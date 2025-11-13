@@ -401,7 +401,7 @@ All acceptance criteria met. Story ready for senior developer code review.
 **Review Date:** 2025-11-13  
 **Review Type:** Senior Developer Code Review  
 **Outcome:** ✅ **APPROVED**  
-**Story Context Reference:** `docs/sprint-artifacts/1-5-basic-rest-api-structure-and-exception-handling.context.xml`
+**Story Context Reference:** `docs/sprint-artifacts/stories/1-5-basic-rest-api-structure-and-exception-handling.context.xml`
 
 ---
 

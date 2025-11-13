@@ -280,6 +280,37 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles AccountLockedException (423 Locked).
+     *
+     * <p>This exception is thrown when a user attempts to login with an account
+     * that has been locked due to too many failed login attempts.</p>
+     *
+     * @param ex the exception
+     * @param request the HTTP request
+     * @return 423 response with error details
+     */
+    @ExceptionHandler(AccountLockedException.class)
+    public ResponseEntity<ErrorResponse> handleAccountLockedException(
+            AccountLockedException ex,
+            HttpServletRequest request) {
+
+        String requestId = generateRequestId();
+        log.warn("Account locked [requestId={}]: {}", requestId, ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+                HttpStatus.LOCKED.value(),
+                HttpStatus.LOCKED.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI(),
+                requestId
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.LOCKED)
+                .body(errorResponse);
+    }
+
+    /**
      * Handles all unhandled exceptions (500 Internal Server Error).
      *
      * <p>This is the catch-all handler for unexpected errors. Stack traces are

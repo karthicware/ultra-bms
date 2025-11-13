@@ -11,6 +11,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 /**
  * User entity representing system users with role-based access control.
  * Supports six user roles: SUPER_ADMIN, PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR,
@@ -74,8 +76,33 @@ public class User extends BaseEntity {
     private Boolean active = true;
 
     /**
+     * User's phone number in E.164 format (optional)
+     */
+    @Size(max = 20, message = "Phone number must not exceed 20 characters")
+    @Column(name = "phone", length = 20)
+    private String phone;
+
+    /**
      * Whether multi-factor authentication is enabled for this user
      */
     @Column(name = "mfa_enabled", nullable = false)
     private Boolean mfaEnabled = false;
+
+    /**
+     * Whether the account is currently locked due to failed login attempts
+     */
+    @Column(name = "account_locked", nullable = false)
+    private Boolean accountLocked = false;
+
+    /**
+     * Timestamp until which the account is locked (null if not locked)
+     */
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
+
+    /**
+     * Number of consecutive failed login attempts
+     */
+    @Column(name = "failed_login_attempts", nullable = false)
+    private Integer failedLoginAttempts = 0;
 }

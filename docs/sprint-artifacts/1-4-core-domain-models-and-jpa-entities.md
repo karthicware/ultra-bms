@@ -260,7 +260,7 @@ Story 1.3 established patterns for configuration and Spring Boot integration tha
 
 ### Context Reference
 
-- Story Context: docs/sprint-artifacts/1-4-core-domain-models-and-jpa-entities.context.xml (Generated: 2025-11-13)
+- Story Context: docs/sprint-artifacts/stories/1-4-core-domain-models-and-jpa-entities.context.xml (Generated: 2025-11-13)
 
 ### Agent Model Used
 

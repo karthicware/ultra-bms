@@ -1,0 +1,313 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>2.2</storyId>
+    <title>Role-Based Access Control (RBAC) Implementation</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-13</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-2-role-based-access-control-rbac-implementation.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a system administrator</asA>
+    <iWant>role-based permissions enforced across the application</iWant>
+    <soThat>users can only access features appropriate to their role</soThat>
+    <tasks>
+      - Task 1: Create Database Schema for RBAC
+      - Task 2: Create JPA Entities for RBAC
+      - Task 3: Enable Method-Level Security
+      - Task 4: Implement Custom Permission Evaluator
+      - Task 5: Enhance JWT Token with Permissions
+      - Task 6: Implement UserDetailsService with Permissions
+      - Task 7: Create Permission Matrix Documentation
+      - Task 8: Implement Frontend Route Protection
+      - Task 9: Create Frontend Permission Hook
+      - Task 10: Implement Role-Based Navigation Menu
+      - Task 11: Extend GlobalExceptionHandler for Authorization
+      - Task 12: Configure Permission Caching
+      - Task 13: Create Role Assignment API
+      - Task 14: Test RBAC End-to-End
+      - Task 15: Update API Documentation
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    AC1: Create normalized database schema with roles, permissions, and role_permissions tables. Six roles (SUPER_ADMIN, PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR, FINANCE_MANAGER, TENANT, VENDOR) with resource:action permission pattern.
+
+    AC2: Enable Spring Security method-level security with @PreAuthorize and @Secured annotations. Return 403 Forbidden if user lacks required permission.
+
+    AC3: Implement CustomPermissionEvaluator for data-level access control with caching. Support property-level restrictions for PROPERTY_MANAGER role.
+
+    AC4: Extend JWT token payload to include permissions array. JwtAuthenticationFilter extracts permissions and populates Spring Security authorities.
+
+    AC5: Create UserDetailsService that loads user with role permissions. Cache user permissions in Ehcache with 10-minute TTL.
+
+    AC6: Document permission matrix as markdown table mapping roles to permissions. API endpoint GET /api/v1/permissions/matrix returns permission matrix JSON.
+
+    AC7: Implement Next.js middleware for route-based authorization. Create ProtectedRoute component wrapper for client-side route protection.
+
+    AC8: Create usePermission hook with hasPermission() and hasRole() methods. Extract permissions from JWT token stored in auth context.
+
+    AC9: Update sidebar navigation to show/hide menu items based on user role and permissions.
+
+    AC10: Extend GlobalExceptionHandler to handle AccessDeniedException with 403 response. Log authorization failures to audit_logs table.
+
+    AC11: Configure Ehcache for permission caching with 10-minute TTL and cache eviction on role updates.
+
+    AC12: Create endpoint POST /api/v1/users/{userId}/role (SUPER_ADMIN only) and GET /api/v1/roles for role management.
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>3.1 Authentication & Access Control</section>
+        <snippet>Defines 6 user roles: SUPER_ADMIN (full system access), PROPERTY_MANAGER (property-specific management), MAINTENANCE_SUPERVISOR (work order and vendor management), FINANCE_MANAGER (financial operations), TENANT (self-service portal), VENDOR (job assignment tracking). Role-based access control (RBAC) is a core security requirement.</snippet>
+      </doc>
+
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Security Architecture - Role-Based Access Control (RBAC)</section>
+        <snippet>Permission model uses Resource + Action pattern (e.g., tenants:create, work-orders:view). Method-level security with @PreAuthorize and @Secured annotations. Custom permission evaluator enables data-level access control. Permission caching with Ehcache reduces database queries. JWT tokens include permissions array for frontend authorization.</snippet>
+      </doc>
+
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Data Architecture - Users & Authentication</section>
+        <snippet>Database schema includes: users table with role_id FK, roles table (id, name, description), permissions table (id, name, resource, action), role_permissions join table (role_id, permission_id). Roles and permissions normalized for flexible assignment.</snippet>
+      </doc>
+
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>7.1.9 Navigation Patterns - Active State Indication</section>
+        <snippet>Sidebar navigation shows active state with background color change and persists based on current route. Role-based navigation filters menu items based on user permissions from JWT token.</snippet>
+      </doc>
+
+      <doc>
+        <path>docs/sprint-artifacts/epics/2-authentication-and-user-management.md</path>
+        <title>Epic 2: Authentication & User Management</title>
+        <section>Story 2.2: Role-Based Access Control (RBAC) Implementation</section>
+        <snippet>Implements RBAC with six roles and permission-based access control. Backend uses Spring Security @PreAuthorize annotations, custom permission evaluator for data-level access. Frontend uses Next.js middleware for route protection and usePermission hook for conditional rendering. Permission matrix documents feature-level and data-level access rules.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/config/SecurityConfig.java</path>
+        <kind>config</kind>
+        <symbol>SecurityConfig</symbol>
+        <lines>1-109</lines>
+        <reason>Spring Security configuration with @EnableMethodSecurity already enabled. Needs extension to register CustomPermissionEvaluator bean and configure MethodSecurityExpressionHandler.</reason>
+      </artifact>
+
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/security/JwtTokenProvider.java</path>
+        <kind>security</kind>
+        <symbol>JwtTokenProvider</symbol>
+        <lines>72-87</lines>
+        <reason>Generates JWT access tokens with user role. Needs enhancement to include permissions array in token claims. Method generateAccessToken() will be extended to load role permissions.</reason>
+      </artifact>
+
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/security/JwtAuthenticationFilter.java</path>
+        <kind>security</kind>
+        <symbol>JwtAuthenticationFilter</symbol>
+        <lines>1-end</lines>
+        <reason>JWT authentication filter that sets SecurityContext. Needs update to extract permissions from JWT and populate GrantedAuthority collection for Spring Security.</reason>
+      </artifact>
+
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/User.java</path>
+        <kind>entity</kind>
+        <symbol>User</symbol>
+        <lines>66-70</lines>
+        <reason>User entity with role field as enum. Migration needed: replace role enum with role_id FK to roles table. Add getAuthorities() method returning permissions as GrantedAuthority.</reason>
+      </artifact>
+
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/exception/GlobalExceptionHandler.java</path>
+        <kind>exception-handler</kind>
+        <symbol>GlobalExceptionHandler</symbol>
+        <lines>1-end</lines>
+        <reason>Global exception handler from Story 1.5. Needs extension with @ExceptionHandler(AccessDeniedException.class) method to return 403 responses with requiredPermission field.</reason>
+      </artifact>
+
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/config/CacheConfig.java</path>
+        <kind>config</kind>
+        <symbol>CacheConfig</symbol>
+        <lines>1-end</lines>
+        <reason>Ehcache configuration from Story 1.3. Add "userPermissions" cache region with 10-minute TTL and max 10000 entries for permission caching.</reason>
+      </artifact>
+
+      <artifact>
+        <path>backend/src/main/resources/db/migration/V8__add_account_lockout_fields_to_users.sql</path>
+        <kind>migration</kind>
+        <symbol>V8__add_account_lockout_fields_to_users.sql</symbol>
+        <lines>1-end</lines>
+        <reason>Latest database migration. New migrations for RBAC: V9 (roles table), V10 (permissions table), V11 (role_permissions), V12 (add role_id FK to users).</reason>
+      </artifact>
+
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/AuditLog.java</path>
+        <kind>entity</kind>
+        <symbol>AuditLog</symbol>
+        <lines>1-end</lines>
+        <reason>Audit logging entity from Story 2.1. Reuse for logging authorization failures with action="AUTHORIZATION_FAILED" and details JSON.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <backend>
+        <dependency>Spring Boot 3.4.0</dependency>
+        <dependency>Spring Security 6.x (included in Spring Boot Starter)</dependency>
+        <dependency>Spring Data JPA 3.4.x</dependency>
+        <dependency>Hibernate 6.x (default JPA provider)</dependency>
+        <dependency>PostgreSQL JDBC Driver 42.x</dependency>
+        <dependency>Ehcache 3.x (for permission caching)</dependency>
+        <dependency>io.jsonwebtoken:jjwt-api:0.12.x (JWT library)</dependency>
+        <dependency>Lombok 1.18.x (for @RequiredArgsConstructor)</dependency>
+        <dependency>Flyway 10.x (for database migrations)</dependency>
+      </backend>
+
+      <frontend>
+        <dependency>Next.js 15.5 (App Router for server-side route guards)</dependency>
+        <dependency>React 19.2.0</dependency>
+        <dependency>TypeScript 5.8</dependency>
+        <dependency>React Hook Form 7.x (for form validation)</dependency>
+        <dependency>Zod 3.x (for schema validation)</dependency>
+        <dependency>Axios 1.x (for HTTP client with interceptors)</dependency>
+        <dependency>shadcn/ui (for UI components)</dependency>
+        <dependency>Tailwind CSS 4.0</dependency>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - MUST use Spring Security @PreAuthorize and @Secured annotations for method-level security
+    - MUST NOT store permissions in JWT token if list exceeds reasonable size (>50 permissions) - use role-based token instead
+    - MUST implement permission caching to avoid database queries on every request
+    - MUST use BCrypt for password hashing (already implemented in Story 2.1)
+    - MUST follow resource:action naming convention for permissions (e.g., "tenants:create", "work-orders:view")
+    - MUST return 403 Forbidden (not 404) when user lacks permission to prevent information disclosure
+    - MUST log all authorization failures to audit_logs table with userId, resource, action, and IP address
+    - MUST support data-level access control (e.g., PROPERTY_MANAGER can only access assigned properties)
+    - SUPER_ADMIN role MUST automatically have all permissions without explicit assignment
+    - Frontend MUST hide/disable UI elements for actions user cannot perform (not just block API calls)
+    - MUST invalidate permission cache when user role changes or role permissions are modified
+    - MUST document permission matrix in markdown format for developer reference
+    - Migration from role enum to role_id FK MUST preserve existing user roles
+    - MUST use @EntityGraph or JOIN FETCH to avoid N+1 queries when loading user with role and permissions
+    - Permission evaluator MUST be stateless and cacheable for performance
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>POST /api/v1/users/{userId}/role</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/users/{userId}/role - Request body: { roleId: Long } - Response: UserDto with updated role</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/UserController.java</path>
+      <description>Assign role to user. Requires SUPER_ADMIN permission. Invalidates user's permission cache after role change.</description>
+    </interface>
+
+    <interface>
+      <name>GET /api/v1/roles</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/roles - Response: List<RoleDto> with id, name, description, permissionCount</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/RoleController.java</path>
+      <description>List all available roles. Accessible by authenticated users. Returns role metadata for role selection dropdowns.</description>
+    </interface>
+
+    <interface>
+      <name>GET /api/v1/permissions/matrix</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/permissions/matrix - Response: JSON permission matrix with roles and permissions</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/PermissionMatrixController.java</path>
+      <description>Returns permission matrix for admin UI. Requires SUPER_ADMIN permission. Shows which roles have which permissions.</description>
+    </interface>
+
+    <interface>
+      <name>PermissionEvaluator.hasPermission()</name>
+      <kind>Spring Security interface</kind>
+      <signature>boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission)</signature>
+      <path>backend/src/main/java/com/ultrabms/security/CustomPermissionEvaluator.java</path>
+      <description>Custom permission evaluator for data-level access control. Checks if user has permission on specific resource. SUPER_ADMIN always returns true.</description>
+    </interface>
+
+    <interface>
+      <name>UserDetailsService.loadUserByUsername()</name>
+      <kind>Spring Security interface</kind>
+      <signature>UserDetails loadUserByUsername(String username) throws UsernameNotFoundException</signature>
+      <path>backend/src/main/java/com/ultrabms/service/CustomUserDetailsService.java</path>
+      <description>Loads user with role and permissions. Returns UserDetails with authorities populated from role permissions. Cached with @Cacheable("userPermissions").</description>
+    </interface>
+
+    <interface>
+      <name>usePermission hook</name>
+      <kind>React hook</kind>
+      <signature>const { hasPermission, hasRole, isLoading } = usePermission()</signature>
+      <path>frontend/src/hooks/usePermission.ts</path>
+      <description>Frontend hook for permission checks. hasPermission(permission: string) checks JWT token for specific permission. hasRole(role: string) checks user role.</description>
+    </interface>
+
+    <interface>
+      <name>ProtectedRoute component</name>
+      <kind>React component</kind>
+      <signature>&lt;ProtectedRoute role="SUPER_ADMIN" permission="tenants:create"&gt;...&lt;/ProtectedRoute&gt;</signature>
+      <path>frontend/src/components/auth/ProtectedRoute.tsx</path>
+      <description>Client-side route protection component. Checks user role/permission and shows loading, fallback, or children based on authorization.</description>
+    </interface>
+
+    <interface>
+      <name>Next.js middleware</name>
+      <kind>Server-side middleware</kind>
+      <signature>export function middleware(request: NextRequest): NextResponse</signature>
+      <path>frontend/src/middleware.ts</path>
+      <description>Server-side route guard. Validates JWT token and checks role/permission requirements. Redirects to /403 if unauthorized.</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing follows Ultra BMS testing standards: JUnit 5 + Mockito for unit tests, MockMvc for integration tests, TestContainers for database integration. Frontend uses Vitest + React Testing Library. Manual testing checklist in story includes role-based scenarios for all 6 user roles. Permission caching tested with cache hit/miss verification. E2E tests with Playwright for critical authorization flows.
+    </standards>
+
+    <locations>
+      - backend/src/test/java/com/ultrabms/repository/*RepositoryTest.java
+      - backend/src/test/java/com/ultrabms/service/*ServiceTest.java
+      - backend/src/test/java/com/ultrabms/controller/*ControllerTest.java
+      - backend/src/test/java/com/ultrabms/security/CustomPermissionEvaluatorTest.java
+      - frontend/src/__tests__/hooks/usePermission.test.ts
+      - frontend/src/__tests__/components/ProtectedRoute.test.tsx
+    </locations>
+
+    <ideas>
+      AC1: Test role and permission repository methods (findByName, findAll with @EntityGraph). Verify FK constraints and unique constraints.
+
+      AC2: Integration test with MockMvc: Test @PreAuthorize on controller methods with @WithMockUser(authorities={"tenants:read"}). Verify 200 OK with permission, 403 without.
+
+      AC3: Unit test CustomPermissionEvaluator: Test SUPER_ADMIN always returns true, PROPERTY_MANAGER restricted to assigned properties, data-level access control logic.
+
+      AC4: Test JWT token generation includes permissions array. Test JwtAuthenticationFilter extracts permissions and populates authorities. Verify token refresh reloads permissions.
+
+      AC5: Test CustomUserDetailsService loads user with role and permissions. Verify @Cacheable annotation works (use @DirtiesContext). Test cache eviction on role update.
+
+      AC6: Test permission matrix API returns correct JSON structure. Test markdown generation. Verify only SUPER_ADMIN can access.
+
+      AC7-AC9: Frontend integration tests with Mock Service Worker: Test middleware redirects unauthorized users. Test ProtectedRoute shows/hides content. Test navigation menu filters items.
+
+      AC10: Test GlobalExceptionHandler returns 403 with requiredPermission field. Test audit logging on authorization failure.
+
+      AC11: Test permission cache hit/miss with Spring's CacheManager. Test cache eviction on role/permission update.
+
+      AC12: Test role assignment API: POST as SUPER_ADMIN → 200 OK, POST as PROPERTY_MANAGER → 403 Forbidden. Test GET /api/v1/roles accessible by authenticated users.
+
+      AC12 (E2E): Manual testing with multiple roles: Login as each role, verify menu items visible, test unauthorized access returns 403, test permission checks work.
+    </ideas>
+  </tests>
+</story-context>
