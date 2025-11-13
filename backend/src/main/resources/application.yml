@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: ultra-bms
+  profiles:
+    active: dev
+
+server:
+  port: 8080

@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    # Placeholder - will be configured in Story 1.2
+    url: jdbc:postgresql://localhost:5432/ultra_bms_dev
+    username: ultra_bms_user
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    com.ultrabms: DEBUG
+    org.springframework.web: DEBUG

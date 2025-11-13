@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <parameter name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra BMS - Design Direction Showcase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#0A2342',
+                            hover: '#081B34',
+                            light: '#1A3A5C'
+                        },
+                        secondary: {
+                            DEFAULT: '#1152D4',
+                            hover: '#0D42B0'
+                        },
+                        accent: {
+                            DEFAULT: '#D4AF37',
+                            hover: '#C09F2F'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .direction-card {
+            transition: all 0.3s ease;
+        }
+        .direction-card:hover {
+            transform: scale(1.02);
+        }
+        .mockup-screen {
+            min-height: 600px;
+            background: linear-gradient(to bottom, #f9fafb 0%, #f3f4f6 100%);
+        }
+        .sidebar-nav-item {
+            transition: all 0.2s ease;
+        }
+        .sidebar-nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-nav-item.active {
+            background-color: rgba(212, 175, 55, 0.2);
+            border-left: 3px solid #D4AF37;
+        }
+        .kpi-card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+        .kpi-card:hover {
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Ultra BMS Design Direction</h1>
+            <p class="text-lg text-gray-600">Modern, Professional Dashboard with shadcn/ui Components</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex justify-center gap-4 mb-8">
+            <button onclick="showDirection(1)" id="btn-1" class="px-6 py-3 rounded-lg font-semibold bg-primary text-white">
+                Direction 1: Balanced Professional
+            </button>
+            <button onclick="showDirection(2)" id="btn-2" class="px-6 py-3 rounded-lg font-semibold border-2 border-primary text-primary">
+                Direction 2: Information Dense
+            </button>
+            <button onclick="showDirection(3)" id="btn-3" class="px-6 py-3 rounded-lg font-semibold border-2 border-primary text-primary">
+                Direction 3: Spacious Modern
+            </button>
+        </div>
+
+        <!-- Direction 1: Balanced Professional (Default) -->
+        <div id="direction-1" class="direction-screen">
+            <div class="bg-white rounded-xl shadow-2xl overflow-hidden mb-8">
+                <div class="grid grid-cols-12">
+                    <!-- Sidebar -->
+                    <div class="col-span-2 bg-primary h-screen">
+                        <div class="p-6">
+                            <!-- Logo -->
+                            <div class="flex items-center gap-3 mb-8">
+                                <div class="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
+                                    <span class="text-primary font-bold text-xl">U</span>
+                                </div>
+                                <div>
+                                    <div class="text-white font-bold text-lg">Ultra BMS</div>
+                                    <div class="text-gray-300 text-xs">Property Management</div>
+                                </div>
+                            </div>
+
+                            <!-- Navigation -->
+                            <nav class="space-y-2">
+                                <a href="#" class="sidebar-nav-item active flex items-center gap-3 px-4 py-3 rounded-lg text-white">
+                                    <span class="material-symbols-outlined">dashboard</span>
+                                    <span class="font-medium">Dashboard</span>
+                                </a>
+                                <a href="#" class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300">
+                                    <span class="material-symbols-outlined">apartment</span>
+                                    <span class="font-medium">Properties</span>
+                                </a>
+                                <a href="#" class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300">
+                                    <span class="material-symbols-outlined">groups</span>
+                                    <span class="font-medium">Tenants</span>
+                                </a>
+                                <a href="#" class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300">
+                                    <span class="material-symbols-outlined">build</span>
+                                    <span class="font-medium">Maintenance</span>
+                                </a>
+                                <a href="#" class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300">
+                                    <span class="material-symbols-outlined">engineering</span>
+                                    <span class="font-medium">Vendors</span>
+                                </a>
+                                <a href="#" class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300">
+                                    <span class="material-symbols-outlined">account_balance_wallet</span>
+                                    <span class="font-medium">Finance</span>
+                                </a>
+                                <a href="#" class="sidebar-nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300">
+                                    <span class="material-symbols-outlined">summarize</span>
+                                    <span class="font-medium">Reports</span>
+                                </a>
+                            </nav>
+                        </div>
+                    </div>
+
+                    <!-- Main Content -->
+                    <div class="col-span-10 mockup-screen">
+                        <!-- Header -->
+                        <div class="bg-white border-b px-8 py-4 flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900">Executive Dashboard</h2>
+                                <p class="text-sm text-gray-500">Welcome back, Property Manager</p>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <button class="p-2 hover:bg-gray-100 rounded-lg relative">
+                                    <span class="material-symbols-outlined text-gray-600">notifications</span>
+                                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                                </button>
+                                <button class="p-2 hover:bg-gray-100 rounded-lg">
+                                    <span class="material-symbols-outlined text-gray-600">settings</span>
+                                </button>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-semibold">
+                                        PM
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Content Area -->
+                        <div class="p-8">
+                            <!-- KPI Cards -->
+                            <div class="grid grid-cols-4 gap-6 mb-8">
+                                <div class="kpi-card p-6 border-l-4 border-primary">
+                                    <div class="text-sm font-medium text-gray-500 mb-1">Total Revenue</div>
+                                    <div class="text-3xl font-bold text-gray-900">$1.24M</div>
+                                    <div class="mt-2 flex items-center gap-1">
+                                        <span class="text-green-600 text-sm font-medium">↑ 12.5%</span>
+                                        <span class="text-gray-500 text-xs">vs. last month</span>
+                                    </div>
+                                </div>
+
+                                <div class="kpi-card p-6 border-l-4 border-green-500">
+                                    <div class="text-sm font-medium text-gray-500 mb-1">Occupancy Rate</div>
+                                    <div class="text-3xl font-bold text-gray-900">94.2%</div>
+                                    <div class="mt-2 flex items-center gap-1">
+                                        <span class="text-green-600 text-sm font-medium">↑ 2.3%</span>
+                                        <span class="text-gray-500 text-xs">vs. last month</span>
+                                    </div>
+                                </div>
+
+                                <div class="kpi-card p-6 border-l-4 border-orange-500">
+                                    <div class="text-sm font-medium text-gray-500 mb-1">Pending Work Orders</div>
+                                    <div class="text-3xl font-bold text-gray-900">23</div>
+                                    <div class="mt-2 flex items-center gap-1">
+                                        <span class="text-red-600 text-sm font-medium">↑ 5</span>
+                                        <span class="text-gray-500 text-xs">vs. yesterday</span>
+                                    </div>
+                                </div>
+
+                                <div class="kpi-card p-6 border-l-4 border-accent">
+                                    <div class="text-sm font-medium text-gray-500 mb-1">Collection Rate</div>
+                                    <div class="text-3xl font-bold text-gray-900">96.8%</div>
+                                    <div class="mt-2 flex items-center gap-1">
+                                        <span class="text-green-600 text-sm font-medium">↑ 1.2%</span>
+                                        <span class="text-gray-500 text-xs">vs. last month</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Charts and Tables -->
+                            <div class="grid grid-cols-2 gap-6">
+                                <!-- Recent Work Orders -->
+                                <div class="bg-white rounded-xl shadow p-6">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="text-lg font-bold text-gray-900">Recent Work Orders</h3>
+                                        <button class="text-sm text-secondary font-medium hover:underline">View All →</button>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                                    <span class="material-symbols-outlined text-red-600 text-sm">plumbing</span>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium text-gray-900">Unit 305 - Water Leak</div>
+                                                    <div class="text-sm text-gray-500">Building A • 2 hours ago</div>
+                                                </div>
+                                            </div>
+                                            <span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">High</span>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                    <span class="material-symbols-outlined text-blue-600 text-sm">ac_unit</span>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium text-gray-900">Unit 201 - AC Maintenance</div>
+                                                    <div class="text-sm text-gray-500">Building B • 5 hours ago</div>
+                                                </div>
+                                            </div>
+                                            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">Medium</span>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                                    <span class="material-symbols-outlined text-green-600 text-sm">lightbulb</span>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium text-gray-900">Lobby Light Replacement</div>
+                                                    <div class="text-sm text-gray-500">Building A • 1 day ago</div>
+                                                </div>
+                                            </div>
+                                            <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">Low</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Upcoming Lease Expirations -->
+                                <div class="bg-white rounded-xl shadow p-6">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="text-lg font-bold text-gray-900">Lease Expirations (30 Days)</h3>
+                                        <button class="text-sm text-secondary font-medium hover:underline">View All →</button>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                            <div>
+                                                <div class="font-medium text-gray-900">Ahmed Al-Mansoori</div>
+                                                <div class="text-sm text-gray-500">Unit 402, Building A</div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-sm font-medium text-orange-600">15 days</div>
+                                                <div class="text-xs text-gray-500">Dec 28, 2025</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                            <div>
+                                                <div class="font-medium text-gray-900">Sarah Johnson</div>
+                                                <div class="text-sm text-gray-500">Unit 301, Building B</div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-sm font-medium text-yellow-600">22 days</div>
+                                                <div class="text-xs text-gray-500">Jan 4, 2026</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                            <div>
+                                                <div class="font-medium text-gray-900">Tech Solutions Ltd</div>
+                                                <div class="text-sm text-gray-500">Unit 105, Building C</div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-sm font-medium text-green-600">29 days</div>
+                                                <div class="text-xs text-gray-500">Jan 11, 2026</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Direction Description -->
+            <div class="bg-white rounded-lg shadow p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Direction 1: Balanced Professional</h3>
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Design Philosophy</h4>
+                        <p class="text-gray-600">This direction strikes the perfect balance between information density and visual comfort. It's optimized for daily use by property managers who need quick access to key metrics while maintaining visual clarity.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Key Characteristics</h4>
+                        <ul class="text-gray-600 space-y-1">
+                            <li>• <strong>Layout:</strong> Persistent sidebar + multi-column content</li>
+                            <li>• <strong>Density:</strong> Balanced - 4-column KPI grid</li>
+                            <li>• <strong>Navigation:</strong> Icon + text labels for clarity</li>
+                            <li>• <strong>Visual Weight:</strong> Subtle shadows, clean cards</li>
+                            <li>• <strong>Best For:</strong> Daily operations, power users</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 2: Information Dense (Hidden by default) -->
+        <div id="direction-2" class="direction-screen hidden">
+            <div class="bg-white rounded-xl shadow-2xl overflow-hidden mb-8">
+                <div class="text-center p-12 bg-gradient-to-br from-primary to-primary-hover text-white">
+                    <h2 class="text-3xl font-bold mb-4">Direction 2: Information Dense</h2>
+                    <p class="text-lg opacity-90">Maximizes screen real estate for data-heavy workflows</p>
+                    <div class="mt-8 grid grid-cols-3 gap-6 text-left">
+                        <div class="bg-white/10 rounded-lg p-4">
+                            <div class="font-semibold mb-2">Compact Layout</div>
+                            <p class="text-sm opacity-80">6-column KPI grid, smaller cards, tighter spacing</p>
+                        </div>
+                        <div class="bg-white/10 rounded-lg p-4">
+                            <div class="font-semibold mb-2">Data Tables</div>
+                            <p class="text-sm opacity-80">More rows visible per screen, inline editing</p>
+                        </div>
+                        <div class="bg-white/10 rounded-lg p-4">
+                            <div class="font-semibold mb-2">Collapsible Sidebar</div>
+                            <p class="text-sm opacity-80">Icons-only mode for maximum content space</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-3">When to Use This Direction</h3>
+                <p class="text-gray-600">Ideal for advanced users who need to monitor multiple data points simultaneously. Finance managers and executives who analyze trends across properties would benefit from this information-rich layout.</p>
+            </div>
+        </div>
+
+        <!-- Direction 3: Spacious Modern (Hidden by default) -->
+        <div id="direction-3" class="direction-screen hidden">
+            <div class="bg-white rounded-xl shadow-2xl overflow-hidden mb-8">
+                <div class="text-center p-12 bg-gradient-to-br from-gray-50 to-gray-100">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">Direction 3: Spacious Modern</h2>
+                    <p class="text-lg text-gray-600">Emphasizes clarity and breathing room</p>
+                    <div class="mt-8 grid grid-cols-3 gap-6 text-left">
+                        <div class="bg-white rounded-lg p-6 shadow">
+                            <div class="font-semibold text-gray-900 mb-2">Large Typography</div>
+                            <p class="text-sm text-gray-600">Big numbers, generous whitespace, visual hierarchy</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-6 shadow">
+                            <div class="font-semibold text-gray-900 mb-2">Card-Heavy</div>
+                            <p class="text-sm text-gray-600">Each section as distinct card with elevation</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-6 shadow">
+                            <div class="font-semibold text-gray-900 mb-2">Progressive Disclosure</div>
+                            <p class="text-sm text-gray-600">Show essentials first, expand for details</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-3">When to Use This Direction</h3>
+                <p class="text-gray-600">Perfect for executive dashboards and presentations. The generous spacing and large typography make it easy to glance at key metrics during meetings. Also suitable for users who prefer simplified, less overwhelming interfaces.</p>
+            </div>
+        </div>
+
+        <!-- shadcn/ui Component Highlight -->
+        <div class="bg-gradient-to-r from-primary to-secondary text-white rounded-xl p-8 mt-8">
+            <h3 class="text-2xl font-bold mb-4">Built with shadcn/ui Components</h3>
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-white/10 rounded-lg p-4">
+                    <div class="font-semibold mb-1">sidebar-01</div>
+                    <div class="text-sm opacity-80">Navigation structure</div>
+                </div>
+                <div class="bg-white/10 rounded-lg p-4">
+                    <div class="font-semibold mb-1">card</div>
+                    <div class="text-sm opacity-80">KPI and content containers</div>
+                </div>
+                <div class="bg-white/10 rounded-lg p-4">
+                    <div class="font-semibold mb-1">button</div>
+                    <div class="text-sm opacity-80">All interactive actions</div>
+                </div>
+                <div class="bg-white/10 rounded-lg p-4">
+                    <div class="font-semibold mb-1">badge</div>
+                    <div class="text-sm opacity-80">Status indicators</div>
+                </div>
+            </div>
+            <p class="mt-4 text-sm opacity-90">All components are accessible (WCAG 2.1 AA), customizable via Tailwind, and fully typed with TypeScript.</p>
+        </div>
+    </div>
+
+    <script>
+        function showDirection(num) {
+            // Hide all directions
+            document.getElementById('direction-1').classList.add('hidden');
+            document.getElementById('direction-2').classList.add('hidden');
+            document.getElementById('direction-3').classList.add('hidden');
+
+            // Show selected direction
+            document.getElementById('direction-' + num).classList.remove('hidden');
+
+            // Update button styles
+            ['btn-1', 'btn-2', 'btn-3'].forEach(id => {
+                const btn = document.getElementById(id);
+                btn.classList.remove('bg-primary', 'text-white');
+                btn.classList.add('border-2', 'border-primary', 'text-primary');
+            });
+
+            const activeBtn = document.getElementById('btn-' + num);
+            activeBtn.classList.add('bg-primary', 'text-white');
+            activeBtn.classList.remove('border-2', 'border-primary', 'text-primary');
+        }
+    </script>
+</body>
+</html>

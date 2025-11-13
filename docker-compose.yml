@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17.6-alpine
+    container_name: ultra-bms-postgres
+    environment:
+      POSTGRES_DB: ultra_bms_dev
+      POSTGRES_USER: ultra_bms_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ultra-bms-network
+
+volumes:
+  postgres_data:
+
+networks:
+  ultra-bms-network:
+    driver: bridge
