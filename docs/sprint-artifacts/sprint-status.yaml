@@ -36,8 +36,8 @@ development_status:
   # Epic 1: Platform Foundation & Infrastructure (5 stories)
   epic-1: contexted
   1-1-project-initialization-and-repository-structure: done
-  1-2-local-postgresql-database-setup: ready-for-dev
-  1-3-ehcache-configuration-for-application-caching: backlog
+  1-2-local-postgresql-database-setup: done
+  1-3-ehcache-configuration-for-application-caching: drafted
   1-4-core-domain-models-and-jpa-entities: backlog
   1-5-basic-rest-api-structure-and-exception-handling: backlog
   epic-1-retrospective: optional

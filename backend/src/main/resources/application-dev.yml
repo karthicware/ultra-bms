@@ -1,16 +1,29 @@
 spring:
   datasource:
-    # Placeholder - will be configured in Story 1.2
-    url: jdbc:postgresql://localhost:5432/ultra_bms_dev
-    username: ultra_bms_user
-    password: ${POSTGRES_PASSWORD}
+    url: jdbc:postgresql://localhost:5433/ultra_bms_dev
+    username: ${DB_USERNAME:ultra_bms_user}
+    password: ${DB_PASSWORD:dev_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
   jpa:
-    show-sql: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: update # Auto-creates/updates schema in dev
+    show-sql: true # Log all SQL statements
     properties:
       hibernate:
-        format_sql: true
+        format_sql: true # Format SQL for readability
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+management:
+  endpoint:
+    health:
+      show-details: always # Show database health status
 
 logging:
   level:
