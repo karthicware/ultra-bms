@@ -1,0 +1,250 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>5</storyId>
+    <title>Basic REST API Structure and Exception Handling</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-13</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-5-basic-rest-api-structure-and-exception-handling.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>backend developer</asA>
+    <iWant>a standardized REST API structure with global exception handling</iWant>
+    <soThat>APIs follow consistent patterns and errors are handled gracefully</soThat>
+    <tasks>
+      - Task 1: Create Exception Classes (AC #2, #3)
+      - Task 2: Implement Global Exception Handler (AC #2, #3)
+      - Task 3: Create Request/Response Interceptor (AC #3)
+      - Task 4: Create Health Check Controller (AC #6)
+      - Task 5: Configure Spring Boot Actuator (AC #6)
+      - Task 6: Configure SpringDoc OpenAPI (AC #6)
+      - Task 7: Configure CORS (AC #7)
+      - Task 8: Create Base Service and Controller Patterns (AC #1, #4)
+      - Task 9: Implement Request Validation (AC #5)
+      - Task 10: Configure Pagination Support (AC #4)
+      - Task 11: Add Request/Response Logging (AC #1)
+      - Task 12: Update README with API Documentation (AC #1, #6, #7)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    AC1: REST API structure follows standard package organization with base path /api/v1, controller package com.ultrabms.controller, service package com.ultrabms.service, repository package com.ultrabms.repository, DTO package com.ultrabms.dto. Controllers use @RestController annotation and follow RESTful naming conventions.
+
+    AC2: Global exception handler implemented using @RestControllerAdvice with @ExceptionHandler methods for: EntityNotFoundException → 404 Not Found, ValidationException → 400 Bad Request, AccessDeniedException → 403 Forbidden, AuthenticationException → 401 Unauthorized, DuplicateResourceException → 409 Conflict, Generic Exception → 500 Internal Server Error.
+
+    AC3: All error responses return standardized JSON format with fields: timestamp (ISO-8601), status (HTTP status code), error (error category), message (user-friendly description), path (requested endpoint), requestId (correlation UUID for request tracing).
+
+    AC4: Successful responses follow patterns: Success (200 OK) returns DTO directly or wrapped response, Created (201) returns created resource with Location header, No Content (204) for successful DELETE operations, consistent date format (ISO-8601: yyyy-MM-dd'T'HH:mm:ss'Z'), pagination support with page/size/sort parameters.
+
+    AC5: Request validation implemented using @Valid annotation on request bodies, BindingResult for validation errors, validation error responses include field-level error details, custom validators for complex business rules where needed.
+
+    AC6: Health check endpoints available: /api/health (basic UP/DOWN status), /api/info (application version and build info), Spring Boot Actuator endpoints configured for development, SpringDoc OpenAPI generates API documentation, Swagger UI accessible at /swagger-ui.html, OpenAPI spec available at /v3/api-docs.
+
+    AC7: CORS configured to allow localhost:3000 (Next.js dev server), allow specific HTTP methods (GET, POST, PUT, DELETE, PATCH, OPTIONS), allow credentials for cookie-based authentication, configurable allowed origins via application.yml.
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>5.1 System Architecture</section>
+        <snippet>Backend: Java 17 with Spring Boot framework, Database: PostgreSQL with Redis caching, File Storage: AWS S3. Frontend: React.js with TypeScript, UI Components: shadcn/ui component library.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Backend Implementation Patterns - Controller Pattern</section>
+        <snippet>Controllers use @RestController, @RequestMapping, constructor injection with @RequiredArgsConstructor. Services use @Service with @Transactional for database operations. Repositories extend JpaRepository.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>REST API Conventions</section>
+        <snippet>Base URL: /api/v1, Endpoints: Plural nouns kebab-case (e.g., /work-orders), HTTP Methods: GET (retrieve), POST (create), PUT (full update), PATCH (partial update), DELETE. Status Codes: 200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 500 Internal Server Error.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>API Response Format</section>
+        <snippet>Error Response: { "success": false, "error": { "code": "RESOURCE_NOT_FOUND", "message": "...", "field": "..." }, "timestamp": "..." }. All timestamps use ISO-8601 format.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Exception Handling</section>
+        <snippet>Use @ControllerAdvice for global exception handling. Map exceptions to HTTP status codes. Return standardized ErrorResponse objects. Log errors with appropriate context.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Story 1.5: Error Response Contract</section>
+        <snippet>Error response includes timestamp, status, error, message, path, requestId. CORS allows localhost:3000 with methods GET, POST, PUT, DELETE, PATCH, OPTIONS. Allow credentials: true for cookie-based auth.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/sprint-artifacts/1-4-core-domain-models-and-jpa-entities.md</path>
+        <title>Story 1.4 - Core Domain Models</title>
+        <section>Dev Notes - Learnings</section>
+        <snippet>Use dedicated @Configuration classes for feature setup. UserRepository, PropertyRepository, UnitRepository available. Bean Validation annotations used (@NotNull, @Email, @Size). UUID primary keys used for all entities.</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/BaseEntity.java</path>
+        <kind>entity</kind>
+        <symbol>BaseEntity</symbol>
+        <lines>1-50</lines>
+        <reason>Provides audit pattern (createdAt, updatedAt, version) that all entities extend. Demonstrates JPA auditing with @CreatedDate, @LastModifiedDate, and optimistic locking with @Version.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/User.java</path>
+        <kind>entity</kind>
+        <symbol>User</symbol>
+        <lines>1-82</lines>
+        <reason>Example entity demonstrating validation annotations (@NotNull, @Email, @Size), enum usage (UserRole), @JsonIgnore for sensitive fields (passwordHash), and index creation pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/repository/UserRepository.java</path>
+        <kind>repository</kind>
+        <symbol>UserRepository</symbol>
+        <lines>all</lines>
+        <reason>Example repository extending JpaRepository demonstrating CRUD operations and custom query methods (findByEmail, findByRole).</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/config/JpaAuditingConfig.java</path>
+        <kind>config</kind>
+        <symbol>JpaAuditingConfig</symbol>
+        <lines>all</lines>
+        <reason>Configuration class pattern with @EnableJpaAuditing. Shows how to create dedicated config classes for features.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/resources/application-dev.yml</path>
+        <kind>configuration</kind>
+        <symbol>application-dev.yml</symbol>
+        <lines>34-57</lines>
+        <reason>Shows actuator endpoint configuration (health, info, caches), logging configuration for dev environment, and security config pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/pom.xml</path>
+        <kind>dependencies</kind>
+        <symbol>pom.xml</symbol>
+        <lines>32-132</lines>
+        <reason>Lists all required dependencies: spring-boot-starter-web, spring-boot-starter-actuator, spring-boot-starter-validation, springdoc-openapi-starter-webmvc-ui, lombok.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <backend type="maven">
+        <dependency>spring-boot-starter-web:3.4.0</dependency>
+        <dependency>spring-boot-starter-actuator:3.4.0</dependency>
+        <dependency>spring-boot-starter-validation:3.4.0</dependency>
+        <dependency>spring-boot-starter-data-jpa:3.4.0</dependency>
+        <dependency>spring-boot-starter-security:3.4.0</dependency>
+        <dependency>springdoc-openapi-starter-webmvc-ui:2.8.4</dependency>
+        <dependency>postgresql:runtime</dependency>
+        <dependency>lombok:1.18.36:provided</dependency>
+        <dependency>mapstruct:1.6.3</dependency>
+      </backend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Package structure must follow: com.ultrabms.{controller|service|repository|dto|exception|config}
+    - Controllers must use constructor injection (never field injection) with @RequiredArgsConstructor from Lombok
+    - All exceptions must be caught by GlobalExceptionHandler, never leak stack traces to client
+    - Error responses must include correlation ID (UUID) for request tracing across logs
+    - CORS must be configurable via application.yml property (app.cors.allowed-origins)
+    - Health check endpoint /api/health must NOT require authentication (public endpoint)
+    - Swagger UI must be accessible only in development profile, disabled in production
+    - All date/time fields must use ISO-8601 format (yyyy-MM-dd'T'HH:mm:ss'Z') in JSON
+    - Pagination defaults: page=0, size=20, max size=100 to prevent abuse
+    - Use snake_case for database columns, camelCase for Java fields (Hibernate naming strategy configured)
+    - Follow REST conventions: plural nouns, kebab-case for multi-word resources (/work-orders)
+    - HTTP methods: GET (retrieve), POST (create), PUT (full update), PATCH (partial), DELETE
+    - Validation errors must return 400 with field-level error details, not generic message
+    - Use @Valid annotation on controller method parameters accepting request bodies
+    - Create custom exception classes extending RuntimeException (EntityNotFoundException, DuplicateResourceException, ValidationException)
+    - Filters must be registered via FilterRegistrationBean, not @Component annotation
+    - Logging: Use @Slf4j from Lombok, log level DEBUG for dev, INFO for production
+    - Request/response logging must exclude sensitive headers (Authorization)
+    - Checkstyle validation runs on build, zero violations required
+    - Avoid wildcard imports, use explicit imports (issue identified in Story 1.4)
+  </constraints>
+
+  <interfaces>
+    <api>
+      <name>Health Check API</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/health → {"status": "UP", "timestamp": "2025-11-13T10:00:00Z"}</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/HealthController.java</path>
+    </api>
+    <api>
+      <name>Application Info API</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/info → {"version": "1.0.0", "build": "2025-11-13"}</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/HealthController.java</path>
+    </api>
+    <api>
+      <name>Error Response Format</name>
+      <kind>JSON contract</kind>
+      <signature>{ "timestamp": "...", "status": 404, "error": "Not Found", "message": "...", "path": "/api/v1/...", "requestId": "uuid" }</signature>
+      <path>backend/src/main/java/com/ultrabms/exception/ErrorResponse.java</path>
+    </api>
+    <api>
+      <name>Pagination Response Format</name>
+      <kind>JSON contract</kind>
+      <signature>{ "content": [], "pageable": {...}, "totalElements": 100, "totalPages": 5 }</signature>
+      <path>Standard Spring Data Page interface</path>
+    </api>
+    <api>
+      <name>Global Exception Handler</name>
+      <kind>class interface</kind>
+      <signature>@RestControllerAdvice class with @ExceptionHandler methods returning ResponseEntity&lt;ErrorResponse&gt;</signature>
+      <path>backend/src/main/java/com/ultrabms/exception/GlobalExceptionHandler.java</path>
+    </api>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing approach follows three levels: L1 (Unit) - test individual methods in exception handlers, filters, and validators using JUnit 5 + Mockito; L2 (Integration) - test controller endpoints with mocked services using @WebMvcTest; L3 (Manual) - verify via Swagger UI, curl, browser, and Next.js dev server. Backend uses JUnit 5, Mockito, AssertJ for assertions. Manual verification required for Swagger UI loading, CORS preflight requests, and actuator endpoints. No formal test coverage target for Story 1.5 as it's infrastructure code, but aim for testing all exception handler methods and validation logic.
+    </standards>
+    <locations>
+      backend/src/test/java/com/ultrabms/exception/
+      backend/src/test/java/com/ultrabms/controller/
+      backend/src/test/java/com/ultrabms/filter/
+    </locations>
+    <ideas>
+      <test id="AC2" description="Test global exception handler catches EntityNotFoundException and returns 404 with proper ErrorResponse JSON format including requestId">
+        Trigger EntityNotFoundException → verify status=404, message populated, path included, requestId is UUID
+      </test>
+      <test id="AC2" description="Test validation exception returns 400 with field-level error details">
+        Send invalid request body → verify status=400, field errors listed with field name and error message
+      </test>
+      <test id="AC3" description="Test error response includes correlation ID">
+        Trigger any exception → verify ErrorResponse contains requestId field with valid UUID
+      </test>
+      <test id="AC6" description="Test health check endpoint returns 200 OK with UP status">
+        GET /api/health → verify response: {"status": "UP", "timestamp": "..."}
+      </test>
+      <test id="AC6" description="Test Swagger UI accessible at /swagger-ui.html">
+        Manual: Load http://localhost:8080/swagger-ui.html in browser → verify page loads with API docs
+      </test>
+      <test id="AC7" description="Test CORS allows localhost:3000 origin">
+        Manual: From Next.js dev server (localhost:3000), fetch() to backend API → verify no CORS errors
+      </test>
+      <test id="AC7" description="Test CORS preflight request succeeds">
+        OPTIONS /api/v1/users → verify Access-Control-Allow-Origin header present
+      </test>
+      <test id="AC4" description="Test pagination query parameters work">
+        GET /api/v1/users?page=0&amp;size=10&amp;sort=createdAt,desc → verify response includes pageable, totalElements, totalPages
+      </test>
+      <test id="AC5" description="Test @Valid annotation triggers validation">
+        POST /api/v1/users with invalid email → verify MethodArgumentNotValidException caught, returns 400 with field errors
+      </test>
+      <test id="AC1" description="Test request logging filter logs HTTP method, URI, status code">
+        Make any API request → check logs contain: method, URI, status code, execution time
+      </test>
+    </ideas>
+  </tests>
+</story-context>

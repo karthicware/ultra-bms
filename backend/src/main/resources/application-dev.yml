@@ -44,10 +44,40 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,caches # Expose cache metrics endpoint
+        include: health,info,metrics,caches # Expose health, info, metrics, and cache endpoints
+      base-path: /actuator # Base path for actuator endpoints (default)
   metrics:
     enable:
       cache: true # Enable cache metrics
+  info:
+    env:
+      enabled: true # Enable environment info in /actuator/info
+
+# Application metadata for /api/info endpoint
+application:
+  version: 1.0.0
+  build-time: 2025-11-13T08:00:00Z
+
+# SpringDoc OpenAPI configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs # OpenAPI JSON spec path
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html # Swagger UI path
+    enabled: true
+    try-it-out-enabled: true # Enable "Try it out" button
+    operations-sorter: method # Sort by HTTP method
+    tags-sorter: alpha # Sort tags alphabetically
+    doc-expansion: none # Don't expand operations by default
+  show-actuator: false # Don't show actuator endpoints in Swagger UI
+
+# CORS Configuration
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:3000  # Next.js development server
+      - http://localhost:3001  # Alternative frontend port
 
 logging:
   level:
