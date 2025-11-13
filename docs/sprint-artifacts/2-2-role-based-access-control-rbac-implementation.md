@@ -1,6 +1,8 @@
 # Story 2.2: Role-Based Access Control (RBAC) Implementation
 
-Status: drafted
+Status: ready-for-dev
+Context File: docs/sprint-artifacts/stories/2-2-role-based-access-control-rbac-implementation.context.xml
+Context Generated: 2025-11-13
 
 ## Story
 

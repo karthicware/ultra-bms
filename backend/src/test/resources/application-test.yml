@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -8,9 +8,28 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
   h2:
     console:
       enabled: false
+  flyway:
+    enabled: false  # Disable Flyway for tests, use JPA schema generation instead
+  cache:
+    type: jcache
+    jcache:
+      config: classpath:ehcache.xml
+
+# JWT Configuration (Test)
+jwt:
+  secret: dGhpc0lzQVRlc3RTZWNyZXRLZXlGb3JUZXN0aW5nT25seU1pbmltdW0yNTZCaXRz
+  access-token-expiration: 3600000
+  refresh-token-expiration: 604800000
+
+# Cookie Configuration (Test)
+cookie:
+  secure: false
 
 logging:
   level:

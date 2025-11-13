@@ -1,0 +1,71 @@
+# Production Configuration for Ultra BMS
+# This configuration is activated when running with spring.profiles.active=prod
+
+spring:
+  application:
+    name: ultra-bms
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/ultrabms_prod}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Never auto-create schema in production
+    show-sql: false        # Disable SQL logging in production
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+# JWT Configuration (Production)
+# CRITICAL: Set JWT_SECRET environment variable with strong secret (min 256 bits)
+# Generate using: openssl rand -base64 32
+jwt:
+  secret: ${JWT_SECRET}  # MUST be provided via environment variable
+  access-token-expiration: 3600000      # 1 hour in milliseconds
+  refresh-token-expiration: 604800000   # 7 days in milliseconds
+
+# Cookie Configuration (Production)
+cookie:
+  secure: true  # REQUIRED: Cookies sent only over HTTPS in production
+
+# CORS Configuration (Production)
+app:
+  cors:
+    allowed-origins:
+      - ${FRONTEND_URL}  # Set via environment variable (e.g., https://ultrabms.com)
+
+# Actuator Configuration (Production)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging Configuration (Production)
+logging:
+  level:
+    root: INFO
+    com.ultrabms: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/ultra-bms/application.log
+    max-size: 10MB
+    max-history: 30

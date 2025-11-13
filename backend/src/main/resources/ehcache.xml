@@ -64,10 +64,22 @@
         <key-type>java.lang.String</key-type>
         <value-type>java.lang.Object</value-type>
         <expiry>
-            <ttl unit="hours">12</ttl>
+            <ttl unit="minutes">12</ttl>
         </expiry>
         <resources>
             <heap unit="entries">10000</heap>
+        </resources>
+    </cache>
+
+    <!-- Login Attempts Cache: Track failed login attempts for rate limiting -->
+    <cache alias="loginAttemptsCache">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.lang.Integer</value-type>
+        <expiry>
+            <ttl unit="minutes">15</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">1000</heap>
         </resources>
     </cache>
 

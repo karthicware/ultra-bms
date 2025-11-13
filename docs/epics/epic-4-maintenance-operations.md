@@ -1,8 +1,8 @@
-## Epic 4: Maintenance Operations
+# Epic 4: Maintenance Operations
 
 **Goal:** Implement straightforward maintenance management with work order creation, preventive maintenance scheduling, simple vendor assignment, and job completion tracking to ensure efficient property maintenance.
 
-### Story 4.1: Work Order Creation and Management
+## Story 4.1: Work Order Creation and Management
 
 As a property manager,
 I want to create and manage work orders from multiple sources,
@@ -83,7 +83,7 @@ So that all maintenance needs are tracked and assigned efficiently.
 - Send email notifications on creation, assignment, and status changes
 - Link tenant maintenance requests to work orders automatically
 
-### Story 4.2: Preventive Maintenance Scheduling
+## Story 4.2: Preventive Maintenance Scheduling
 
 As a property manager,
 I want to set up recurring preventive maintenance schedules,
@@ -158,7 +158,7 @@ So that equipment is maintained proactively and failures are prevented.
 - Send reminder emails 3 days before PM due date
 - Add validation: end date must be after start date
 
-### Story 4.3: Work Order Assignment and Vendor Coordination
+## Story 4.3: Work Order Assignment and Vendor Coordination
 
 As a maintenance supervisor,
 I want to assign work orders to internal staff or external vendors,
@@ -208,7 +208,7 @@ So that jobs are distributed efficiently.
 - Track assignment history in work_order_assignments table
 - Frontend: Use shadcn/ui Select component for assignee dropdown
 
-### Story 4.4: Job Progress Tracking and Completion
+## Story 4.4: Job Progress Tracking and Completion
 
 As a maintenance staff or vendor,
 I want to update job progress and mark work as complete,
@@ -269,4 +269,3 @@ So that work completion is tracked.
 - Frontend: Use shadcn/ui Form components with file upload
 
 ---
-

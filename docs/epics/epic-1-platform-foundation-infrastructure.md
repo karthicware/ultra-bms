@@ -333,3 +333,5 @@ So that APIs follow consistent patterns and errors are handled gracefully.
 - Document API contracts with examples
 - Use DTOs to avoid exposing entity structure directly
 - Implement API versioning strategy (/v1, /v2) from the start
+
+---

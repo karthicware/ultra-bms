@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +36,9 @@ public class AuthController {
     private static final int REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 
     private final AuthService authService;
+
+    @Value("${cookie.secure:false}")
+    private boolean cookieSecure;
 
     /**
      * Registers a new user in the system.
@@ -230,7 +234,7 @@ public class AuthController {
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // Set to true in production with HTTPS
+        cookie.setSecure(cookieSecure); // Environment-specific: false for dev, true for prod
         cookie.setPath("/api/v1/auth");
         cookie.setMaxAge(REFRESH_TOKEN_MAX_AGE);
         cookie.setAttribute("SameSite", "Strict");
@@ -245,7 +249,7 @@ public class AuthController {
     private void clearRefreshTokenCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, "");
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // Set to true in production with HTTPS
+        cookie.setSecure(cookieSecure); // Environment-specific: false for dev, true for prod
         cookie.setPath("/api/v1/auth");
         cookie.setMaxAge(0); // Expire immediately
         response.addCookie(cookie);

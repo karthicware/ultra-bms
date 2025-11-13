@@ -1,8 +1,8 @@
-## Epic 9: Communication & Notifications
+# Epic 9: Communication & Notifications
 
 **Goal:** Implement email-based notification system and announcement management to keep all stakeholders informed.
 
-### Story 9.1: Email Notification System
+## Story 9.1: Email Notification System
 
 As a system administrator,
 I want an automated email notification system,
@@ -122,7 +122,7 @@ So that users are informed of important events and updates via email.
 - Consider using AWS SES as alternative to Gmail (future enhancement)
 - Add email preview feature (send test email)
 
-### Story 9.2: Announcement Management
+## Story 9.2: Announcement Management
 
 As a property manager,
 I want to create and send announcements to tenants,
@@ -216,132 +216,5 @@ So that I can communicate important information to residents.
 - Add confirmation dialog for sending to all tenants
 - Display recipient count before sending
 - Optional: Add in-app notification banner for high-priority announcements
-
----
-
-## FR Coverage Matrix
-
-This section validates that ALL functional requirements from the PRD are covered by the epic and story breakdown.
-
-| FR ID | Functional Requirement | Epic(s) | Story(ies) |
-|-------|------------------------|---------|------------|
-| **FR1** | User Authentication & Access Control with password recovery and role-based access | Epic 2 | Story 2.1, 2.2, 2.3, 2.4 |
-| **FR2** | Executive and Operational Dashboards with KPIs, analytics, and real-time insights | Epic 8 | Story 8.1, 8.2 |
-| **FR3** | Tenant Onboarding with lease terms, parking allocation, document upload, and email notifications (including pre-tenancy lead management and quotations) | Epic 3 | Story 3.1, 3.3 |
-| **FR4** | Tenant Lifecycle Management including portal access, maintenance requests, payment history | Epic 3 | Story 3.4, 3.5 |
-| **FR5** | Tenant Self-Service Portal for maintenance requests, document access, announcements | Epic 3, Epic 9 | Story 3.4, 3.5, 9.2 |
-| **FR6** | Work Order Creation and Management with priority levels, photo attachments, assignment | Epic 4 | Story 4.1, 4.3 |
-| **FR7** | Preventive Maintenance Scheduling with recurring schedules and automated generation | Epic 4 | Story 4.2 |
-| **FR8** | Job Progress Tracking with status updates, time logging, photo uploads | Epic 4 | Story 4.4 |
-| **FR9** | Vendor Registration and Profile Management with service categories, rates, documents | Epic 5 | Story 5.1, 5.2 |
-| **FR10** | Vendor Document and License Management with expiry tracking and auto-suspension | Epic 5 | Story 5.2 |
-| **FR11** | Vendor Performance Tracking with ratings, job completion metrics, rankings | Epic 5 | Story 5.3 |
-| **FR12** | Revenue Management with rent invoicing, payment recording, overdue tracking | Epic 6 | Story 6.1 |
-| **FR13** | Expense Management with vendor payments, work order cost tracking, batch processing | Epic 6 | Story 6.2 |
-| **FR14** | PDC Management with registration, deposit tracking, bounce handling, replacement workflow | Epic 6 | Story 6.3 |
-| **FR15** | Financial Reporting with P&L, cash flow, AR aging, revenue/expense breakdowns | Epic 6 | Story 6.4 |
-| **FR16** | Asset Registry and Tracking with maintenance history, warranty tracking, document storage | Epic 7 | Story 7.1 |
-| **FR17** | Document Management System with version control, expiry tracking, access control | Epic 7 | Story 7.2 |
-| **FR18** | Compliance and Inspection Tracking with regulatory requirements, schedules, violations | Epic 7 | Story 7.3 |
-| **FR19** | Parking Management integrated with tenant onboarding (Mulkiya upload, spot allocation) | Epic 3 | Story 3.2 |
-| **FR20** | Email Notification System and Announcement Management for stakeholder communication | Epic 9 | Story 9.1, 9.2 |
-
-**Coverage Summary:**
-- **Total FRs:** 20
-- **FRs Covered:** 20
-- **Coverage Rate:** 100%
-
-All functional requirements from the PRD have been decomposed into epics and stories with detailed acceptance criteria.
-
----
-
-## Epic Breakdown Summary
-
-### Epic 1: Platform Foundation
-**Stories:** 5
-**Focus:** Project setup, database, API structure, caching, core domain models
-**Status:** Simplified per user feedback (local PostgreSQL, Ehcache, no CI/CD, no AWS initially)
-
-### Epic 2: Authentication & User Management
-**Stories:** 5
-**Focus:** JWT authentication, RBAC, password recovery, session management, security
-**Status:** Simplified (removed MFA, SSO, vendor role is basic)
-
-### Epic 3: Tenant Management
-**Stories:** 5
-**Focus:** Lead management and quotations, property setup, tenant onboarding with parking/Mulkiya, tenant portal, maintenance requests
-**Status:** Revised (added leads and quotations feature, parking optional, physical documents, email-only notifications, photos only)
-
-### Epic 4: Maintenance Operations
-**Stories:** 4
-**Focus:** Work orders, preventive maintenance, vendor assignment, progress tracking
-**Status:** Significantly simplified (removed task checklists, effectiveness metrics, vendor portal, auto-assignment, quality inspection, detailed time logging)
-
-### Epic 5: Vendor Management
-**Stories:** 3
-**Focus:** Vendor registration, document/license management, performance tracking
-**Status:** Simplified approach without vendor portal
-
-### Epic 6: Financial Management
-**Stories:** 4
-**Focus:** Rent invoicing, payments, expenses, PDC management, financial reporting
-**Status:** Comprehensive with automated invoicing and PDC workflows
-
-### Epic 7: Asset & Compliance Management
-**Stories:** 3
-**Focus:** Asset registry, document management, compliance/inspection tracking
-**Status:** Integrated asset tracking with maintenance work orders
-
-### Epic 8: Dashboard & Reporting
-**Stories:** 2
-**Focus:** Executive dashboard, role-specific operational dashboards
-**Status:** Comprehensive KPIs and analytics across all modules
-
-### Epic 9: Communication & Notifications
-**Stories:** 2
-**Focus:** Email notification system, announcement management
-**Status:** Email-only as per user requirements (no SMS, no push)
-
-**Total Stories:** 33 stories across 9 epics
-
----
-
-## Implementation Notes
-
-### Key Simplifications Made
-Based on user feedback, the following simplifications were applied:
-
-1. **Infrastructure:** Local PostgreSQL instead of RDS, Ehcache instead of Redis, no load balancer
-2. **Authentication:** No MFA, no SSO implementation
-3. **Tenant Management:** Physical documents (no digital signatures), email-only notifications, parking Mulkiya as single document
-4. **Maintenance:** Removed vendor portal, auto-assignment rules, vendor acceptance workflow, quality inspection, detailed time tracking with start/end times, task checklists, effectiveness metrics
-5. **Communication:** Email-only (no SMS, no push notifications)
-
-### Technology Stack Summary
-- **Frontend:** Next.js 14+, TypeScript, shadcn/ui, Tailwind CSS, React Hook Form, Zod
-- **Backend:** Java 17, Spring Boot 3.x, Maven, Spring Security, Spring Data JPA
-- **Database:** PostgreSQL 15+ (local for development)
-- **Caching:** Ehcache 3.x
-- **Email:** Gmail API
-- **Deployment:** Monolithic application (AWS UAE deferred to final phase)
-- **Timezone:** All system dates and times in UAE timezone (Gulf Standard Time - GST, UTC+4)
-
-### Story Characteristics
-- **Vertically sliced:** Each story delivers complete functionality
-- **Sequentially ordered:** No forward dependencies
-- **BDD acceptance criteria:** Given/When/Then/And format throughout
-- **Implementation-ready:** Detailed technical notes and prerequisites for each story
-
-### Next Steps in BMad Method
-1. **UX Design Workflow:** Add interaction details to story acceptance criteria
-2. **Architecture Workflow:** Add technical decisions and data models to story technical notes
-3. **Phase 4 Implementation:** Execute stories with full context from PRD + epics + UX + Architecture
-
----
-
-**Document Generated:** November 2025
-**Project:** Ultra BMS - Building Maintenance Software Platform
-**Method:** BMad Method - Epic and Story Decomposition Workflow
-**Status:** ✅ Complete - Ready for UX Design Workflow
 
 ---

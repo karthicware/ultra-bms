@@ -1,8 +1,8 @@
-## Epic 7: Asset & Compliance Management
+# Epic 7: Asset & Compliance Management
 
 **Goal:** Implement asset tracking and compliance management to maintain equipment records and ensure regulatory compliance.
 
-### Story 7.1: Asset Registry and Tracking
+## Story 7.1: Asset Registry and Tracking
 
 As a property manager,
 I want to maintain an asset registry for property equipment,
@@ -85,7 +85,7 @@ So that I can track maintenance history and warranty information.
 - Display asset QR code for easy mobile access (optional)
 - Track asset depreciation using straight-line method (optional)
 
-### Story 7.2: Document Management System
+## Story 7.2: Document Management System
 
 As a property manager,
 I want a centralized document repository,
@@ -188,7 +188,7 @@ So that all property-related documents are organized and easily accessible.
 - Frontend: Use shadcn/ui Dialog for document preview modal
 - Implement drag-and-drop file upload
 
-### Story 7.3: Compliance and Inspection Tracking
+## Story 7.3: Compliance and Inspection Tracking
 
 As a property manager,
 I want to track regulatory compliance and inspections,
@@ -306,4 +306,3 @@ So that all properties meet legal requirements and avoid violations.
 - Generate compliance reports for property audits
 
 ---
-

@@ -1,8 +1,8 @@
-## Epic 8: Dashboard & Reporting
+# Epic 8: Dashboard & Reporting
 
 **Goal:** Implement comprehensive dashboards and reporting to provide real-time insights into operations, finances, and property performance.
 
-### Story 8.1: Executive Summary Dashboard
+## Story 8.1: Executive Summary Dashboard
 
 As an executive or property manager,
 I want an executive dashboard with key performance indicators,
@@ -97,7 +97,7 @@ So that I can quickly understand the overall business health and identify issues
 - Calculate KPIs server-side for accuracy
 - Add drill-down capability for each KPI (click to see details)
 
-### Story 8.2: Operational Dashboards
+## Story 8.2: Operational Dashboards
 
 As a department user (maintenance supervisor, finance manager),
 I want role-specific operational dashboards,
@@ -234,4 +234,3 @@ So that I can monitor and manage my area of responsibility effectively.
 - Add customization: users can hide/show dashboard widgets (optional)
 
 ---
-

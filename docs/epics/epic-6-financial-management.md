@@ -1,8 +1,8 @@
-## Epic 6: Financial Management
+# Epic 6: Financial Management
 
 **Goal:** Implement comprehensive financial management including rent collection, expense tracking, PDC management, and financial reporting to ensure accurate financial operations.
 
-### Story 6.1: Rent Invoicing and Payment Management
+## Story 6.1: Rent Invoicing and Payment Management
 
 As a finance manager,
 I want to generate rent invoices and track payments,
@@ -106,7 +106,7 @@ So that rental income is collected efficiently and accurately.
 - Implement print-friendly invoice layout
 - Support multiple payment methods including PDC (link to Story 6.3)
 
-### Story 6.2: Expense Management and Vendor Payments
+## Story 6.2: Expense Management and Vendor Payments
 
 As a finance manager,
 I want to track expenses and process vendor payments,
@@ -196,7 +196,7 @@ So that all costs are recorded and vendors are paid on time.
 - Calculate month-over-month expense growth
 - Support expense approval workflow (optional enhancement)
 
-### Story 6.3: Post-Dated Cheque (PDC) Management
+## Story 6.3: Post-Dated Cheque (PDC) Management
 
 As a finance manager,
 I want to manage post-dated cheques from tenants,
@@ -310,7 +310,7 @@ So that I can track cheque deposits and handle bounced cheques.
 - Display PDC calendar view showing all upcoming cheque dates
 - Implement bulk deposit action (mark multiple PDCs as deposited)
 
-### Story 6.4: Financial Reporting and Analytics
+## Story 6.4: Financial Reporting and Analytics
 
 As a finance manager,
 I want to view financial reports and analytics,
@@ -415,4 +415,3 @@ So that I can understand income, expenses, and profitability.
 - Support custom date range selection
 
 ---
-

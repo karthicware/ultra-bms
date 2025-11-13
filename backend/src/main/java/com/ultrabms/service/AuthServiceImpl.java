@@ -44,7 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuditLogRepository auditLogRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final LoginAttemptService loginAttemptService;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
     @Transactional

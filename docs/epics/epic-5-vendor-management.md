@@ -1,8 +1,8 @@
-## Epic 5: Vendor Management
+# Epic 5: Vendor Management
 
 **Goal:** Implement vendor registration, document management, and performance tracking to maintain a reliable network of service providers.
 
-### Story 5.1: Vendor Registration and Profile Management
+## Story 5.1: Vendor Registration and Profile Management
 
 As a property manager,
 I want to register and manage vendor profiles,
@@ -80,7 +80,7 @@ So that I have a reliable network of service providers for maintenance work.
 - Calculate rating from work order feedback (average of all ratings)
 - Track totalJobsCompleted counter (increment on work order completion)
 
-### Story 5.2: Vendor Document and License Management
+## Story 5.2: Vendor Document and License Management
 
 As a property manager,
 I want to track vendor licenses and insurance documents,
@@ -150,7 +150,7 @@ So that I ensure compliance and vendor qualifications are current.
 - Frontend: Use shadcn/ui Badge for expiry status colors
 - Add calendar view for document expiry dates
 
-### Story 5.3: Vendor Performance Tracking and Rating
+## Story 5.3: Vendor Performance Tracking and Rating
 
 As a property manager,
 I want to track vendor performance and ratings,
@@ -209,4 +209,3 @@ So that I can make informed decisions when assigning work orders.
 - Add vendor comparison feature (compare multiple vendors side-by-side)
 
 ---
-

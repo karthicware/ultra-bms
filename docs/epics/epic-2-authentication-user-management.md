@@ -410,3 +410,5 @@ export function middleware(request: NextRequest) {
 - Implement proper TypeScript types for User, AuthState, etc.
 - Add E2E tests for authentication flows (Playwright/Cypress)
 - Document authentication flow diagrams for developers
+
+---
