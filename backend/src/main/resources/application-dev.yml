@@ -13,19 +13,45 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update # Auto-creates/updates schema in dev
+      ddl-auto: validate # Validate schema against entities (Flyway handles migrations)
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy # Use snake_case for DB columns
     show-sql: true # Log all SQL statements
     properties:
       hibernate:
         format_sql: true # Format SQL for readability
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  # Caching Configuration
+  cache:
+    type: jcache # Use JCache (JSR-107) provider
+    jcache:
+      config: classpath:ehcache.xml # Path to Ehcache configuration
+
+  jmx:
+    enabled: true # Enable JMX for cache monitoring (default)
+
+  # Security Configuration (Dev Only - Permit Actuator endpoints)
+  security:
+    user:
+      name: dev
+      password: dev
+
 management:
   endpoint:
     health:
       show-details: always # Show database health status
+  endpoints:
+    web:
+      exposure:
+        include: health,info,caches # Expose cache metrics endpoint
+  metrics:
+    enable:
+      cache: true # Enable cache metrics
 
 logging:
   level:
     com.ultrabms: DEBUG
     org.springframework.web: DEBUG
+    org.springframework.cache: DEBUG # Cache operation logging for dev
+    org.ehcache: INFO # Ehcache initialization logging

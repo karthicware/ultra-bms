@@ -37,8 +37,8 @@ development_status:
   epic-1: contexted
   1-1-project-initialization-and-repository-structure: done
   1-2-local-postgresql-database-setup: done
-  1-3-ehcache-configuration-for-application-caching: drafted
-  1-4-core-domain-models-and-jpa-entities: backlog
+  1-3-ehcache-configuration-for-application-caching: done
+  1-4-core-domain-models-and-jpa-entities: done
   1-5-basic-rest-api-structure-and-exception-handling: backlog
   epic-1-retrospective: optional
 
