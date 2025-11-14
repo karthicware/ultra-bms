@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -54,6 +55,7 @@ public class UserController {
      * @return page of users
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('user:read') or hasRole('SUPER_ADMIN')")
     @Operation(
             summary = "List all users",
             description = "Retrieves all users with pagination and sorting support. " +
@@ -81,6 +83,7 @@ public class UserController {
      * @return user details
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('user:read') or hasRole('SUPER_ADMIN')")
     @Operation(
             summary = "Get user by ID",
             description = "Retrieves a single user by their unique identifier (UUID)."
@@ -123,9 +126,10 @@ public class UserController {
      * @return created user with generated ID
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('user:create') or hasRole('SUPER_ADMIN')")
     @Operation(
             summary = "Create a new user",
-            description = "Creates a new user account. Email must be unique across the system."
+            description = "Creates a new user account. Email must be unique across the system. Requires user:create permission."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -174,9 +178,10 @@ public class UserController {
      * @return updated user
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('user:update') or hasRole('SUPER_ADMIN')")
     @Operation(
             summary = "Update user",
-            description = "Updates an existing user. All fields are required (full update)."
+            description = "Updates an existing user. All fields are required (full update). Requires user:update permission."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -212,9 +217,10 @@ public class UserController {
      * @return 204 No Content
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('user:delete') or hasRole('SUPER_ADMIN')")
     @Operation(
             summary = "Delete user",
-            description = "Soft deletes a user by setting active=false. The user record is retained for audit purposes."
+            description = "Soft deletes a user by setting active=false. The user record is retained for audit purposes. Requires user:delete permission."
     )
     @ApiResponses(value = {
             @ApiResponse(
