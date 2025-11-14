@@ -1,6 +1,7 @@
 package com.ultrabms.security;
 
 import com.ultrabms.repository.TokenBlacklistRepository;
+import com.ultrabms.util.TokenHashUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,9 +17,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Validate token
                 if (jwtTokenProvider.validateToken(token)) {
                     // Check if token is blacklisted
-                    String tokenHash = hashToken(token);
+                    String tokenHash = TokenHashUtil.hashToken(token);
                     if (tokenBlacklistRepository.existsByTokenHash(tokenHash)) {
                         log.warn("Attempted to use blacklisted token");
                     } else {
@@ -100,27 +98,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
-    }
-
-    /**
-     * Hashes a token using SHA-256.
-     *
-     * @param token token to hash
-     * @return hashed token as hex string
-     */
-    private String hashToken(String token) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
-            }
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not available", e);
-        }
     }
 }

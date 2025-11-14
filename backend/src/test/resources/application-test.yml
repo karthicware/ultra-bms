@@ -20,6 +20,17 @@ spring:
     type: jcache
     jcache:
       config: classpath:ehcache.xml
+  mail:
+    host: localhost
+    port: 25
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
 
 # JWT Configuration (Test)
 jwt:
@@ -30,6 +41,11 @@ jwt:
 # Cookie Configuration (Test)
 cookie:
   secure: false
+
+# Application Configuration (Test)
+app:
+  frontend-url: http://localhost:3000
+  support-email: support@ultrabms.com
 
 logging:
   level:

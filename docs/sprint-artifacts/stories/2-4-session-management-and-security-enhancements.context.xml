@@ -1,0 +1,361 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>4</storyId>
+    <title>Session Management and Security Enhancements</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-14</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-4-session-management-and-security-enhancements.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>system administrator</asA>
+    <iWant>robust session management and security controls</iWant>
+    <soThat>user sessions are secure and properly managed</soThat>
+    <tasks>
+      - Task 1: Create Session Tables Database Schema (AC: #2, #5)
+      - Task 2: Create Token Blacklist Database Schema (AC: #5)
+      - Task 3: Create Session JPA Entities and Repositories (AC: #2, #5)
+      - Task 4: Configure Session Timeout Properties (AC: #1)
+      - Task 5: Update JwtTokenProvider with Configurable Expiration (AC: #1)
+      - Task 6: Implement Session Service (AC: #3, #8)
+      - Task 7: Create Session Activity Filter (AC: #4)
+      - Task 8: Update Token Blacklist Check in JwtAuthenticationFilter (AC: #5)
+      - Task 9: Implement Logout Endpoint (AC: #6)
+      - Task 10: Implement Logout All Devices Endpoint (AC: #7)
+      - Task 11: Implement Active Sessions Endpoints (AC: #8)
+      - Task 12: Configure Security Headers (AC: #9)
+      - Task 13: Configure CSRF Protection (AC: #10)
+      - Task 14: Update AuthService to Create Sessions on Login (AC: #3)
+      - Task 15: Implement Session Cleanup Scheduled Job (AC: #11)
+      - Task 16: Create Frontend Token Refresh Interceptor (AC: #12)
+      - Task 17: Create Session Expiry Warning Component (AC: #13)
+      - Task 18: Create Active Sessions Management UI (AC: #14)
+      - Task 19: Test Session Management Flow End-to-End (AC: All)
+      - Task 20: Update API Documentation (AC: All)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    AC1: Session Timeout Configuration - Configure session timeouts in application.yml: access token 1 hour, refresh token 7 days, idle timeout 30 min, absolute timeout 12 hours.
+
+    AC2: Session Tracking Database Schema - Create user_sessions table with: id, user_id, session_id, access_token_hash, refresh_token_hash, created_at, last_activity_at, expires_at, ip_address, user_agent, device_type, is_active. Enforce max 3 concurrent sessions per user.
+
+    AC3: Session Creation on Login - Create UserSession record on login with sessionId, hashed tokens, IP address, User-Agent, device type. Enforce max 3 concurrent sessions (delete oldest if exceeded).
+
+    AC4: Session Activity Tracking - Create SessionActivityFilter to update last_activity_at on each request. Check idle timeout (30 min) and absolute timeout (12 hours). Invalidate expired sessions.
+
+    AC5: Token Blacklist Implementation - Create token_blacklist table with: id, token_hash, token_type (ACCESS/REFRESH), expires_at, reason. Check blacklist during JWT validation.
+
+    AC6: Logout Endpoint Implementation - POST /api/v1/auth/logout marks session inactive, adds tokens to blacklist, clears refresh token cookie, logs logout event.
+
+    AC7: Logout All Devices Endpoint - POST /api/v1/auth/logout-all invalidates all user sessions except current, adds all tokens to blacklist.
+
+    AC8: Active Sessions Management Endpoint - GET /api/v1/auth/sessions returns active sessions. POST /api/v1/auth/sessions/{sessionId}/revoke revokes individual session.
+
+    AC9: Security Headers Configuration - Configure headers: X-Frame-Options: DENY, X-Content-Type-Options: nosniff, X-XSS-Protection, HSTS, CSP.
+
+    AC10: CSRF Protection Configuration - Enable CSRF with CookieCsrfTokenRepository. Frontend reads XSRF-TOKEN cookie and sends in X-XSRF-TOKEN header. Exclude auth endpoints.
+
+    AC11: Scheduled Session Cleanup Job - Hourly job deletes expired sessions, expired blacklist entries, old audit logs (90 days retention).
+
+    AC12: Frontend Token Refresh Implementation - Axios interceptor handles 401 by calling /api/v1/auth/refresh, retries original request with new token.
+
+    AC13: Session Expiry Warning UI - Modal shows 5 minutes before expiry with "Stay Logged In" and "Logout" buttons. Countdown timer.
+
+    AC14: Account Settings Session Management UI - /settings/security page shows active sessions table with device, browser, IP, last active. Revoke and logout-all buttons.
+
+    AC15: IP-Based Anomaly Detection (Optional) - Track IP addresses. Email notification on new IP login with link to revoke session.
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>3.1.1 User Authentication</section>
+        <snippet>Multi-factor authentication, single sign-on support, password recovery workflow, session management and timeout controls, role-based access control. Specifies session timeout requirements and security controls.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>5.4 Security Requirements</section>
+        <snippet>Data encryption at rest (AES-256), TLS 1.3 for data in transit, OAuth 2.0 with JWT tokens, audit logging, backup strategy, disaster recovery with RPO &lt; 1 hour and RTO &lt; 4 hours.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Security Architecture - JWT-Based Authentication</section>
+        <snippet>Access token 1 hour expiry, refresh token 7 days expiry, token storage in HttpOnly cookies, HS256 algorithm. Implements stateless JWT authentication with Spring Security.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Security Architecture - Session Management</section>
+        <snippet>Database-backed sessions in user_sessions table tracking IP, User-Agent, device type. Idle timeout 30 min, absolute timeout 12 hours. Max 3 concurrent sessions per user.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>API Security - Token Blacklisting</section>
+        <snippet>Invalidated tokens stored in token_blacklist table with expiration for cleanup. Security headers (X-Frame-Options, HSTS, CSP, X-XSS-Protection) for defense-in-depth.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Database Naming Conventions</section>
+        <snippet>Tables: snake_case plural (user_sessions, token_blacklist). Columns: snake_case (last_activity_at). Foreign keys: {table}_id. Indexes: idx_{table}_{column}.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>REST API Conventions</section>
+        <snippet>Base URL /api/v1. Endpoints: plural nouns, kebab-case. Consistent response format with success, data/error, timestamp. Status codes: 200 OK, 201 Created, 401 Unauthorized, 403 Forbidden.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-2-authentication-user-management.md</path>
+        <title>Epic 2: Authentication & User Management</title>
+        <section>Story 2.4: Session Management and Security Enhancements</section>
+        <snippet>Full story details with 15 acceptance criteria covering session timeout configuration, session tracking database, logout functionality, security headers, CSRF protection, scheduled cleanup jobs, and frontend session management UI.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/controller/AuthController.java</path>
+        <kind>controller</kind>
+        <symbol>AuthController</symbol>
+        <lines>1-100+</lines>
+        <reason>Existing authentication controller with register and login endpoints. Need to add logout, logout-all, and active sessions endpoints for AC6, AC7, AC8.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/security/JwtTokenProvider.java</path>
+        <kind>service</kind>
+        <symbol>JwtTokenProvider</symbol>
+        <lines>1-80+</lines>
+        <reason>Generates and validates JWT tokens. Need to update with configurable expiration from properties and add methods to extract exp claim for AC1.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/security/SecurityConfig.java</path>
+        <kind>config</kind>
+        <symbol>SecurityConfig</symbol>
+        <lines>all</lines>
+        <reason>Spring Security configuration. Need to add security headers (AC9), CSRF protection (AC10), and register SessionActivityFilter (AC4).</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/security/JwtAuthenticationFilter.java</path>
+        <kind>filter</kind>
+        <symbol>JwtAuthenticationFilter</symbol>
+        <lines>all</lines>
+        <reason>JWT validation filter. Need to add token blacklist check after JWT signature validation for AC5.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/AuthService.java</path>
+        <kind>service</kind>
+        <symbol>AuthService</symbol>
+        <lines>all</lines>
+        <reason>Handles login logic. Need to integrate sessionService.createSession() after successful authentication for AC3.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/User.java</path>
+        <kind>entity</kind>
+        <symbol>User</symbol>
+        <lines>all</lines>
+        <reason>User entity with roles and permissions. Referenced by UserSession entity for session tracking.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/TokenBlacklist.java</path>
+        <kind>entity</kind>
+        <symbol>TokenBlacklist</symbol>
+        <lines>all</lines>
+        <reason>Existing token blacklist entity. May need updates to support session management (reason field for logout types).</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/resources/application.yml</path>
+        <kind>configuration</kind>
+        <symbol>N/A</symbol>
+        <lines>all</lines>
+        <reason>Application configuration. Need to add session timeout properties: idle-timeout, absolute-timeout, max-concurrent-sessions for AC1.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/resources/db/migration/V13__create_password_reset_tokens_table.sql</path>
+        <kind>migration</kind>
+        <symbol>N/A</symbol>
+        <lines>all</lines>
+        <reason>Example migration pattern. V15 and V16 will follow same structure for user_sessions and updates to token_blacklist.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/lib/api.ts</path>
+        <kind>api-client</kind>
+        <symbol>N/A</symbol>
+        <lines>all</lines>
+        <reason>Axios API client. Need to add response interceptor for automatic token refresh on 401 responses for AC12.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/package.json</path>
+        <kind>configuration</kind>
+        <symbol>N/A</symbol>
+        <lines>20-35</lines>
+        <reason>Frontend dependencies: Next.js 16, React 19, Axios, React Hook Form, Zod, shadcn/ui components. All necessary libraries already installed.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/pom.xml</path>
+        <kind>configuration</kind>
+        <symbol>N/A</symbol>
+        <lines>32-80</lines>
+        <reason>Backend dependencies: Spring Boot 3.4.0, Spring Security, Spring Data JPA, JWT (jjwt), PostgreSQL, Flyway, Spring Mail. All necessary libraries already included.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <backend>
+        <framework name="Spring Boot" version="3.4.0" />
+        <library name="Spring Security" version="6.x" usage="JWT authentication, RBAC, security filters" />
+        <library name="Spring Data JPA" version="3.4.x" usage="Database operations, repositories" />
+        <library name="jjwt (Java JWT)" version="latest" usage="JWT token generation and validation" />
+        <library name="PostgreSQL Driver" version="latest" usage="Database connectivity" />
+        <library name="Flyway" version="latest" usage="Database migrations" />
+        <library name="Spring Boot Actuator" version="included" usage="Health checks, metrics" />
+        <library name="Spring Mail" version="included" usage="Email notifications" />
+        <library name="Lombok" version="latest" usage="Reduce boilerplate code" />
+        <library name="BCrypt" version="included in Spring Security" usage="Password hashing, token hashing" />
+      </backend>
+      <frontend>
+        <framework name="Next.js" version="16.0.2" />
+        <library name="React" version="19.2.0" usage="UI framework" />
+        <library name="TypeScript" version="5.x" usage="Type safety" />
+        <library name="Axios" version="1.13.2" usage="HTTP client with interceptors" />
+        <library name="React Hook Form" version="7.66.0" usage="Form validation" />
+        <library name="Zod" version="4.1.12" usage="Schema validation" />
+        <library name="shadcn/ui" version="latest" usage="UI components (Dialog, Table, Badge, Button, Alert)" />
+        <library name="Tailwind CSS" version="4.x" usage="Styling" />
+        <library name="lucide-react" version="0.553.0" usage="Icons" />
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Must use Spring Security 6+ framework for all security implementations
+    - Database table and column naming: snake_case convention (user_sessions, last_activity_at)
+    - All new endpoints must follow REST conventions: /api/v1 base URL, kebab-case, plural nouns
+    - JWT tokens use HS256 algorithm (existing standard)
+    - Refresh tokens stored in HTTP-only, secure, SameSite=Strict cookies
+    - All database changes via Flyway migrations (V15, V16, etc.)
+    - Use constructor injection (@RequiredArgsConstructor) not field injection
+    - Repository query methods follow Spring Data JPA naming conventions
+    - Use Java 17 records for DTOs (immutable)
+    - Frontend: Store access token in memory only (security), not localStorage
+    - Frontend: Use shadcn/ui components for consistency (Dialog, Table, Badge, Button, Alert)
+    - All APIs must return consistent response format: { success, data/error, timestamp }
+    - HTTP status codes: 200 OK, 201 Created, 401 Unauthorized, 403 Forbidden
+    - Token hashing: Use BCrypt before storing in database (security)
+    - Session IDs: Generate using UUID.randomUUID()
+    - Scheduled jobs: Use @Scheduled annotation with cron expressions
+    - Integration with existing: AuthController, JwtTokenProvider, SecurityConfig, JwtAuthenticationFilter, AuthService
+    - No breaking changes to existing auth endpoints (register, login, refresh)
+    - Must maintain backward compatibility with Stories 2.1, 2.2, 2.3
+  </constraints>
+
+  <interfaces>
+    <api>
+      <endpoint>
+        <name>POST /api/v1/auth/logout</name>
+        <kind>REST endpoint</kind>
+        <signature>POST /api/v1/auth/logout (Authorization: Bearer token, Cookie: refreshToken)</signature>
+        <request>No body required. Extracts tokens from Authorization header and cookie.</request>
+        <response>200 OK: { success: true, message: "Logged out successfully" }</response>
+        <path>backend/src/main/java/com/ultrabms/controller/AuthController.java</path>
+      </endpoint>
+      <endpoint>
+        <name>POST /api/v1/auth/logout-all</name>
+        <kind>REST endpoint</kind>
+        <signature>POST /api/v1/auth/logout-all (Authorization: Bearer token)</signature>
+        <request>No body required. Uses current user from SecurityContext.</request>
+        <response>200 OK: { success: true, message: "Logged out from {count} devices", devicesCount: number }</response>
+        <path>backend/src/main/java/com/ultrabms/controller/AuthController.java</path>
+      </endpoint>
+      <endpoint>
+        <name>GET /api/v1/auth/sessions</name>
+        <kind>REST endpoint</kind>
+        <signature>GET /api/v1/auth/sessions (Authorization: Bearer token)</signature>
+        <request>No parameters. Returns active sessions for current user.</request>
+        <response>200 OK: { success: true, data: SessionDto[] }</response>
+        <path>backend/src/main/java/com/ultrabms/controller/AuthController.java</path>
+      </endpoint>
+      <endpoint>
+        <name>POST /api/v1/auth/sessions/{sessionId}/revoke</name>
+        <kind>REST endpoint</kind>
+        <signature>POST /api/v1/auth/sessions/{sessionId}/revoke (Authorization: Bearer token)</signature>
+        <request>Path param: sessionId (String UUID)</request>
+        <response>200 OK: { success: true, message: "Session revoked" }</response>
+        <path>backend/src/main/java/com/ultrabms/controller/AuthController.java</path>
+      </endpoint>
+    </api>
+    <database>
+      <table>
+        <name>user_sessions</name>
+        <schema>
+          id UUID PRIMARY KEY,
+          user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+          session_id VARCHAR(255) UNIQUE NOT NULL,
+          access_token_hash VARCHAR(255),
+          refresh_token_hash VARCHAR(255),
+          created_at TIMESTAMP DEFAULT NOW(),
+          last_activity_at TIMESTAMP NOT NULL,
+          expires_at TIMESTAMP NOT NULL,
+          ip_address VARCHAR(50),
+          user_agent VARCHAR(500),
+          device_type VARCHAR(50),
+          is_active BOOLEAN DEFAULT true,
+          version BIGINT DEFAULT 0
+        </schema>
+        <indexes>
+          idx_user_sessions_session_id UNIQUE,
+          idx_user_sessions_user_id,
+          idx_user_sessions_expires_at,
+          idx_user_sessions_last_activity_at
+        </indexes>
+      </table>
+      <table>
+        <name>token_blacklist (existing, may need updates)</name>
+        <schema>
+          Existing: id, token_hash, token_type, expires_at, created_at
+          Update: Add 'reason' VARCHAR(100) column for tracking logout types
+        </schema>
+      </table>
+    </database>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 + Mockito for unit tests. MockMvc for controller integration tests. TestContainers for database integration tests. @SpringBootTest for full integration tests.
+      Frontend: Playwright for E2E tests. Test authentication flows, session management UI, token refresh interceptor.
+    </standards>
+    <locations>
+      Backend tests: backend/src/test/java/com/ultrabms/
+      Frontend tests: frontend/tests/ (Playwright E2E)
+      Test resources: backend/src/test/resources/application-test.yml
+    </locations>
+    <ideas>
+      - AC1: Test SecurityProperties binding from application.yml
+      - AC2: Test UserSession entity creation with all required fields
+      - AC3: Test session creation on login, verify max 3 concurrent sessions enforced
+      - AC4: Test SessionActivityFilter updates last_activity_at on each request
+      - AC4: Test idle timeout detection (31 min inactivity → 401 SESSION_EXPIRED_IDLE)
+      - AC4: Test absolute timeout (12 hours + 1 min → 401 SESSION_EXPIRED_ABSOLUTE)
+      - AC5: Test token blacklist check rejects blacklisted tokens with 401
+      - AC6: Test POST /api/v1/auth/logout marks session inactive, adds tokens to blacklist, clears cookie
+      - AC7: Test POST /api/v1/auth/logout-all invalidates all user sessions except current
+      - AC8: Test GET /api/v1/auth/sessions returns active sessions with correct fields
+      - AC8: Test POST /api/v1/auth/sessions/{sessionId}/revoke invalidates specific session
+      - AC9: Test security headers present in all API responses (X-Frame-Options, HSTS, CSP)
+      - AC10: Test CSRF protection: POST without XSRF-TOKEN → 403, with token → 200
+      - AC11: Test @Scheduled cleanup job deletes expired sessions and blacklist entries
+      - AC12: Test frontend Axios interceptor refreshes token on 401, retries original request
+      - AC13: Test SessionExpiryWarning modal shows 5 min before expiry with countdown
+      - AC14: Test Active Sessions UI displays sessions table with device, IP, last active
+      - AC14: Test revoke session button calls API and removes session from list
+      - End-to-end: Test full session lifecycle from login to logout
+      - End-to-end: Test concurrent session limit (login 4 times, oldest session deleted)
+    </ideas>
+  </tests>
+</story-context>

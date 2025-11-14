@@ -311,6 +311,68 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles RateLimitExceededException (429 Too Many Requests).
+     *
+     * <p>This exception is thrown when rate limiting is exceeded for operations
+     * such as password reset requests (max 3 per hour per email).</p>
+     *
+     * @param ex the exception
+     * @param request the HTTP request
+     * @return 429 response with error details and retry-after header
+     */
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceededException(
+            RateLimitExceededException ex,
+            HttpServletRequest request) {
+
+        String requestId = generateRequestId();
+        log.warn("Rate limit exceeded [requestId={}]: {}", requestId, ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI(),
+                requestId
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(errorResponse);
+    }
+
+    /**
+     * Handles InvalidTokenException (400 Bad Request).
+     *
+     * <p>This exception is thrown when a password reset token is invalid,
+     * expired, or already used.</p>
+     *
+     * @param ex the exception
+     * @param request the HTTP request
+     * @return 400 response with error details
+     */
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTokenException(
+            InvalidTokenException ex,
+            HttpServletRequest request) {
+
+        String requestId = generateRequestId();
+        log.warn("Invalid token [requestId={}]: {}", requestId, ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI(),
+                requestId
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse);
+    }
+
+    /**
      * Handles all unhandled exceptions (500 Internal Server Error).
      *
      * <p>This is the catch-all handler for unexpected errors. Stack traces are

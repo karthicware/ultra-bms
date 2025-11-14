@@ -49,6 +49,8 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final LoginAttemptService loginAttemptService;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final SessionService sessionService;
+    private final com.ultrabms.repository.UserSessionRepository userSessionRepository;
 
     @Override
     @Transactional
@@ -90,8 +92,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public LoginResponse login(LoginRequest request, String ipAddress, String userAgent) {
+    public LoginResponse login(LoginRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
         log.info("Login attempt for email: {}", request.email());
+
+        // Extract request metadata
+        String ipAddress = getClientIpAddress(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
 
         // Check if email is rate-limited
         if (loginAttemptService.isBlocked(request.email())) {
@@ -164,10 +170,16 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtTokenProvider.generateAccessToken(user);
         String refreshToken = jwtTokenProvider.generateRefreshToken(user);
 
-        // Log successful login
-        logAuditEvent(user.getId(), "LOGIN_SUCCESS", ipAddress, userAgent, null);
+        // Create session for tracking and management
+        String sessionId = sessionService.createSession(user, accessToken, refreshToken, httpRequest);
+        log.debug("Created session {} for user {}", sessionId, user.getEmail());
 
-        log.info("User logged in successfully: {} (ID: {})", user.getEmail(), user.getId());
+        // Log successful login
+        logAuditEvent(user.getId(), "LOGIN_SUCCESS", ipAddress, userAgent,
+                Map.of("sessionId", sessionId));
+
+        log.info("User logged in successfully: {} (ID: {}) with session {}",
+                user.getEmail(), user.getId(), sessionId);
 
         return new LoginResponse(
                 accessToken,
@@ -175,6 +187,20 @@ public class AuthServiceImpl implements AuthService {
                 3600L, // 1 hour in seconds
                 mapToUserDto(user)
         );
+    }
+
+    /**
+     * Extracts the client's IP address from the HTTP request.
+     *
+     * @param request HTTP servlet request
+     * @return client's IP address
+     */
+    private String getClientIpAddress(jakarta.servlet.http.HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     @Override
@@ -224,14 +250,22 @@ public class AuthServiceImpl implements AuthService {
         log.info("Logout requested");
 
         try {
-            // Blacklist access token
+            // Find and invalidate session using access token
             if (accessToken != null && !accessToken.isBlank()) {
-                blacklistToken(accessToken);
-            }
-
-            // Blacklist refresh token
-            if (refreshToken != null && !refreshToken.isBlank()) {
-                blacklistToken(refreshToken);
+                String tokenHash = com.ultrabms.util.TokenHashUtil.hashToken(accessToken);
+                userSessionRepository.findByAccessTokenHash(tokenHash)
+                        .ifPresent(userSession -> {
+                            sessionService.invalidateSession(
+                                    userSession.getSessionId(),
+                                    com.ultrabms.entity.enums.BlacklistReason.LOGOUT
+                            );
+                            log.info("Session {} invalidated on logout", userSession.getSessionId());
+                        });
+            } else {
+                // Fallback: If no access token, blacklist refresh token directly
+                if (refreshToken != null && !refreshToken.isBlank()) {
+                    blacklistToken(refreshToken);
+                }
             }
 
             log.info("User logged out successfully");

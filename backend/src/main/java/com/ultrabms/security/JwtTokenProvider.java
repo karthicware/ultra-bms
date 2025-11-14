@@ -1,5 +1,6 @@
 package com.ultrabms.security;
 
+import com.ultrabms.config.SecurityProperties;
 import com.ultrabms.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -42,26 +43,27 @@ public class JwtTokenProvider {
     private final SecretKey secretKey;
     private final long accessTokenExpirationMs;
     private final long refreshTokenExpirationMs;
+    private final SecurityProperties securityProperties;
 
     /**
      * Constructor initializing JWT configuration from application properties.
      *
      * @param jwtSecret JWT secret key (Base64-encoded, minimum 256 bits)
-     * @param accessTokenExpiration Access token expiration in milliseconds (default: 1 hour)
-     * @param refreshTokenExpiration Refresh token expiration in milliseconds (default: 7 days)
+     * @param securityProperties Security configuration properties for JWT and session settings
      */
     public JwtTokenProvider(
             @Value("${jwt.secret}") String jwtSecret,
-            @Value("${jwt.access-token-expiration:3600000}") long accessTokenExpiration,
-            @Value("${jwt.refresh-token-expiration:604800000}") long refreshTokenExpiration
+            SecurityProperties securityProperties
     ) {
         // Generate secret key from configured string (must be >= 256 bits for HS256)
         this.secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-        this.accessTokenExpirationMs = accessTokenExpiration;
-        this.refreshTokenExpirationMs = refreshTokenExpiration;
+        this.securityProperties = securityProperties;
+        this.accessTokenExpirationMs = securityProperties.getJwt().getAccessTokenExpirationMillis();
+        this.refreshTokenExpirationMs = securityProperties.getJwt().getRefreshTokenExpirationMillis();
 
-        log.info("JwtTokenProvider initialized with access token expiration: {}ms, refresh token expiration: {}ms",
-                accessTokenExpirationMs, refreshTokenExpirationMs);
+        log.info("JwtTokenProvider initialized with access token expiration: {}ms ({}s), refresh token expiration: {}ms ({}s)",
+                accessTokenExpirationMs, securityProperties.getJwt().getAccessTokenExpiration(),
+                refreshTokenExpirationMs, securityProperties.getJwt().getRefreshTokenExpiration());
     }
 
     /**
@@ -247,5 +249,43 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    /**
+     * Gets the configured access token expiration time in seconds.
+     * Used by session management for token lifecycle tracking.
+     *
+     * @return access token expiration in seconds
+     */
+    public int getAccessTokenExpirationSeconds() {
+        return securityProperties.getJwt().getAccessTokenExpiration();
+    }
+
+    /**
+     * Gets the configured refresh token expiration time in seconds.
+     * Used by session management for token lifecycle tracking.
+     *
+     * @return refresh token expiration in seconds
+     */
+    public int getRefreshTokenExpirationSeconds() {
+        return securityProperties.getJwt().getRefreshTokenExpiration();
+    }
+
+    /**
+     * Gets the configured access token expiration time in milliseconds.
+     *
+     * @return access token expiration in milliseconds
+     */
+    public long getAccessTokenExpirationMillis() {
+        return accessTokenExpirationMs;
+    }
+
+    /**
+     * Gets the configured refresh token expiration time in milliseconds.
+     *
+     * @return refresh token expiration in milliseconds
+     */
+    public long getRefreshTokenExpirationMillis() {
+        return refreshTokenExpirationMs;
     }
 }

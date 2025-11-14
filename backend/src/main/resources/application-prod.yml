@@ -26,6 +26,28 @@ spring:
         order_inserts: true
         order_updates: true
 
+  # Spring Mail Configuration (Gmail SMTP for Production)
+  # CRITICAL: Set GMAIL_APP_PASSWORD environment variable
+  # Generate at: https://myaccount.google.com/apppasswords
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${GMAIL_USERNAME:karthicware@gmail.com}
+    password: ${GMAIL_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+        transport:
+          protocol: smtp
+        debug: false
+
 # JWT Configuration (Production)
 # CRITICAL: Set JWT_SECRET environment variable with strong secret (min 256 bits)
 # Generate using: openssl rand -base64 32
@@ -38,11 +60,30 @@ jwt:
 cookie:
   secure: true  # REQUIRED: Cookies sent only over HTTPS in production
 
-# CORS Configuration (Production)
+# Application Configuration (Production)
 app:
+  # CORS Configuration
   cors:
     allowed-origins:
       - ${FRONTEND_URL}  # Set via environment variable (e.g., https://ultrabms.com)
+
+  # Frontend URL for email links (password reset, etc.)
+  frontend-url: ${FRONTEND_URL}
+
+  # Support email for user assistance
+  support-email: ${SUPPORT_EMAIL:support@ultrabms.com}
+
+  # Security Configuration
+  security:
+    # JWT Token Configuration
+    jwt:
+      access-token-expiration: 3600      # 1 hour in seconds
+      refresh-token-expiration: 604800   # 7 days in seconds
+    # Session Management Configuration
+    session:
+      idle-timeout: 1800          # 30 minutes in seconds (no activity timeout)
+      absolute-timeout: 43200     # 12 hours in seconds (force re-login)
+      max-concurrent-sessions: 3  # Maximum active sessions per user
 
 # Actuator Configuration (Production)
 management:

@@ -28,16 +28,15 @@ public interface AuthService {
      * Authenticates a user and issues JWT tokens.
      *
      * <p>Verifies credentials, checks account lockout status, generates tokens,
-     * and logs the authentication event.</p>
+     * creates a session, and logs the authentication event.</p>
      *
      * @param request login request with email and password
-     * @param ipAddress client's IP address for audit logging
-     * @param userAgent client's user agent for audit logging
+     * @param httpRequest HTTP servlet request for extracting IP, user agent, and session metadata
      * @return login response with access token, refresh token, and user profile
      * @throws org.springframework.security.core.AuthenticationException if credentials are invalid
      * @throws com.ultrabms.exception.AccountLockedException if account is locked
      */
-    LoginResponse login(LoginRequest request, String ipAddress, String userAgent);
+    LoginResponse login(LoginRequest request, jakarta.servlet.http.HttpServletRequest httpRequest);
 
     /**
      * Refreshes an access token using a valid refresh token.

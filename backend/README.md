@@ -350,6 +350,535 @@ jwt:
 - Never commit secrets to version control
 - Use secure key management (AWS Secrets Manager, Azure Key Vault)
 
+## Password Reset
+
+The Ultra BMS API provides a secure three-step password reset workflow that allows users to safely reset their forgotten passwords via email verification.
+
+### Security Features
+
+- **Cryptographically secure tokens** - 256-bit entropy (64-character hex strings)
+- **Short token expiration** - 15-minute validity window
+- **Single-use tokens** - Tokens invalidated after successful reset
+- **Rate limiting** - 3 reset requests per hour per email address
+- **Email enumeration prevention** - Consistent responses for existing/non-existing accounts
+- **Password strength validation** - Same requirements as registration
+- **Audit logging** - All password resets logged with timestamp and IP
+- **Automated cleanup** - Hourly scheduled job removes expired/used tokens
+
+### Three-Step Password Reset Flow
+
+#### Step 1: Request Password Reset
+
+User submits their email address to initiate the password reset process.
+
+**Endpoint:** `POST /api/v1/auth/forgot-password`
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Success Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "If your email is registered, you'll receive password reset instructions shortly."
+}
+```
+
+**Example curl:**
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john.doe@ultrabms.com"
+  }'
+```
+
+**What Happens:**
+1. System checks if email exists in database
+2. If found, generates secure 64-character token (256-bit entropy)
+3. Token stored with 15-minute expiration
+4. Email sent with reset link containing token
+5. Previous unused tokens for user invalidated
+6. **Security:** Always returns 200 OK (prevents email enumeration)
+
+**Rate Limiting:**
+- **Limit:** 3 requests per hour per email address
+- **Response:** 429 Too Many Requests after limit exceeded
+- **Reset:** Automatic after 1 hour from first attempt
+
+**Rate Limit Response (429):**
+```json
+{
+  "status": 429,
+  "error": "Too Many Requests",
+  "message": "Too many password reset attempts. Please try again in 45 minutes.",
+  "path": "/api/v1/auth/forgot-password",
+  "requestId": "uuid"
+}
+```
+
+#### Step 2: Validate Reset Token
+
+Frontend validates the token when user clicks email link (optional step for better UX).
+
+**Endpoint:** `GET /api/v1/auth/reset-password/validate?token={token}`
+
+**Success Response (200 OK):**
+```json
+{
+  "valid": true,
+  "remainingMinutes": 12
+}
+```
+
+**Example curl:**
+```bash
+curl -X GET "http://localhost:8080/api/v1/auth/reset-password/validate?token=a1b2c3d4e5f6..."
+```
+
+**Error Responses:**
+- `400 Bad Request` - Token invalid, expired, or already used
+
+**What Frontend Should Do:**
+- If `valid: true` - Show password reset form
+- If error - Show "Link expired" message with option to request new reset
+
+#### Step 3: Complete Password Reset
+
+User submits new password with valid token.
+
+**Endpoint:** `POST /api/v1/auth/reset-password`
+
+**Request Body:**
+```json
+{
+  "token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+  "newPassword": "NewSecureP@ssw0rd123"
+}
+```
+
+**Success Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Password reset successful. You can now log in with your new password."
+}
+```
+
+**Example curl:**
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+    "newPassword": "NewSecureP@ssw0rd123"
+  }'
+```
+
+**What Happens:**
+1. Token validated (exists, not used, not expired)
+2. Password validated against strength requirements
+3. Password hashed with BCrypt (cost factor 12)
+4. User's password updated in database
+5. Token marked as used (prevents reuse)
+6. Confirmation email sent to user
+7. Event logged to audit trail
+
+**Error Responses:**
+- `400 Bad Request` - Invalid/expired token or weak password
+- `400 Bad Request` - Token already used
+
+### Email Configuration
+
+Password reset requires SMTP email configuration. The system uses Gmail SMTP by default.
+
+**Required Environment Variables:**
+```bash
+export GMAIL_USERNAME=your-email@gmail.com
+export GMAIL_APP_PASSWORD=your-16-char-app-password
+```
+
+**⚠️ Gmail App Password Setup:**
+1. Enable 2-Factor Authentication on Google account
+2. Generate App Password: https://myaccount.google.com/apppasswords
+3. Use 16-character app password (not your regular password)
+4. Never commit credentials to version control
+
+**Development Configuration (application-dev.yml):**
+```yaml
+spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+```
+
+**Production Configuration:**
+- Use environment-specific SMTP server
+- Consider dedicated email service (SendGrid, AWS SES, Mailgun)
+- Configure proper SPF/DKIM/DMARC records
+- Use dedicated email domain for better deliverability
+
+**Email Templates:**
+
+Two branded HTML + plain text email templates:
+
+1. **Password Reset Email** (`password-reset-email.html`)
+   - Subject: "Reset Your Ultra BMS Password"
+   - Contains reset button with token link
+   - 15-minute expiration warning
+   - Security notice about unsolicited emails
+
+2. **Password Change Confirmation** (`password-change-confirmation.html`)
+   - Subject: "Your Ultra BMS Password Has Been Changed"
+   - Confirms successful password change
+   - Timestamp of change
+   - Alert if change wasn't authorized
+
+### Token Security Details
+
+**Token Generation:**
+- **Algorithm:** `SecureRandom` (cryptographically secure)
+- **Entropy:** 32 bytes (256 bits)
+- **Format:** 64-character hexadecimal string
+- **Example:** `a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2`
+
+**Token Lifecycle:**
+1. **Generation:** User requests password reset
+2. **Storage:** Token stored in `password_reset_tokens` table
+3. **Expiration:** 15 minutes from generation
+4. **Validation:** Checked for existence, used status, expiration
+5. **Usage:** Marked as used after successful password reset
+6. **Cleanup:** Deleted by hourly scheduled job
+
+**Database Schema:**
+
+**password_reset_tokens table:**
+| Column     | Type      | Description                      |
+|------------|-----------|----------------------------------|
+| id         | UUID      | Primary key                      |
+| user_id    | UUID      | Foreign key to users table       |
+| token      | VARCHAR   | 64-character hex token (unique)  |
+| expires_at | TIMESTAMP | Expiration time (15 min)         |
+| used       | BOOLEAN   | Single-use flag                  |
+| created_at | TIMESTAMP | Token generation timestamp       |
+| updated_at | TIMESTAMP | Last update timestamp            |
+| version    | BIGINT    | Optimistic locking version       |
+
+**password_reset_attempts table:**
+| Column           | Type      | Description                   |
+|------------------|-----------|-------------------------------|
+| id               | UUID      | Primary key                   |
+| email            | VARCHAR   | Email being reset (unique)    |
+| attempt_count    | INTEGER   | Number of attempts            |
+| first_attempt_at | TIMESTAMP | Rate limit window start       |
+| last_attempt_at  | TIMESTAMP | Most recent attempt           |
+| created_at       | TIMESTAMP | Record creation               |
+| updated_at       | TIMESTAMP | Last update                   |
+| version          | BIGINT    | Optimistic locking version    |
+
+### Automated Cleanup
+
+A scheduled job runs every hour to clean up old data and prevent database bloat.
+
+**Schedule:** `0 0 * * * *` (every hour at :00 minutes)
+
+**Service:** `PasswordResetCleanupService.cleanupExpiredData()`
+
+**Cleanup Operations:**
+
+1. **Expired Tokens:**
+   - **Criteria:** `expiresAt < (now - 1 hour)`
+   - **Retention:** 1 hour after expiration
+   - **Purpose:** Debugging buffer for recently expired tokens
+
+2. **Used Tokens:**
+   - **Criteria:** `used = true AND createdAt < (now - 24 hours)`
+   - **Retention:** 24 hours after creation
+   - **Purpose:** Audit trail for recent password resets
+
+3. **Rate Limit Attempts:**
+   - **Criteria:** `firstAttemptAt < (now - 7 days)`
+   - **Retention:** 7 days
+   - **Purpose:** Security monitoring and analytics
+
+**Monitoring Cleanup Job:**
+```bash
+# Check logs for cleanup job execution
+docker logs ultra-bms-backend | grep "PasswordResetCleanupService"
+
+# Expected output every hour:
+# INFO  c.u.service.PasswordResetCleanupService - Starting password reset cleanup job
+# INFO  c.u.service.PasswordResetCleanupService - Deleted 5 expired password reset tokens
+# INFO  c.u.service.PasswordResetCleanupService - Deleted 3 old used password reset tokens
+# INFO  c.u.service.PasswordResetCleanupService - Deleted 12 old password reset rate limit attempts
+# INFO  c.u.service.PasswordResetCleanupService - Password reset cleanup job completed successfully. Total records deleted: 20
+```
+
+### Testing Password Reset Flow
+
+**Complete End-to-End Test:**
+
+```bash
+# Step 1: Request password reset
+curl -X POST http://localhost:8080/api/v1/auth/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{"email": "john.doe@ultrabms.com"}'
+
+# Response: {"success": true, "message": "If your email is registered..."}
+
+# Step 2: Check email for reset link
+# Link format: http://localhost:3000/reset-password?token=a1b2c3d4e5f6...
+
+# Step 3: Validate token (optional, for better UX)
+TOKEN="a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+curl -X GET "http://localhost:8080/api/v1/auth/reset-password/validate?token=$TOKEN"
+
+# Response: {"valid": true, "remainingMinutes": 14}
+
+# Step 4: Reset password
+curl -X POST http://localhost:8080/api/v1/auth/reset-password \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"token\": \"$TOKEN\",
+    \"newPassword\": \"NewSecureP@ssw0rd123\"
+  }"
+
+# Response: {"success": true, "message": "Password reset successful..."}
+
+# Step 5: Verify login with new password
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john.doe@ultrabms.com",
+    "password": "NewSecureP@ssw0rd123"
+  }'
+
+# Response: {"accessToken": "...", "refreshToken": "...", "user": {...}}
+```
+
+**Test Rate Limiting:**
+```bash
+# Send 4 requests to trigger rate limit
+for i in {1..4}; do
+  echo "Attempt $i:"
+  curl -X POST http://localhost:8080/api/v1/auth/forgot-password \
+    -H "Content-Type: application/json" \
+    -d '{"email": "test@example.com"}'
+  echo -e "\n---"
+done
+
+# Expected:
+# Attempts 1-3: HTTP 200 OK
+# Attempt 4: HTTP 429 Too Many Requests
+```
+
+**Test Token Expiration:**
+```bash
+# Request reset
+curl -X POST http://localhost:8080/api/v1/auth/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{"email": "john.doe@ultrabms.com"}'
+
+# Wait 16 minutes, then try to use token
+sleep 960
+
+# Try to reset password (will fail)
+curl -X POST http://localhost:8080/api/v1/auth/reset-password \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"token\": \"$TOKEN\",
+    \"newPassword\": \"NewSecureP@ssw0rd123\"
+  }"
+
+# Expected: HTTP 400 Bad Request - "Reset link is expired"
+```
+
+### Troubleshooting
+
+#### Email Not Received
+
+**Check 1: Email Configuration**
+```bash
+# Verify environment variables are set
+echo $GMAIL_USERNAME
+echo $GMAIL_APP_PASSWORD  # Should show 16-character app password
+
+# Check application logs for SMTP errors
+docker logs ultra-bms-backend | grep "mail"
+```
+
+**Check 2: Spam/Junk Folder**
+- Check spam/junk folder in email client
+- Add noreply@ultrabms.com to contacts
+
+**Check 3: Gmail App Password**
+- Ensure 2FA is enabled on Google account
+- Generate new app password if needed
+- Verify 16-character password (no spaces)
+
+**Check 4: Application Logs**
+```bash
+# Look for email sending errors
+docker logs ultra-bms-backend | grep "EmailService"
+
+# Expected success log:
+# INFO c.u.service.EmailService - Password reset email sent successfully to user@example.com
+```
+
+#### Token Validation Fails
+
+**Problem:** "Reset link is invalid or has expired"
+
+**Solutions:**
+1. **Token Expired:**
+   - Tokens valid for only 15 minutes
+   - Request new password reset
+   - Use reset link immediately after receiving email
+
+2. **Token Already Used:**
+   - Each token can only be used once
+   - Request new password reset
+
+3. **Token Malformed:**
+   - Ensure full 64-character token copied from email
+   - Check for truncation or extra characters
+   - Token should be pure hexadecimal (0-9, a-f)
+
+4. **Database Issue:**
+   - Check database connectivity
+   - Verify `password_reset_tokens` table exists
+   - Check application logs for database errors
+
+#### Rate Limiting Triggered
+
+**Problem:** "Too many password reset attempts"
+
+**Solutions:**
+- Wait for time specified in error message (up to 1 hour)
+- Rate limit: 3 attempts per hour per email address
+- Window resets 1 hour after first attempt
+- Contact support if legitimate user needs immediate access
+
+**Override Rate Limit (Development Only):**
+```sql
+-- Delete rate limit entries for specific email
+DELETE FROM password_reset_attempts WHERE email = 'user@example.com';
+```
+
+#### Password Validation Fails
+
+**Problem:** "Password does not meet requirements"
+
+**Solutions:**
+- Ensure password meets all requirements:
+  - Minimum 8 characters
+  - At least 1 uppercase letter (A-Z)
+  - At least 1 lowercase letter (a-z)
+  - At least 1 digit (0-9)
+  - At least 1 special character (@$!%*?&)
+- Frontend validation mirrors backend rules
+- Try stronger password: `SecureP@ssw0rd123`
+
+#### Cleanup Job Not Running
+
+**Problem:** Old tokens not being deleted
+
+**Solutions:**
+1. **Check Scheduling Enabled:**
+   ```java
+   // Verify @EnableScheduling in EmailConfig.java
+   @Configuration
+   @EnableAsync
+   @EnableScheduling
+   public class EmailConfig { ... }
+   ```
+
+2. **Check Logs:**
+   ```bash
+   # Should see hourly log entries
+   docker logs ultra-bms-backend | grep "cleanup job"
+   ```
+
+3. **Manual Cleanup (if needed):**
+   ```sql
+   -- Delete expired tokens
+   DELETE FROM password_reset_tokens
+   WHERE expires_at < NOW() - INTERVAL '1 hour';
+
+   -- Delete old used tokens
+   DELETE FROM password_reset_tokens
+   WHERE used = true
+   AND created_at < NOW() - INTERVAL '24 hours';
+
+   -- Delete old rate limit attempts
+   DELETE FROM password_reset_attempts
+   WHERE first_attempt_at < NOW() - INTERVAL '7 days';
+   ```
+
+### Security Best Practices
+
+**For Production Deployment:**
+1. **Email Security:**
+   - Use dedicated SMTP service (SendGrid, AWS SES, Mailgun)
+   - Configure SPF, DKIM, DMARC records
+   - Use dedicated domain for emails
+   - Monitor email deliverability rates
+
+2. **Token Security:**
+   - Never log complete tokens (only first 10 characters)
+   - Use HTTPS for all reset links
+   - Consider shorter expiration time for high-security apps
+   - Monitor for unusual token generation patterns
+
+3. **Rate Limiting:**
+   - Adjust limits based on abuse patterns
+   - Consider IP-based rate limiting in addition to email-based
+   - Implement CAPTCHA for repeated attempts
+   - Monitor rate limit triggers for abuse detection
+
+4. **Monitoring:**
+   - Alert on high password reset volumes
+   - Track failed reset attempts
+   - Monitor email bounce rates
+   - Review audit logs regularly
+
+5. **User Experience:**
+   - Clear error messages guide users
+   - Provide support contact for locked accounts
+   - Consider SMS-based reset as alternative
+   - Show remaining time on validation page
+
+### API Documentation
+
+For detailed API documentation including request/response schemas, error codes, and interactive testing:
+
+**Swagger UI:** http://localhost:8080/swagger-ui.html
+
+**Navigate to:** Auth Controller → Password Reset Endpoints
+
+**Interactive Testing:**
+1. Open Swagger UI
+2. Find "POST /api/v1/auth/forgot-password"
+3. Click "Try it out"
+4. Enter request body
+5. Click "Execute"
+6. View response
+
+**Full API Documentation:** `/docs/api/password-reset-api.md`
+
 ## Package Structure
 
 ```

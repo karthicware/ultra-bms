@@ -1,0 +1,397 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>5</storyId>
+    <title>Frontend Authentication Components and Protected Routes</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-14</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/2-5-frontend-authentication-components-and-protected-routes.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>frontend developer</asA>
+    <iWant>reusable authentication components and route protection</iWant>
+    <soThat>I can easily secure pages and handle auth states</soThat>
+    <tasks>
+- Task 1: Create Authentication Context and Hooks (AC: #5)
+- Task 2: Configure API Client with Axios (AC: #7)
+- Task 3: Define TypeScript Types and Interfaces (AC: #11)
+- Task 4: Create Validation Schemas with Zod (AC: #10)
+- Task 5: Create Reusable Form Components (AC: #14)
+- Task 6: Implement Login Page (AC: #1)
+- Task 7: Implement Registration Page (AC: #2)
+- Task 8: Implement Password Reset Flow (AC: #3)
+- Task 9: Implement Account Security Settings Page (AC: #4)
+- Task 10: Implement Route Protection Middleware (AC: #6)
+- Task 11: Create ProtectedRoute Component (AC: #6)
+- Task 12: Create Session Expiry Warning Modal (AC: #8)
+- Task 13: Implement UI/UX Polish (AC: #9, #10)
+- Task 14: Implement Accessibility Features (AC: #12)
+- Task 15: Implement Security Best Practices (AC: #13)
+- Task 16: Write Tests (AC: #15)
+- Task 17: Documentation (AC: #15)
+- Task 18: Integration Testing (AC: All)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+AC1: Login Page - Email/password form with validation, "Remember me" checkbox, "Forgot password?" link, error handling, loading state, redirect to dashboard
+AC2: Registration Page - Email, password (with strength meter), confirm password, first name, last name, phone (optional), terms checkbox, success redirect
+AC3: Password Reset Flow - /forgot-password email form, /reset-password token validation and new password form with countdown timer
+AC4: Account Security Settings - Change password section, active sessions table with revoke buttons, logout all devices, auto-refresh every 30s
+AC5: Authentication Context - AuthContext with user state, login/register/logout/refreshToken methods, useAuth/useUser/usePermission hooks
+AC6: Route Protection - Next.js middleware for server-side protection, ProtectedRoute component for client-side, role/permission-based access, /403 page
+AC7: API Client - Axios instance with Authorization header, CSRF token, token refresh interceptor, retry on 401, logout on refresh failure
+AC8: Session Expiry Warning - Modal 5 minutes before expiry, countdown timer, "Stay Logged In" button, auto-logout on timeout
+AC9: UI/UX Polish - Loading skeletons, smooth transitions, persist returnUrl, network error handling, clear error messages
+AC10: Form Validation - Zod schemas for all forms, inline errors, password strength meter, success toasts
+AC11: TypeScript Types - User, AuthState, AuthContextType, LoginRequest/Response, RegisterRequest, SessionDto, ErrorResponse interfaces
+AC12: Accessibility - Keyboard navigation, ARIA labels, screen reader support, 4.5:1 contrast, responsive design, dark mode
+AC13: Security - Access token in memory only, refresh token in HTTP-only cookie, CSRF protection, auto-logout on token fail
+AC14: Component Reusability - FormField, PasswordInput, EmailInput, SubmitButton, AuthLayout, PasswordStrengthMeter
+AC15: Testing - E2E tests with Playwright, component tests with React Testing Library, documentation in README
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="3.1 Authentication & Access Control">
+        User Authentication requirements: Multi-factor authentication (MFA), Single Sign-On (SSO) support, Password recovery workflow (3-step process), Session management and timeout controls, Role-based access control (RBAC). User Roles: Super Admin, Property Manager, Maintenance Supervisor, Finance Manager, Tenant, Vendor.
+      </doc>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="4.2 UI Components">
+        Component Library: shadcn/ui for consistent, accessible components. Color Scheme: Dark theme with blue/teal accents. Typography: Inter font family. Icons: Lucide library. Forms: Progressive disclosure with validation using React Hook Form. Styling: Tailwind CSS utility-first.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Frontend Implementation Patterns">
+        Next.js App Router with TypeScript. Use shadcn/ui components. Store access token in memory (not localStorage for security). Store refresh token in HTTP-only cookie. Token refresh logic in Axios interceptor. React Hook Form + Zod for validation. Proper TypeScript types for User, AuthState.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Frontend Stack">
+        Framework: Next.js 15. Language: TypeScript 5.x. UI Library: React 19+. Component Library: shadcn/ui. Styling: Tailwind CSS 4.0. Forms: React Hook Form. Icons: Lucide React. Testing: Vitest, React Testing Library.
+      </doc>
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="1.1 Design System Choice">
+        Primary Framework: shadcn/ui with Tailwind CSS. Built on Radix UI for WCAG 2.1 Level AA accessibility. TypeScript-first for type safety. Components: button, input, card, table, dialog, alert-dialog, dropdown-menu, form, toast, alert, progress, sidebar-01, breadcrumb.
+      </doc>
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="3.1 Color System">
+        Primary: Deep Navy (#0A2342). Secondary: Professional Blue (#1152D4). Accent: Gold (#D4AF37). Success: #22C55E. Warning: #F59E0B. Error: #EF4444. Light Background: #FFFFFF. Dark Background: #0B0F19.
+      </doc>
+      <doc path="docs/epics/epic-2-authentication-user-management.md" title="Epic 2" section="Story 2.1">
+        Login endpoint: POST /api/v1/auth/login accepts {email, password, rememberMe}, returns {accessToken, refreshToken, user, sessionId}. Access token: 1 hour. Refresh token: 7 days. Payload includes: userId, email, role, permissions. Rate limiting: max 5 login attempts per 15 minutes.
+      </doc>
+      <doc path="docs/epics/epic-2-authentication-user-management.md" title="Epic 2" section="Story 2.3">
+        Password reset endpoints: POST /api/v1/auth/forgot-password, GET /api/v1/auth/reset-password/validate, POST /api/v1/auth/reset-password. Token expires in 15 minutes. Always return 200 OK for forgot-password to not reveal if email exists.
+      </doc>
+      <doc path="docs/epics/epic-2-authentication-user-management.md" title="Epic 2" section="Story 2.4">
+        Session management endpoints: GET /api/v1/auth/sessions (active sessions list), POST /api/v1/auth/sessions/{id}/revoke, POST /api/v1/auth/logout-all. SessionDto: {sessionId, deviceType, browser, ipAddress, lastActivityAt, isCurrent}. Access token expires in 1 hour, idle timeout 30 minutes, absolute timeout 12 hours.
+      </doc>
+      <doc path="docs/epics/epic-2-authentication-user-management.md" title="Epic 2" section="Story 2.5">
+        Frontend authentication pages: /login, /register, /forgot-password, /reset-password, /settings/security. Hooks: useAuth(), useUser(), usePermission(). Route protection: Next.js middleware, ProtectedRoute component. API integration: Axios with auth interceptor. Session expiry warning modal 5 minutes before timeout.
+      </doc>
+      <doc path="docs/sprint-artifacts/2-4-session-management-and-security-enhancements.md" title="Story 2.4" section="Dev Notes">
+        Backend provides session management infrastructure. Error codes: SESSION_EXPIRED_IDLE, SESSION_EXPIRED_ABSOLUTE, ACCESS_TOKEN_EXPIRED. Security headers: X-Frame-Options, HSTS, CSP. CSRF protection: Backend expects X-XSRF-TOKEN header, frontend reads from XSRF-TOKEN cookie.
+      </doc>
+    </docs>
+
+    <code>
+      <file path="frontend/src/lib/api.ts" kind="api-client" symbol="apiClient" lines="1-31" reason="Existing Axios instance with basic setup. Need to enhance with auth token header, CSRF token, and refresh interceptor logic for Story 2.5.">
+        Current implementation has placeholder comment for auth token (Epic 2). Need to add: 1) Authorization header from AuthContext, 2) X-XSRF-TOKEN header from cookie, 3) 401 response interceptor for token refresh, 4) Refresh lock to prevent concurrent refresh requests.
+      </file>
+      <file path="frontend/src/lib/password-reset-api.ts" kind="api" symbol="requestPasswordReset, validateResetToken, resetPassword" lines="1-66" reason="Existing password reset API functions from Story 2.3. Demonstrates pattern for creating typed API functions. Reuse this pattern for auth-related APIs (login, register, logout).">
+        Shows TypeScript interface definitions (ForgotPasswordRequest, ForgotPasswordResponse, etc.) and API function implementations using apiClient. Follow same pattern for auth endpoints.
+      </file>
+      <file path="frontend/src/components/password-strength-indicator.tsx" kind="component" symbol="PasswordStrengthIndicator" reason="Reusable component from Story 2.3 for password strength visualization. Use in registration and password change forms for AC2 and AC4.">
+        Component displays password strength meter with colored bar and requirements checklist. Integrates with zxcvbn library for strength calculation.
+      </file>
+      <file path="frontend/src/components/ui/button.tsx" kind="shadcn-component" symbol="Button" reason="shadcn/ui Button component for all CTAs. Use for submit buttons, action buttons throughout auth flows.">
+        Accessible button with variants (default, destructive, outline, secondary, ghost, link) and sizes (default, sm, lg, icon). Built on Radix UI primitives.
+      </file>
+      <file path="frontend/src/components/ui/input.tsx" kind="shadcn-component" symbol="Input" reason="shadcn/ui Input component for all form fields. Use for email, password, text inputs in login, registration, password reset forms.">
+        Accessible input field with proper ARIA labels and styling. Supports all HTML input types.
+      </file>
+      <file path="frontend/src/components/ui/card.tsx" kind="shadcn-component" symbol="Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter" reason="shadcn/ui Card components for layout structure. Use for auth page containers, session list items.">
+        Composable card components with semantic sections for header, content, footer.
+      </file>
+      <file path="frontend/src/components/ui/label.tsx" kind="shadcn-component" symbol="Label" reason="shadcn/ui Label component for form field labels. Use with htmlFor attribute for accessibility.">
+        Accessible label component based on Radix UI Label primitive.
+      </file>
+      <file path="frontend/src/components/ui/alert.tsx" kind="shadcn-component" symbol="Alert, AlertTitle, AlertDescription" reason="shadcn/ui Alert component for error/success messages. Use for displaying validation errors, success confirmations.">
+        Alert component with variants (default, destructive). Use for inline error messages and success notifications.
+      </file>
+      <file path="frontend/src/app/(auth)/login/page.tsx" kind="page" reason="Check if login page exists from previous stories. May need to create or enhance for AC1.">
+        Login page implementation location. Check if exists or needs creation.
+      </file>
+      <file path="frontend/src/app/(auth)/forgot-password/page.tsx" kind="page" reason="Existing forgot-password page from Story 2.3. Reference for form patterns and API integration.">
+        Demonstrates password reset request flow, form validation, error handling.
+      </file>
+      <file path="frontend/src/app/(auth)/reset-password/page.tsx" kind="page" reason="Existing reset-password page from Story 2.3. Reference for token validation and form submission patterns.">
+        Demonstrates token validation on page load, countdown timer, new password form with strength meter.
+      </file>
+      <file path="frontend/package.json" kind="config" symbol="dependencies" lines="20-34" reason="Lists installed dependencies. Key packages: axios (1.13.2), react-hook-form (7.66.0), zod (4.1.12), @hookform/resolvers (5.2.2) already installed. Need to add: jwt-decode, zxcvbn for AC8 and AC2.">
+        Already have core dependencies. May need to install additional shadcn components (table, badge, dialog, toast, alert-dialog) using npx shadcn@latest add.
+      </file>
+      <file path="frontend/src/types/index.ts" kind="types" reason="Existing types file. Add authentication-related TypeScript interfaces here for AC11: User, AuthState, AuthContextType, LoginRequest, LoginResponse, RegisterRequest, SessionDto, ErrorResponse.">
+        Central location for TypeScript type definitions.
+      </file>
+      <file path="frontend/src/lib/utils.ts" kind="utility" reason="Utility functions. May contain cn() for className merging, other helper functions to reference.">
+        Common utility functions for the application.
+      </file>
+      <file path="frontend/src/lib/constants.ts" kind="constants" reason="Application constants. May define API endpoints, timeout values, other constants.">
+        Configuration constants for the application.
+      </file>
+    </code>
+
+    <dependencies>
+      <frontend>
+        <installed>
+          <package name="axios" version="1.13.2">HTTP client for API requests</package>
+          <package name="react-hook-form" version="7.66.0">Form state management and validation</package>
+          <package name="zod" version="4.1.12">Schema validation</package>
+          <package name="@hookform/resolvers" version="5.2.2">Zod resolver for react-hook-form</package>
+          <package name="@radix-ui/react-label" version="2.1.8">Accessible label primitive</package>
+          <package name="@radix-ui/react-slot" version="1.2.4">Radix slot utility</package>
+          <package name="lucide-react" version="0.553.0">Icon library</package>
+          <package name="next" version="16.0.2">React framework</package>
+          <package name="react" version="19.2.0">UI library</package>
+          <package name="tailwindcss" version="4">Utility-first CSS</package>
+        </installed>
+        <toInstall>
+          <package name="jwt-decode" version="latest">Decode JWT tokens for expiry checking (AC8)</package>
+          <package name="zxcvbn" version="latest">Password strength estimation (AC2)</package>
+          <package name="@types/zxcvbn" version="latest">TypeScript types for zxcvbn</package>
+        </toInstall>
+        <shadcnComponents>
+          <installed>button, input, card, label, alert</installed>
+          <toInstall>form, table, badge, dialog, toast, alert-dialog, skeleton, select, checkbox, textarea</toInstall>
+        </shadcnComponents>
+      </frontend>
+      <backend>
+        <endpoints>
+          <endpoint method="POST" path="/api/v1/auth/login">Login with credentials, returns access token and refresh token</endpoint>
+          <endpoint method="POST" path="/api/v1/auth/register">Register new user account</endpoint>
+          <endpoint method="POST" path="/api/v1/auth/logout">Logout current session, invalidate tokens</endpoint>
+          <endpoint method="POST" path="/api/v1/auth/refresh">Refresh access token using refresh token</endpoint>
+          <endpoint method="POST" path="/api/v1/auth/forgot-password">Request password reset email</endpoint>
+          <endpoint method="GET" path="/api/v1/auth/reset-password/validate">Validate reset token</endpoint>
+          <endpoint method="POST" path="/api/v1/auth/reset-password">Complete password reset</endpoint>
+          <endpoint method="GET" path="/api/v1/auth/sessions">Get active sessions for current user</endpoint>
+          <endpoint method="POST" path="/api/v1/auth/sessions/{sessionId}/revoke">Revoke specific session</endpoint>
+          <endpoint method="POST" path="/api/v1/auth/logout-all">Logout from all devices</endpoint>
+          <endpoint method="POST" path="/api/v1/auth/change-password">Change password for authenticated user</endpoint>
+        </endpoints>
+      </backend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+Security Constraints:
+- CRITICAL: Store access token in React Context state (memory only), NEVER in localStorage or sessionStorage (prevents XSS attacks)
+- CRITICAL: Refresh token must be stored in HTTP-only cookie (cannot be accessed by JavaScript, set by backend)
+- Implement CSRF protection: read XSRF-TOKEN from cookie, send in X-XSRF-TOKEN header with all state-changing requests
+- Validate JWT token expiration client-side before making requests (check exp claim)
+- Auto-logout if refresh token fails to prevent stale auth state
+- Password fields must use type="password" with optional visibility toggle
+- Clear all auth state on logout (reset Context to null, call backend logout endpoint)
+
+Code Quality Constraints:
+- Use TypeScript strict mode, all types explicitly defined, NO any types
+- Use React Hook Form + Zod for all form validation (consistent pattern)
+- Use shadcn/ui components as base, customize with Tailwind utilities
+- Store/manage global auth state in React Context API (not Redux for this feature)
+- Create reusable form components (FormField, PasswordInput, EmailInput, SubmitButton)
+- Extract validation schemas to separate file: schemas/authSchemas.ts
+- Add JSDoc comments to all public functions and components
+
+Architecture Constraints:
+- Use Next.js App Router with server components where possible
+- Implement Next.js middleware (middleware.ts) for server-side route protection
+- Protected routes: all /(dashboard)/* routes, public routes: /(auth)/*, /api/*, /
+- Create ProtectedRoute client component for client-side protection with requiredRole/requiredPermission props
+- Axios interceptor must handle token refresh on 401 response, retry original request with new token
+- Implement refresh lock using mutex flag to prevent concurrent refresh requests
+- Store intended URL in returnUrl query parameter or sessionStorage, navigate to it after successful login
+
+UI/UX Constraints:
+- Loading skeletons during auth checks (use shadcn Skeleton component)
+- Smooth transitions between auth states (loading → authenticated → loaded) without flash
+- Session expiry warning modal 5 minutes before expiry with countdown timer
+- Network error handling: show retry button and helpful message
+- Invalid credentials: clear password field, show inline error
+- Success feedback: green toast with checkmark icon
+
+Accessibility Constraints:
+- All forms keyboard navigable (Tab through fields, Enter to submit)
+- Form inputs have associated labels with htmlFor attribute
+- Error messages announced by screen readers using aria-live="polite"
+- Focus management: auto-focus first input on page load, focus first error field on validation failure
+- ARIA labels for icon-only buttons (password toggle, close modal)
+- Touch targets minimum 44x44px for mobile
+- Color contrast minimum 4.5:1 for text (WCAG AA)
+- Test with screen readers (NVDA on Windows, VoiceOver on Mac)
+
+Testing Constraints:
+- Write E2E tests using Playwright for authentication flows (login, registration, password reset, logout, protected route access)
+- Write component tests using React Testing Library (form validation, error display, loading states)
+- Test custom hooks (useAuth, useUser, usePermission) with mock data
+- Document authentication flow in frontend README
+  </constraints>
+
+  <interfaces>
+    <apiEndpoint name="POST /api/v1/auth/login" kind="REST">
+      <signature>POST /api/v1/auth/login</signature>
+      <requestBody>{ email: string, password: string, rememberMe?: boolean }</requestBody>
+      <responseBody>{ success: boolean, data: { accessToken: string, refreshToken: string, user: User, sessionId: string }, timestamp: string }</responseBody>
+      <path>docs/sprint-artifacts/2-1-user-registration-and-login-with-jwt-authentication.md</path>
+    </apiEndpoint>
+
+    <apiEndpoint name="POST /api/v1/auth/register" kind="REST">
+      <signature>POST /api/v1/auth/register</signature>
+      <requestBody>{ email: string, password: string, firstName: string, lastName: string, phone?: string, role?: string }</requestBody>
+      <responseBody>{ success: boolean, data: User, timestamp: string }</responseBody>
+      <path>docs/sprint-artifacts/2-1-user-registration-and-login-with-jwt-authentication.md</path>
+    </apiEndpoint>
+
+    <apiEndpoint name="POST /api/v1/auth/refresh" kind="REST">
+      <signature>POST /api/v1/auth/refresh</signature>
+      <requestBody>None (refresh token in HTTP-only cookie)</requestBody>
+      <responseBody>{ success: boolean, data: { accessToken: string }, timestamp: string }</responseBody>
+      <path>docs/sprint-artifacts/2-1-user-registration-and-login-with-jwt-authentication.md</path>
+    </apiEndpoint>
+
+    <apiEndpoint name="POST /api/v1/auth/logout" kind="REST">
+      <signature>POST /api/v1/auth/logout</signature>
+      <requestBody>None</requestBody>
+      <responseBody>{ success: boolean, message: string, timestamp: string }</responseBody>
+      <path>docs/sprint-artifacts/2-4-session-management-and-security-enhancements.md</path>
+    </apiEndpoint>
+
+    <apiEndpoint name="GET /api/v1/auth/sessions" kind="REST">
+      <signature>GET /api/v1/auth/sessions</signature>
+      <responseBody>{ success: boolean, data: SessionDto[], timestamp: string }</responseBody>
+      <path>docs/sprint-artifacts/2-4-session-management-and-security-enhancements.md</path>
+    </apiEndpoint>
+
+    <interface name="User" kind="TypeScript">
+      <signature>interface User { id: string; email: string; firstName: string; lastName: string; role: string; permissions: string[]; createdAt: string; }</signature>
+      <path>frontend/src/types/auth.ts (to be created)</path>
+    </interface>
+
+    <interface name="AuthState" kind="TypeScript">
+      <signature>interface AuthState { user: User | null; isAuthenticated: boolean; isLoading: boolean; }</signature>
+      <path>frontend/src/types/auth.ts (to be created)</path>
+    </interface>
+
+    <interface name="AuthContextType" kind="TypeScript">
+      <signature>interface AuthContextType extends AuthState { login: (email: string, password: string) =&gt; Promise&lt;void&gt;; logout: () =&gt; Promise&lt;void&gt;; register: (data: RegisterRequest) =&gt; Promise&lt;void&gt;; refreshToken: () =&gt; Promise&lt;string&gt;; }</signature>
+      <path>frontend/src/types/auth.ts (to be created)</path>
+    </interface>
+
+    <reactHook name="useAuth" kind="custom-hook">
+      <signature>function useAuth(): AuthContextType</signature>
+      <description>Returns AuthContext value with user state and auth methods. Throws error if used outside AuthProvider.</description>
+      <path>frontend/src/hooks/useAuth.ts (to be created) OR frontend/src/contexts/AuthContext.tsx</path>
+    </reactHook>
+
+    <reactHook name="useUser" kind="custom-hook">
+      <signature>function useUser(): { user: User | null; isLoading: boolean }</signature>
+      <description>Returns current user profile and loading state</description>
+      <path>frontend/src/hooks/useUser.ts (to be created)</path>
+    </reactHook>
+
+    <reactHook name="usePermission" kind="custom-hook">
+      <signature>function usePermission(permission: string): boolean</signature>
+      <description>Checks if current user has specified permission based on role</description>
+      <path>frontend/src/hooks/usePermission.ts (to be created)</path>
+    </reactHook>
+
+    <component name="AuthProvider" kind="React-Context-Provider">
+      <signature>&lt;AuthProvider children={ReactNode} /&gt;</signature>
+      <description>Wraps app to provide global auth state via Context API. Manages user state, login/logout/register methods, auto-refresh logic.</description>
+      <path>frontend/src/contexts/AuthContext.tsx (to be created)</path>
+    </component>
+
+    <component name="ProtectedRoute" kind="React-Component">
+      <signature>&lt;ProtectedRoute children={ReactNode} requiredRole?={string} requiredPermission?={string} /&gt;</signature>
+      <description>Client-side route guard. Redirects unauthenticated users to /login, unauthorized users to /403. Shows skeleton loader while checking auth.</description>
+      <path>frontend/src/components/auth/ProtectedRoute.tsx (to be created)</path>
+    </component>
+
+    <middleware name="middleware" kind="Next.js-Middleware">
+      <signature>export function middleware(request: NextRequest): NextResponse</signature>
+      <description>Server-side route protection. Checks for access token, redirects unauthenticated users accessing protected routes to /login with returnUrl parameter.</description>
+      <path>frontend/src/middleware.ts (to be created)</path>
+    </middleware>
+  </interfaces>
+
+  <tests>
+    <standards>
+      **Testing Frameworks:**
+      - E2E Testing: Playwright (already configured in playwright.config.ts)
+      - Component Testing: React Testing Library
+      - Hook Testing: @testing-library/react-hooks
+      - Mocking: Mock Service Worker (msw) for API mocking
+
+      **Test Coverage Requirements:**
+      - Unit tests for all custom hooks (useAuth, useUser, usePermission)
+      - Component tests for auth forms (validation, error display, loading states)
+      - E2E tests for critical user flows (login, registration, password reset, logout, protected route access)
+      - Integration tests for API client interceptors (token refresh, error handling)
+
+      **Testing Patterns:**
+      - Use data-testid attributes for E2E test selectors
+      - Mock API calls using msw for predictable test data
+      - Test accessibility using @testing-library/jest-dom matchers
+      - Test keyboard navigation and screen reader compatibility
+    </standards>
+
+    <locations>
+      - E2E tests: frontend/tests/e2e/ (Playwright)
+      - Component tests: frontend/src/components/__tests__/
+      - Hook tests: frontend/src/hooks/__tests__/
+      - Integration tests: frontend/src/lib/__tests__/
+    </locations>
+
+    <ideas>
+      **AC1 - Login Page:**
+      - E2E: Test successful login flow (enter credentials → submit → redirect to /dashboard)
+      - E2E: Test login failure (invalid credentials → error message shown)
+      - Component: Test email validation (empty email → error, invalid format → error)
+      - Component: Test password field (type password → masked, click toggle → visible)
+      - Component: Test "Remember me" checkbox (checked → rememberMe=true in request)
+
+      **AC2 - Registration Page:**
+      - E2E: Test registration flow (fill form → submit → success message → redirect to /login)
+      - Component: Test password strength meter (weak password → red bar, strong password → green bar)
+      - Component: Test requirements checklist (enter "Pass" → 8+ chars checked, uppercase unchecked)
+      - Component: Test confirm password validation (passwords don't match → error)
+
+      **AC3 - Password Reset Flow:**
+      - E2E: Test forgot password (enter email → submit → success message)
+      - E2E: Test reset password (valid token → enter new password → submit → redirect to /login)
+      - Component: Test token validation (expired token → error message with retry link)
+      - Component: Test countdown timer (15:00 → decrements every second → 00:00 → token expired)
+
+      **AC5 - Authentication Context:**
+      - Hook: Test useAuth login (call login() → isAuthenticated becomes true, user is set)
+      - Hook: Test useAuth logout (call logout() → isAuthenticated becomes false, user is null)
+      - Hook: Test auto-refresh (token expires → refreshToken() called automatically)
+
+      **AC6 - Route Protection:**
+      - E2E: Test protected route redirect (unauthenticated user → navigate to /dashboard → redirect to /login)
+      - E2E: Test role-based access (TENANT user → navigate to admin page → redirect to /403)
+      - Component: Test ProtectedRoute (no user → redirect, user with wrong role → redirect to /403)
+
+      **AC7 - API Client:**
+      - Integration: Test request interceptor (make request → Authorization header added with token)
+      - Integration: Test 401 handling (API returns 401 → refresh token called → request retried)
+      - Integration: Test refresh failure (refresh returns 401 → user logged out, redirect to /login)
+
+      **AC8 - Session Expiry Warning:**
+      - Component: Test modal appears (5 minutes before expiry → modal shown with countdown)
+      - Component: Test "Stay Logged In" button (click → refreshToken() called, modal closes)
+      - Component: Test auto-logout (countdown reaches 0 → logout() called, redirect to /login)
+
+      **AC15 - Accessibility:**
+      - Component: Test keyboard navigation (Tab key → focus moves through form fields)
+      - Component: Test screen reader (error message → aria-live region announces error)
+      - E2E: Test contrast ratios (all text meets WCAG AA 4.5:1 minimum)
+    </ideas>
+  </tests>
+</story-context>

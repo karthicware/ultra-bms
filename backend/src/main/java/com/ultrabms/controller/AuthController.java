@@ -36,6 +36,10 @@ public class AuthController {
     private static final int REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 
     private final AuthService authService;
+    private final com.ultrabms.service.PasswordResetService passwordResetService;
+    private final com.ultrabms.service.SessionService sessionService;
+    private final com.ultrabms.security.JwtTokenProvider jwtTokenProvider;
+    private final com.ultrabms.repository.UserSessionRepository userSessionRepository;
 
     @Value("${cookie.secure:false}")
     private boolean cookieSecure;
@@ -90,11 +94,8 @@ public class AuthController {
 
         log.info("Login request received for email: {}", request.email());
 
-        // Extract IP address and user agent
-        String ipAddress = getClientIpAddress(httpRequest);
-        String userAgent = httpRequest.getHeader("User-Agent");
-
-        LoginResponse response = authService.login(request, ipAddress, userAgent);
+        // Pass HTTP request to service for session creation
+        LoginResponse response = authService.login(request, httpRequest);
 
         // Set refresh token as HTTP-only cookie
         setRefreshTokenCookie(httpResponse, response.refreshToken());
@@ -177,6 +178,144 @@ public class AuthController {
 
         log.info("Logout successful");
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Logs out user from all devices except the current one.
+     * Invalidates all active sessions except the current session.
+     *
+     * @param httpRequest HTTP servlet request for extracting current access token
+     * @return 200 OK with number of sessions revoked
+     */
+    @PostMapping("/logout-all")
+    @Operation(summary = "Logout from all devices", description = "Invalidates all user sessions except the current one")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully logged out from all other devices"),
+            @ApiResponse(responseCode = "401", description = "Authentication required")
+    })
+    public ResponseEntity<java.util.Map<String, Object>> logoutAllDevices(HttpServletRequest httpRequest) {
+        log.info("Logout all devices request received");
+
+        // Extract access token
+        String accessToken = extractAccessToken(httpRequest);
+        if (accessToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // Get user ID from token
+        java.util.UUID userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+
+        // Find current session ID
+        String tokenHash = com.ultrabms.util.TokenHashUtil.hashToken(accessToken);
+        String currentSessionId = userSessionRepository.findByAccessTokenHash(tokenHash)
+                .map(com.ultrabms.entity.UserSession::getSessionId)
+                .orElse(null);
+
+        if (currentSessionId == null) {
+            log.warn("Current session not found for logout-all request");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // Revoke all sessions except current
+        int revokedCount = sessionService.revokeAllUserSessionsExcept(userId, currentSessionId);
+
+        log.info("Revoked {} sessions for user {}", revokedCount, userId);
+
+        return ResponseEntity.ok(java.util.Map.of(
+                "success", true,
+                "message", String.format("Logged out from %d other device(s)", revokedCount),
+                "revokedSessions", revokedCount
+        ));
+    }
+
+    /**
+     * Initiates password reset workflow by sending reset email.
+     * Always returns 200 OK for security (doesn't reveal if email exists).
+     *
+     * @param request forgot password request with email address
+     * @param httpRequest HTTP servlet request for extracting IP address
+     * @return 200 OK with success message
+     */
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request password reset", description = "Sends password reset email if account exists")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Reset link sent (if account exists)"),
+            @ApiResponse(responseCode = "400", description = "Invalid email format"),
+            @ApiResponse(responseCode = "429", description = "Too many reset attempts - rate limit exceeded")
+    })
+    public ResponseEntity<SuccessResponse> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request,
+            HttpServletRequest httpRequest) {
+
+        log.info("Password reset requested for email: {}", request.email());
+
+        String ipAddress = getClientIpAddress(httpRequest);
+
+        passwordResetService.initiatePasswordReset(request.email(), ipAddress);
+
+        // Always return success message (security: don't reveal if email exists)
+        return ResponseEntity.ok(
+            new SuccessResponse(
+                true,
+                "If your email is registered, you'll receive password reset instructions shortly."
+            )
+        );
+    }
+
+    /**
+     * Validates a password reset token.
+     * Checks if token is valid, not expired, and not used.
+     *
+     * @param token The reset token to validate
+     * @return 200 OK with validation result including remaining time
+     */
+    @GetMapping("/reset-password/validate")
+    @Operation(summary = "Validate reset token", description = "Checks if password reset token is valid and returns remaining time")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token is valid"),
+            @ApiResponse(responseCode = "400", description = "Token is invalid, expired, or already used")
+    })
+    public ResponseEntity<com.ultrabms.service.PasswordResetService.TokenValidationResult> validateResetToken(
+            @RequestParam("token") String token) {
+
+        log.info("Token validation requested for token: {}...", token.substring(0, Math.min(10, token.length())));
+
+        var result = passwordResetService.validateResetToken(token);
+
+        log.info("Token validation successful: {} minutes remaining", result.remainingMinutes());
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Completes password reset by setting new password.
+     * Validates token and password, updates password, invalidates tokens, sends confirmation.
+     *
+     * @param request Reset password request with token and new password
+     * @param httpRequest HTTP servlet request for extracting IP address
+     * @return 200 OK with success message
+     */
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password", description = "Completes password reset with new password")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Password reset successful"),
+            @ApiResponse(responseCode = "400", description = "Invalid token or weak password")
+    })
+    public ResponseEntity<SuccessResponse> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request,
+            HttpServletRequest httpRequest) {
+
+        log.info("Password reset completion requested");
+
+        String ipAddress = getClientIpAddress(httpRequest);
+
+        passwordResetService.resetPassword(request.token(), request.newPassword(), ipAddress);
+
+        return ResponseEntity.ok(
+            new SuccessResponse(
+                true,
+                "Password reset successful. You can now log in with your new password."
+            )
+        );
     }
 
     /**

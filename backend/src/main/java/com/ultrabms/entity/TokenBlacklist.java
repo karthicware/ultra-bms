@@ -1,5 +1,7 @@
 package com.ultrabms.entity;
 
+import com.ultrabms.entity.enums.BlacklistReason;
+import com.ultrabms.entity.enums.TokenType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -60,6 +62,30 @@ public class TokenBlacklist {
     private LocalDateTime blacklistedAt;
 
     /**
+     * Type of token (ACCESS or REFRESH)
+     * Distinguishes between short-lived access tokens and long-lived refresh tokens
+     */
+    @NotNull(message = "Token type cannot be null")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "token_type", nullable = false, length = 20)
+    private TokenType tokenType = TokenType.ACCESS;
+
+    /**
+     * Reason why the token was blacklisted
+     * Used for audit trail and security monitoring
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reason", length = 100)
+    private BlacklistReason reason;
+
+    /**
+     * When the token was blacklisted (same as blacklistedAt, for consistency)
+     * Added for uniformity with other entities
+     */
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    /**
      * Constructor for creating a new blacklist entry.
      *
      * @param tokenHash hashed token value
@@ -69,5 +95,24 @@ public class TokenBlacklist {
         this.tokenHash = tokenHash;
         this.expiresAt = expiresAt;
         this.blacklistedAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
+        this.tokenType = TokenType.ACCESS;
+    }
+
+    /**
+     * Constructor for creating a new blacklist entry with token type and reason.
+     *
+     * @param tokenHash hashed token value
+     * @param tokenType type of token (ACCESS or REFRESH)
+     * @param expiresAt when the token expires
+     * @param reason    why the token was blacklisted
+     */
+    public TokenBlacklist(String tokenHash, TokenType tokenType, LocalDateTime expiresAt, BlacklistReason reason) {
+        this.tokenHash = tokenHash;
+        this.tokenType = tokenType;
+        this.expiresAt = expiresAt;
+        this.reason = reason;
+        this.blacklistedAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 }
