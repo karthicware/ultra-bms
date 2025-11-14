@@ -47,8 +47,8 @@ development_status:
   2-1-user-registration-and-login-with-jwt-authentication: done  # Completed 2025-11-14 - All review action items resolved (66 tests passing)
   2-2-role-based-access-control-rbac-implementation: done  # Completed 2025-11-13
   2-3-password-reset-and-recovery-workflow: done  # Completed 2025-11-14 - All tasks + audit logging complete (25 tests passing)
-  2-4-session-management-and-security-enhancements: in-progress  # Development started 2025-11-14
-  2-5-frontend-authentication-components-and-protected-routes: ready-for-dev  # Story context created 2025-11-14
+  2-4-session-management-and-security-enhancements: done  # Completed 2025-11-15 - All ACs met, code reviewed, action items resolved (87 tests passing)
+  2-5-frontend-authentication-components-and-protected-routes: in-progress  # Development started 2025-11-15
   epic-2-retrospective: optional
 
   # Epic 3: Tenant Management & Portal (5 stories)

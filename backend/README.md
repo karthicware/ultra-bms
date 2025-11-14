@@ -879,6 +879,410 @@ For detailed API documentation including request/response schemas, error codes, 
 
 **Full API Documentation:** `/docs/api/password-reset-api.md`
 
+## Session Management
+
+Ultra BMS implements robust session management with tracking, timeout enforcement, and security controls to protect user sessions.
+
+### Session Lifecycle
+
+#### 1. Session Creation (On Login)
+
+When a user successfully authenticates:
+- **Database Record:** `UserSession` entity created in `user_sessions` table
+- **Session ID:** UUID generated as unique session identifier
+- **Token Hashing:** Access and refresh tokens hashed (SHA-256) before storage
+- **Metadata Captured:** IP address, User-Agent, device type, creation timestamp
+- **Expiration Set:** Absolute timeout (12 hours from creation)
+- **Concurrent Limit:** Max 3 sessions per user; oldest deleted if exceeded
+
+```java
+// SessionService.createSession()
+String sessionId = UUID.randomUUID().toString();
+String accessTokenHash = TokenHashUtil.hashToken(accessToken);
+String refreshTokenHash = TokenHashUtil.hashToken(refreshToken);
+
+UserSession session = new UserSession();
+session.setUser(user);
+session.setSessionId(sessionId);
+session.setAccessTokenHash(accessTokenHash);
+session.setRefreshTokenHash(refreshTokenHash);
+session.setExpiresAt(now.plusSeconds(absoluteTimeout)); // 12 hours
+session.setIpAddress(request.getRemoteAddr());
+session.setUserAgent(request.getHeader("User-Agent"));
+session.updateDeviceType(); // Desktop/Mobile/Tablet
+```
+
+#### 2. Session Activity Tracking
+
+On each authenticated request:
+- **Filter:** `SessionActivityFilter` intercepts after JWT validation
+- **Timestamp Update:** `last_activity_at` updated to current time
+- **Idle Check:** Session invalidated if idle > 30 minutes
+- **Absolute Check:** Session invalidated if age > 12 hours
+- **Blacklist:** Expired sessions add tokens to `token_blacklist`
+
+```java
+// SessionActivityFilter.doFilterInternal()
+Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+if (auth != null && auth.isAuthenticated()) {
+    String token = extractTokenFromRequest(request);
+    sessionService.updateSessionActivity(token); // Checks timeouts
+}
+```
+
+#### 3. Session Timeout Enforcement
+
+**Idle Timeout (30 minutes):**
+- No authenticated requests for 30 minutes → session invalidated
+- `last_activity_at` compared to current time
+- User must login again after idle timeout
+
+**Absolute Timeout (12 hours):**
+- Session expires 12 hours after creation, regardless of activity
+- `expires_at` timestamp checked on each request
+- Forces re-authentication for long-running sessions
+
+```yaml
+# application.yml
+app:
+  security:
+    session:
+      idle-timeout: 1800      # 30 minutes in seconds
+      absolute-timeout: 43200 # 12 hours in seconds
+      max-concurrent-sessions: 3
+```
+
+#### 4. Session Termination
+
+**Logout (Single Device):**
+- `POST /api/v1/auth/logout`
+- Marks session `is_active = false`
+- Adds access and refresh tokens to blacklist
+- Clears refresh token cookie
+- Logs audit event
+
+**Logout All Devices:**
+- `POST /api/v1/auth/logout-all`
+- Invalidates all user sessions except current
+- Blacklists all associated tokens
+- Returns count of revoked sessions
+
+**Session Revocation:**
+- `DELETE /api/v1/sessions/{sessionId}`
+- User can revoke individual sessions from security settings
+- Validates session belongs to current user
+- Same invalidation process as logout
+
+#### 5. Session Cleanup (Scheduled)
+
+**Hourly Cleanup Job:**
+- **Schedule:** Every hour (`@Scheduled(fixedDelay = 3600000)`)
+- **Expired Sessions:** Deleted if `expires_at < now`
+- **Inactive Sessions:** Deleted if inactive for 30+ days
+- **Blacklist Entries:** Deleted after token expiration
+- **Audit Logs:** Retained for 90 days (cleanup optional)
+
+```java
+// SessionCleanupService
+@Scheduled(fixedDelay = 3600000) // Every hour
+@Transactional
+public void cleanupExpiredSessions() {
+    LocalDateTime now = LocalDateTime.now();
+
+    // Delete expired sessions
+    int deleted = userSessionRepository.deleteByExpiresAtBefore(now);
+
+    // Delete old inactive sessions (30+ days)
+    LocalDateTime threshold = now.minusDays(30);
+    int inactive = userSessionRepository.deleteInactiveSessionsBefore(threshold);
+}
+```
+
+### Token Blacklisting
+
+**Purpose:** Prevent use of invalidated tokens after logout
+
+**Implementation:**
+- **Table:** `token_blacklist`
+- **Hash:** SHA-256 hash of token stored (not plain text)
+- **Type:** ACCESS or REFRESH token
+- **Reason:** LOGOUT, LOGOUT_ALL, IDLE_TIMEOUT, ABSOLUTE_TIMEOUT, PASSWORD_RESET, SECURITY_VIOLATION
+- **Expiration:** Token's original expiry time (for cleanup)
+
+**Validation Flow:**
+```java
+// JwtAuthenticationFilter.doFilterInternal()
+if (jwtTokenProvider.validateToken(token)) {
+    String tokenHash = TokenHashUtil.hashToken(token);
+    if (tokenBlacklistRepository.existsByTokenHash(tokenHash)) {
+        // Token is blacklisted - reject authentication
+        log.warn("Attempted to use blacklisted token");
+        return;
+    }
+    // Token valid - proceed with authentication
+}
+```
+
+### Concurrent Session Enforcement
+
+**Limit:** Maximum 3 active sessions per user
+
+**Enforcement Logic:**
+```java
+// SessionService.createSession()
+long activeCount = userSessionRepository.countByUserIdAndIsActiveTrue(userId);
+int maxSessions = securityProperties.getSession().getMaxConcurrentSessions();
+
+if (activeCount >= maxSessions) {
+    // Delete oldest session
+    List<UserSession> oldest = userSessionRepository.findOldestActiveSessionByUserId(userId);
+    UserSession oldestSession = oldest.get(0);
+    invalidateSession(oldestSession.getSessionId(), BlacklistReason.SECURITY_VIOLATION);
+}
+```
+
+**User Impact:**
+- Login from 4th device → oldest session automatically terminated
+- User sees "Your session was terminated due to login from another device" on next request
+- Prevents account sharing and session hijacking
+
+### Session Management Endpoints
+
+**Get Active Sessions:**
+```bash
+GET /api/v1/sessions
+Authorization: Bearer {accessToken}
+
+# Response:
+{
+  "sessions": [
+    {
+      "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+      "deviceType": "Desktop",
+      "browser": "Chrome 120",
+      "ipAddress": "192.168.1.100",
+      "location": "Dubai, UAE",
+      "lastActivityAt": "2025-11-15T10:30:00Z",
+      "createdAt": "2025-11-15T08:00:00Z",
+      "isCurrent": true
+    }
+  ]
+}
+```
+
+**Revoke Session:**
+```bash
+DELETE /api/v1/sessions/{sessionId}
+Authorization: Bearer {accessToken}
+
+# Response: 204 No Content
+```
+
+**Logout All Devices:**
+```bash
+POST /api/v1/auth/logout-all
+Authorization: Bearer {accessToken}
+
+# Response:
+{
+  "success": true,
+  "message": "Logged out from 2 other device(s)",
+  "revokedSessions": 2
+}
+```
+
+### Security Headers
+
+Session security enhanced with HTTP security headers:
+
+```java
+// SecurityConfig - Security Headers Configuration
+.headers(headers -> headers
+    .frameOptions(frame -> frame.deny())  // Prevent clickjacking
+    .xssProtection(xss -> xss.headerValue(ENABLED_MODE_BLOCK))  // XSS protection
+    .contentTypeOptions(contentTypeOptions -> {})  // MIME sniffing prevention
+    .httpStrictTransportSecurity(hsts -> hsts
+        .includeSubDomains(true)
+        .maxAgeInSeconds(31536000)  // 1 year HSTS
+    )
+    .contentSecurityPolicy(csp -> csp
+        .policyDirectives("default-src 'self'; frame-ancestors 'none'")
+    )
+)
+```
+
+**Headers Applied:**
+- `X-Frame-Options: DENY` - Prevents embedding in iframes
+- `X-Content-Type-Options: nosniff` - Prevents MIME sniffing
+- `X-XSS-Protection: 1; mode=block` - Browser XSS protection
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains` - Force HTTPS
+- `Content-Security-Policy: default-src 'self'; frame-ancestors 'none'` - CSP protection
+
+### Frontend Integration
+
+**Token Refresh Interceptor:**
+```typescript
+// frontend/src/lib/api.ts
+apiClient.interceptors.response.use(
+  response => response,
+  async error => {
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // Attempt token refresh
+      const response = await fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        credentials: 'include' // Send refresh token cookie
+      });
+
+      if (response.ok) {
+        const { accessToken } = await response.json();
+        setAccessToken(accessToken);
+        // Retry original request with new token
+        return apiClient(originalRequest);
+      }
+
+      // Refresh failed - logout user
+      await logout();
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+**Session Expiry Warning:**
+- Modal displays 5 minutes before access token expires
+- Countdown timer shows remaining time
+- "Stay Logged In" button triggers token refresh
+- "Logout" button immediately ends session
+- Auto-logout if user doesn't respond
+
+**Active Sessions UI:**
+- Located at `/settings/security` in dashboard
+- Table shows all active sessions with device, browser, IP, last active time
+- Current session highlighted with badge
+- Revoke button for each session
+- "Logout All Other Devices" button
+
+### Troubleshooting
+
+#### Session Expired (Idle Timeout)
+
+**Problem:** "Session expired due to inactivity"
+
+**Cause:** No requests for 30+ minutes
+
+**Solution:**
+- Login again
+- Increase `app.security.session.idle-timeout` in application.yml (not recommended for security)
+- Frontend can ping backend periodically to keep session alive
+
+#### Session Expired (Absolute Timeout)
+
+**Problem:** "Session expired (absolute timeout)"
+
+**Cause:** Session older than 12 hours
+
+**Solution:**
+- Login again
+- Long-running sessions force re-authentication for security
+
+#### Concurrent Session Limit
+
+**Problem:** "Your session was terminated due to login from another device"
+
+**Cause:** More than 3 active sessions
+
+**Solution:**
+- Logout from unused devices via `/settings/security` page
+- Use "Logout All Other Devices" button
+- Adjust `app.security.session.max-concurrent-sessions` if needed
+
+#### Token Blacklisted
+
+**Problem:** "Attempted to use blacklisted token"
+
+**Cause:** Token was invalidated via logout or timeout
+
+**Solution:**
+- Login again to get new tokens
+- Check if logout was accidental
+- Verify session wasn't revoked from another device
+
+### Monitoring
+
+**Session Metrics to Monitor:**
+- Active session count per user
+- Session creation rate
+- Session invalidation rate (timeouts vs. manual logout)
+- Concurrent session limit violations
+- Token blacklist size (should shrink after cleanup)
+
+**Log Events:**
+```
+INFO  c.u.service.SessionService - Created session abc123 for user user@example.com from IP 192.168.1.100
+WARN  c.u.service.SessionService - Session xyz789 idle timeout exceeded (30min). Invalidating session.
+INFO  c.u.service.SessionService - Session abc123 revoked by user
+INFO  c.u.service.SessionCleanupService - Session cleanup completed: deleted 15 expired sessions and 8 old inactive sessions
+```
+
+### Security Best Practices
+
+1. **Never Log Complete Tokens:** Only log session IDs or first 10 characters of token
+2. **Monitor Anomalies:** Alert on unusual session patterns (many logins, rapid device changes)
+3. **IP Validation (Optional):** Track IP changes within session; flag as suspicious
+4. **Device Fingerprinting:** Enhance device detection beyond User-Agent parsing
+5. **Geographic Tracking:** Use GeoIP for location-based alerts (optional)
+
+### Database Schema
+
+**user_sessions Table:**
+```sql
+CREATE TABLE user_sessions (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    session_id VARCHAR(255) UNIQUE NOT NULL,
+    access_token_hash VARCHAR(255),
+    refresh_token_hash VARCHAR(255),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    last_activity_at TIMESTAMP NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    ip_address VARCHAR(50),
+    user_agent VARCHAR(500),
+    device_type VARCHAR(50),
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    version BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE UNIQUE INDEX idx_user_sessions_session_id ON user_sessions(session_id);
+CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX idx_user_sessions_expires_at ON user_sessions(expires_at);
+CREATE INDEX idx_user_sessions_last_activity ON user_sessions(last_activity_at);
+```
+
+**token_blacklist Table:**
+```sql
+CREATE TABLE token_blacklist (
+    id UUID PRIMARY KEY,
+    token_hash VARCHAR(255) UNIQUE NOT NULL,
+    token_type VARCHAR(20) NOT NULL CHECK (token_type IN ('ACCESS', 'REFRESH')),
+    expires_at TIMESTAMP NOT NULL,
+    reason VARCHAR(100),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    blacklisted_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX idx_token_blacklist_token_hash ON token_blacklist(token_hash);
+CREATE INDEX idx_token_blacklist_expires_at ON token_blacklist(expires_at);
+```
+
+### API Documentation
+
+For detailed session management API documentation:
+
+**Swagger UI:** http://localhost:8080/swagger-ui.html → Session Controller
+
+**Full API Docs:** `/docs/api/session-management-api.md`
+
 ## Package Structure
 
 ```

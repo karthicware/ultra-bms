@@ -1,31 +1,24 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { setupAuthInterceptors } from '@/lib/api';
-
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  roleName: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  accessToken: string | null;
-  isAuthenticated: boolean;
-  login: (accessToken: string, refreshToken: string, user: User) => void;
-  logout: () => Promise<void>;
-  updateAccessToken: (token: string) => void;
-}
+import * as authApi from '@/lib/auth-api';
+import { getUserFromToken } from '@/lib/jwt-utils';
+import type {
+  User,
+  AuthContextType,
+  LoginRequest,
+  RegisterRequest,
+  Permission,
+} from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   // Setup API interceptors on mount
@@ -41,52 +34,214 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
   }, [accessToken, router]);
 
-  const login = useCallback((token: string, refreshToken: string, userData: User) => {
-    setAccessToken(token);
-    setUser(userData);
-    // Refresh token is stored in HTTP-only cookie by backend
+  // Try to restore session on mount
+  useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        // Try to refresh token to restore session
+        const response = await authApi.refreshAccessToken();
+        if (response.success && response.data.accessToken) {
+          const token = response.data.accessToken;
+          setAccessToken(token);
+
+          // Extract user information from JWT token
+          const userData = getUserFromToken(token);
+          if (userData) {
+            setUser(userData);
+          }
+        }
+      } catch (error) {
+        console.log('No existing session found');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    restoreSession();
   }, []);
 
-  const logout = useCallback(async () => {
+  /**
+   * Login with email and password
+   */
+  const login = useCallback(
+    async (email: string, password: string, rememberMe: boolean = false) => {
+      setIsLoading(true);
+      try {
+        const credentials: LoginRequest = { email, password, rememberMe };
+        const response = await authApi.login(credentials);
+
+        if (response.success && response.data) {
+          setAccessToken(response.data.accessToken);
+          setUser(response.data.user);
+          // Redirect will be handled by the calling component
+        } else {
+          throw new Error('Login failed');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  /**
+   * Register a new user
+   */
+  const register = useCallback(async (userData: RegisterRequest) => {
+    setIsLoading(true);
     try {
-      // Call logout endpoint (will clear cookie)
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        credentials: 'include', // Send cookies
-      });
+      const response = await authApi.register(userData);
+
+      if (response.success && response.data) {
+        // Registration successful - user should verify email or login
+        return response.data;
+      } else {
+        throw new Error('Registration failed');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  /**
+   * Logout current session
+   */
+  const logout = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await authApi.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       // Clear local state regardless of API call success
       setAccessToken(null);
       setUser(null);
+      setIsLoading(false);
       router.push('/login');
     }
-  }, [accessToken, router]);
+  }, [router]);
 
+  /**
+   * Refresh access token
+   */
+  const refreshToken = useCallback(async () => {
+    try {
+      const response = await authApi.refreshAccessToken();
+      if (response.success && response.data.accessToken) {
+        setAccessToken(response.data.accessToken);
+      } else {
+        throw new Error('Token refresh failed');
+      }
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      // Logout on refresh failure
+      setAccessToken(null);
+      setUser(null);
+      router.push('/login');
+      throw error;
+    }
+  }, [router]);
+
+  /**
+   * Update access token (used by interceptors)
+   */
   const updateAccessToken = useCallback((token: string) => {
     setAccessToken(token);
   }, []);
 
-  const value: AuthContextType = {
-    user,
-    accessToken,
-    isAuthenticated: !!accessToken && !!user,
-    login,
-    logout,
-    updateAccessToken,
-  };
+  const value: AuthContextType = useMemo(
+    () => ({
+      user,
+      isAuthenticated: !!accessToken && !!user,
+      isLoading,
+      login,
+      register,
+      logout,
+      refreshToken,
+      updateAccessToken,
+    }),
+    [user, accessToken, isLoading, login, register, logout, refreshToken, updateAccessToken]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+/**
+ * Hook to access auth context
+ */
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+/**
+ * Hook to get current user
+ */
+export function useUser() {
+  const { user, isLoading } = useAuth();
+  return { user, isLoading };
+}
+
+/**
+ * Hook to check permissions
+ */
+export function usePermission() {
+  const { user } = useAuth();
+
+  const hasPermission = useCallback(
+    (permission: Permission): boolean => {
+      if (!user || !user.permissions) return false;
+      return user.permissions.includes(permission);
+    },
+    [user]
+  );
+
+  const hasAnyPermission = useCallback(
+    (permissions: Permission[]): boolean => {
+      if (!user || !user.permissions) return false;
+      return permissions.some((permission) => user.permissions.includes(permission));
+    },
+    [user]
+  );
+
+  const hasAllPermissions = useCallback(
+    (permissions: Permission[]): boolean => {
+      if (!user || !user.permissions) return false;
+      return permissions.every((permission) => user.permissions.includes(permission));
+    },
+    [user]
+  );
+
+  const hasRole = useCallback(
+    (role: string): boolean => {
+      if (!user) return false;
+      return user.role === role;
+    },
+    [user]
+  );
+
+  const hasAnyRole = useCallback(
+    (roles: string[]): boolean => {
+      if (!user) return false;
+      return roles.includes(user.role);
+    },
+    [user]
+  );
+
+  return {
+    hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
+    hasRole,
+    hasAnyRole,
+  };
 }

@@ -6,8 +6,19 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Send cookies (for refresh token)
+  withCredentials: true, // Send cookies (for refresh token and CSRF)
 });
+
+// CSRF token management
+let csrfToken: string | null = null;
+
+export function setCSRFToken(token: string) {
+  csrfToken = token;
+}
+
+export function getCSRFToken(): string | null {
+  return csrfToken;
+}
 
 // Token refresh state
 let isRefreshing = false;
@@ -37,13 +48,22 @@ export function setupAuthInterceptors(
   handleLogout = logout;
 }
 
-// Request interceptor - Add Authorization header
+// Request interceptor - Add Authorization and CSRF headers
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Add Authorization header if token exists
     const token = getAccessToken?.();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Add CSRF token for state-changing operations (POST, PUT, DELETE, PATCH)
+    const isStateChangingMethod =
+      config.method && ['post', 'put', 'delete', 'patch'].includes(config.method.toLowerCase());
+    if (isStateChangingMethod && csrfToken && config.headers) {
+      config.headers['X-XSRF-TOKEN'] = csrfToken;
+    }
+
     return config;
   },
   (error) => {
@@ -51,9 +71,16 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor - Handle token refresh
+// Response interceptor - Handle token refresh and CSRF token extraction
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Extract CSRF token from response headers if present
+    const csrfTokenFromHeader = response.headers['x-xsrf-token'];
+    if (csrfTokenFromHeader) {
+      setCSRFToken(csrfTokenFromHeader);
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 

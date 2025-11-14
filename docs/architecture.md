@@ -1608,6 +1608,42 @@ cors:
   max-age: 3600
 ```
 
+#### CSRF Protection
+
+**Architectural Decision:** CSRF protection is **disabled** for Ultra BMS API endpoints.
+
+**Rationale:**
+- **JWT-Based Authentication:** Access tokens are transmitted in the `Authorization` header, not cookies
+- **Stateless API:** RESTful API follows stateless design principles (SessionCreationPolicy.STATELESS)
+- **Modern SPA Architecture:** Frontend is a separate Single Page Application (Next.js)
+- **CSRF Not Applicable:** CSRF attacks exploit automatic cookie transmission by browsers; JWT tokens require explicit JavaScript to add headers, preventing automatic submission from malicious sites
+- **Industry Best Practice:** Spring Security documentation recommends disabling CSRF for stateless JWT-based REST APIs
+
+**Security Configuration:**
+```java
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable())  // Disabled for JWT-based stateless API
+        .sessionManagement(session ->
+            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        )
+        // ... other config
+}
+```
+
+**Alternative Protection Mechanisms:**
+- **CORS Policy:** Strict CORS configuration prevents unauthorized origins from making API requests
+- **Token Validation:** JWT signature verification prevents token tampering
+- **Token Blacklisting:** Invalidated tokens are checked against blacklist on each request
+- **Secure Token Storage:** Access tokens stored in memory (not localStorage) in frontend
+- **HTTP-Only Cookies:** Refresh tokens stored in HTTP-only, Secure, SameSite=Strict cookies
+
+**References:**
+- [Spring Security CSRF for REST APIs](https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#csrf-when)
+- [OWASP CSRF Prevention Cheat Sheet - Stateless APIs](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#synchronizer-token-pattern)
+- [RFC 8725: JWT Best Practices](https://datatracker.ietf.org/doc/html/rfc8725)
+
 ### Audit Logging
 - All user actions logged to `audit_logs` table
 - Includes: user_id, action, entity, IP address, timestamp

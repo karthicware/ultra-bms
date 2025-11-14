@@ -25,4 +25,5 @@ export interface PaginatedResponse<T> {
   size: number;
 }
 
-// Module-specific types will be added in respective epics
+// Module-specific types
+export * from './auth';

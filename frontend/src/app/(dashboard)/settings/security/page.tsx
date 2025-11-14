@@ -1,39 +1,69 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { apiClient } from '@/lib/api';
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import { AxiosError } from 'axios';
+import { formatDistanceToNow } from 'date-fns';
+
+import * as authApi from '@/lib/auth-api';
+import { changePasswordSchema, type ChangePasswordFormData } from '@/schemas/authSchemas';
+import { PasswordInput, PasswordStrengthMeter, SubmitButton } from '@/components/forms';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Smartphone, Monitor, Tablet, MapPin, Clock, Shield, AlertTriangle } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-
-interface Session {
-  sessionId: string;
-  deviceType: string;
-  browser: string | null;
-  ipAddress: string | null;
-  location: string | null;
-  lastActivityAt: string;
-  createdAt: string;
-  isCurrent: boolean;
-}
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Smartphone,
+  Monitor,
+  Tablet,
+  MapPin,
+  Clock,
+  Shield,
+  AlertTriangle,
+  Key,
+  CheckCircle2,
+} from 'lucide-react';
+import type { SessionDto } from '@/types/auth';
 
 export default function SecurityPage() {
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<SessionDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
+  const [changePasswordError, setChangePasswordError] = useState<string>('');
+  const [changePasswordSuccess, setChangePasswordSuccess] = useState(false);
+
+  const form = useForm<ChangePasswordFormData>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
+
+  const { isSubmitting, errors } = form.formState;
+  const newPassword = form.watch('newPassword');
 
   const fetchSessions = async () => {
     try {
       setLoading(true);
-      setError(null);
-      const response = await apiClient.get<Session[]>('/v1/auth/sessions');
-      setSessions(response.data);
+      setError('');
+      const response = await authApi.getActiveSessions();
+      if (response.success && response.data.sessions) {
+        setSessions(response.data.sessions);
+      }
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to load active sessions');
       console.error('Failed to fetch sessions:', err);
+      setError('Failed to load active sessions');
     } finally {
       setLoading(false);
     }
@@ -58,29 +88,68 @@ export default function SecurityPage() {
   };
 
   const revokeSession = async (sessionId: string) => {
-    if (!confirm('Are you sure you want to revoke this session?')) return;
-
     try {
-      await apiClient.delete(`/v1/auth/sessions/${sessionId}`);
+      await authApi.revokeSession(sessionId);
+      toast.success('Session revoked successfully');
       setSessions((prev) => prev.filter((s) => s.sessionId !== sessionId));
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to revoke session');
       console.error('Failed to revoke session:', err);
+      toast.error('Failed to revoke session');
     }
   };
 
   const logoutAllOtherDevices = async () => {
-    if (!confirm('This will log you out from all other devices. Continue?')) return;
+    try {
+      await authApi.logoutAllDevices();
+      toast.success('Logged out from all other devices');
+      await fetchSessions(); // Refresh the list
+    } catch (err) {
+      console.error('Failed to logout all:', err);
+      toast.error('Failed to logout from all devices');
+    }
+  };
+
+  const onSubmitPasswordChange = async (data: ChangePasswordFormData) => {
+    setChangePasswordError('');
+    setChangePasswordSuccess(false);
 
     try {
-      const response = await apiClient.post('/v1/auth/logout-all');
-      alert(response.data.message || 'Logged out from all other devices');
-      fetchSessions(); // Refresh the list
+      await authApi.changePassword(data);
+
+      setChangePasswordSuccess(true);
+      toast.success('Password changed successfully', {
+        description: 'Your password has been updated.',
+      });
+
+      // Reset form
+      form.reset();
+
+      // Hide success message after 5 seconds
+      setTimeout(() => setChangePasswordSuccess(false), 5000);
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to logout from all devices');
-      console.error('Failed to logout all:', err);
+      console.error('Password change failed:', err);
+
+      if (err instanceof AxiosError) {
+        const errorData = err.response?.data;
+        const errorCode = errorData?.error?.code;
+        const errorMessage = errorData?.error?.message;
+
+        switch (errorCode) {
+          case 'INVALID_CREDENTIALS':
+            setChangePasswordError('Current password is incorrect.');
+            form.setError('currentPassword', {
+              message: 'Incorrect password',
+            });
+            break;
+          case 'PASSWORD_TOO_WEAK':
+            setChangePasswordError('New password does not meet security requirements.');
+            break;
+          default:
+            setChangePasswordError(errorMessage || 'Failed to change password. Please try again.');
+        }
+      } else {
+        setChangePasswordError('An unexpected error occurred. Please try again.');
+      }
     }
   };
 
@@ -89,11 +158,121 @@ export default function SecurityPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Security Settings</h1>
         <p className="text-muted-foreground">
-          Manage your active sessions and security preferences
+          Manage your password and active sessions
         </p>
       </div>
 
       <div className="space-y-6">
+        {/* Change Password Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              Change Password
+            </CardTitle>
+            <CardDescription>Update your password to keep your account secure</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {changePasswordSuccess && (
+              <Alert className="mb-4 border-green-200 bg-green-50">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  Your password has been changed successfully.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {changePasswordError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{changePasswordError}</AlertDescription>
+              </Alert>
+            )}
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmitPasswordChange)} className="space-y-4">
+                {/* Current Password */}
+                <FormField
+                  control={form.control}
+                  name="currentPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Current password</FormLabel>
+                      <FormControl>
+                        <PasswordInput
+                          placeholder="Enter your current password"
+                          autoComplete="current-password"
+                          disabled={isSubmitting}
+                          error={!!errors.currentPassword}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* New Password */}
+                <FormField
+                  control={form.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>New password</FormLabel>
+                      <FormControl>
+                        <PasswordInput
+                          placeholder="Enter your new password"
+                          autoComplete="new-password"
+                          disabled={isSubmitting}
+                          error={!!errors.newPassword}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+
+                      {/* Password Strength Meter */}
+                      {newPassword && (
+                        <div className="mt-2">
+                          <PasswordStrengthMeter password={newPassword} />
+                        </div>
+                      )}
+                    </FormItem>
+                  )}
+                />
+
+                {/* Confirm Password */}
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm new password</FormLabel>
+                      <FormControl>
+                        <PasswordInput
+                          placeholder="Re-enter your new password"
+                          autoComplete="new-password"
+                          disabled={isSubmitting}
+                          error={!!errors.confirmPassword}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <SubmitButton
+                  isLoading={isSubmitting}
+                  loadingText="Changing password..."
+                  className="mt-6"
+                >
+                  Change password
+                </SubmitButton>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
         {/* Active Sessions Card */}
         <Card>
           <CardHeader>
@@ -104,17 +283,19 @@ export default function SecurityPage() {
                   Active Sessions
                 </CardTitle>
                 <CardDescription>
-                  Manage where you&apos;re logged in. You can revoke access to any device at any time.
+                  Manage where you're logged in. You can revoke access to any device at any time.
                 </CardDescription>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={logoutAllOtherDevices}
-                disabled={loading || sessions.length <= 1}
-              >
-                Logout All Other Devices
-              </Button>
+              {sessions.length > 1 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={logoutAllOtherDevices}
+                  disabled={loading}
+                >
+                  Logout All Other Devices
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent>
@@ -196,20 +377,6 @@ export default function SecurityPage() {
                 inactivity.
               </p>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Change Password Card (placeholder for future implementation) */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Change Password</CardTitle>
-            <CardDescription>Update your password to keep your account secure</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Password change functionality coming soon. For now, you can reset your password using
-              the &quot;Forgot Password&quot; link on the login page.
-            </p>
           </CardContent>
         </Card>
       </div>

@@ -43,7 +43,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Disable CSRF for REST API (will be enabled with JWT in Story 2.1)
+            .csrf(csrf -> csrf.disable()) // CSRF disabled for JWT-based stateless REST API (see architecture.md - API Security - CSRF Protection)
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )

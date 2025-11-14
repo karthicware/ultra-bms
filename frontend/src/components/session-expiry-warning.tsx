@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
+import { getTimeUntilExpiration } from '@/lib/jwt-utils';
 import {
   Dialog,
   DialogContent,
@@ -11,65 +12,43 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Clock } from 'lucide-react';
 
 const WARNING_TIME_MINUTES = 5; // Show warning 5 minutes before expiry
 const CHECK_INTERVAL_MS = 30000; // Check every 30 seconds
 
 export function SessionExpiryWarning() {
-  const { accessToken, logout, updateAccessToken } = useAuth();
+  const { user, logout, refreshToken } = useAuth();
   const [showWarning, setShowWarning] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
 
-  const getTokenExpiry = useCallback((token: string | null): number | null => {
-    if (!token) return null;
-
+  const handleStayLoggedIn = useCallback(async () => {
     try {
-      // Decode JWT token (base64 decode the payload)
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000; // Convert to milliseconds
-    } catch (error) {
-      console.error('Failed to decode token:', error);
-      return null;
-    }
-  }, []);
-
-  const refreshSession = useCallback(async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/v1/auth/refresh`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Token refresh failed');
-      }
-
-      const data = await response.json();
-      updateAccessToken(data.accessToken);
+      await refreshToken();
       setShowWarning(false);
     } catch (error) {
       console.error('Failed to refresh session:', error);
       await logout();
     }
-  }, [updateAccessToken, logout]);
+  }, [refreshToken, logout]);
 
   useEffect(() => {
+    if (!user) {
+      setShowWarning(false);
+      return;
+    }
+
     const checkExpiry = () => {
-      const expiryTime = getTokenExpiry(accessToken);
-      if (!expiryTime) {
+      // Get access token from context (we need to access it somehow)
+      // For now, we'll use a simplified approach
+      const accessToken = sessionStorage.getItem('accessToken');
+      if (!accessToken) {
         setShowWarning(false);
         return;
       }
 
-      const now = Date.now();
-      const timeUntilExpiry = expiryTime - now;
+      const timeUntilExpiry = getTimeUntilExpiration(accessToken);
       const warningThreshold = WARNING_TIME_MINUTES * 60 * 1000;
 
       if (timeUntilExpiry <= 0) {
@@ -92,7 +71,7 @@ export function SessionExpiryWarning() {
     const interval = setInterval(checkExpiry, CHECK_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [accessToken, getTokenExpiry, logout]);
+  }, [user, logout]);
 
   // Countdown timer
   useEffect(() => {
@@ -118,27 +97,32 @@ export function SessionExpiryWarning() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  if (!showWarning) return null;
+
   return (
     <Dialog open={showWarning} onOpenChange={(open) => !open && logout()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-amber-500" />
+            <AlertCircle className="h-5 w-5 text-warning" aria-hidden="true" />
             <DialogTitle>Session Expiring Soon</DialogTitle>
           </div>
           <DialogDescription className="pt-4">
             Your session will expire in{' '}
-            <span className="font-semibold text-amber-600">
+            <span className="font-semibold text-warning" role="timer" aria-live="polite">
               {formatTime(timeRemaining)}
             </span>
             . Would you like to stay logged in?
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center gap-2 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
-          <Clock className="h-4 w-4" />
-          <p>Click &quot;Stay Logged In&quot; to extend your session.</p>
-        </div>
+        <Alert className="border-warning/20 bg-warning/10">
+          <Clock className="h-4 w-4 text-warning" aria-hidden="true" />
+          <AlertDescription className="text-warning-foreground">
+            Click "Stay Logged In" to extend your session, or you'll be automatically logged out
+            when the timer reaches zero.
+          </AlertDescription>
+        </Alert>
 
         <DialogFooter className="flex-col gap-2 sm:flex-row">
           <Button
@@ -146,10 +130,10 @@ export function SessionExpiryWarning() {
             onClick={() => logout()}
             className="w-full sm:w-auto"
           >
-            Logout
+            Logout Now
           </Button>
           <Button
-            onClick={() => refreshSession()}
+            onClick={handleStayLoggedIn}
             className="w-full sm:w-auto"
           >
             Stay Logged In
