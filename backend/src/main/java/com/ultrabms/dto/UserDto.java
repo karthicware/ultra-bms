@@ -1,6 +1,5 @@
 package com.ultrabms.dto;
 
-import com.ultrabms.entity.enums.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -51,9 +50,9 @@ public record UserDto(
         @Schema(description = "User's last name", example = "Doe")
         String lastName,
 
-        @NotNull(message = "Role is required")
-        @Schema(description = "User's role in the system", example = "PROPERTY_MANAGER")
-        UserRole role,
+        @NotBlank(message = "Role is required")
+        @Schema(description = "User's role in the system (role name)", example = "PROPERTY_MANAGER")
+        String roleName,
 
         @Schema(description = "Whether the user account is active", example = "true")
         Boolean active,
@@ -73,7 +72,7 @@ public record UserDto(
      * @param email user's email
      * @param firstName user's first name
      * @param lastName user's last name
-     * @param role user's role
+     * @param roleName user's role name
      * @param active whether the account is active
      * @param mfaEnabled whether MFA is enabled
      * @return a new UserDto instance
@@ -82,10 +81,10 @@ public record UserDto(
             String email,
             String firstName,
             String lastName,
-            UserRole role,
+            String roleName,
             Boolean active,
             Boolean mfaEnabled
     ) {
-        return new UserDto(null, email, firstName, lastName, role, active, mfaEnabled, null, null);
+        return new UserDto(null, email, firstName, lastName, roleName, active, mfaEnabled, null, null);
     }
 }

@@ -1,7 +1,6 @@
 package com.ultrabms.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.ultrabms.entity.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -10,8 +9,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.stream.Collectors;
 
 /**
  * User entity representing system users with role-based access control.
@@ -62,12 +65,13 @@ public class User extends BaseEntity {
     private String lastName;
 
     /**
-     * User's role in the system (stored as string for flexibility)
+     * User's role in the system - many-to-one relationship with roles table
+     * Eagerly fetched to include permissions for authorization checks
      */
     @NotNull(message = "Role cannot be null")
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
-    private UserRole role;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
 
     /**
      * Whether the user account is active (soft delete pattern)
@@ -105,4 +109,55 @@ public class User extends BaseEntity {
      */
     @Column(name = "failed_login_attempts", nullable = false)
     private Integer failedLoginAttempts = 0;
+
+    /**
+     * Get user authorities (permissions) for Spring Security.
+     * Converts role permissions to GrantedAuthority collection.
+     * SUPER_ADMIN always has all permissions.
+     *
+     * @return collection of GrantedAuthority representing user permissions
+     */
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (role == null) {
+            return Collections.emptyList();
+        }
+        return role.getPermissions().stream()
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Get the role name as a string (e.g., "SUPER_ADMIN", "PROPERTY_MANAGER")
+     *
+     * @return role name or null if role not set
+     */
+    public String getRoleName() {
+        return role != null ? role.getName() : null;
+    }
+
+    /**
+     * Check if user has a specific permission
+     *
+     * @param permissionName permission to check (e.g., "tenants:create")
+     * @return true if user has the permission, false otherwise
+     */
+    public boolean hasPermission(String permissionName) {
+        if (role == null) {
+            return false;
+        }
+        // SUPER_ADMIN has all permissions
+        if (role.isSuperAdmin()) {
+            return true;
+        }
+        return role.hasPermission(permissionName);
+    }
+
+    /**
+     * Check if user has a specific role
+     *
+     * @param roleName role to check (e.g., "SUPER_ADMIN")
+     * @return true if user has the role, false otherwise
+     */
+    public boolean hasRole(String roleName) {
+        return role != null && role.getName().equals(roleName);
+    }
 }

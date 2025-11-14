@@ -1,7 +1,8 @@
 # Story 2.1: User Registration and Login with JWT Authentication
 
-Status: review
+Status: done
 Completed: 2025-11-13
+UAE Phone Validation Enhancement: 2025-11-14
 
 ## Story
 

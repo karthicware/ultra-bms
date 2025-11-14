@@ -2,9 +2,9 @@ package com.ultrabms.service;
 
 import com.ultrabms.dto.*;
 import com.ultrabms.entity.AuditLog;
+import com.ultrabms.entity.Role;
 import com.ultrabms.entity.TokenBlacklist;
 import com.ultrabms.entity.User;
-import com.ultrabms.entity.enums.UserRole;
 import com.ultrabms.exception.AccountLockedException;
 import com.ultrabms.exception.DuplicateResourceException;
 import com.ultrabms.repository.AuditLogRepository;
@@ -25,6 +25,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -57,6 +58,9 @@ class AuthServiceImplTest {
     @Mock
     private LoginAttemptService loginAttemptService;
 
+    @Mock
+    private com.ultrabms.repository.RoleRepository roleRepository;
+
     @Spy
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
@@ -69,6 +73,8 @@ class AuthServiceImplTest {
     private static final String TEST_IP = "192.168.1.1";
     private static final String TEST_USER_AGENT = "Mozilla/5.0";
 
+    private Role testRole;
+
     @BeforeEach
     void setUp() {
         // Create test register request
@@ -77,12 +83,19 @@ class AuthServiceImplTest {
                 "P@ssw0rd123",
                 "Test",
                 "User",
-                UserRole.PROPERTY_MANAGER,
+                "PROPERTY_MANAGER",
                 "+971501234567"
         );
 
         // Create test login request
         loginRequest = new LoginRequest("test@ultrabms.com", "P@ssw0rd123");
+
+        // Create test role
+        testRole = new Role();
+        testRole.setId(1L);
+        testRole.setName("PROPERTY_MANAGER");
+        testRole.setDescription("Property Manager Role");
+        testRole.setPermissions(new HashSet<>());
 
         // Create test user
         testUser = new User();
@@ -91,7 +104,7 @@ class AuthServiceImplTest {
         testUser.setPasswordHash(passwordEncoder.encode("P@ssw0rd123"));
         testUser.setFirstName("Test");
         testUser.setLastName("User");
-        testUser.setRole(UserRole.PROPERTY_MANAGER);
+        testUser.setRole(testRole);
         testUser.setPhone("+971501234567");
         testUser.setActive(true);
         testUser.setMfaEnabled(false);
@@ -106,6 +119,7 @@ class AuthServiceImplTest {
     void shouldSuccessfullyRegisterNewUser() {
         // Arrange
         when(userRepository.findByEmail(registerRequest.email())).thenReturn(Optional.empty());
+        when(roleRepository.findByName(registerRequest.roleName())).thenReturn(Optional.of(testRole));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(auditLogRepository.save(any(AuditLog.class))).thenReturn(new AuditLog());
 
@@ -117,7 +131,7 @@ class AuthServiceImplTest {
         assertThat(result.email()).isEqualTo(registerRequest.email());
         assertThat(result.firstName()).isEqualTo(registerRequest.firstName());
         assertThat(result.lastName()).isEqualTo(registerRequest.lastName());
-        assertThat(result.role()).isEqualTo(registerRequest.role());
+        assertThat(result.roleName()).isEqualTo(registerRequest.roleName());
 
         verify(userRepository).findByEmail(registerRequest.email());
         verify(userRepository).save(any(User.class));
@@ -129,6 +143,7 @@ class AuthServiceImplTest {
     void shouldHashPasswordWithBCryptDuringRegistration() {
         // Arrange
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(roleRepository.findByName(registerRequest.roleName())).thenReturn(Optional.of(testRole));
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         when(userRepository.save(userCaptor.capture())).thenReturn(testUser);
@@ -162,6 +177,7 @@ class AuthServiceImplTest {
     void shouldLogRegistrationAuditEvent() {
         // Arrange
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(roleRepository.findByName(registerRequest.roleName())).thenReturn(Optional.of(testRole));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         ArgumentCaptor<AuditLog> auditLogCaptor = ArgumentCaptor.forClass(AuditLog.class);

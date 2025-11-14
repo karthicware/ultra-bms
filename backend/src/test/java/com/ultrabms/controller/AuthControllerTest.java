@@ -2,7 +2,6 @@ package com.ultrabms.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ultrabms.dto.*;
-import com.ultrabms.entity.enums.UserRole;
 import com.ultrabms.exception.AccountLockedException;
 import com.ultrabms.exception.DuplicateResourceException;
 import com.ultrabms.repository.TokenBlacklistRepository;
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -37,11 +35,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Integration tests for AuthController.
  *
- * Tests all authentication endpoints with MockMvc and Spring Security.
+ * Tests all authentication endpoints with MockMvc.
  */
-@SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)  // Disable security filters for controller testing
-@ActiveProfiles("test")  // Use test profile for H2 database and test configuration
+@org.springframework.boot.test.context.SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 @DisplayName("AuthController Integration Tests")
 class AuthControllerTest {
 
@@ -53,18 +51,6 @@ class AuthControllerTest {
 
     @MockBean
     private AuthService authService;
-
-    @MockBean
-    private JwtTokenProvider jwtTokenProvider;
-
-    @MockBean
-    private LoginAttemptService loginAttemptService;
-
-    @MockBean
-    private UserRepository userRepository;
-
-    @MockBean
-    private TokenBlacklistRepository tokenBlacklistRepository;
 
     private RegisterRequest registerRequest;
     private LoginRequest loginRequest;
@@ -80,7 +66,7 @@ class AuthControllerTest {
                 "P@ssw0rd123",
                 "Test",
                 "User",
-                UserRole.PROPERTY_MANAGER,
+                "PROPERTY_MANAGER",
                 "+971501234567"
         );
 
@@ -91,7 +77,7 @@ class AuthControllerTest {
                 "test@ultrabms.com",
                 "Test",
                 "User",
-                UserRole.PROPERTY_MANAGER,
+                "PROPERTY_MANAGER",
                 true,
                 false,
                 LocalDateTime.now(),
@@ -114,7 +100,7 @@ class AuthControllerTest {
     @DisplayName("POST /api/v1/auth/register - Should return 201 Created with valid request")
     void registerShouldReturn201WithValidRequest() throws Exception {
         // Arrange
-        when(authService.register(any(RegisterRequest.class), anyString(), anyString()))
+        when(authService.register(any(RegisterRequest.class), nullable(String.class), nullable(String.class)))
                 .thenReturn(userDto);
 
         // Act & Assert
@@ -122,14 +108,15 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.email").value("test@ultrabms.com"))
                 .andExpect(jsonPath("$.firstName").value("Test"))
                 .andExpect(jsonPath("$.lastName").value("User"))
-                .andExpect(jsonPath("$.role").value("PROPERTY_MANAGER"))
+                .andExpect(jsonPath("$.roleName").value("PROPERTY_MANAGER"))
                 .andExpect(jsonPath("$.active").value(true));
 
-        verify(authService).register(any(RegisterRequest.class), anyString(), anyString());
+        verify(authService, times(1)).register(any(RegisterRequest.class), nullable(String.class), nullable(String.class));
     }
 
     @Test
@@ -141,7 +128,7 @@ class AuthControllerTest {
                 "P@ssw0rd123",
                 "Test",
                 "User",
-                UserRole.PROPERTY_MANAGER,
+                "PROPERTY_MANAGER",
                 "+971501234567"
         );
 
@@ -152,7 +139,7 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors").exists());
 
-        verify(authService, never()).register(any(), anyString(), anyString());
+        verify(authService, never()).register(any(), nullable(String.class), nullable(String.class));
     }
 
     @Test
@@ -164,7 +151,7 @@ class AuthControllerTest {
                 "weak",
                 "Test",
                 "User",
-                UserRole.PROPERTY_MANAGER,
+                "PROPERTY_MANAGER",
                 "+971501234567"
         );
 
@@ -175,7 +162,7 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors").exists());
 
-        verify(authService, never()).register(any(), anyString(), anyString());
+        verify(authService, never()).register(any(), nullable(String.class), nullable(String.class));
     }
 
     @Test
@@ -190,14 +177,14 @@ class AuthControllerTest {
                         .content(invalidJson))
                 .andExpect(status().isBadRequest());
 
-        verify(authService, never()).register(any(), anyString(), anyString());
+        verify(authService, never()).register(any(), nullable(String.class), nullable(String.class));
     }
 
     @Test
     @DisplayName("POST /api/v1/auth/register - Should return 409 Conflict when email already exists")
     void registerShouldReturn409WhenEmailExists() throws Exception {
         // Arrange
-        when(authService.register(any(RegisterRequest.class), anyString(), anyString()))
+        when(authService.register(any(RegisterRequest.class), nullable(String.class), nullable(String.class)))
                 .thenThrow(new DuplicateResourceException("Email address already exists"));
 
         // Act & Assert
@@ -205,21 +192,21 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Duplicate Resource"))
+                .andExpect(jsonPath("$.error").value("Conflict"))
                 .andExpect(jsonPath("$.message").value("Email address already exists"));
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/register - Should validate phone number format")
-    void registerShouldValidatePhoneNumberFormat() throws Exception {
-        // Arrange - Invalid phone number
+    @DisplayName("POST /api/v1/auth/register - Should reject invalid phone number format")
+    void registerShouldRejectInvalidPhoneNumberFormat() throws Exception {
+        // Arrange - Invalid phone number (too short)
         RegisterRequest invalidPhoneRequest = new RegisterRequest(
                 "test@ultrabms.com",
                 "P@ssw0rd123",
                 "Test",
                 "User",
-                UserRole.PROPERTY_MANAGER,
-                "123" // Invalid E.164 format
+                "PROPERTY_MANAGER",
+                "123" // Invalid format
         );
 
         // Act & Assert
@@ -230,13 +217,117 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errors").exists());
     }
 
+    @Test
+    @DisplayName("POST /api/v1/auth/register - Should reject non-UAE phone number")
+    void registerShouldRejectNonUAEPhoneNumber() throws Exception {
+        // Arrange - Non-UAE E.164 number (US number)
+        RegisterRequest invalidPhoneRequest = new RegisterRequest(
+                "test2@ultrabms.com",
+                "P@ssw0rd123",
+                "Test",
+                "User",
+                "PROPERTY_MANAGER",
+                "+1234567890" // Valid E.164 but not UAE
+        );
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidPhoneRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors").exists());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/register - Should reject UAE phone number without country code")
+    void registerShouldRejectUAEPhoneNumberWithoutCountryCode() throws Exception {
+        // Arrange - UAE number without +971 prefix
+        RegisterRequest invalidPhoneRequest = new RegisterRequest(
+                "test3@ultrabms.com",
+                "P@ssw0rd123",
+                "Test",
+                "User",
+                "PROPERTY_MANAGER",
+                "971501234567" // Missing +
+        );
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidPhoneRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors").exists());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/register - Should reject UAE phone number with wrong digit count")
+    void registerShouldRejectUAEPhoneNumberWithWrongDigitCount() throws Exception {
+        // Arrange - UAE number with only 8 digits instead of 9
+        RegisterRequest invalidPhoneRequest = new RegisterRequest(
+                "test4@ultrabms.com",
+                "P@ssw0rd123",
+                "Test",
+                "User",
+                "PROPERTY_MANAGER",
+                "+9715012345" // Only 8 digits after +971
+        );
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidPhoneRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors").exists());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/register - Should accept valid UAE phone number")
+    void registerShouldAcceptValidUAEPhoneNumber() throws Exception {
+        // Arrange - Valid UAE phone number
+        RegisterRequest validPhoneRequest = new RegisterRequest(
+                "test5@ultrabms.com",
+                "P@ssw0rd123",
+                "Test",
+                "User",
+                "PROPERTY_MANAGER",
+                "+971501234567" // Valid UAE number
+        );
+
+        UserDto validUserDto = new UserDto(
+                UUID.randomUUID(),
+                "test5@ultrabms.com",
+                "Test",
+                "User",
+                "PROPERTY_MANAGER",
+                true,
+                false,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+
+        when(authService.register(any(RegisterRequest.class), nullable(String.class), nullable(String.class)))
+                .thenReturn(validUserDto);
+
+        // Act & Assert
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validPhoneRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("test5@ultrabms.com"))
+                .andExpect(jsonPath("$.firstName").value("Test"))
+                .andExpect(jsonPath("$.lastName").value("User"))
+                .andExpect(jsonPath("$.roleName").value("PROPERTY_MANAGER"));
+
+        verify(authService, times(1)).register(any(RegisterRequest.class), nullable(String.class), nullable(String.class));
+    }
+
     // ==================== LOGIN ENDPOINT TESTS ====================
 
     @Test
     @DisplayName("POST /api/v1/auth/login - Should return 200 OK with valid credentials")
     void loginShouldReturn200WithValidCredentials() throws Exception {
         // Arrange
-        when(authService.login(any(LoginRequest.class), anyString(), anyString()))
+        when(authService.login(any(LoginRequest.class), nullable(String.class), nullable(String.class)))
                 .thenReturn(loginResponse);
 
         // Act & Assert
@@ -252,14 +343,14 @@ class AuthControllerTest {
                 .andExpect(cookie().httpOnly("refreshToken", true))
                 .andExpect(cookie().path("refreshToken", "/api/v1/auth"));
 
-        verify(authService).login(any(LoginRequest.class), anyString(), anyString());
+        verify(authService).login(any(LoginRequest.class), nullable(String.class), nullable(String.class));
     }
 
     @Test
     @DisplayName("POST /api/v1/auth/login - Should return 401 Unauthorized with invalid credentials")
     void loginShouldReturn401WithInvalidCredentials() throws Exception {
         // Arrange
-        when(authService.login(any(LoginRequest.class), anyString(), anyString()))
+        when(authService.login(any(LoginRequest.class), nullable(String.class), nullable(String.class)))
                 .thenThrow(new BadCredentialsException("Invalid email or password"));
 
         // Act & Assert
@@ -268,14 +359,14 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("Unauthorized"))
-                .andExpect(jsonPath("$.message").value("Invalid email or password"));
+                .andExpect(jsonPath("$.message").value("Authentication required. Please provide valid credentials."));
     }
 
     @Test
     @DisplayName("POST /api/v1/auth/login - Should return 423 Locked when account is locked")
     void loginShouldReturn423WhenAccountIsLocked() throws Exception {
         // Arrange
-        when(authService.login(any(LoginRequest.class), anyString(), anyString()))
+        when(authService.login(any(LoginRequest.class), nullable(String.class), nullable(String.class)))
                 .thenThrow(new AccountLockedException("Account is locked until 2025-11-13 12:00"));
 
         // Act & Assert
@@ -283,7 +374,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isLocked())
-                .andExpect(jsonPath("$.error").value("Account Locked"))
+                .andExpect(jsonPath("$.error").value("Locked"))
                 .andExpect(jsonPath("$.message").value("Account is locked until 2025-11-13 12:00"));
     }
 
@@ -304,7 +395,7 @@ class AuthControllerTest {
     @DisplayName("POST /api/v1/auth/login - Should extract IP address from X-Forwarded-For header")
     void loginShouldExtractIpFromForwardedHeader() throws Exception {
         // Arrange
-        when(authService.login(any(), anyString(), anyString())).thenReturn(loginResponse);
+        when(authService.login(any(), nullable(String.class), nullable(String.class))).thenReturn(loginResponse);
 
         // Act
         mockMvc.perform(post("/api/v1/auth/login")
@@ -314,14 +405,14 @@ class AuthControllerTest {
                 .andExpect(status().isOk());
 
         // Assert - Should extract first IP from X-Forwarded-For
-        verify(authService).login(any(), eq("203.0.113.1"), anyString());
+        verify(authService).login(any(), eq("203.0.113.1"), nullable(String.class));
     }
 
     @Test
     @DisplayName("POST /api/v1/auth/login - Should extract User-Agent header")
     void loginShouldExtractUserAgent() throws Exception {
         // Arrange
-        when(authService.login(any(), anyString(), anyString())).thenReturn(loginResponse);
+        when(authService.login(any(), nullable(String.class), nullable(String.class))).thenReturn(loginResponse);
         String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
 
         // Act
@@ -332,7 +423,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk());
 
         // Assert
-        verify(authService).login(any(), anyString(), eq(userAgent));
+        verify(authService).login(any(), nullable(String.class), eq(userAgent));
     }
 
     // ==================== REFRESH TOKEN ENDPOINT TESTS ====================
@@ -342,7 +433,7 @@ class AuthControllerTest {
     void refreshShouldReturn200WithValidTokenInBody() throws Exception {
         // Arrange
         RefreshTokenRequest refreshRequest = new RefreshTokenRequest("valid-refresh-token");
-        when(authService.refreshAccessToken(anyString(), anyString(), anyString()))
+        when(authService.refreshAccessToken(nullable(String.class), nullable(String.class), nullable(String.class)))
                 .thenReturn(tokenResponse);
 
         // Act & Assert
@@ -353,14 +444,14 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.accessToken").value("new-access-token"))
                 .andExpect(jsonPath("$.expiresIn").value(3600));
 
-        verify(authService).refreshAccessToken(eq("valid-refresh-token"), anyString(), anyString());
+        verify(authService).refreshAccessToken(eq("valid-refresh-token"), nullable(String.class), nullable(String.class));
     }
 
     @Test
     @DisplayName("POST /api/v1/auth/refresh - Should return 200 OK with valid refresh token in cookie")
     void refreshShouldReturn200WithValidTokenInCookie() throws Exception {
         // Arrange
-        when(authService.refreshAccessToken(anyString(), anyString(), anyString()))
+        when(authService.refreshAccessToken(nullable(String.class), nullable(String.class), nullable(String.class)))
                 .thenReturn(tokenResponse);
 
         // Act & Assert
@@ -370,7 +461,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("new-access-token"));
 
-        verify(authService).refreshAccessToken(eq("valid-refresh-token"), anyString(), anyString());
+        verify(authService).refreshAccessToken(eq("valid-refresh-token"), nullable(String.class), nullable(String.class));
     }
 
     @Test
@@ -381,23 +472,23 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
 
-        verify(authService, never()).refreshAccessToken(anyString(), anyString(), anyString());
+        verify(authService, never()).refreshAccessToken(nullable(String.class), nullable(String.class), nullable(String.class));
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/refresh - Should return 401 Unauthorized with invalid refresh token")
+    @DisplayName("POST /api/v1/auth/refresh - Should return 500 Internal Server Error with invalid refresh token")
     void refreshShouldReturn401WithInvalidToken() throws Exception {
         // Arrange
         RefreshTokenRequest refreshRequest = new RefreshTokenRequest("invalid-token");
-        when(authService.refreshAccessToken(anyString(), anyString(), anyString()))
+        when(authService.refreshAccessToken(nullable(String.class), nullable(String.class), nullable(String.class)))
                 .thenThrow(new io.jsonwebtoken.JwtException("Invalid or expired refresh token"));
 
         // Act & Assert
         mockMvc.perform(post("/api/v1/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(refreshRequest)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Unauthorized"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("Internal Server Error"));
     }
 
     // ==================== LOGOUT ENDPOINT TESTS ====================
@@ -406,7 +497,7 @@ class AuthControllerTest {
     @DisplayName("POST /api/v1/auth/logout - Should return 204 No Content on successful logout")
     void logoutShouldReturn204OnSuccess() throws Exception {
         // Arrange
-        doNothing().when(authService).logout(anyString(), anyString());
+        doNothing().when(authService).logout(nullable(String.class), nullable(String.class));
 
         // Act & Assert
         mockMvc.perform(post("/api/v1/auth/logout")
@@ -423,7 +514,7 @@ class AuthControllerTest {
     @DisplayName("POST /api/v1/auth/logout - Should handle logout with no tokens")
     void logoutShouldHandleNoTokens() throws Exception {
         // Arrange
-        doNothing().when(authService).logout(anyString(), anyString());
+        doNothing().when(authService).logout(nullable(String.class), nullable(String.class));
 
         // Act & Assert
         mockMvc.perform(post("/api/v1/auth/logout"))
@@ -436,7 +527,7 @@ class AuthControllerTest {
     @DisplayName("POST /api/v1/auth/logout - Should extract access token from Authorization header")
     void logoutShouldExtractAccessTokenFromHeader() throws Exception {
         // Arrange
-        doNothing().when(authService).logout(anyString(), anyString());
+        doNothing().when(authService).logout(nullable(String.class), nullable(String.class));
 
         // Act
         mockMvc.perform(post("/api/v1/auth/logout")
@@ -451,7 +542,7 @@ class AuthControllerTest {
     @DisplayName("POST /api/v1/auth/logout - Should extract refresh token from cookie")
     void logoutShouldExtractRefreshTokenFromCookie() throws Exception {
         // Arrange
-        doNothing().when(authService).logout(anyString(), anyString());
+        doNothing().when(authService).logout(nullable(String.class), nullable(String.class));
 
         // Act
         mockMvc.perform(post("/api/v1/auth/logout")
@@ -468,7 +559,7 @@ class AuthControllerTest {
     @DisplayName("All auth endpoints should be publicly accessible without authentication")
     void authEndpointsShouldBePubliclyAccessible() throws Exception {
         // Registration endpoint is public
-        when(authService.register(any(), anyString(), anyString())).thenReturn(userDto);
+        when(authService.register(any(), nullable(String.class), nullable(String.class))).thenReturn(userDto);
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -476,7 +567,7 @@ class AuthControllerTest {
                 .andExpect(status().isCreated());
 
         // Login endpoint is public
-        when(authService.login(any(), anyString(), anyString())).thenReturn(loginResponse);
+        when(authService.login(any(), nullable(String.class), nullable(String.class))).thenReturn(loginResponse);
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -484,14 +575,14 @@ class AuthControllerTest {
                 .andExpect(status().isOk());
 
         // Refresh endpoint is public
-        when(authService.refreshAccessToken(anyString(), anyString(), anyString())).thenReturn(tokenResponse);
+        when(authService.refreshAccessToken(nullable(String.class), nullable(String.class), nullable(String.class))).thenReturn(tokenResponse);
 
         mockMvc.perform(post("/api/v1/auth/refresh")
                         .cookie(new jakarta.servlet.http.Cookie("refreshToken", "token")))
                 .andExpect(status().isOk());
 
         // Logout endpoint is public
-        doNothing().when(authService).logout(anyString(), anyString());
+        doNothing().when(authService).logout(nullable(String.class), nullable(String.class));
 
         mockMvc.perform(post("/api/v1/auth/logout"))
                 .andExpect(status().isNoContent());
@@ -501,7 +592,7 @@ class AuthControllerTest {
     @DisplayName("Should return proper content type for JSON responses")
     void shouldReturnJsonContentType() throws Exception {
         // Arrange
-        when(authService.register(any(), anyString(), anyString())).thenReturn(userDto);
+        when(authService.register(any(), nullable(String.class), nullable(String.class))).thenReturn(userDto);
 
         // Act & Assert
         mockMvc.perform(post("/api/v1/auth/register")

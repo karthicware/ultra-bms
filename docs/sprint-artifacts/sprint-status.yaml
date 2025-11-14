@@ -45,7 +45,7 @@ development_status:
   # Epic 2: Authentication & User Management (5 stories)
   epic-2: backlog
   2-1-user-registration-and-login-with-jwt-authentication: in-progress  # Code review complete - changes requested (2 HIGH, 3 MED findings)
-  2-2-role-based-access-control-rbac-implementation: ready-for-dev  # Story context created 2025-11-13
+  2-2-role-based-access-control-rbac-implementation: in-progress  # Story context created 2025-11-13
   2-3-password-reset-and-recovery-workflow: ready-for-dev  # Story context created 2025-11-13
   2-4-session-management-and-security-enhancements: backlog
   2-5-frontend-authentication-components-and-protected-routes: backlog

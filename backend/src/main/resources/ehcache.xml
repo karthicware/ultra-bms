@@ -83,4 +83,16 @@
         </resources>
     </cache>
 
+    <!-- User Permissions Cache: Cache permission evaluation results for RBAC -->
+    <cache alias="userPermissions">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.lang.Boolean</value-type>
+        <expiry>
+            <ttl unit="minutes">10</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">5000</heap>
+        </resources>
+    </cache>
+
 </config>

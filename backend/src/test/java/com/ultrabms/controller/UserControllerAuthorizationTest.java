@@ -2,7 +2,6 @@ package com.ultrabms.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ultrabms.dto.UserDto;
-import com.ultrabms.entity.enums.UserRole;
 import com.ultrabms.security.CustomUserDetailsService;
 import com.ultrabms.security.RolePermissionService;
 import com.ultrabms.service.UserService;
@@ -10,7 +9,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -29,7 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration tests for UserController authorization.
  * Tests that @PreAuthorize annotations correctly enforce RBAC permissions.
  */
-@WebMvcTest(UserController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @DisplayName("UserController Authorization Tests")
 class UserControllerAuthorizationTest {
@@ -49,6 +50,12 @@ class UserControllerAuthorizationTest {
     @MockBean
     private RolePermissionService rolePermissionService;
 
+    @MockBean
+    private com.ultrabms.security.JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private com.ultrabms.repository.TokenBlacklistRepository tokenBlacklistRepository;
+
     private static final UUID TEST_USER_ID = UUID.randomUUID();
 
     @Nested
@@ -57,7 +64,8 @@ class UserControllerAuthorizationTest {
 
         @Test
         @DisplayName("Should allow SUPER_ADMIN to list users")
-        @WithMockUser(username = "admin@test.com", roles = {"SUPER_ADMIN"}, authorities = {"user:read"})
+        @WithMockUser(username = "admin@test.com",
+                     authorities = {"users:read"})
         void shouldAllowSuperAdminToListUsers() throws Exception {
             mockMvc.perform(get("/api/v1/users"))
                 .andExpect(status().isOk());
@@ -93,12 +101,20 @@ class UserControllerAuthorizationTest {
 
         @Test
         @DisplayName("Should allow SUPER_ADMIN to get user by ID")
-        @WithMockUser(username = "admin@test.com", roles = {"SUPER_ADMIN"}, authorities = {"user:read"})
+        @WithMockUser(username = "admin@test.com",
+                     authorities = {"users:read"})
         void shouldAllowSuperAdminToGetUserById() throws Exception {
-            UserDto userDto = new UserDto();
-            userDto.setId(TEST_USER_ID);
-            userDto.setEmail("test@test.com");
-            userDto.setRole(UserRole.TENANT);
+            UserDto userDto = new UserDto(
+                TEST_USER_ID,
+                "test@test.com",
+                "Test",
+                "User",
+                "TENANT",
+                true,
+                false,
+                null,
+                null
+            );
 
             when(userService.findById(TEST_USER_ID)).thenReturn(userDto);
 
@@ -122,19 +138,32 @@ class UserControllerAuthorizationTest {
 
         @Test
         @DisplayName("Should allow SUPER_ADMIN to create user")
-        @WithMockUser(username = "admin@test.com", roles = {"SUPER_ADMIN"}, authorities = {"user:create"})
+        @WithMockUser(username = "admin@test.com",
+                     authorities = {"users:create"})
         void shouldAllowSuperAdminToCreateUser() throws Exception {
-            UserDto userDto = new UserDto();
-            userDto.setEmail("newuser@test.com");
-            userDto.setFirstName("Test");
-            userDto.setLastName("User");
-            userDto.setRole(UserRole.TENANT);
-            userDto.setActive(true);
+            UserDto userDto = new UserDto(
+                null,
+                "newuser@test.com",
+                "Test",
+                "User",
+                "TENANT",
+                true,
+                false,
+                null,
+                null
+            );
 
-            UserDto createdUser = new UserDto();
-            createdUser.setId(UUID.randomUUID());
-            createdUser.setEmail(userDto.getEmail());
-            createdUser.setRole(userDto.getRole());
+            UserDto createdUser = new UserDto(
+                UUID.randomUUID(),
+                userDto.email(),
+                userDto.firstName(),
+                userDto.lastName(),
+                userDto.roleName(),
+                true,
+                false,
+                null,
+                null
+            );
 
             when(userService.create(any(UserDto.class))).thenReturn(createdUser);
 
@@ -150,9 +179,17 @@ class UserControllerAuthorizationTest {
         @DisplayName("Should deny PROPERTY_MANAGER from creating user")
         @WithMockUser(username = "pm@test.com", roles = {"PROPERTY_MANAGER"})
         void shouldDenyPropertyManagerFromCreatingUser() throws Exception {
-            UserDto userDto = new UserDto();
-            userDto.setEmail("newuser@test.com");
-            userDto.setRole(UserRole.TENANT);
+            UserDto userDto = new UserDto(
+                null,
+                "newuser@test.com",
+                "Test",
+                "User",
+                "TENANT",
+                true,
+                false,
+                null,
+                null
+            );
 
             mockMvc.perform(post("/api/v1/users")
                     .with(csrf())
@@ -165,9 +202,17 @@ class UserControllerAuthorizationTest {
         @DisplayName("Should deny TENANT from creating user")
         @WithMockUser(username = "tenant@test.com", roles = {"TENANT"})
         void shouldDenyTenantFromCreatingUser() throws Exception {
-            UserDto userDto = new UserDto();
-            userDto.setEmail("newuser@test.com");
-            userDto.setRole(UserRole.TENANT);
+            UserDto userDto = new UserDto(
+                null,
+                "newuser@test.com",
+                "Test",
+                "User",
+                "TENANT",
+                true,
+                false,
+                null,
+                null
+            );
 
             mockMvc.perform(post("/api/v1/users")
                     .with(csrf())
@@ -180,9 +225,17 @@ class UserControllerAuthorizationTest {
         @DisplayName("Should deny MAINTENANCE_SUPERVISOR from creating user")
         @WithMockUser(username = "ms@test.com", roles = {"MAINTENANCE_SUPERVISOR"})
         void shouldDenyMaintenanceSupervisorFromCreatingUser() throws Exception {
-            UserDto userDto = new UserDto();
-            userDto.setEmail("newuser@test.com");
-            userDto.setRole(UserRole.TENANT);
+            UserDto userDto = new UserDto(
+                null,
+                "newuser@test.com",
+                "Test",
+                "User",
+                "TENANT",
+                true,
+                false,
+                null,
+                null
+            );
 
             mockMvc.perform(post("/api/v1/users")
                     .with(csrf())
@@ -198,15 +251,20 @@ class UserControllerAuthorizationTest {
 
         @Test
         @DisplayName("Should allow SUPER_ADMIN to update user")
-        @WithMockUser(username = "admin@test.com", roles = {"SUPER_ADMIN"}, authorities = {"user:update"})
+        @WithMockUser(username = "admin@test.com",
+                     authorities = {"users:update"})
         void shouldAllowSuperAdminToUpdateUser() throws Exception {
-            UserDto userDto = new UserDto();
-            userDto.setId(TEST_USER_ID);
-            userDto.setEmail("updated@test.com");
-            userDto.setFirstName("Updated");
-            userDto.setLastName("User");
-            userDto.setRole(UserRole.TENANT);
-            userDto.setActive(true);
+            UserDto userDto = new UserDto(
+                TEST_USER_ID,
+                "updated@test.com",
+                "Updated",
+                "User",
+                "TENANT",
+                true,
+                false,
+                null,
+                null
+            );
 
             when(userService.update(any(UUID.class), any(UserDto.class))).thenReturn(userDto);
 
@@ -222,8 +280,17 @@ class UserControllerAuthorizationTest {
         @DisplayName("Should deny TENANT from updating user")
         @WithMockUser(username = "tenant@test.com", roles = {"TENANT"})
         void shouldDenyTenantFromUpdatingUser() throws Exception {
-            UserDto userDto = new UserDto();
-            userDto.setEmail("updated@test.com");
+            UserDto userDto = new UserDto(
+                null,
+                "updated@test.com",
+                "Test",
+                "User",
+                "TENANT",
+                true,
+                false,
+                null,
+                null
+            );
 
             mockMvc.perform(put("/api/v1/users/{id}", TEST_USER_ID)
                     .with(csrf())
@@ -236,8 +303,17 @@ class UserControllerAuthorizationTest {
         @DisplayName("Should deny FINANCE_MANAGER from updating user")
         @WithMockUser(username = "fm@test.com", roles = {"FINANCE_MANAGER"})
         void shouldDenyFinanceManagerFromUpdatingUser() throws Exception {
-            UserDto userDto = new UserDto();
-            userDto.setEmail("updated@test.com");
+            UserDto userDto = new UserDto(
+                null,
+                "updated@test.com",
+                "Test",
+                "User",
+                "FINANCE_MANAGER",
+                true,
+                false,
+                null,
+                null
+            );
 
             mockMvc.perform(put("/api/v1/users/{id}", TEST_USER_ID)
                     .with(csrf())
@@ -253,7 +329,8 @@ class UserControllerAuthorizationTest {
 
         @Test
         @DisplayName("Should allow SUPER_ADMIN to delete user")
-        @WithMockUser(username = "admin@test.com", roles = {"SUPER_ADMIN"}, authorities = {"user:delete"})
+        @WithMockUser(username = "admin@test.com",
+                     authorities = {"users:delete"})
         void shouldAllowSuperAdminToDeleteUser() throws Exception {
             mockMvc.perform(delete("/api/v1/users/{id}", TEST_USER_ID)
                     .with(csrf()))
@@ -312,17 +389,25 @@ class UserControllerAuthorizationTest {
 
         @Test
         @DisplayName("SUPER_ADMIN should have full access to all user operations")
-        @WithMockUser(username = "admin@test.com", roles = {"SUPER_ADMIN"},
-                     authorities = {"user:create", "user:read", "user:update", "user:delete"})
+        @WithMockUser(username = "admin@test.com",
+                     authorities = {"users:create", "users:read", "users:update", "users:delete"})
         void superAdminShouldHaveFullAccess() throws Exception {
             // Can read
             mockMvc.perform(get("/api/v1/users"))
                 .andExpect(status().isOk());
 
             // Can create
-            UserDto userDto = new UserDto();
-            userDto.setEmail("test@test.com");
-            userDto.setRole(UserRole.TENANT);
+            UserDto userDto = new UserDto(
+                null,
+                "test@test.com",
+                "Test",
+                "User",
+                "TENANT",
+                true,
+                false,
+                null,
+                null
+            );
             when(userService.create(any(UserDto.class))).thenReturn(userDto);
 
             mockMvc.perform(post("/api/v1/users")
@@ -346,8 +431,17 @@ class UserControllerAuthorizationTest {
                 .andExpect(status().isForbidden());
 
             // Cannot create
-            UserDto userDto = new UserDto();
-            userDto.setEmail("test@test.com");
+            UserDto userDto = new UserDto(
+                null,
+                "test@test.com",
+                "Test",
+                "User",
+                "TENANT",
+                true,
+                false,
+                null,
+                null
+            );
 
             mockMvc.perform(post("/api/v1/users")
                     .with(csrf())

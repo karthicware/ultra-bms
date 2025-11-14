@@ -13,7 +13,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * JWT Token Provider for generating and validating JWT tokens.
@@ -25,7 +27,8 @@ import java.util.UUID;
  * <ul>
  *   <li>sub (subject): User ID</li>
  *   <li>email: User's email address</li>
- *   <li>role: User's role in the system</li>
+ *   <li>role: User's role name in the system</li>
+ *   <li>permissions: Array of permission strings</li>
  *   <li>iat (issued at): Token creation timestamp</li>
  *   <li>exp (expiration): Token expiration timestamp</li>
  * </ul>
@@ -73,16 +76,23 @@ public class JwtTokenProvider {
         Instant now = Instant.now();
         Instant expiration = now.plus(accessTokenExpirationMs, ChronoUnit.MILLIS);
 
+        // Extract permissions from user's role
+        List<String> permissions = user.getAuthorities().stream()
+                .map(authority -> authority.getAuthority())
+                .collect(Collectors.toList());
+
         String token = Jwts.builder()
                 .subject(user.getId().toString())
                 .claim("email", user.getEmail())
-                .claim("role", user.getRole().name())
+                .claim("role", user.getRoleName())
+                .claim("permissions", permissions)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiration))
                 .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
 
-        log.debug("Generated access token for user: {} (ID: {})", user.getEmail(), user.getId());
+        log.debug("Generated access token for user: {} (ID: {}) with {} permissions",
+                user.getEmail(), user.getId(), permissions.size());
         return token;
     }
 
@@ -102,7 +112,7 @@ public class JwtTokenProvider {
         String token = Jwts.builder()
                 .subject(user.getId().toString())
                 .claim("email", user.getEmail())
-                .claim("role", user.getRole().name())
+                .claim("role", user.getRoleName())
                 .claim("type", "refresh")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiration))
@@ -177,6 +187,23 @@ public class JwtTokenProvider {
     public String getRoleFromToken(String token) {
         Claims claims = getClaims(token);
         return claims.get("role", String.class);
+    }
+
+    /**
+     * Extracts the permissions from a JWT token.
+     *
+     * @param token JWT token
+     * @return list of permission strings
+     * @throws JwtException if token is invalid or cannot be parsed
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> getPermissionsFromToken(String token) {
+        Claims claims = getClaims(token);
+        Object permissionsObj = claims.get("permissions");
+        if (permissionsObj instanceof List<?>) {
+            return (List<String>) permissionsObj;
+        }
+        return List.of();
     }
 
     /**

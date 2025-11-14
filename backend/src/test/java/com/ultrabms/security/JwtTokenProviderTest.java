@@ -1,7 +1,7 @@
 package com.ultrabms.security;
 
+import com.ultrabms.entity.Role;
 import com.ultrabms.entity.User;
-import com.ultrabms.entity.enums.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
@@ -34,13 +35,20 @@ class JwtTokenProviderTest {
 
         jwtTokenProvider = new JwtTokenProvider(testSecret, accessTokenExpiration, refreshTokenExpiration);
 
+        // Create test role
+        Role testRole = new Role();
+        testRole.setId(1L);
+        testRole.setName("PROPERTY_MANAGER");
+        testRole.setDescription("Property Manager Role");
+        testRole.setPermissions(new HashSet<>());
+
         // Create test user
         testUser = new User();
         testUser.setId(UUID.randomUUID());
         testUser.setEmail("test@ultrabms.com");
         testUser.setFirstName("Test");
         testUser.setLastName("User");
-        testUser.setRole(UserRole.PROPERTY_MANAGER);
+        testUser.setRole(testRole);
     }
 
     @Test
@@ -149,7 +157,7 @@ class JwtTokenProviderTest {
         String extractedRole = jwtTokenProvider.getRoleFromToken(token);
 
         // Assert
-        assertThat(extractedRole).isEqualTo(testUser.getRole().name());
+        assertThat(extractedRole).isEqualTo(testUser.getRoleName());
     }
 
     @Test
@@ -191,7 +199,7 @@ class JwtTokenProviderTest {
         assertThat(claims).isNotNull();
         assertThat(claims.getSubject()).isEqualTo(testUser.getId().toString());
         assertThat(claims.get("email", String.class)).isEqualTo(testUser.getEmail());
-        assertThat(claims.get("role", String.class)).isEqualTo(testUser.getRole().name());
+        assertThat(claims.get("role", String.class)).isEqualTo(testUser.getRoleName());
         assertThat(claims.getIssuedAt()).isNotNull();
         assertThat(claims.getExpiration()).isNotNull();
     }
@@ -284,8 +292,16 @@ class JwtTokenProviderTest {
     @DisplayName("Should handle all user roles correctly")
     void shouldHandleAllUserRolesCorrectly() {
         // Test each role
-        for (UserRole role : UserRole.values()) {
+        String[] roleNames = {"SUPER_ADMIN", "PROPERTY_MANAGER", "MAINTENANCE_SUPERVISOR",
+                              "FINANCE_MANAGER", "TENANT", "VENDOR"};
+
+        for (String roleName : roleNames) {
             // Arrange
+            Role role = new Role();
+            role.setId(1L);
+            role.setName(roleName);
+            role.setDescription("Test role");
+            role.setPermissions(new HashSet<>());
             testUser.setRole(role);
 
             // Act
@@ -293,7 +309,7 @@ class JwtTokenProviderTest {
             String extractedRole = jwtTokenProvider.getRoleFromToken(token);
 
             // Assert
-            assertThat(extractedRole).isEqualTo(role.name());
+            assertThat(extractedRole).isEqualTo(roleName);
         }
     }
 }

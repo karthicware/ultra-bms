@@ -1,9 +1,11 @@
 package com.ultrabms.service;
 
 import com.ultrabms.dto.UserDto;
+import com.ultrabms.entity.Role;
 import com.ultrabms.entity.User;
 import com.ultrabms.exception.DuplicateResourceException;
 import com.ultrabms.exception.EntityNotFoundException;
+import com.ultrabms.repository.RoleRepository;
 import com.ultrabms.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,7 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -92,11 +95,15 @@ public class UserServiceImpl implements UserService {
             });
         }
 
+        // Look up role by name if it's being updated
+        Role role = roleRepository.findByName(userDto.roleName())
+                .orElseThrow(() -> new EntityNotFoundException("Role not found: " + userDto.roleName()));
+
         // Update fields
         existingUser.setEmail(userDto.email());
         existingUser.setFirstName(userDto.firstName());
         existingUser.setLastName(userDto.lastName());
-        existingUser.setRole(userDto.role());
+        existingUser.setRole(role);
         existingUser.setActive(userDto.active());
         existingUser.setMfaEnabled(userDto.mfaEnabled());
 
@@ -132,7 +139,7 @@ public class UserServiceImpl implements UserService {
                 user.getEmail(),
                 user.getFirstName(),
                 user.getLastName(),
-                user.getRole(),
+                user.getRoleName(),
                 user.getActive(),
                 user.getMfaEnabled(),
                 user.getCreatedAt(),
@@ -150,11 +157,15 @@ public class UserServiceImpl implements UserService {
      * @return User entity
      */
     private User toEntity(UserDto dto) {
+        // Look up role by name
+        Role role = roleRepository.findByName(dto.roleName())
+                .orElseThrow(() -> new EntityNotFoundException("Role not found: " + dto.roleName()));
+
         User user = new User();
         user.setEmail(dto.email());
         user.setFirstName(dto.firstName());
         user.setLastName(dto.lastName());
-        user.setRole(dto.role());
+        user.setRole(role);
         user.setActive(dto.active() != null ? dto.active() : true);
         user.setMfaEnabled(dto.mfaEnabled() != null ? dto.mfaEnabled() : false);
         // passwordHash should be set by authentication module

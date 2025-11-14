@@ -1,0 +1,468 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------< com.ultrabms:ultra-bms-backend >-------------------
+[INFO] Building UltraBMS 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- checkstyle:3.3.0:check (validate) @ ultra-bms-backend ---
+[INFO] Starting audit...
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/dto/RegisterRequest.java:5:38: Using the '.*' form of import should be avoided - jakarta.validation.constraints.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/dto/UserDto.java:6:8: Unused import - jakarta.validation.constraints.NotNull. [UnusedImports]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/validator/StrongPassword.java:6:28: Using the '.*' form of import should be avoided - java.lang.annotation.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/validator/StrongPasswordValidator.java:5:18: Using the '.*' form of import should be avoided - org.passay.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/security/SecurityConfig.java:16:8: Unused import - org.springframework.security.web.AuthenticationEntryPoint. [UnusedImports]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/security/SecurityConfig.java:17:8: Unused import - org.springframework.security.web.access.AccessDeniedHandler. [UnusedImports]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/security/CustomAuthenticationEntryPoint.java:16:8: Unused import - java.time.LocalDateTime. [UnusedImports]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/security/RolePermissionService.java:7:17: Using the '.*' form of import should be avoided - java.util.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/security/JwtAuthenticationFilter.java:118:17: 'if' construct must use '{}'s. [NeedBraces]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/security/CustomAccessDeniedHandler.java:16:8: Unused import - java.time.LocalDateTime. [UnusedImports]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/security/JwtTokenProvider.java:4:23: Using the '.*' form of import should be avoided - io.jsonwebtoken.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/entity/Property.java:4:27: Using the '.*' form of import should be avoided - jakarta.persistence.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/entity/Unit.java:4:27: Using the '.*' form of import should be avoided - jakarta.persistence.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/entity/AuditLog.java:3:27: Using the '.*' form of import should be avoided - jakarta.persistence.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/entity/BaseEntity.java:3:27: Using the '.*' form of import should be avoided - jakarta.persistence.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/entity/User.java:4:27: Using the '.*' form of import should be avoided - jakarta.persistence.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/entity/TokenBlacklist.java:3:27: Using the '.*' form of import should be avoided - jakarta.persistence.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/entity/Permission.java:3:27: Using the '.*' form of import should be avoided - jakarta.persistence.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/entity/Role.java:3:27: Using the '.*' form of import should be avoided - jakarta.persistence.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/controller/AuthController.java:3:24: Using the '.*' form of import should be avoided - com.ultrabms.dto.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/controller/AuthController.java:20:47: Using the '.*' form of import should be avoided - org.springframework.web.bind.annotation.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/controller/UserController.java:21:47: Using the '.*' form of import should be avoided - org.springframework.web.bind.annotation.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/filter/RequestResponseLoggingFilter.java:14:8: Unused import - java.util.Collections. [UnusedImports]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/filter/RequestResponseLoggingFilter.java:42:33: Name 'log' must match pattern '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'. [ConstantName]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/filter/RequestCorrelationFilter.java:40:33: Name 'log' must match pattern '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'. [ConstantName]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/service/UserService.java:4:8: Unused import - com.ultrabms.entity.enums.UserRole. [UnusedImports]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/service/AuthService.java:3:24: Using the '.*' form of import should be avoided - com.ultrabms.dto.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/service/AuthServiceImpl.java:3:24: Using the '.*' form of import should be avoided - com.ultrabms.dto.*. [AvoidStarImport]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/service/AuthServiceImpl.java:16:8: Unused import - io.jsonwebtoken.Claims. [UnusedImports]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/service/AuthServiceImpl.java:284:17: 'if' construct must use '{}'s. [NeedBraces]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/exception/EntityNotFoundException.java:3:8: Unused import - java.util.UUID. [UnusedImports]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/exception/GlobalExceptionHandler.java:44:33: Name 'log' must match pattern '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'. [ConstantName]
+[WARN] /Users/natarajan/Documents/Projects/ultra-bms/backend/src/main/java/com/ultrabms/exception/ErrorResponse.java:6:8: Unused import - java.util.Map. [UnusedImports]
+Audit done.
+[INFO] You have 0 Checkstyle violations.
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ ultra-bms-backend ---
+[INFO] Copying 4 resources from src/main/resources to target/classes
+[INFO] Copying 14 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ ultra-bms-backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ ultra-bms-backend ---
+[INFO] Copying 1 resource from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ ultra-bms-backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.2:test (default-test) @ ultra-bms-backend ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.ultrabms.controller.UserControllerAuthorizationTest
+[INFO] Running com.ultrabms.controller.UserControllerAuthorizationTest$CreateUserTests
+19:09:05.612 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.ultrabms.controller.UserControllerAuthorizationTest$CreateUserTests]: CreateUserTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+19:09:05.696 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.ultrabms.UltraBmsApplication for test class com.ultrabms.controller.UserControllerAuthorizationTest$CreateUserTests
+19:09:05,487 |-INFO in ch.qos.logback.classic.LoggerContext[default] - This is logback-classic version 1.5.12
+19:09:05,488 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - Here is a list of configurators discovered as a service, by rank: 
+19:09:05,488 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a -   org.springframework.boot.logging.logback.RootLogLevelConfigurator
+19:09:05,488 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - They will be invoked in order until ExecutionStatus.DO_NOT_INVOKE_NEXT_IF_ANY is returned.
+19:09:05,488 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - Constructed configurator of type class org.springframework.boot.logging.logback.RootLogLevelConfigurator
+19:09:05,492 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - org.springframework.boot.logging.logback.RootLogLevelConfigurator.configure() call lasted 1 milliseconds. ExecutionStatus=INVOKE_NEXT_IF_ANY
+19:09:05,492 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - Trying to configure with ch.qos.logback.classic.joran.SerializedModelConfigurator
+19:09:05,493 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - Constructed configurator of type class ch.qos.logback.classic.joran.SerializedModelConfigurator
+19:09:05,494 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback-test.scmo]
+19:09:05,494 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback.scmo]
+19:09:05,494 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - ch.qos.logback.classic.joran.SerializedModelConfigurator.configure() call lasted 1 milliseconds. ExecutionStatus=INVOKE_NEXT_IF_ANY
+19:09:05,494 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - Trying to configure with ch.qos.logback.classic.util.DefaultJoranConfigurator
+19:09:05,494 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - Constructed configurator of type class ch.qos.logback.classic.util.DefaultJoranConfigurator
+19:09:05,495 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback-test.xml]
+19:09:05,495 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback.xml]
+19:09:05,495 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - ch.qos.logback.classic.util.DefaultJoranConfigurator.configure() call lasted 1 milliseconds. ExecutionStatus=INVOKE_NEXT_IF_ANY
+19:09:05,495 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - Trying to configure with ch.qos.logback.classic.BasicConfigurator
+19:09:05,495 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - Constructed configurator of type class ch.qos.logback.classic.BasicConfigurator
+19:09:05,495 |-INFO in ch.qos.logback.classic.BasicConfigurator@301aa982 - Setting up default configuration.
+19:09:05,507 |-INFO in ch.qos.logback.classic.util.ContextInitializer@7ae9a33a - ch.qos.logback.classic.BasicConfigurator.configure() call lasted 12 milliseconds. ExecutionStatus=NEUTRAL
+19:09:05,945 |-INFO in ch.qos.logback.core.joran.util.ConfigurationWatchListUtil@5fc930f0 - Adding [jar:file:/Users/natarajan/.m2/repository/org/springframework/boot/spring-boot/3.4.0/spring-boot-3.4.0.jar!/org/springframework/boot/logging/logback/defaults.xml] to configuration watch list.
+19:09:05,946 |-INFO in ConfigurationWatchList(mainURL=file:/Users/natarajan/Documents/Projects/ultra-bms/backend/target/classes/logback-spring.xml, fileWatchList={/Users/natarajan/Documents/Projects/ultra-bms/backend/target/classes/logback-spring.xml}, urlWatchList=[}) - Cannot watch [jar:file:/Users/natarajan/.m2/repository/org/springframework/boot/spring-boot/3.4.0/spring-boot-3.4.0.jar!/org/springframework/boot/logging/logback/defaults.xml] as its protocol is not one of file, http or https.
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ConversionRuleModelHandler - registering conversion word applicationName with class [org.springframework.boot.logging.logback.ApplicationNameConverter]
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ConversionRuleModelHandler - registering conversion word clr with class [org.springframework.boot.logging.logback.ColorConverter]
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ConversionRuleModelHandler - registering conversion word correlationId with class [org.springframework.boot.logging.logback.CorrelationIdConverter]
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ConversionRuleModelHandler - registering conversion word esb with class [org.springframework.boot.logging.logback.EnclosedInSquareBracketsConverter]
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ConversionRuleModelHandler - registering conversion word wex with class [org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter]
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ConversionRuleModelHandler - registering conversion word wEx with class [org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter]
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@65f58c6e - value "%clr(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}){faint} %clr(%5p){} %clr(13220){magenta} %clr(--- %esb(){APPLICATION_NAME}%esb{APPLICATION_GROUP}[%15.15t] ){faint}%clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx" substituted for "${CONSOLE_LOG_PATTERN:-%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd'T'HH:mm:ss.SSSXXX}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}){} %clr(${PID:-}){magenta} %clr(--- %esb(){APPLICATION_NAME}%esb{APPLICATION_GROUP}[%15.15t] ${LOG_CORRELATION_PATTERN:-}){faint}%clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@65f58c6e - value "UTF-8" substituted for "${CONSOLE_LOG_CHARSET:-${file.encoding:-UTF-8}}"
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@65f58c6e - value "TRACE" substituted for "${CONSOLE_LOG_THRESHOLD:-TRACE}"
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@65f58c6e - value "" substituted for "${CONSOLE_LOG_STRUCTURED_FORMAT:-}"
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@65f58c6e - value "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p 13220 --- %esb(){APPLICATION_NAME}%esb{APPLICATION_GROUP}[%t] %-40.40logger{39} : %m%n%wEx" substituted for "${FILE_LOG_PATTERN:-%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd'T'HH:mm:ss.SSSXXX}} ${LOG_LEVEL_PATTERN:-%5p} ${PID:-} --- %esb(){APPLICATION_NAME}%esb{APPLICATION_GROUP}[%t] ${LOG_CORRELATION_PATTERN:-}%-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@65f58c6e - value "UTF-8" substituted for "${FILE_LOG_CHARSET:-${file.encoding:-UTF-8}}"
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@65f58c6e - value "TRACE" substituted for "${FILE_LOG_THRESHOLD:-TRACE}"
+19:09:05,949 |-INFO in ch.qos.logback.core.model.processor.ModelInterpretationContext@65f58c6e - value "" substituted for "${FILE_LOG_STRUCTURED_FORMAT:-}"
+19:09:05,951 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.apache.catalina.startup.DigesterFactory] to ERROR
+19:09:05,951 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@73ad7e90 - Propagating ERROR level on Logger[org.apache.catalina.startup.DigesterFactory] onto the JUL framework
+19:09:05,952 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.apache.catalina.util.LifecycleBase] to ERROR
+19:09:05,952 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@73ad7e90 - Propagating ERROR level on Logger[org.apache.catalina.util.LifecycleBase] onto the JUL framework
+19:09:05,952 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.apache.coyote.http11.Http11NioProtocol] to WARN
+19:09:05,952 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@73ad7e90 - Propagating WARN level on Logger[org.apache.coyote.http11.Http11NioProtocol] onto the JUL framework
+19:09:05,952 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.apache.sshd.common.util.SecurityUtils] to WARN
+19:09:05,952 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@73ad7e90 - Propagating WARN level on Logger[org.apache.sshd.common.util.SecurityUtils] onto the JUL framework
+19:09:05,952 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.apache.tomcat.util.net.NioSelectorPool] to WARN
+19:09:05,952 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@73ad7e90 - Propagating WARN level on Logger[org.apache.tomcat.util.net.NioSelectorPool] onto the JUL framework
+19:09:05,952 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.eclipse.jetty.util.component.AbstractLifeCycle] to ERROR
+19:09:05,952 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@73ad7e90 - Propagating ERROR level on Logger[org.eclipse.jetty.util.component.AbstractLifeCycle] onto the JUL framework
+19:09:05,952 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.hibernate.validator.internal.util.Version] to WARN
+19:09:05,952 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@73ad7e90 - Propagating WARN level on Logger[org.hibernate.validator.internal.util.Version] onto the JUL framework
+19:09:05,952 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [org.springframework.boot.actuate.endpoint.jmx] to WARN
+19:09:05,952 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@73ad7e90 - Propagating WARN level on Logger[org.springframework.boot.actuate.endpoint.jmx] onto the JUL framework
+19:09:05,952 |-INFO in ch.qos.logback.core.model.processor.AppenderModelHandler - Processing appender named [CONSOLE]
+19:09:05,952 |-INFO in ch.qos.logback.core.model.processor.AppenderModelHandler - About to instantiate appender of type [ch.qos.logback.core.ConsoleAppender]
+19:09:05,954 |-INFO in ch.qos.logback.core.model.processor.ImplicitModelHandler - Assuming default type [ch.qos.logback.classic.encoder.PatternLayoutEncoder] for [encoder] property
+19:09:05,967 |-WARN in ch.qos.logback.core.model.processor.AppenderModelHandler - Appender named [FILE] not referenced. Skipping further processing.
+19:09:05,968 |-INFO in ch.qos.logback.classic.model.processor.RootLoggerModelHandler - Setting level of ROOT logger to INFO
+19:09:05,968 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@73ad7e90 - Propagating INFO level on Logger[ROOT] onto the JUL framework
+19:09:05,968 |-INFO in ch.qos.logback.core.model.processor.AppenderRefModelHandler - Attaching appender named [CONSOLE] to Logger[ROOT]
+19:09:05,968 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [com.ultrabms] to DEBUG
+19:09:05,968 |-INFO in ch.qos.logback.classic.jul.LevelChangePropagator@73ad7e90 - Propagating DEBUG level on Logger[com.ultrabms] onto the JUL framework
+19:09:05,968 |-INFO in ch.qos.logback.core.model.processor.DefaultProcessor@4ba380c7 - End of configuration.
+19:09:05,968 |-INFO in org.springframework.boot.logging.logback.SpringBootJoranConfigurator@784c5ef5 - Registering current configuration as safe fallback point
+
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.0)
+
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build what is described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html#0.3
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (/Users/natarajan/.m2/repository/net/bytebuddy/byte-buddy-agent/1.15.10/byte-buddy-agent-1.15.10.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+2025-11-14 19:09:07.578 [main] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration [correlationId=NONE] - 
+
+Using generated security password: 690febea-e8dc-47d4-bbb5-f57037a160bd
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-11-14 19:09:07.580 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer [correlationId=NONE] - Found 2 UserDetailsService beans, with names [inMemoryUserDetailsManager, com.ultrabms.security.CustomUserDetailsService#0]. Global Authentication Manager will not use a UserDetailsService for username/password login. Consider publishing a single UserDetailsService bean.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.0)
+
+2025-11-14 19:09:08.682 [main] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration [correlationId=NONE] - 
+
+Using generated security password: e45d540e-6f5b-464a-ba07-5ee6809eeaff
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-11-14 19:09:08.684 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer [correlationId=NONE] - Found 2 UserDetailsService beans, with names [inMemoryUserDetailsManager, com.ultrabms.security.CustomUserDetailsService#0]. Global Authentication Manager will not use a UserDetailsService for username/password login. Consider publishing a single UserDetailsService bean.
+[ERROR] Tests run: 4, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 3.257 s <<< FAILURE! -- in com.ultrabms.controller.UserControllerAuthorizationTest$CreateUserTests
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$CreateUserTests.shouldDenyPropertyManagerFromCreatingUser -- Time elapsed: 0.087 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$CreateUserTests.shouldDenyPropertyManagerFromCreatingUser(UserControllerAuthorizationTest.java:205)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$CreateUserTests.shouldAllowSuperAdminToCreateUser -- Time elapsed: 0.022 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<201> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$CreateUserTests.shouldAllowSuperAdminToCreateUser(UserControllerAuthorizationTest.java:181)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$CreateUserTests.shouldDenyTenantFromCreatingUser -- Time elapsed: 0.006 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$CreateUserTests.shouldDenyTenantFromCreatingUser(UserControllerAuthorizationTest.java:228)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$CreateUserTests.shouldDenyMaintenanceSupervisorFromCreatingUser -- Time elapsed: 0.007 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$CreateUserTests.shouldDenyMaintenanceSupervisorFromCreatingUser(UserControllerAuthorizationTest.java:251)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests
+[ERROR] Tests run: 6, Failures: 6, Errors: 0, Skipped: 0, Time elapsed: 0.064 s <<< FAILURE! -- in com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests.shouldDenyMaintenanceSupervisorFromDeletingUser -- Time elapsed: 0.007 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests.shouldDenyMaintenanceSupervisorFromDeletingUser(UserControllerAuthorizationTest.java:371)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests.shouldDenyFinanceManagerFromDeletingUser -- Time elapsed: 0.011 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests.shouldDenyFinanceManagerFromDeletingUser(UserControllerAuthorizationTest.java:380)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests.shouldAllowSuperAdminToDeleteUser -- Time elapsed: 0.007 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<204> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests.shouldAllowSuperAdminToDeleteUser(UserControllerAuthorizationTest.java:344)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests.shouldDenyVendorFromDeletingUser -- Time elapsed: 0.006 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests.shouldDenyVendorFromDeletingUser(UserControllerAuthorizationTest.java:389)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests.shouldDenyPropertyManagerFromDeletingUser -- Time elapsed: 0.005 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests.shouldDenyPropertyManagerFromDeletingUser(UserControllerAuthorizationTest.java:353)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests.shouldDenyTenantFromDeletingUser -- Time elapsed: 0.006 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$DeleteUserTests.shouldDenyTenantFromDeletingUser(UserControllerAuthorizationTest.java:362)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running com.ultrabms.controller.UserControllerAuthorizationTest$GetAllUsersTests
+[ERROR] Tests run: 4, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.063 s <<< FAILURE! -- in com.ultrabms.controller.UserControllerAuthorizationTest$GetAllUsersTests
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$GetAllUsersTests.shouldDenyPropertyManagerWithoutPermission -- Time elapsed: 0.009 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$GetAllUsersTests.shouldDenyPropertyManagerWithoutPermission(UserControllerAuthorizationTest.java:101)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$GetAllUsersTests.shouldDenyTenantFromListingUsers -- Time elapsed: 0.004 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$GetAllUsersTests.shouldDenyTenantFromListingUsers(UserControllerAuthorizationTest.java:86)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$GetAllUsersTests.shouldAllowSuperAdminToListUsers -- Time elapsed: 0.009 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<200> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$GetAllUsersTests.shouldAllowSuperAdminToListUsers(UserControllerAuthorizationTest.java:78)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running com.ultrabms.controller.UserControllerAuthorizationTest$GetUserByIdTests
+[ERROR] Tests run: 2, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.037 s <<< FAILURE! -- in com.ultrabms.controller.UserControllerAuthorizationTest$GetUserByIdTests
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$GetUserByIdTests.shouldAllowSuperAdminToGetUserById -- Time elapsed: 0.018 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<200> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$GetUserByIdTests.shouldAllowSuperAdminToGetUserById(UserControllerAuthorizationTest.java:129)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$GetUserByIdTests.shouldDenyTenantFromGettingUserById -- Time elapsed: 0.011 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$GetUserByIdTests.shouldDenyTenantFromGettingUserById(UserControllerAuthorizationTest.java:138)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running com.ultrabms.controller.UserControllerAuthorizationTest$RoleBasedAccessSummaryTests
+[ERROR] Tests run: 2, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.028 s <<< FAILURE! -- in com.ultrabms.controller.UserControllerAuthorizationTest$RoleBasedAccessSummaryTests
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$RoleBasedAccessSummaryTests.superAdminShouldHaveFullAccess -- Time elapsed: 0.008 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<200> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$RoleBasedAccessSummaryTests.superAdminShouldHaveFullAccess(UserControllerAuthorizationTest.java:404)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$RoleBasedAccessSummaryTests.tenantShouldHaveNoAccess -- Time elapsed: 0.005 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$RoleBasedAccessSummaryTests.tenantShouldHaveNoAccess(UserControllerAuthorizationTest.java:438)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running com.ultrabms.controller.UserControllerAuthorizationTest$UpdateUserTests
+[ERROR] Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.025 s <<< FAILURE! -- in com.ultrabms.controller.UserControllerAuthorizationTest$UpdateUserTests
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$UpdateUserTests.shouldDenyFinanceManagerFromUpdatingUser -- Time elapsed: 0.005 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$UpdateUserTests.shouldDenyFinanceManagerFromUpdatingUser(UserControllerAuthorizationTest.java:329)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$UpdateUserTests.shouldDenyTenantFromUpdatingUser -- Time elapsed: 0.007 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$UpdateUserTests.shouldDenyTenantFromUpdatingUser(UserControllerAuthorizationTest.java:306)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.ultrabms.controller.UserControllerAuthorizationTest$UpdateUserTests.shouldAllowSuperAdminToUpdateUser -- Time elapsed: 0.005 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<200> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.ultrabms.controller.UserControllerAuthorizationTest$UpdateUserTests.shouldAllowSuperAdminToUpdateUser(UserControllerAuthorizationTest.java:282)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.642 s -- in com.ultrabms.controller.UserControllerAuthorizationTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   UserControllerAuthorizationTest$CreateUserTests.shouldAllowSuperAdminToCreateUser:181 Status expected:<201> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$CreateUserTests.shouldDenyMaintenanceSupervisorFromCreatingUser:251 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$CreateUserTests.shouldDenyPropertyManagerFromCreatingUser:205 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$CreateUserTests.shouldDenyTenantFromCreatingUser:228 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$DeleteUserTests.shouldAllowSuperAdminToDeleteUser:344 Status expected:<204> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$DeleteUserTests.shouldDenyFinanceManagerFromDeletingUser:380 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$DeleteUserTests.shouldDenyMaintenanceSupervisorFromDeletingUser:371 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$DeleteUserTests.shouldDenyPropertyManagerFromDeletingUser:353 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$DeleteUserTests.shouldDenyTenantFromDeletingUser:362 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$DeleteUserTests.shouldDenyVendorFromDeletingUser:389 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$GetAllUsersTests.shouldAllowSuperAdminToListUsers:78 Status expected:<200> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$GetAllUsersTests.shouldDenyPropertyManagerWithoutPermission:101 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$GetAllUsersTests.shouldDenyTenantFromListingUsers:86 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$GetUserByIdTests.shouldAllowSuperAdminToGetUserById:129 Status expected:<200> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$GetUserByIdTests.shouldDenyTenantFromGettingUserById:138 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$RoleBasedAccessSummaryTests.superAdminShouldHaveFullAccess:404 Status expected:<200> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$RoleBasedAccessSummaryTests.tenantShouldHaveNoAccess:438 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$UpdateUserTests.shouldAllowSuperAdminToUpdateUser:282 Status expected:<200> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$UpdateUserTests.shouldDenyFinanceManagerFromUpdatingUser:329 Status expected:<403> but was:<404>
+[ERROR]   UserControllerAuthorizationTest$UpdateUserTests.shouldDenyTenantFromUpdatingUser:306 Status expected:<403> but was:<404>
+[INFO] 
+[ERROR] Tests run: 21, Failures: 20, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.878 s
+[INFO] Finished at: 2025-11-14T19:09:09+04:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.2:test (default-test) on project ultra-bms-backend: There are test failures.
+[ERROR] 
+[ERROR] See /Users/natarajan/Documents/Projects/ultra-bms/backend/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

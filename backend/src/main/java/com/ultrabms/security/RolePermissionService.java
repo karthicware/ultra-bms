@@ -132,6 +132,9 @@ public class RolePermissionService {
      * @return true if role has the permission
      */
     public boolean hasPermission(UserRole role, Permission permission) {
+        if (role == null || permission == null) {
+            return false;
+        }
         return getPermissionsForRole(role).contains(permission);
     }
 

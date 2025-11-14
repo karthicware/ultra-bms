@@ -2,11 +2,14 @@ package com.ultrabms.service;
 
 import com.ultrabms.dto.*;
 import com.ultrabms.entity.AuditLog;
+import com.ultrabms.entity.Role;
 import com.ultrabms.entity.TokenBlacklist;
 import com.ultrabms.entity.User;
 import com.ultrabms.exception.AccountLockedException;
 import com.ultrabms.exception.DuplicateResourceException;
+import com.ultrabms.exception.EntityNotFoundException;
 import com.ultrabms.repository.AuditLogRepository;
+import com.ultrabms.repository.RoleRepository;
 import com.ultrabms.repository.TokenBlacklistRepository;
 import com.ultrabms.repository.UserRepository;
 import com.ultrabms.security.JwtTokenProvider;
@@ -40,6 +43,7 @@ import java.util.Map;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final TokenBlacklistRepository tokenBlacklistRepository;
     private final AuditLogRepository auditLogRepository;
     private final JwtTokenProvider jwtTokenProvider;
@@ -57,13 +61,17 @@ public class AuthServiceImpl implements AuthService {
             throw new DuplicateResourceException("Email address already exists: " + request.email());
         }
 
+        // Look up role by name
+        Role role = roleRepository.findByName(request.roleName())
+                .orElseThrow(() -> new EntityNotFoundException("Role not found: " + request.roleName()));
+
         // Create new user entity
         User user = new User();
         user.setEmail(request.email());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
-        user.setRole(request.role());
+        user.setRole(role);
         user.setPhone(request.phone());
         user.setActive(true);
         user.setMfaEnabled(false);
@@ -75,7 +83,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Log registration event for audit trail
         logAuditEvent(savedUser.getId(), "REGISTRATION", ipAddress, userAgent,
-                Map.of("email", savedUser.getEmail(), "role", savedUser.getRole().name()));
+                Map.of("email", savedUser.getEmail(), "role", savedUser.getRoleName()));
 
         return mapToUserDto(savedUser);
     }
@@ -313,7 +321,7 @@ public class AuthServiceImpl implements AuthService {
                 user.getEmail(),
                 user.getFirstName(),
                 user.getLastName(),
-                user.getRole(),
+                user.getRoleName(),
                 user.getActive(),
                 user.getMfaEnabled(),
                 user.getCreatedAt(),

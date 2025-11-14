@@ -1,6 +1,5 @@
 package com.ultrabms.dto;
 
-import com.ultrabms.entity.enums.UserRole;
 import com.ultrabms.validator.StrongPassword;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
@@ -45,20 +44,20 @@ public record RegisterRequest(
         @Schema(description = "User's last name", example = "Doe", required = true)
         String lastName,
 
-        @NotNull(message = "Role is required")
+        @NotBlank(message = "Role is required")
         @Schema(
-                description = "User's role in the system",
+                description = "User's role in the system (role name)",
                 example = "PROPERTY_MANAGER",
                 allowableValues = {"SUPER_ADMIN", "PROPERTY_MANAGER", "MAINTENANCE_SUPERVISOR", "FINANCE_MANAGER", "TENANT", "VENDOR"},
                 required = true
         )
-        UserRole role,
+        String roleName,
 
         @Pattern(
-                regexp = "^\\+?[1-9]\\d{1,14}$",
-                message = "Phone number must be in E.164 format (e.g., +971501234567)"
+                regexp = "^\\+971[0-9]{9}$",
+                message = "Phone number must be a valid UAE number in E.164 format (e.g., +971501234567)"
         )
-        @Schema(description = "User's phone number in E.164 format (optional)", example = "+971501234567")
+        @Schema(description = "User's phone number - UAE numbers only in E.164 format (optional)", example = "+971501234567")
         String phone
 ) {
 }
