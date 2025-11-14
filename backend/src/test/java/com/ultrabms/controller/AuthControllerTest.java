@@ -15,11 +15,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -38,9 +39,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * Tests all authentication endpoints with MockMvc and Spring Security.
  */
-@WebMvcTest(AuthController.class)
+@SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)  // Disable security filters for controller testing
-@Import(com.ultrabms.exception.GlobalExceptionHandler.class)  // Import exception handler for proper error responses
+@ActiveProfiles("test")  // Use test profile for H2 database and test configuration
 @DisplayName("AuthController Integration Tests")
 class AuthControllerTest {
 
