@@ -1,5 +1,6 @@
 package com.ultrabms.security;
 
+import com.ultrabms.config.SecurityProperties;
 import com.ultrabms.entity.Role;
 import com.ultrabms.entity.User;
 import io.jsonwebtoken.Claims;
@@ -30,10 +31,13 @@ class JwtTokenProviderTest {
     void setUp() {
         // Initialize JwtTokenProvider with test configuration
         String testSecret = "dGhpc0lzQVRlc3RTZWNyZXRLZXlGb3JUZXN0aW5nT25seU1pbmltdW0yNTZCaXRz"; // Base64 encoded 256-bit secret
-        long accessTokenExpiration = 3600000L; // 1 hour
-        long refreshTokenExpiration = 604800000L; // 7 days
 
-        jwtTokenProvider = new JwtTokenProvider(testSecret, accessTokenExpiration, refreshTokenExpiration);
+        // Create mock SecurityProperties
+        SecurityProperties securityProperties = new SecurityProperties();
+        securityProperties.getJwt().setAccessTokenExpiration(3600); // 1 hour in seconds
+        securityProperties.getJwt().setRefreshTokenExpiration(604800); // 7 days in seconds
+
+        jwtTokenProvider = new JwtTokenProvider(testSecret, securityProperties);
 
         // Create test role
         Role testRole = new Role();
@@ -212,7 +216,10 @@ class JwtTokenProviderTest {
 
         // Create a second provider with different secret
         String differentSecret = "ZGlmZmVyZW50U2VjcmV0S2V5Rm9yVGVzdGluZ1B1cnBvc2VzT25seUJhc2U2NA==";
-        JwtTokenProvider differentProvider = new JwtTokenProvider(differentSecret, 3600000L, 604800000L);
+        SecurityProperties diffSecProps = new SecurityProperties();
+        diffSecProps.getJwt().setAccessTokenExpiration(3600);
+        diffSecProps.getJwt().setRefreshTokenExpiration(604800);
+        JwtTokenProvider differentProvider = new JwtTokenProvider(differentSecret, diffSecProps);
 
         // Act - Try to validate with different secret
         boolean isValid = differentProvider.validateToken(token);
@@ -226,7 +233,10 @@ class JwtTokenProviderTest {
     void shouldRejectExpiredToken() {
         // Arrange - Create provider with very short expiration (1 millisecond)
         String testSecret = "dGhpc0lzQVRlc3RTZWNyZXRLZXlGb3JUZXN0aW5nT25seU1pbmltdW0yNTZCaXRz";
-        JwtTokenProvider shortExpiryProvider = new JwtTokenProvider(testSecret, 1L, 1L);
+        SecurityProperties shortProps = new SecurityProperties();
+        shortProps.getJwt().setAccessTokenExpiration(0); // Expire immediately (< 1 second)
+        shortProps.getJwt().setRefreshTokenExpiration(0);
+        JwtTokenProvider shortExpiryProvider = new JwtTokenProvider(testSecret, shortProps);
 
         String token = shortExpiryProvider.generateAccessToken(testUser);
 

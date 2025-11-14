@@ -12,6 +12,7 @@ import com.ultrabms.repository.TokenBlacklistRepository;
 import com.ultrabms.repository.UserRepository;
 import com.ultrabms.security.JwtTokenProvider;
 import io.jsonwebtoken.JwtException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,15 @@ class AuthServiceImplTest {
 
     @Mock
     private com.ultrabms.repository.RoleRepository roleRepository;
+
+    @Mock
+    private com.ultrabms.repository.UserSessionRepository userSessionRepository;
+
+    @Mock
+    private SessionService sessionService;
+
+    @Mock
+    private HttpServletRequest httpRequest;
 
     @Spy
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
@@ -110,6 +120,15 @@ class AuthServiceImplTest {
         testUser.setMfaEnabled(false);
         testUser.setAccountLocked(false);
         testUser.setFailedLoginAttempts(0);
+
+        // Configure mock HttpServletRequest
+        lenient().when(httpRequest.getRemoteAddr()).thenReturn(TEST_IP);
+        lenient().when(httpRequest.getHeader("User-Agent")).thenReturn(TEST_USER_AGENT);
+        lenient().when(httpRequest.getHeader("X-Forwarded-For")).thenReturn(null); // No forwarded IP by default
+
+        // Configure mock SessionService to return a test session ID
+        lenient().when(sessionService.createSession(any(User.class), anyString(), anyString(), any(HttpServletRequest.class)))
+                .thenReturn("test-session-id-123");
     }
 
     // ==================== REGISTRATION TESTS ====================
@@ -206,7 +225,7 @@ class AuthServiceImplTest {
         when(jwtTokenProvider.generateRefreshToken(testUser)).thenReturn("refresh-token");
 
         // Act
-        LoginResponse response = authService.login(loginRequest, TEST_IP, TEST_USER_AGENT);
+        LoginResponse response = authService.login(loginRequest, httpRequest);
 
         // Assert
         assertThat(response).isNotNull();
@@ -227,7 +246,7 @@ class AuthServiceImplTest {
         when(userRepository.findByEmail(loginRequest.email())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> authService.login(loginRequest, TEST_IP, TEST_USER_AGENT))
+        assertThatThrownBy(() -> authService.login(loginRequest, httpRequest))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessage("Invalid email or password");
 
@@ -245,7 +264,7 @@ class AuthServiceImplTest {
         LoginRequest wrongPasswordRequest = new LoginRequest("test@ultrabms.com", "WrongP@ssw0rd");
 
         // Act & Assert
-        assertThatThrownBy(() -> authService.login(wrongPasswordRequest, TEST_IP, TEST_USER_AGENT))
+        assertThatThrownBy(() -> authService.login(wrongPasswordRequest, httpRequest))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessage("Invalid email or password");
 
@@ -260,7 +279,7 @@ class AuthServiceImplTest {
         when(loginAttemptService.isBlocked(loginRequest.email())).thenReturn(true);
 
         // Act & Assert
-        assertThatThrownBy(() -> authService.login(loginRequest, TEST_IP, TEST_USER_AGENT))
+        assertThatThrownBy(() -> authService.login(loginRequest, httpRequest))
                 .isInstanceOf(AccountLockedException.class)
                 .hasMessageContaining("Too many failed login attempts");
 
@@ -279,7 +298,7 @@ class AuthServiceImplTest {
         when(userRepository.findByEmail(loginRequest.email())).thenReturn(Optional.of(testUser));
 
         // Act & Assert
-        assertThatThrownBy(() -> authService.login(loginRequest, TEST_IP, TEST_USER_AGENT))
+        assertThatThrownBy(() -> authService.login(loginRequest, httpRequest))
                 .isInstanceOf(AccountLockedException.class)
                 .hasMessageContaining("Account is locked until");
     }
@@ -301,7 +320,7 @@ class AuthServiceImplTest {
         when(userRepository.save(userCaptor.capture())).thenReturn(testUser);
 
         // Act
-        authService.login(loginRequest, TEST_IP, TEST_USER_AGENT);
+        authService.login(loginRequest, httpRequest);
 
         // Assert
         User savedUser = userCaptor.getAllValues().get(0); // First save unlocks
@@ -324,7 +343,7 @@ class AuthServiceImplTest {
         when(userRepository.save(userCaptor.capture())).thenReturn(testUser);
 
         // Act & Assert
-        assertThatThrownBy(() -> authService.login(wrongRequest, TEST_IP, TEST_USER_AGENT))
+        assertThatThrownBy(() -> authService.login(wrongRequest, httpRequest))
                 .isInstanceOf(BadCredentialsException.class);
 
         User savedUser = userCaptor.getValue();
@@ -345,7 +364,7 @@ class AuthServiceImplTest {
         when(userRepository.save(userCaptor.capture())).thenReturn(testUser);
 
         // Act & Assert
-        assertThatThrownBy(() -> authService.login(wrongRequest, TEST_IP, TEST_USER_AGENT))
+        assertThatThrownBy(() -> authService.login(wrongRequest, httpRequest))
                 .isInstanceOf(BadCredentialsException.class);
 
         User savedUser = userCaptor.getValue();
@@ -368,7 +387,7 @@ class AuthServiceImplTest {
         when(userRepository.save(userCaptor.capture())).thenReturn(testUser);
 
         // Act
-        authService.login(loginRequest, TEST_IP, TEST_USER_AGENT);
+        authService.login(loginRequest, httpRequest);
 
         // Assert
         User savedUser = userCaptor.getValue();
@@ -390,7 +409,7 @@ class AuthServiceImplTest {
         when(auditLogRepository.save(auditLogCaptor.capture())).thenReturn(new AuditLog());
 
         // Act
-        authService.login(loginRequest, TEST_IP, TEST_USER_AGENT);
+        authService.login(loginRequest, httpRequest);
 
         // Assert
         AuditLog auditLog = auditLogCaptor.getValue();
@@ -502,21 +521,24 @@ class AuthServiceImplTest {
     // ==================== LOGOUT TESTS ====================
 
     @Test
-    @DisplayName("Should successfully logout and blacklist tokens")
+    @DisplayName("Should successfully logout when session exists")
     void shouldSuccessfullyLogoutAndBlacklistTokens() {
         // Arrange
         String accessToken = "access-token";
         String refreshToken = "refresh-token";
+        String sessionId = "test-session-id";
 
-        when(jwtTokenProvider.getExpirationFromToken(anyString()))
-                .thenReturn(new java.util.Date(System.currentTimeMillis() + 3600000));
-        when(tokenBlacklistRepository.existsByTokenHash(anyString())).thenReturn(false);
+        com.ultrabms.entity.UserSession mockSession = new com.ultrabms.entity.UserSession();
+        mockSession.setSessionId(sessionId);
+
+        // Mock session lookup to return a session
+        when(userSessionRepository.findByAccessTokenHash(anyString())).thenReturn(Optional.of(mockSession));
 
         // Act
         authService.logout(accessToken, refreshToken);
 
-        // Assert
-        verify(tokenBlacklistRepository, times(2)).save(any(TokenBlacklist.class));
+        // Assert - Should call sessionService.invalidateSession
+        verify(sessionService).invalidateSession(eq(sessionId), any(com.ultrabms.entity.enums.BlacklistReason.class));
     }
 
     @Test

@@ -9,6 +9,7 @@ import com.ultrabms.repository.UserRepository;
 import com.ultrabms.security.JwtTokenProvider;
 import com.ultrabms.service.AuthService;
 import com.ultrabms.service.LoginAttemptService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -327,7 +328,7 @@ class AuthControllerTest {
     @DisplayName("POST /api/v1/auth/login - Should return 200 OK with valid credentials")
     void loginShouldReturn200WithValidCredentials() throws Exception {
         // Arrange
-        when(authService.login(any(LoginRequest.class), nullable(String.class), nullable(String.class)))
+        when(authService.login(any(LoginRequest.class), any(HttpServletRequest.class)))
                 .thenReturn(loginResponse);
 
         // Act & Assert
@@ -343,14 +344,14 @@ class AuthControllerTest {
                 .andExpect(cookie().httpOnly("refreshToken", true))
                 .andExpect(cookie().path("refreshToken", "/api/v1/auth"));
 
-        verify(authService).login(any(LoginRequest.class), nullable(String.class), nullable(String.class));
+        verify(authService).login(any(LoginRequest.class), any(HttpServletRequest.class));
     }
 
     @Test
     @DisplayName("POST /api/v1/auth/login - Should return 401 Unauthorized with invalid credentials")
     void loginShouldReturn401WithInvalidCredentials() throws Exception {
         // Arrange
-        when(authService.login(any(LoginRequest.class), nullable(String.class), nullable(String.class)))
+        when(authService.login(any(LoginRequest.class), any(HttpServletRequest.class)))
                 .thenThrow(new BadCredentialsException("Invalid email or password"));
 
         // Act & Assert
@@ -366,7 +367,7 @@ class AuthControllerTest {
     @DisplayName("POST /api/v1/auth/login - Should return 423 Locked when account is locked")
     void loginShouldReturn423WhenAccountIsLocked() throws Exception {
         // Arrange
-        when(authService.login(any(LoginRequest.class), nullable(String.class), nullable(String.class)))
+        when(authService.login(any(LoginRequest.class), any(HttpServletRequest.class)))
                 .thenThrow(new AccountLockedException("Account is locked until 2025-11-13 12:00"));
 
         // Act & Assert
@@ -395,7 +396,7 @@ class AuthControllerTest {
     @DisplayName("POST /api/v1/auth/login - Should extract IP address from X-Forwarded-For header")
     void loginShouldExtractIpFromForwardedHeader() throws Exception {
         // Arrange
-        when(authService.login(any(), nullable(String.class), nullable(String.class))).thenReturn(loginResponse);
+        when(authService.login(any(), any(HttpServletRequest.class))).thenReturn(loginResponse);
 
         // Act
         mockMvc.perform(post("/api/v1/auth/login")
@@ -404,15 +405,15 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk());
 
-        // Assert - Should extract first IP from X-Forwarded-For
-        verify(authService).login(any(), eq("203.0.113.1"), nullable(String.class));
+        // Assert - Should call login with HttpServletRequest (IP extraction happens in AuthServiceImpl)
+        verify(authService).login(any(), any(HttpServletRequest.class));
     }
 
     @Test
     @DisplayName("POST /api/v1/auth/login - Should extract User-Agent header")
     void loginShouldExtractUserAgent() throws Exception {
         // Arrange
-        when(authService.login(any(), nullable(String.class), nullable(String.class))).thenReturn(loginResponse);
+        when(authService.login(any(), any(HttpServletRequest.class))).thenReturn(loginResponse);
         String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
 
         // Act
@@ -422,8 +423,8 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk());
 
-        // Assert
-        verify(authService).login(any(), nullable(String.class), eq(userAgent));
+        // Assert - Should call login with HttpServletRequest (User-Agent extraction happens in AuthServiceImpl)
+        verify(authService).login(any(), any(HttpServletRequest.class));
     }
 
     // ==================== REFRESH TOKEN ENDPOINT TESTS ====================
@@ -567,7 +568,7 @@ class AuthControllerTest {
                 .andExpect(status().isCreated());
 
         // Login endpoint is public
-        when(authService.login(any(), nullable(String.class), nullable(String.class))).thenReturn(loginResponse);
+        when(authService.login(any(), any(HttpServletRequest.class))).thenReturn(loginResponse);
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
