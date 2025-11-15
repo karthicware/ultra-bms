@@ -11,6 +11,11 @@ public enum UnitStatus {
     AVAILABLE,
 
     /**
+     * Unit is reserved for a lead during tenant conversion/onboarding process
+     */
+    RESERVED,
+
+    /**
      * Unit is currently occupied by a tenant
      */
     OCCUPIED,

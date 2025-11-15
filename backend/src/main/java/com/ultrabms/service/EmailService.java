@@ -1,11 +1,14 @@
 package com.ultrabms.service;
 
+import com.ultrabms.entity.Lead;
+import com.ultrabms.entity.Quotation;
 import com.ultrabms.entity.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -121,6 +124,128 @@ public class EmailService {
     }
 
     /**
+     * Send quotation email to lead with PDF attachment asynchronously.
+     * Email contains branded HTML template with quotation details and PDF attachment.
+     * Fails silently (logs error) to avoid blocking user workflow if email delivery fails.
+     *
+     * @param lead The lead entity
+     * @param quotation The quotation entity
+     * @param pdfContent The quotation PDF content
+     */
+    @Async("emailTaskExecutor")
+    public void sendQuotationEmail(Lead lead, Quotation quotation, byte[] pdfContent) {
+        try {
+            // Build Thymeleaf context with template variables
+            Context context = new Context();
+            context.setVariable("leadName", lead.getFullName());
+            context.setVariable("quotationNumber", quotation.getQuotationNumber());
+            context.setVariable("issueDate", quotation.getIssueDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
+            context.setVariable("validityDate", quotation.getValidityDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
+            context.setVariable("totalAmount", quotation.getTotalFirstPayment());
+            context.setVariable("frontendUrl", frontendUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            // Render HTML and plain text templates
+            String htmlContent = templateEngine.process("email/quotation-email", context);
+            String textContent = templateEngine.process("email/quotation-email.txt", context);
+
+            // Send email with PDF attachment
+            sendEmailWithAttachment(
+                lead.getEmail(),
+                "Your Rental Quotation from UltraBMS",
+                textContent,
+                htmlContent,
+                pdfContent,
+                String.format("quotation-%s.pdf", quotation.getQuotationNumber())
+            );
+
+            log.info("Quotation email sent successfully to lead: {} ({})", lead.getId(), lead.getEmail());
+
+        } catch (Exception e) {
+            // Fail silently - don't throw exception to user, just log error
+            log.error("Failed to send quotation email to lead: {} ({})", lead.getId(), lead.getEmail(), e);
+        }
+    }
+
+    /**
+     * Send welcome email to new lead asynchronously.
+     * Confirms lead registration and provides next steps information.
+     * Fails silently (logs error) to avoid blocking user workflow if email delivery fails.
+     *
+     * @param lead The lead entity
+     */
+    @Async("emailTaskExecutor")
+    public void sendWelcomeEmail(Lead lead) {
+        try {
+            // Build Thymeleaf context with template variables
+            Context context = new Context();
+            context.setVariable("leadName", lead.getFullName());
+            context.setVariable("leadNumber", lead.getLeadNumber());
+            context.setVariable("frontendUrl", frontendUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            // Render HTML and plain text templates
+            String htmlContent = templateEngine.process("email/welcome-email", context);
+            String textContent = templateEngine.process("email/welcome-email.txt", context);
+
+            // Send email
+            sendEmail(
+                lead.getEmail(),
+                "Welcome to UltraBMS - Your Lead Registration Confirmed",
+                textContent,
+                htmlContent
+            );
+
+            log.info("Welcome email sent successfully to lead: {} ({})", lead.getId(), lead.getEmail());
+
+        } catch (Exception e) {
+            // Fail silently - don't throw exception to user, just log error
+            log.error("Failed to send welcome email to lead: {} ({})", lead.getId(), lead.getEmail(), e);
+        }
+    }
+
+    /**
+     * Send quotation accepted notification to admin asynchronously.
+     * Notifies admin that a lead has accepted a quotation.
+     * Fails silently (logs error) to avoid blocking user workflow if email delivery fails.
+     *
+     * @param lead The lead entity
+     * @param quotation The quotation entity
+     */
+    @Async("emailTaskExecutor")
+    public void sendQuotationAcceptedNotification(Lead lead, Quotation quotation) {
+        try {
+            // Build Thymeleaf context with template variables
+            Context context = new Context();
+            context.setVariable("leadName", lead.getFullName());
+            context.setVariable("leadNumber", lead.getLeadNumber());
+            context.setVariable("quotationNumber", quotation.getQuotationNumber());
+            context.setVariable("totalAmount", quotation.getTotalFirstPayment());
+            context.setVariable("frontendUrl", frontendUrl);
+
+            // Render HTML and plain text templates
+            String htmlContent = templateEngine.process("email/quotation-accepted-notification", context);
+            String textContent = templateEngine.process("email/quotation-accepted-notification.txt", context);
+
+            // Send email to support/admin email
+            sendEmail(
+                supportEmail,
+                String.format("Quotation Accepted: %s - %s", quotation.getQuotationNumber(), lead.getFullName()),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Quotation accepted notification sent successfully for quotation: {} ({})",
+                    quotation.getId(), quotation.getQuotationNumber());
+
+        } catch (Exception e) {
+            // Fail silently - don't throw exception to user, just log error
+            log.error("Failed to send quotation accepted notification for quotation: {} ({})",
+                    quotation.getId(), quotation.getQuotationNumber(), e);
+        }
+    }
+
+    /**
      * Internal helper method to send multipart email (HTML + plain text fallback).
      * Creates MimeMessage with both HTML and text content for email client compatibility.
      *
@@ -138,6 +263,34 @@ public class EmailService {
         helper.setSubject(subject);
         helper.setText(textContent, htmlContent);
         helper.setFrom(supportEmail);
+
+        mailSender.send(message);
+    }
+
+    /**
+     * Internal helper method to send multipart email with attachment.
+     * Creates MimeMessage with both HTML and text content plus PDF attachment.
+     *
+     * @param to Recipient email address
+     * @param subject Email subject line
+     * @param textContent Plain text version of email
+     * @param htmlContent HTML version of email
+     * @param attachment PDF content as byte array
+     * @param attachmentFilename Filename for the PDF attachment
+     * @throws MessagingException if email cannot be sent
+     */
+    private void sendEmailWithAttachment(String to, String subject, String textContent, String htmlContent,
+                                          byte[] attachment, String attachmentFilename) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(textContent, htmlContent);
+        helper.setFrom(supportEmail);
+
+        // Add PDF attachment
+        helper.addAttachment(attachmentFilename, new ByteArrayResource(attachment), "application/pdf");
 
         mailSender.send(message);
     }

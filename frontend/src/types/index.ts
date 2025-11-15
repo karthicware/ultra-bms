@@ -27,3 +27,5 @@ export interface PaginatedResponse<T> {
 
 // Module-specific types
 export * from './auth';
+export * from './leads';
+export * from './quotations';

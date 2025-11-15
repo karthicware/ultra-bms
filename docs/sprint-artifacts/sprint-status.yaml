@@ -54,7 +54,7 @@ development_status:
   # Epic 3: Tenant Management & Portal (5 stories)
   # NOTE: Epic 3 has duplicate Story 3.2 numbering in epics.md - both included below
   epic-3: backlog
-  3-1-lead-management-and-quotation-system: backlog
+  3-1-lead-management-and-quotation-system: in-progress  # Started 2025-11-15 - Implementation in progress
   3-2-property-and-unit-management: backlog
   3-2-tenant-onboarding-and-registration: backlog
   3-3-tenant-portal-dashboard-and-profile-management: backlog
