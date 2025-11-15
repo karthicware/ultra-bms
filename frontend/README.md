@@ -240,28 +240,231 @@ src/
 
 ## Testing
 
-### E2E Tests
+Ultra BMS has comprehensive E2E test coverage for all authentication and authorization flows.
 
-Run the comprehensive authentication test suite:
+**📊 [View Detailed Testing Status Report](./TESTING-STATUS.md)** - Current test results, known issues, and fix guide
 
+### Test Suite Overview
+
+**Total Test Files:** 6
+**Total Test Cases:** ~117 (Chrome-only, 3x faster)
+**Framework:** Playwright
+**Browser:** Chrome (Chromium) only
+
+| Test Suite | File | Test Cases | Type | Status |
+|------------|------|-----------|------|--------|
+| **UI Only** | `tests/e2e/ui-only.spec.ts` | 17 | No Backend | ✅ **100% passing** |
+| Login Flow | `tests/e2e/login.spec.ts` | ~20 | Integration | ⚠️ Needs Backend |
+| Registration | `tests/e2e/registration.spec.ts` | ~25 | Integration | ⚠️ Needs Backend |
+| Password Reset | `tests/e2e/password-reset.spec.ts` | ~15 | Integration | ⚠️ Needs Backend |
+| Session Management | `tests/e2e/session-management.spec.ts` | ~20 | Integration | ⚠️ Needs Backend |
+| Protected Routes & RBAC | `tests/e2e/protected-routes.spec.ts` | ~20 | Integration | ⚠️ Needs Backend |
+
+**Legend:**
+- ✅ **No Backend** - Tests run with just `npm run dev`
+- ⚠️ **Needs Backend** - Requires Spring Boot API + PostgreSQL
+- 🚀 **Chrome-Only** - Tests run only in Chrome for 3x faster execution
+
+### Quick Start - Run Tests Now
+
+**IMPORTANT:** You MUST start the frontend before running tests!
+
+**Without Backend (UI Tests Only):**
 ```bash
-# Run all auth tests
-npm run test:e2e -- tests/auth.spec.ts
+# Terminal 1: Start frontend (REQUIRED!)
+npm run dev
+# Wait for: ✓ Ready in Xs
 
-# Watch mode
-npm run test:e2e:ui
+# Terminal 2: Run UI tests
+npm run test:e2e -- ui-only.spec.ts
 
-# Debug mode
-npm run test:e2e:debug
+# Expected: 17 passing ✅ (Chrome-only)
 ```
 
-Test coverage includes:
-- Login flow with validation
-- Registration with password requirements
-- Password reset flow
-- Token validation
-- Accessibility (keyboard navigation, ARIA labels)
-- Error handling
+**With Backend (All Tests):**
+```bash
+# Terminal 1: Start PostgreSQL (ensure running)
+
+# Terminal 2: Start backend
+cd ../backend
+./mvnw spring-boot:run
+
+# Terminal 3: Start frontend (REQUIRED!)
+cd ../frontend
+npm run dev
+# Wait for: ✓ Ready in Xs
+
+# Terminal 4: Run all tests
+npm run test:e2e
+
+# Expected: ~110+ passing (Chrome-only, 3x faster)
+```
+
+### Running Specific Test Suites
+
+```bash
+# UI-only tests (no backend needed)
+npm run test:e2e -- ui-only.spec.ts
+
+# Integration tests (backend required)
+npm run test:e2e -- login.spec.ts
+npm run test:e2e -- registration.spec.ts
+npm run test:e2e -- password-reset.spec.ts
+npm run test:e2e -- session-management.spec.ts
+npm run test:e2e -- protected-routes.spec.ts
+
+# Interactive mode with UI
+npm run test:e2e:ui
+
+# Watch test execution in browser
+npm run test:e2e:headed
+
+# Debug specific test
+npm run test:e2e:debug -- ui-only.spec.ts
+
+# Generate HTML report
+npm run test:e2e:report
+```
+
+### Test Coverage Details
+
+#### ✅ Login Flow (20+ tests)
+- Form validation (empty fields, invalid email)
+- Successful authentication with valid credentials
+- "Remember Me" functionality and token persistence
+- Error handling (invalid credentials, network errors, server errors)
+- Password visibility toggle
+- Redirect to intended page after login
+- Loading states and keyboard accessibility
+- CSRF token inclusion
+- Rate limiting enforcement
+
+#### ✅ Registration (25+ tests)
+- All form elements rendering
+- Password strength meter (weak/medium/strong/very strong)
+- Password requirements checklist with real-time updates
+- Form validation (email format, name length, phone format)
+- Password validation (uppercase, lowercase, number, special char, min length)
+- Passwords match validation
+- Terms acceptance requirement
+- Duplicate email detection
+- Server error handling
+- Loading states and UI polish
+
+#### ✅ Password Reset (15+ tests)
+- Complete password reset flow end-to-end
+- Token validation (valid/invalid/expired)
+- Non-existent email handling (security: no email reveal)
+- Weak password rejection
+- Password mismatch error
+- Rate limiting (3 requests per hour)
+- Token invalidation after use
+- Prevent token reuse
+- Countdown timer (15-minute expiry)
+- UI/UX features (loading states, password toggle)
+
+#### ✅ Session Management (20+ tests)
+- Automatic access token refresh
+- Refresh token expiration handling
+- Session persistence across page refreshes
+- Session expiry warning modal (5 min before timeout)
+- Active sessions list display
+- Current session badge
+- Revoke specific session
+- Logout from all other devices
+- Auto-refresh session list (30s interval)
+- Change password successfully
+- Validate current password
+- Password requirements enforcement
+- Complete logout (clear cookies, redirect, block access)
+- CSRF token inclusion in requests
+
+#### ✅ Protected Routes & RBAC (20+ tests)
+- Redirect unauthenticated users to login
+- Preserve intended URL with redirect parameter
+- Allow public route access
+- Redirect authenticated users from auth pages
+- Server-side middleware protection
+- No content flash before redirect
+- SUPER_ADMIN access to admin pages
+- TENANT denied admin access
+- 403 Forbidden page display
+- PROPERTY_MANAGER property access
+- VENDOR denied financial reports
+- Permission-based access control
+- Conditional UI rendering based on permissions
+- Multiple roles/permissions handling
+- Edge cases (invalid tokens, concurrent requests, cross-tab auth)
+
+### Test Infrastructure
+
+**Playwright Configuration:**
+- Browser: Chromium, Firefox, WebKit
+- Headless by default
+- Screenshot on failure
+- Video recording on retry
+- Parallel execution
+
+**Custom Fixtures:**
+- `userFactory` - Create test users with roles/permissions
+- `authHelper` - Login/logout helpers
+- `waitHelper` - Smart waiting utilities
+
+**Test Data:**
+- `@faker-js/faker` for realistic data generation
+- Isolated test users per test case
+- Automatic cleanup after tests
+
+### Best Practices
+
+✅ **Isolation** - Each test creates its own data
+✅ **Cleanup** - Automatic cleanup of test users and sessions
+✅ **Realistic Data** - Faker for emails, names, phone numbers
+✅ **Accessibility** - Keyboard navigation, ARIA labels, screen readers
+✅ **Error Scenarios** - Both happy paths and error cases
+✅ **Security** - CSRF tokens, secure storage, rate limiting
+✅ **Performance** - Efficient waits, parallel execution
+
+### Debugging Tests
+
+```bash
+# Run with headed browser to watch execution
+npm run test:e2e:headed
+
+# Debug mode with Playwright Inspector
+npm run test:e2e:debug -- tests/e2e/login.spec.ts
+
+# Run specific test by name
+npm run test:e2e -- -g "should login with valid credentials"
+
+# Generate and view HTML report
+npm run test:e2e:report
+```
+
+### CI/CD Integration
+
+Tests are configured for CI/CD pipelines:
+
+```yaml
+# Example: GitHub Actions
+- name: Install dependencies
+  run: npm ci
+
+- name: Install Playwright browsers
+  run: npx playwright install --with-deps
+
+- name: Run E2E tests
+  run: npm run test:e2e
+
+- name: Upload test results
+  if: always()
+  uses: actions/upload-artifact@v3
+  with:
+    name: playwright-report
+    path: playwright-report/
+```
+
+**📖 Complete Testing Documentation:** [docs/AUTHENTICATION.md#testing](./docs/AUTHENTICATION.md#testing)
 
 ## Troubleshooting
 

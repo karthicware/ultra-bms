@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Authentication Middleware
+ * Authentication Proxy
  * Protects routes that require authentication
  */
 
@@ -17,10 +17,10 @@ const publicRoutes = [
 // Routes that should redirect to dashboard if already authenticated
 const authRoutes = ['/login', '/register', '/forgot-password'];
 
-// API routes that should be excluded from middleware
+// API routes that should be excluded from proxy
 const apiRoutes = ['/api'];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip middleware for API routes, static files, and Next.js internals
@@ -58,7 +58,7 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Configure which routes the middleware should run on
+// Configure which routes the proxy should run on
 export const config = {
   matcher: [
     /*

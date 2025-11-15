@@ -106,12 +106,12 @@ export default function LoginPage() {
       }
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" data-testid="login-form">
           {/* Error Alert */}
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" data-testid="error-alert">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription data-testid="error-message">{error}</AlertDescription>
             </Alert>
           )}
 
@@ -129,6 +129,7 @@ export default function LoginPage() {
                     autoComplete="email"
                     autoFocus
                     disabled={isSubmitting}
+                    data-testid="email-input"
                     {...field}
                   />
                 </FormControl>
@@ -158,6 +159,7 @@ export default function LoginPage() {
                     placeholder="Enter your password"
                     autoComplete="current-password"
                     disabled={isSubmitting}
+                    data-testid="password-input"
                     {...field}
                   />
                 </FormControl>
@@ -194,6 +196,7 @@ export default function LoginPage() {
             isLoading={isSubmitting}
             loadingText="Signing in..."
             className="mt-6"
+            data-testid="login-button"
           >
             Sign in
           </SubmitButton>

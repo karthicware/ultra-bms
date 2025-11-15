@@ -1,6 +1,7 @@
 import { test as base } from '@playwright/test';
 import { UserFactory } from './factories/user-factory';
 import { TenantFactory } from './factories/tenant-factory';
+import { AuthHelper } from '../helpers/auth-helper';
 
 /**
  * Extended Playwright fixtures for Ultra BMS
@@ -10,6 +11,7 @@ import { TenantFactory } from './factories/tenant-factory';
 type TestFixtures = {
   userFactory: UserFactory;
   tenantFactory: TenantFactory;
+  authHelper: AuthHelper;
 };
 
 export const test = base.extend<TestFixtures>({
@@ -23,6 +25,11 @@ export const test = base.extend<TestFixtures>({
     const factory = new TenantFactory();
     await use(factory);
     await factory.cleanup(); // Auto-cleanup after each test
+  },
+
+  authHelper: async ({ page }, use) => {
+    const helper = new AuthHelper(page);
+    await use(helper);
   },
 });
 

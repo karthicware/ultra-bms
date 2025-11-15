@@ -463,38 +463,222 @@ Set in Axios configuration:
 
 ## Testing
 
+### Test Infrastructure
+
+The testing suite uses:
+- **Playwright** - E2E testing framework
+- **@faker-js/faker** - Test data generation
+- **Custom fixtures** - Reusable test helpers (userFactory, authHelper)
+
 ### Running E2E Tests
 
 ```bash
-# Run all auth tests
-npm run test:e2e -- tests/auth.spec.ts
+# Run all authentication tests
+npm run test:e2e
 
-# Run with UI
-npm run test:e2e:ui -- tests/auth.spec.ts
+# Run specific test file
+npm run test:e2e -- tests/e2e/login.spec.ts
+npm run test:e2e -- tests/e2e/registration.spec.ts
+npm run test:e2e -- tests/e2e/password-reset.spec.ts
+npm run test:e2e -- tests/e2e/session-management.spec.ts
+npm run test:e2e -- tests/e2e/protected-routes.spec.ts
 
-# Run in headed mode
-npm run test:e2e:headed -- tests/auth.spec.ts
+# Run with UI (watch mode)
+npm run test:e2e:ui
 
-# Debug mode
-npm run test:e2e:debug -- tests/auth.spec.ts
+# Run in headed mode (see browser)
+npm run test:e2e:headed
+
+# Debug specific test
+npm run test:e2e:debug -- tests/e2e/login.spec.ts
+
+# Generate HTML report
+npm run test:e2e:report
 ```
 
 ### Test Coverage
 
-The E2E test suite covers:
+#### Login Flow Tests (`tests/e2e/login.spec.ts`)
+✅ **UI and Validation**
+  - Display all form elements (email, password, remember me, links)
+  - Show validation errors for empty/invalid inputs
+  - Toggle password visibility
+  - Accessible form labels and attributes
 
-✅ Login page validation
-✅ Registration form validation
-✅ Password strength meter
-✅ Password reset flow
-✅ Token validation
-✅ Keyboard navigation
-✅ ARIA labels and accessibility
-✅ Error handling
-✅ Form submission
+✅ **Successful Authentication**
+  - Login with valid credentials
+  - Persist "Remember Me" preference
+  - Redirect to intended page after login
+  - Store tokens securely
+
+✅ **Authentication Errors**
+  - Invalid credentials error message
+  - Non-existent user handling
+  - Network error handling
+  - Server error handling
+
+✅ **UI/UX Features**
+  - Loading states during submission
+  - Keyboard accessibility
+  - Auto-focus email input
+  - Clear password after failed login
+
+✅ **Security**
+  - CSRF token inclusion in requests
+  - Rate limiting enforcement
+
+#### Registration Flow Tests (`tests/e2e/registration.spec.ts`)
+✅ **UI and Form Elements**
+  - Display all required fields
+  - Password strength meter
+  - Password requirements checklist
+  - Terms acceptance checkbox
+
+✅ **Successful Registration**
+  - Register with all valid data
+  - Register with minimum required fields
+  - Email verification flow
+
+✅ **Password Validation**
+  - Weak/strong password indicators
+  - Reject passwords missing:
+    - Uppercase letter
+    - Lowercase letter
+    - Number
+    - Special character
+    - Minimum 8 characters
+  - Passwords must match validation
+
+✅ **Form Validation**
+  - All required fields validation
+  - Email format validation
+  - Name length validation
+  - Phone number format (if provided)
+  - Terms acceptance requirement
+
+✅ **Server-Side Validation**
+  - Duplicate email detection
+  - Server error handling
+
+✅ **UI/UX Features**
+  - Loading states
+  - Password visibility toggle
+  - Dynamic requirements checklist updates
+  - Keyboard navigation
+
+#### Password Reset Tests (`tests/e2e/password-reset.spec.ts`)
+✅ **Happy Path**
+  - Complete password reset flow
+  - Token validation
+  - Password strength indicator
+  - Success redirect to login
+
+✅ **Error Scenarios**
+  - Non-existent email (security: no reveal)
+  - Invalid/expired token
+  - Weak password rejection
+  - Password mismatch error
+
+✅ **Rate Limiting**
+  - Enforce 3 requests per hour limit
+
+✅ **Token Management**
+  - Invalidate previous tokens
+  - Prevent token reuse after success
+
+✅ **UI/UX**
+  - Password visibility toggle
+  - Loading states
+  - Countdown timer (15 min expiry)
+
+#### Session Management Tests (`tests/e2e/session-management.spec.ts`)
+✅ **Token Refresh**
+  - Automatic access token refresh
+  - Handle refresh token expiration
+  - Maintain session across page refreshes
+
+✅ **Session Expiry Warning**
+  - Show warning 5 minutes before expiry
+  - Countdown timer
+  - "Stay Logged In" extends session
+  - Auto-logout on timeout
+
+✅ **Active Sessions**
+  - Display list of active sessions
+  - Show current session badge
+  - Revoke specific session
+  - Logout from all other devices
+  - Auto-refresh session list (30s interval)
+
+✅ **Change Password**
+  - Successfully change password
+  - Reject wrong current password
+  - Validate new password requirements
+  - Login with new password
+
+✅ **Logout**
+  - Clear session and cookies
+  - Redirect to login
+  - Block access to protected routes
+
+✅ **CSRF Protection**
+  - Include CSRF token in state-changing requests
+
+#### Protected Routes & RBAC Tests (`tests/e2e/protected-routes.spec.ts`)
+✅ **Unauthenticated Access**
+  - Redirect to login from protected routes
+  - Preserve intended URL
+  - Allow public route access
+  - Redirect authenticated users from auth pages
+
+✅ **Middleware Protection**
+  - Server-side route blocking
+  - Check auth on every navigation
+  - No content flash before redirect
+
+✅ **Role-Based Access Control**
+  - SUPER_ADMIN access to admin pages
+  - TENANT denied admin access
+  - 403 Forbidden page display
+  - PROPERTY_MANAGER property access
+  - VENDOR denied financial reports
+
+✅ **Permission-Based Control**
+  - MANAGE_USERS permission check
+  - Deny without required permission
+  - Conditional UI element rendering
+  - Hide elements based on permissions
+
+✅ **Multiple Roles & Permissions**
+  - Grant access with ANY required role
+  - Deny with NONE of required roles
+
+✅ **Client-Side Protection**
+  - Loading skeleton during auth check
+  - No content flash before redirect
+
+✅ **Edge Cases**
+  - Handle invalid/malformed tokens
+  - Concurrent auth requests
+  - Authentication across tabs
+  - Role/permission changes mid-session
+
+### Test Statistics
+
+**Total Test Files:** 5
+**Total Test Cases:** 100+
+
+| Test Suite | Test Cases | Coverage |
+|------------|-----------|----------|
+| Login Flow | 20+ | Complete |
+| Registration | 25+ | Complete |
+| Password Reset | 15+ | Complete |
+| Session Management | 20+ | Complete |
+| Protected Routes & RBAC | 20+ | Complete |
 
 ### Manual Testing Checklist
 
+#### Authentication Pages
 - [ ] Login with valid credentials
 - [ ] Login with invalid credentials
 - [ ] "Remember me" functionality
@@ -505,15 +689,139 @@ The E2E test suite covers:
 - [ ] Forgot password email sending
 - [ ] Password reset with valid token
 - [ ] Password reset with expired token
+
+#### Session Management
 - [ ] Change password in settings
 - [ ] View active sessions
-- [ ] Revoke session
-- [ ] Logout all devices
-- [ ] Session expiry warning
+- [ ] Revoke specific session
+- [ ] Logout all other devices
+- [ ] Session expiry warning (5 min before)
 - [ ] Auto-logout on session expiry
 - [ ] Token refresh on expiry
-- [ ] Protected route access denied
-- [ ] 403 page display
+- [ ] Session persists across page refresh
+
+#### Authorization
+- [ ] Protected route access denied (unauthenticated)
+- [ ] 403 page display (unauthorized)
+- [ ] RBAC - admin access for SUPER_ADMIN
+- [ ] RBAC - deny TENANT admin access
+- [ ] Permission checks work correctly
+- [ ] Conditional UI elements based on permissions
+
+#### Security
+- [ ] CSRF tokens sent with POST requests
+- [ ] Tokens stored securely (access in memory, refresh in HTTP-only cookie)
+- [ ] No sensitive data in localStorage
+- [ ] Password requirements enforced
+- [ ] Rate limiting on login/password reset
+
+### Test Data Management
+
+Tests use `@faker-js/faker` for generating realistic test data:
+
+```typescript
+import { faker } from '@faker-js/faker';
+
+const testUser = {
+  email: faker.internet.email(),
+  password: 'ValidP@ssw0rd123',
+  firstName: faker.person.firstName(),
+  lastName: faker.person.lastName(),
+  phone: faker.phone.number('+1##########'),
+};
+```
+
+### Custom Test Fixtures
+
+Located in `tests/support/fixtures/`:
+
+**userFactory** - Create test users
+```typescript
+const testUser = await userFactory.createUser({
+  email: 'test@example.com',
+  password: 'Password123!',
+  role: 'SUPER_ADMIN',
+  permissions: ['MANAGE_USERS'],
+});
+```
+
+**authHelper** - Authentication helpers
+```typescript
+await authHelper.login(page, email, password);
+await authHelper.logout(page);
+```
+
+### Testing Best Practices
+
+1. **Isolation** - Each test is independent, creates its own test data
+2. **Cleanup** - Tests clean up after themselves (user deletion, session termination)
+3. **Realistic Data** - Use faker for realistic test data
+4. **Accessibility** - Test keyboard navigation, ARIA labels, screen reader compatibility
+5. **Error Scenarios** - Test both happy paths and error cases
+6. **Security** - Verify CSRF tokens, token storage, rate limiting
+7. **Performance** - Use `page.waitForLoadState('networkidle')` appropriately
+8. **Parallelization** - Tests can run in parallel (Playwright default)
+
+### CI/CD Integration
+
+```yaml
+# Example GitHub Actions workflow
+- name: Run E2E Tests
+  run: |
+    npm run test:e2e
+
+- name: Upload test results
+  if: always()
+  uses: actions/upload-artifact@v3
+  with:
+    name: playwright-report
+    path: playwright-report/
+```
+
+### Debugging Failed Tests
+
+```bash
+# Run in debug mode
+npm run test:e2e:debug -- tests/e2e/login.spec.ts
+
+# View test report
+npm run test:e2e:report
+
+# Run specific test by name
+npm run test:e2e -- tests/e2e/login.spec.ts -g "should login with valid credentials"
+
+# Run in headed mode to watch test execution
+npm run test:e2e:headed
+```
+
+### Writing New Tests
+
+When adding new authentication features, follow this pattern:
+
+```typescript
+import { test, expect } from '../support/fixtures';
+
+test.describe('Feature Name', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/your-page');
+  });
+
+  test('should do something', async ({ page, userFactory }) => {
+    // Arrange
+    const testUser = await userFactory.createUser({
+      email: 'test@example.com',
+      password: 'Password123!',
+    });
+
+    // Act
+    await page.fill('input[type="email"]', testUser.email);
+    await page.click('button[type="submit"]');
+
+    // Assert
+    await expect(page.locator('text=Success')).toBeVisible();
+  });
+});
+```
 
 ---
 

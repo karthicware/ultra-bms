@@ -48,8 +48,8 @@ development_status:
   2-2-role-based-access-control-rbac-implementation: done  # Completed 2025-11-13
   2-3-password-reset-and-recovery-workflow: done  # Completed 2025-11-14 - All tasks + audit logging complete (25 tests passing)
   2-4-session-management-and-security-enhancements: done  # Completed 2025-11-15 - All ACs met, code reviewed, action items resolved (87 tests passing)
-  2-5-frontend-authentication-components-and-protected-routes: in-progress  # Development started 2025-11-15
-  epic-2-retrospective: optional
+  2-5-frontend-authentication-components-and-protected-routes: done  # Completed 2025-11-15 - All 18 tasks complete: JWT auth, RBAC, route protection, session management, E2E tests, docs (24 files created/modified)
+  epic-2-retrospective: completed  # Completed 2025-11-15 - Retrospective document: docs/retrospectives/epic-2-retrospective.md
 
   # Epic 3: Tenant Management & Portal (5 stories)
   # NOTE: Epic 3 has duplicate Story 3.2 numbering in epics.md - both included below
@@ -102,3 +102,197 @@ development_status:
   9-1-email-notification-system: backlog
   9-2-announcement-management: backlog
   epic-9-retrospective: optional
+
+# ==============================================================================
+# EPIC 2 RETROSPECTIVE ACTION ITEMS
+# ==============================================================================
+# Generated: 2025-11-15
+# Source: docs/retrospectives/epic-2-retrospective.md
+# Status: ACTIVE - Must be addressed before/during Epic 3
+#
+# Priority Levels:
+#   P0 = Blocking - MUST be done before Epic 3 starts
+#   P1 = High - Should be done early in Epic 3
+#   P2 = Medium - Can be done during Epic 3
+# ==============================================================================
+
+action_items:
+  # CRITICAL TESTING STANDARDS (P0 - BLOCKING)
+  # ------------------------------------------
+  - id: "AI-2-1"
+    priority: "P0"
+    category: "Testing"
+    title: "Add data-testid to ALL interactive elements"
+    description: |
+      Every button, input, form, link, modal must have data-testid attribute.
+      This is MANDATORY and BLOCKING for Epic 3 stories.
+    acceptance_criteria:
+      - "All interactive components have data-testid following naming convention"
+      - "Convention: {component}-{element}-{action} (e.g., btn-submit, input-email)"
+      - "Verified in code review before PR approval"
+    owner: "Developer"
+    status: "open"
+    epic: "Epic 3"
+    reference: "docs/retrospectives/epic-2-retrospective.md#action-11-add-data-testid"
+
+  - id: "AI-2-2"
+    priority: "P0"
+    category: "Testing"
+    title: "Create pre-test validation script"
+    description: |
+      Create scripts/check-services.sh that validates backend and frontend
+      servers are healthy before running E2E tests.
+    acceptance_criteria:
+      - "Script checks backend: curl http://localhost:8080/actuator/health"
+      - "Script checks frontend: curl http://localhost:3000"
+      - "Script exits with error code if services unavailable"
+      - "Integrated into package.json test scripts"
+    owner: "DevOps/Developer"
+    status: "open"
+    epic: "Epic 3"
+    reference: "docs/retrospectives/epic-2-retrospective.md#action-12-create-pre-test-validation-script"
+
+  - id: "AI-2-3"
+    priority: "P0"
+    category: "Process"
+    title: "Update agent workflow with server validation step"
+    description: |
+      Update dev-story workflow to include explicit 'Verify servers are running'
+      step BEFORE 'Execute E2E tests' step.
+    acceptance_criteria:
+      - "Workflow includes server validation step"
+      - "Step executes check-services.sh script"
+      - "Workflow fails fast if servers are down"
+      - "Agent reports server status before proceeding"
+    owner: "SM (Scrum Master)"
+    status: "open"
+    epic: "Epic 3"
+    reference: "docs/retrospectives/epic-2-retrospective.md#action-13-update-agent-workflow"
+
+  - id: "AI-2-4"
+    priority: "P0"
+    category: "Process"
+    title: "Update Definition of Done checklist"
+    description: |
+      Add new mandatory items to DoD:
+      - All interactive elements have data-testid
+      - Servers verified running before tests
+      - Completion notes added
+      - sprint-status.yaml updated
+    acceptance_criteria:
+      - "DoD checklist updated with 4 new items"
+      - "Team reviews and approves checklist"
+      - "Checklist integrated into story template"
+    owner: "SM (Scrum Master)"
+    status: "open"
+    epic: "Epic 3"
+    reference: "docs/retrospectives/epic-2-retrospective.md#action-23-update-definition-of-done"
+
+  # PROCESS STANDARDS (P1 - HIGH)
+  # ------------------------------
+  - id: "AI-2-5"
+    priority: "P1"
+    category: "Process"
+    title: "Update sprint-status.yaml when stories complete"
+    description: |
+      Developer must update sprint-status.yaml in the same commit when moving
+      story to 'done' status.
+    acceptance_criteria:
+      - "sprint-status.yaml update in same commit as final code"
+      - "Story status accurately reflects completion"
+      - "Verified in code review"
+    owner: "Developer"
+    status: "open"
+    epic: "Epic 3"
+    reference: "docs/retrospectives/epic-2-retrospective.md#action-21-update-sprint-statusyaml"
+
+  - id: "AI-2-6"
+    priority: "P1"
+    category: "Documentation"
+    title: "Add completion notes to ALL stories"
+    description: |
+      Every story must include comprehensive completion notes with same quality
+      level as Story 2-5 (files created/modified, dependencies, test results).
+    acceptance_criteria:
+      - "Completion notes section in every story"
+      - "Lists all files created/modified"
+      - "Documents all dependencies added"
+      - "Includes test results and coverage"
+      - "Notes any deviations from acceptance criteria"
+    owner: "Developer"
+    status: "open"
+    epic: "Epic 3"
+    reference: "docs/retrospectives/epic-2-retrospective.md#action-22-add-completion-notes"
+
+  - id: "AI-2-7"
+    priority: "P1"
+    category: "Testing"
+    title: "Establish minimum test coverage thresholds"
+    description: |
+      Define and enforce test coverage minimums:
+      - Backend: 80% line, 70% branch
+      - Frontend: 70% line, 60% branch
+      - E2E: All critical flows
+    acceptance_criteria:
+      - "Coverage thresholds documented"
+      - "CI/CD enforces minimums"
+      - "Coverage reports on each PR"
+    owner: "SM + Dev Team"
+    status: "open"
+    epic: "Epic 3"
+    reference: "docs/retrospectives/epic-2-retrospective.md#action-14-establish-coverage-thresholds"
+
+  - id: "AI-2-8"
+    priority: "P1"
+    category: "Documentation"
+    title: "Document data-testid naming conventions"
+    description: |
+      Create documentation for data-testid naming standards with examples
+      for all component types (buttons, forms, inputs, modals, etc.).
+    acceptance_criteria:
+      - "Naming convention documented"
+      - "Examples for all component types"
+      - "Integrated into code review checklist"
+      - "Added to component templates"
+    owner: "SM (Scrum Master)"
+    status: "open"
+    epic: "Epic 3"
+    reference: "docs/retrospectives/epic-2-retrospective.md#lesson-4-testability-by-design"
+
+  # TECHNICAL STANDARDS (P2 - MEDIUM)
+  # ----------------------------------
+  - id: "AI-2-9"
+    priority: "P2"
+    category: "Technical"
+    title: "Create reusable patterns document"
+    description: |
+      Document patterns from Epic 2 for reuse: Axios interceptors, AuthContext,
+      Zod validation, dual-layer protection, form structure, error handling.
+    acceptance_criteria:
+      - "Patterns documented with code examples"
+      - "Stored in docs/patterns/ directory"
+      - "Referenced in developer onboarding"
+    owner: "SM + Senior Dev"
+    status: "open"
+    epic: "Epic 3"
+    reference: "docs/retrospectives/epic-2-retrospective.md#action-31-create-patterns-document"
+
+  - id: "AI-2-10"
+    priority: "P2"
+    category: "Technical"
+    title: "Design API integration layer for Epic 3"
+    description: |
+      Design tenant API client structure following patterns from auth API client
+      (interceptors, error handling, type safety).
+    acceptance_criteria:
+      - "API client structure reviewed"
+      - "Tenant API client design approved"
+      - "Follows auth API client patterns"
+    owner: "Architect + Senior Dev"
+    status: "open"
+    epic: "Epic 3"
+    reference: "docs/retrospectives/epic-2-retrospective.md#action-33-api-integration-layer"
+
+# ==============================================================================
+# END OF ACTION ITEMS
+# ==============================================================================

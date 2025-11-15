@@ -163,6 +163,15 @@ Expected ready-for-dev or in-progress. Continuing anyway...
 
   <step n="4" goal="Run validations and tests">
     <action>Determine how to run tests for this repo (infer or use {{run_tests_command}} if provided)</action>
+
+    <critical>MANDATORY: Before running any tests, verify that required services are running</critical>
+    <action>Check if E2E tests are being executed (look for playwright, cypress, or similar)</action>
+    <check if="E2E tests will be executed">
+      <action>Run service health check script: bash frontend/scripts/check-services.sh</action>
+      <action if="health check fails">HALT with clear message: "Services not running. Start backend (port 8080) and frontend (port 3000) servers before running E2E tests"</action>
+      <action if="health check succeeds">Log: "✅ All services verified - proceeding with tests"</action>
+    </check>
+
     <action>Run all existing tests to ensure no regressions</action>
     <action>Run the new tests to verify implementation correctness</action>
     <action>Run linting and code quality checks if configured</action>

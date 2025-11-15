@@ -80,9 +80,9 @@ export default function ForgotPasswordPage() {
     >
       {success ? (
         <div className="space-y-4">
-          <Alert className="border-green-200 bg-green-50">
+          <Alert className="border-green-200 bg-green-50" data-testid="success-alert">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800">
+            <AlertDescription className="text-green-800" data-testid="success-message">
               <strong className="font-semibold">Check your email!</strong>
               <p className="mt-1">
                 We've sent password reset instructions to your email address. The link will expire in 15 minutes.
@@ -115,9 +115,9 @@ export default function ForgotPasswordPage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Error Alert */}
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" data-testid="error-alert">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription data-testid="error-message">{error}</AlertDescription>
               </Alert>
             )}
 
@@ -135,6 +135,7 @@ export default function ForgotPasswordPage() {
                       autoComplete="email"
                       autoFocus
                       disabled={isSubmitting}
+                      data-testid="email-input"
                       {...field}
                     />
                   </FormControl>
@@ -151,6 +152,7 @@ export default function ForgotPasswordPage() {
               isLoading={isSubmitting}
               loadingText="Sending reset link..."
               className="mt-6"
+              data-testid="submit-button"
             >
               Send reset link
             </SubmitButton>

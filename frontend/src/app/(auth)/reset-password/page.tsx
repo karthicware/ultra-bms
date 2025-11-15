@@ -209,9 +209,9 @@ function ResetPasswordContent() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {/* Error Alert */}
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" data-testid="error-alert">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription data-testid="error-message">{error}</AlertDescription>
             </Alert>
           )}
 
@@ -232,6 +232,7 @@ function ResetPasswordContent() {
                     autoFocus
                     disabled={isSubmitting}
                     error={!!errors.newPassword}
+                    data-testid="password-input"
                     {...field}
                   />
                 </FormControl>
@@ -260,6 +261,7 @@ function ResetPasswordContent() {
                     autoComplete="new-password"
                     disabled={isSubmitting}
                     error={!!errors.confirmPassword}
+                    data-testid="confirm-password-input"
                     {...field}
                   />
                 </FormControl>
@@ -273,6 +275,7 @@ function ResetPasswordContent() {
             isLoading={isSubmitting}
             loadingText="Resetting password..."
             className="mt-6"
+            data-testid="submit-button"
           >
             Reset password
           </SubmitButton>

@@ -11,28 +11,59 @@ interface User {
   firstName: string;
   lastName: string;
   password: string;
-  role?: string;
+  roleName?: string;
 }
 
 export class UserFactory {
   private createdUsers: string[] = [];
   private apiUrl = process.env.API_URL || 'http://localhost:8080/api/v1';
+  private baseUrl = process.env.BASE_URL || 'http://localhost:8080';
+  private backendAvailable: boolean | null = null;
+
+  /**
+   * Check if backend is available
+   */
+  private async checkBackend(): Promise<boolean> {
+    if (this.backendAvailable !== null) {
+      return this.backendAvailable;
+    }
+
+    try {
+      // Health check is at root level, not under /api/v1
+      const response = await fetch(`${this.baseUrl}/actuator/health`, {
+        method: 'GET',
+      }).catch(() => null);
+
+      this.backendAvailable = response?.ok || false;
+    } catch {
+      this.backendAvailable = false;
+    }
+
+    return this.backendAvailable;
+  }
 
   /**
    * Create a test user with optional overrides
+   * Throws error if backend is not available
    */
   async createUser(overrides: Partial<User> = {}): Promise<User> {
+    const backendAvailable = await this.checkBackend();
+
+    if (!backendAvailable) {
+      throw new Error('Backend API is not available. Start the backend server to run integration tests.');
+    }
+
     const user: User = {
       email: faker.internet.email(),
       firstName: faker.person.firstName(),
       lastName: faker.person.lastName(),
-      password: faker.internet.password({ length: 12 }),
-      role: 'PROPERTY_MANAGER',
+      password: 'Test@123', // Strong password that meets all requirements
+      roleName: 'PROPERTY_MANAGER',
       ...overrides,
     };
 
-    // API call to create user
-    const response = await fetch(`${this.apiUrl}/users`, {
+    // API call to create user via registration endpoint
+    const response = await fetch(`${this.apiUrl}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(user),
@@ -53,7 +84,7 @@ export class UserFactory {
    */
   async createAdmin(overrides: Partial<User> = {}): Promise<User> {
     return this.createUser({
-      role: 'SUPER_ADMIN',
+      roleName: 'SUPER_ADMIN',
       ...overrides,
     });
   }
@@ -63,7 +94,7 @@ export class UserFactory {
    */
   async createFinanceManager(overrides: Partial<User> = {}): Promise<User> {
     return this.createUser({
-      role: 'FINANCE_MANAGER',
+      roleName: 'FINANCE_MANAGER',
       ...overrides,
     });
   }

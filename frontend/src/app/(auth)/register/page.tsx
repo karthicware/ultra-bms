@@ -105,12 +105,12 @@ export default function RegisterPage() {
       }
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" data-testid="register-form">
           {/* Error Alert */}
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" data-testid="error-alert">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription data-testid="error-message">{error}</AlertDescription>
             </Alert>
           )}
 
@@ -169,6 +169,7 @@ export default function RegisterPage() {
                     placeholder="name@example.com"
                     autoComplete="email"
                     disabled={isSubmitting}
+                    data-testid="email-input"
                     {...field}
                   />
                 </FormControl>
@@ -216,6 +217,7 @@ export default function RegisterPage() {
                     autoComplete="new-password"
                     disabled={isSubmitting}
                     error={!!errors.password}
+                    data-testid="password-input"
                     {...field}
                   />
                 </FormControl>
@@ -244,6 +246,7 @@ export default function RegisterPage() {
                     autoComplete="new-password"
                     disabled={isSubmitting}
                     error={!!errors.confirmPassword}
+                    data-testid="confirm-password-input"
                     {...field}
                   />
                 </FormControl>
@@ -292,7 +295,7 @@ export default function RegisterPage() {
           />
 
           {/* Submit Button */}
-          <SubmitButton isLoading={isSubmitting} loadingText="Creating account..." className="mt-6">
+          <SubmitButton isLoading={isSubmitting} loadingText="Creating account..." className="mt-6" data-testid="register-button">
             Create account
           </SubmitButton>
         </form>
