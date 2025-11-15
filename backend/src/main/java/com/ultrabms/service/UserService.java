@@ -1,7 +1,6 @@
 package com.ultrabms.service;
 
 import com.ultrabms.dto.UserDto;
-import com.ultrabms.entity.enums.UserRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

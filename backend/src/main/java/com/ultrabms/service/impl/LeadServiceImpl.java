@@ -199,7 +199,7 @@ public class LeadServiceImpl implements LeadService {
     ) {
         log.info("Uploading document for lead: {}, type: {}", leadId, documentType);
 
-        Lead lead = findLeadById(leadId);
+        findLeadById(leadId); // Validate lead exists
 
         // Validate file
         if (file.isEmpty()) {

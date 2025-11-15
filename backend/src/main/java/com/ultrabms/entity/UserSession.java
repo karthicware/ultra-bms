@@ -8,7 +8,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.time.Duration;
 
 /**
  * Entity representing active user sessions with device tracking and timeout management.

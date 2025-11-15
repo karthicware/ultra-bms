@@ -32,8 +32,6 @@ public class PasswordResetService {
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     private final com.ultrabms.repository.AuditLogRepository auditLogRepository;
 
-    private static final int MAX_RESET_ATTEMPTS = 3;
-    private static final int RATE_LIMIT_WINDOW_HOURS = 1;
     private static final int TOKEN_EXPIRATION_MINUTES = 15;
     private static final int TOKEN_BYTES = 32; // 256 bits
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();

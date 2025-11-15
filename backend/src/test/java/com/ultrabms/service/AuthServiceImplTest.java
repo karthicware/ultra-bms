@@ -3,7 +3,6 @@ package com.ultrabms.service;
 import com.ultrabms.dto.*;
 import com.ultrabms.entity.AuditLog;
 import com.ultrabms.entity.Role;
-import com.ultrabms.entity.TokenBlacklist;
 import com.ultrabms.entity.User;
 import com.ultrabms.exception.AccountLockedException;
 import com.ultrabms.exception.DuplicateResourceException;
@@ -426,7 +425,6 @@ class AuthServiceImplTest {
     void shouldSuccessfullyRefreshAccessToken() {
         // Arrange
         String refreshToken = "valid-refresh-token";
-        String tokenHash = "hashed-token";
 
         when(jwtTokenProvider.validateToken(refreshToken)).thenReturn(true);
         when(jwtTokenProvider.isRefreshToken(refreshToken)).thenReturn(true);

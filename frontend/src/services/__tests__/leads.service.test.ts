@@ -5,7 +5,7 @@
 
 import {
   createLead,
-  getLead by,
+  getLeadById,
   getLeads,
   updateLead,
   uploadDocument,

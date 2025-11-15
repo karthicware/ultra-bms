@@ -53,7 +53,7 @@ public class QuotationServiceImpl implements QuotationService {
         log.info("Creating new quotation for lead: {}", request.getLeadId());
 
         // Validate lead exists
-        Lead lead = leadRepository.findById(request.getLeadId())
+        leadRepository.findById(request.getLeadId())
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found"));
 
         // Validate validity date is after issue date

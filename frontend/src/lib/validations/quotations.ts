@@ -291,3 +291,27 @@ export function getDefaultValidityDate(issueDate: Date): Date {
   validity.setDate(validity.getDate() + 30);
   return validity;
 }
+
+/**
+ * Default quotation terms and conditions
+ */
+export const DEFAULT_QUOTATION_TERMS = {
+  paymentTerms: `1. The tenant shall pay rent monthly in advance on the 1st of each month.
+2. Payment shall be made via bank transfer to the account specified by the landlord.
+3. A security deposit equivalent to one month's rent is required before move-in.
+4. Late payment will incur a penalty of 1% per day after the 5th of the month.
+5. All payments are non-refundable except the security deposit, which will be returned within 30 days of lease termination, subject to property inspection.`,
+
+  moveinProcedures: `1. Complete and submit all required documentation including Emirates ID, passport, and visa copies.
+2. Pay the security deposit and first month's rent in full.
+3. Schedule a move-in inspection with the property manager.
+4. Receive the keys and access cards at the property management office.
+5. Sign the move-in condition report during the inspection.
+6. Register utility accounts (DEWA, internet, etc.) in your name within 7 days.`,
+
+  cancellationPolicy: `1. The tenant must provide written notice at least 30 days before the intended move-out date.
+2. For cancellation before the lease start date, the security deposit will be forfeited.
+3. For cancellation during the lease period, the tenant is responsible for rent until a replacement tenant is found or the lease expires, whichever comes first.
+4. Early termination fees may apply as per UAE tenancy laws.
+5. The security deposit will be refunded after property inspection and settlement of all outstanding bills, less any damages.`,
+};

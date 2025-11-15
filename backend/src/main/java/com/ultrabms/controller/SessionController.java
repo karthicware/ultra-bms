@@ -18,7 +18,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -34,7 +33,6 @@ import java.util.UUID;
 public class SessionController {
 
     private final SessionService sessionService;
-    private final com.ultrabms.security.JwtTokenProvider jwtTokenProvider;
     private final com.ultrabms.repository.UserSessionRepository userSessionRepository;
 
     /**

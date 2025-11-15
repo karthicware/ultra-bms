@@ -3,7 +3,6 @@ package com.ultrabms.exception;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Standardized error response structure for all API errors.

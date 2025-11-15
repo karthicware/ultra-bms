@@ -13,7 +13,6 @@ import com.ultrabms.repository.RoleRepository;
 import com.ultrabms.repository.TokenBlacklistRepository;
 import com.ultrabms.repository.UserRepository;
 import com.ultrabms.security.JwtTokenProvider;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

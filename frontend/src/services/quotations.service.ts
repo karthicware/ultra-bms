@@ -455,3 +455,31 @@ export async function getQuotationsByLeadId(leadId: string): Promise<Quotation[]
 export async function deleteQuotation(id: string): Promise<void> {
   await apiClient.delete(`${QUOTATIONS_BASE_PATH}/${id}`);
 }
+
+/**
+ * Get dashboard metrics for leads and quotations
+ *
+ * Retrieves aggregated statistics for the quotation dashboard including:
+ * - New quotes count (last 30 days)
+ * - Quotes converted count (ACCEPTED + CONVERTED)
+ * - Conversion rate percentage
+ * - Average time to convert (from SENT to ACCEPTED)
+ * - List of quotations expiring soon with urgency levels
+ *
+ * @returns Promise that resolves to dashboard metrics
+ *
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ *
+ * @example
+ * ```typescript
+ * const metrics = await getDashboardMetrics();
+ * console.log(`Conversion rate: ${metrics.conversionRate.toFixed(1)}%`);
+ * console.log(`Quotes expiring soon: ${metrics.expiringQuotes.length}`);
+ * ```
+ */
+export async function getDashboardMetrics(): Promise<QuotationDashboard> {
+  const response = await apiClient.get<QuotationDashboardResponse>(
+    `${QUOTATIONS_BASE_PATH}/dashboard`
+  );
+  return response.data.data;
+}

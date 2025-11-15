@@ -1,7 +1,5 @@
 package com.ultrabms.exception;
 
-import java.util.UUID;
-
 /**
  * Exception thrown when a requested entity cannot be found in the database.
  *
