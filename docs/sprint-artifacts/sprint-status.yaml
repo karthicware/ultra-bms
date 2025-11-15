@@ -55,9 +55,9 @@ development_status:
   # NOTE: Story numbering fixed - was duplicate 3.2, now corrected to 3.1-3.5
   epic-3: backlog
   3-1-lead-management-and-quotation-system: drafted  # Drafted 2025-11-15 - Story file created, needs story-context
-  3-2-property-and-unit-management: drafted  # Drafted 2025-11-15 - Story file created by SM workflow
+  3-2-property-and-unit-management: in-progress  # In Progress 2025-11-15 - Implementation started by dev workflow
   3-3-tenant-onboarding-and-registration: ready-for-dev  # Context generated 2025-11-15 - Story ready for implementation
-  3-4-tenant-portal-dashboard-and-profile-management: backlog
+  3-4-tenant-portal-dashboard-and-profile-management: ready-for-dev  # Ready 2025-11-15 - Story context generated, ready for implementation
   3-5-tenant-portal-maintenance-request-submission: backlog
   # E2E Testing Stories (implement after all technical stories complete)
   3-1-e2e-lead-management-and-quotation-system: backlog

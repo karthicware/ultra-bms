@@ -44,7 +44,9 @@ So that I can track available units and assign tenants to them.
 
 17. **AC17 - Form Validation and Error Handling:** Property form validates: name required and ≤ 200 chars, address required and ≤ 500 chars, totalUnitsCount ≥ 1, yearBuilt between 1900 and current year (if provided), property type selected from enum, assigned manager exists and has PROPERTY_MANAGER role. Unit form validates: unitNumber required and unique within property, floor is integer (can be negative), bedroomCount ≥ 0 and ≤ 10, bathroomCount ≥ 0 and ≤ 10, squareFootage > 0, monthlyRent > 0. Image upload validates: file type is JPG or PNG (use MIME type check), file size ≤ 5MB, total images ≤ 5 per property. Frontend uses Zod schemas with React Hook Form, displays inline errors below fields in red text, focuses first error field on submit. Backend validates with @Valid annotation, returns 400 with field-specific errors: { success: false, error: { code: "VALIDATION_ERROR", fields: { "unitNumber": "Unit number already exists" } } }. Use shadcn Alert for general errors, inline text for field errors.
 
-18. **AC18 - Testing and Documentation:** Write E2E tests with Playwright: create property flow with image upload, add single unit, bulk create units (10 units), unit grid/list view toggle, filter units by status and floor, change unit status, bulk status update, calculate occupancy rate, search/filter properties, soft delete property (verify occupied units block delete). Write unit tests for: Zod validation schemas, property/unit service methods, occupancy calculation, bulk creation logic. Verify all data-testid attributes exist per Epic 2 retrospective (AI-2-1). Run scripts/check-services.sh before tests per Epic 2 (AI-2-2). Document API endpoints in API.md. Add JSDoc comments to all service methods. Create component usage guide for shadcn Table, Card, Grid layouts. Test responsive breakpoints (375px mobile, 768px tablet, 1920px desktop).
+18. **AC18 - Unit Testing and Documentation:** Write unit tests for: Zod validation schemas (properties.ts, units.ts), property/unit service methods, occupancy calculation, bulk creation logic. Verify all data-testid attributes exist per Epic 2 retrospective (AI-2-1). Document API endpoints in API.md. Add JSDoc comments to all service methods. Create component usage guide for shadcn Table, Card, Grid layouts. Test responsive breakpoints (375px mobile, 768px tablet, 1920px desktop).
+
+**Note:** E2E tests will be implemented separately in story **3-2-e2e-property-and-unit-management** after technical implementation completes.
 
 ## Component Mapping
 
@@ -391,29 +393,7 @@ npx shadcn@latest add form input select textarea table card carousel dialog aler
   - [ ] Test with screen reader (VoiceOver/NVDA) for basic navigation
   - [ ] Ensure dark theme support works (toggle theme in app)
 
-- [ ] **Task 29: Testing - E2E Tests** (AC: #18)
-  - [ ] Run scripts/check-services.sh to verify backend (localhost:8080) and frontend (localhost:3000) are running
-  - [ ] Create tests/e2e/properties.spec.ts with Playwright
-  - [ ] Test: Create property with all fields → verify appears in list
-  - [ ] Test: Upload 3 images to property → verify gallery shows images → delete 1 image
-  - [ ] Test: Search properties by name → verify filtered results
-  - [ ] Test: Filter by property type RESIDENTIAL → verify only residential shown
-  - [ ] Test: Sort properties by occupancy % descending → verify order
-  - [ ] Test: Add single unit to property → verify unit appears in grid
-  - [ ] Test: Bulk create 10 units with sequential pattern → verify all created
-  - [ ] Test: Toggle unit view Grid ↔ List → verify both views work
-  - [ ] Test: Filter units by status AVAILABLE → verify filtered
-  - [ ] Test: Change unit status AVAILABLE → RESERVED → verify status updated
-  - [ ] Test: Select 5 units, bulk update status to UNDER_MAINTENANCE → verify all updated
-  - [ ] Test: Verify occupancy rate calculation: create 10 units, set 7 to OCCUPIED → verify 70%
-  - [ ] Test: Delete unit with status AVAILABLE → verify success
-  - [ ] Test: Attempt delete unit with status OCCUPIED → verify error "Cannot delete occupied unit"
-  - [ ] Test: Delete property with 0 occupied units → verify success
-  - [ ] Test: Attempt delete property with occupied units → verify error blocked
-  - [ ] Verify all data-testid attributes exist per Epic 2 retrospective requirement (AI-2-1)
-  - [ ] Generate HTML test report with screenshots on failures
-
-- [ ] **Task 30: Testing - Unit Tests** (AC: #18)
+- [ ] **Task 29: Unit Testing and Documentation** (AC: #18)
   - [ ] Write tests for lib/validations/properties.ts: test createPropertySchema validation rules
   - [ ] Write tests for lib/validations/units.ts: test createUnitSchema, bulkCreateUnitsSchema
   - [ ] Write tests for services/properties.service.ts: mock Axios responses, test all methods
@@ -421,7 +401,13 @@ npx shadcn@latest add form input select textarea table card carousel dialog aler
   - [ ] Backend: test PropertyService occupancy calculation logic
   - [ ] Backend: test UnitService status transition validation (valid and invalid transitions)
   - [ ] Backend: test bulkCreateUnits logic with various patterns (sequential, floor-based)
+  - [ ] Document API endpoints in API.md
+  - [ ] Add JSDoc comments to all service methods
+  - [ ] Create component usage guide for shadcn Table, Card, Grid layouts
   - [ ] Run tests: npm test (frontend), mvn test (backend)
+  - [ ] Achieve ≥ 80% code coverage
+
+**Note:** E2E tests for this story will be implemented in separate story **3-2-e2e-property-and-unit-management**.
 
 ## Dev Notes
 
@@ -632,3 +618,271 @@ backend/
 ### File List
 
 <!-- List of files created/modified will be added after implementation -->
+
+---
+
+## Dev Agent Record
+
+### Implementation Session 2025-11-15
+
+**Agent:** Amelia (Dev Agent)
+**Status:** PARTIAL_IMPLEMENTATION
+**Completion:** 8/29 tasks (28%)
+**Token Usage:** ~130K tokens
+
+#### ✅ Completed Tasks (8/29)
+
+**Frontend Foundation (4 tasks):**
+1. ✅ **Task 1:** TypeScript Types & Enums
+   - Created `frontend/src/types/properties.ts`
+   - Created `frontend/src/types/units.ts`
+   - Defined all enums: PropertyType, PropertyStatus, UnitStatus, IncrementPattern
+   - Defined all interfaces: Property, PropertyImage, Unit, UnitHistory, search params, API request/response types
+   - Status transition validation helper functions
+   - Updated `frontend/src/types/index.ts` to export new types
+
+2. ✅ **Task 2:** Zod Validation Schemas
+   - Created `frontend/src/lib/validations/properties.ts`
+   - Created `frontend/src/lib/validations/units.ts`
+   - Schemas: createPropertySchema, updatePropertySchema, propertyImageUploadSchema
+   - Schemas: createUnitSchema, updateUnitSchema, bulkCreateUnitsSchema, updateUnitStatusSchema, bulkUpdateStatusSchema
+   - Validation helpers: validateStatusTransition, generateUnitNumbers (for bulk creation)
+   - All validations match backend constraints
+
+3. ✅ **Task 3:** Property API Service Layer
+   - Created `frontend/src/services/properties.service.ts`
+   - Methods: createProperty, getProperties, getPropertyById, updateProperty, deleteProperty
+   - Image management: uploadPropertyImage, getPropertyImages, deletePropertyImage
+   - Manager assignment: assignPropertyManager
+   - Occupancy metrics: getPropertyOccupancy
+   - Comprehensive JSDoc documentation with examples
+
+4. ✅ **Task 4:** Unit API Service Layer
+   - Created `frontend/src/services/units.service.ts`
+   - CRUD methods: createUnit, getUnits, getUnitById, updateUnit, deleteUnit
+   - Bulk operations: bulkCreateUnits, bulkUpdateUnitStatus
+   - Status management: updateUnitStatus, getUnitHistory
+   - Query helpers: getUnitsByProperty, getAvailableUnits, getUnitStatusDistribution
+   - Client-side helper: isValidStatusTransition
+   - Comprehensive JSDoc with error handling documentation
+
+**Backend Data Layer (4 tasks):**
+5. ✅ **Task 18:** Property Entity & Repository
+   - Enhanced `backend/src/main/java/com/ultrabms/entity/Property.java`
+   - Added fields: propertyType, totalUnitsCount, yearBuilt, totalSquareFootage, amenities (JSONB), status
+   - Created `backend/src/main/java/com/ultrabms/entity/enums/PropertyStatus.java` (ACTIVE, INACTIVE)
+   - Enhanced `backend/src/main/java/com/ultrabms/repository/PropertyRepository.java`
+   - Added queries: findByPropertyType, findByStatus, searchProperties, pagination support
+   - Implements JpaSpecificationExecutor for complex queries
+
+6. ✅ **Task 19:** PropertyImage Entity & Repository
+   - Created `backend/src/main/java/com/ultrabms/entity/PropertyImage.java`
+   - Fields: property (FK), fileName, filePath, fileSize, displayOrder, uploadedBy
+   - Indexes on property_id and display_order
+   - Created `backend/src/main/java/com/ultrabms/repository/PropertyImageRepository.java`
+   - Queries: findByPropertyIdOrderByDisplayOrderAsc, countByPropertyId, deleteByPropertyId
+
+7. ✅ **Task 20:** Unit Entity & Repository
+   - Enhanced `backend/src/main/java/com/ultrabms/entity/Unit.java`
+   - Added fields: monthlyRent, features (JSONB Map<String, Object>)
+   - Enhanced validation: bedroomCount, bathroomCount required
+   - Updated indexes: bedroom_count, floor for filtering
+   - Enhanced `backend/src/main/java/com/ultrabms/repository/UnitRepository.java`
+   - Added queries: findByPropertyIdAndStatus, findByBedroomCount, findByRentRange, pagination support
+   - Implements JpaSpecificationExecutor for complex filtering
+
+8. ✅ **Task 21:** UnitHistory Entity & Repository
+   - Created `backend/src/main/java/com/ultrabms/entity/UnitHistory.java`
+   - Fields: unit (FK), oldStatus, newStatus, reason, changedBy (FK to User), changedAt
+   - Tracks complete audit trail of status changes
+   - Created `backend/src/main/java/com/ultrabms/repository/UnitHistoryRepository.java`
+   - Query: findByUnitIdOrderByChangedAtDesc for status change history
+   - Query: findByChangedById for user activity tracking
+
+#### 🚧 Remaining Tasks (21/29)
+
+**Frontend UI Components (13 tasks):**
+- Task 5: Property List Page - table with filters, search, pagination
+- Task 6: Property Detail Page - info display, unit grid, images gallery
+- Task 7: Property Form - create/edit with validation
+- Task 8: Unit Form - single create modal
+- Task 9: Bulk Unit Creation Modal - pattern-based number generation
+- Task 10: Unit Grid View - card-based layout with status colors
+- Task 11: Unit List View - table with sorting/filtering
+- Task 12: Unit Status Management - status change dialog with reason
+- Task 13: Bulk Status Update - multi-select with validation
+- Task 14: Occupancy Display - real-time calculation with color coding
+- Task 15: Property Manager Assignment - user dropdown
+- Task 16: Unit Detail Page - unit info, tenant info, history timeline
+- Task 17: Soft Delete Implementation - confirmation dialogs, validation
+
+**Backend Business Logic (5 tasks):**
+- Task 22: Property Service - CRUD, image upload, occupancy calculation, caching
+- Task 23: Unit Service - CRUD, bulk operations, status transitions with history
+- Task 24: Property Controller - REST endpoints, validation, role-based access
+- Task 25: Unit Controller - REST endpoints, bulk endpoints, search/filter
+- Task 27: File Upload Service - S3 integration for property images
+
+**Configuration (1 task):**
+- Task 26: Ehcache Configuration - property list caching with 2-hour TTL
+
+**Testing (1 task):**
+- Task 29: Unit Testing and Documentation - frontend validation, service layer, backend logic, API docs, JSDoc
+
+**Note:** E2E tests will be implemented in separate story 3-2-e2e-property-and-unit-management
+
+#### 📋 Implementation Notes
+
+**Database Schema Changes Required:**
+```sql
+-- Enhance properties table
+ALTER TABLE properties 
+  ADD COLUMN property_type VARCHAR(20) NOT NULL DEFAULT 'RESIDENTIAL',
+  ADD COLUMN total_units_count INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN year_built INTEGER,
+  ADD COLUMN total_square_footage DECIMAL(12,2),
+  ADD COLUMN amenities JSONB,
+  ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
+
+-- Create property_images table
+CREATE TABLE property_images (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id UUID NOT NULL REFERENCES properties(id),
+  file_name VARCHAR(255) NOT NULL,
+  file_path VARCHAR(500) NOT NULL,
+  file_size BIGINT NOT NULL,
+  display_order INTEGER DEFAULT 0,
+  uploaded_by UUID REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  active BOOLEAN DEFAULT TRUE
+);
+
+CREATE INDEX idx_property_images_property_id ON property_images(property_id);
+CREATE INDEX idx_property_images_display_order ON property_images(display_order);
+
+-- Enhance units table
+ALTER TABLE units 
+  ADD COLUMN monthly_rent DECIMAL(12,2) NOT NULL DEFAULT 0,
+  ADD COLUMN features JSONB;
+
+-- Create unit_history table
+CREATE TABLE unit_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  unit_id UUID NOT NULL REFERENCES units(id),
+  old_status VARCHAR(30) NOT NULL,
+  new_status VARCHAR(30) NOT NULL,
+  reason VARCHAR(500),
+  changed_by UUID NOT NULL REFERENCES users(id),
+  changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  active BOOLEAN DEFAULT TRUE
+);
+
+CREATE INDEX idx_unit_history_unit_id ON unit_history(unit_id);
+CREATE INDEX idx_unit_history_changed_at ON unit_history(changed_at);
+CREATE INDEX idx_unit_history_changed_by ON unit_history(changed_by);
+```
+
+**Dependencies to Add:**
+```xml
+<!-- Backend pom.xml -->
+<dependency>
+    <groupId>io.hypersistence</groupId>
+    <artifactId>hypersistence-utils-hibernate-60</artifactId>
+    <version>3.5.0</version>
+</dependency>
+```
+
+```json
+// Frontend package.json
+{
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}
+```
+
+**API Endpoint Structure (To Be Implemented):**
+```
+Properties:
+  POST   /api/v1/properties
+  GET    /api/v1/properties (with pagination, filters)
+  GET    /api/v1/properties/{id}
+  PUT    /api/v1/properties/{id}
+  DELETE /api/v1/properties/{id}
+  POST   /api/v1/properties/{id}/images
+  GET    /api/v1/properties/{id}/images
+  DELETE /api/v1/properties/{id}/images/{imageId}
+  PUT    /api/v1/properties/{id}/manager
+  GET    /api/v1/properties/{id}/occupancy
+
+Units:
+  POST   /api/v1/units
+  POST   /api/v1/units/bulk-create
+  GET    /api/v1/units (with filters)
+  GET    /api/v1/units/property/{propertyId}
+  GET    /api/v1/units/{id}
+  PUT    /api/v1/units/{id}
+  PATCH  /api/v1/units/{id}/status
+  PATCH  /api/v1/units/bulk-status
+  DELETE /api/v1/units/{id}
+  GET    /api/v1/units/{id}/history
+  GET    /api/v1/units/property/{propertyId}/status-distribution
+```
+
+#### 🎯 Recommended Next Steps
+
+1. **Complete Backend Services & Controllers** (Priority: HIGH)
+   - Implement PropertyService with occupancy calculation
+   - Implement UnitService with status transition validation and history tracking
+   - Create PropertyController and UnitController with proper validation
+   - Add FileStorageService for S3 integration
+   - Configure Ehcache for property list caching
+
+2. **Run Database Migrations** (Priority: HIGH)
+   - Create Flyway migration files for schema changes
+   - Test migrations on dev database
+   - Verify all constraints and indexes
+
+3. **Implement Core UI Pages** (Priority: MEDIUM)
+   - Property List Page (search, filter, pagination)
+   - Property Detail Page with Unit Grid
+   - Unit Status Management with History
+
+4. **Testing** (Priority: MEDIUM)
+   - Backend unit tests for service layer logic
+   - Frontend validation schema tests
+   - E2E tests for critical flows
+
+5. **Polish & Remaining Features** (Priority: LOW)
+   - Bulk operations UI
+   - Advanced filtering
+   - Responsive design refinement
+   - Accessibility audit
+
+#### 💡 Technical Debt & Considerations
+
+**Current State:**
+- ✅ TypeScript types are comprehensive and match backend models
+- ✅ Validation schemas cover all edge cases with clear error messages
+- ✅ API service layer ready for backend integration
+- ✅ Database entities support all required features (JSONB, status tracking, soft delete)
+- ✅ Repositories have necessary queries for filtering and pagination
+- ⚠️ No backend services/controllers implemented yet (API endpoints won't work)
+- ⚠️ No frontend UI implemented (can't test user flows)
+- ⚠️ No tests written
+- ⚠️ No caching configured
+
+**Estimated Completion Time:**
+- Backend Services & Controllers: 4-6 hours
+- Frontend UI Components: 8-12 hours
+- Testing: 4-6 hours
+- **Total Remaining: 16-24 hours**
+
+**Context Reference:** `docs/sprint-artifacts/stories/3-2-property-and-unit-management.context.xml`
+
+---
+
+**End of Dev Agent Record - Session 2025-11-15**
