@@ -124,6 +124,71 @@ Continuing to regenerate tech spec...
     </template-output>
   </step>
 
+  <step n="7.5" goal="Define UI component strategy for epic (shadcn/ui MCP)">
+    <critical>Establishes component strategy at epic level, providing guidance for all stories in this epic</critical>
+
+    <action>Based on PRD requirements and UX Design Spec, identify all UI component categories needed for this epic</action>
+    <action>Use MCP shadcn tools to map components:</action>
+      - Search for relevant components: mcp__shadcn__search_items_in_registries
+      - View component details: mcp__shadcn__view_items_in_registries
+      - Get usage examples: mcp__shadcn__get_item_examples_from_registries
+
+    <action>Review UX Design Spec Section 6 (Component Library Strategy) for component recommendations specific to this epic's module</action>
+    <action>Identify custom components needed (those without shadcn equivalents with clear rationale)</action>
+
+    <template-output file="{default_output_file}">
+      Replace {{ui_component_strategy}} with:
+
+      ## UI Component Strategy
+
+      ### shadcn/ui Components Required
+
+      **Forms & Inputs:**
+      - form, input, textarea, select, checkbox, radio-group
+      - date-picker, combobox (for searchable dropdowns)
+      - [List specific to epic needs]
+
+      **Data Display:**
+      - table, data-table (for list views)
+      - card (for summary displays)
+      - badge (for status indicators)
+      - [Epic-specific components]
+
+      **Navigation & Actions:**
+      - button (primary, secondary, destructive variants)
+      - dialog, sheet (for modals and side panels)
+      - tabs, breadcrumb
+      - [Epic-specific navigation]
+
+      **Feedback:**
+      - toast, alert
+      - skeleton (for loading states)
+      - [Epic-specific feedback components]
+
+      **Installation Command:**
+      ```bash
+      npx shadcn@latest add [list all components space-separated]
+      ```
+
+      ### Custom Components Required
+
+      **[ComponentName]**
+      - **Purpose:** [What it does]
+      - **Rationale:** [Why shadcn alternative doesn't exist]
+      - **Composition:** [Built from which shadcn primitives, if any]
+      - **Stories:** [Which stories in this epic will use it]
+
+      ### Component Usage Guidelines for This Epic
+
+      - [Epic-specific patterns, e.g., "All forms use standard validation pattern from Story 2.1"]
+      - [Consistency requirements, e.g., "Status badges follow color scheme: blue=draft, green=approved, red=rejected"]
+      - [Reference to UX Design Spec sections relevant to this epic]
+      - [Priority order: 1) Use shadcn/ui, 2) Compose from shadcn primitives, 3) Custom only if necessary]
+    </template-output>
+
+    <note>This component strategy guides all stories in the epic, ensuring consistency and preventing redundant component discovery</note>
+  </step>
+
   <step n="8" goal="Risks and test strategy">
     <template-output file="{default_output_file}">
       Replace {{risks_assumptions_questions}} with explicit list (each item labeled as Risk/Assumption/Question) with mitigation or next step

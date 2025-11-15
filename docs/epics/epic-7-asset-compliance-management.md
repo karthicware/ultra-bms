@@ -306,3 +306,98 @@ So that all properties meet legal requirements and avoid violations.
 - Generate compliance reports for property audits
 
 ---
+
+## E2E Testing Stories
+
+**Note:** The following E2E test stories should be implemented AFTER all technical implementation stories (7.1-7.3) are completed. Each E2E story corresponds to its technical story and contains comprehensive end-to-end tests covering all user flows.
+
+## Story 7.1.e2e: E2E Tests for Asset Registry and Tracking
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for asset management,
+So that I can ensure asset tracking and maintenance history work correctly.
+
+**Acceptance Criteria:**
+
+**Given** Story 7.1 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**Asset Registration:**
+- Create new asset with all fields → verify asset number generated (AST-2025-XXXX)
+- Upload asset documents (manual, warranty) → verify documents stored
+- View asset in list → verify appears correctly
+
+**Maintenance History Tracking:**
+- Link work order to asset → verify association created
+- Complete work order → verify lastMaintenanceDate updated on asset
+- View maintenance history → verify all work orders listed
+
+**Warranty Tracking:**
+- Create asset with warranty expiring in 15 days → verify warning displayed
+- Trigger scheduled job → verify expiry reminder email sent
+
+**Prerequisites:** Story 7.1 (status: done)
+
+**Technical Notes:**
+- Test asset-work order linking
+- Verify warranty expiry notifications
+- Clean up test assets
+
+## Story 7.2.e2e: E2E Tests for Document Management
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for document management,
+So that I can ensure document versioning and access control work correctly.
+
+**Acceptance Criteria:**
+
+**Given** Story 7.2 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**Document Upload and Versioning:**
+- Upload document → verify stored correctly
+- Replace document → verify new version created
+- View version history → verify all versions listed
+
+**Access Control:**
+- Login as different roles → verify access based on document access level
+- Test PUBLIC, INTERNAL, RESTRICTED access
+
+**Prerequisites:** Story 7.2 (status: done)
+
+**Technical Notes:**
+- Test version control
+- Verify access restrictions
+- Clean up test documents
+
+## Story 7.3.e2e: E2E Tests for Compliance Tracking
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for compliance management,
+So that I can ensure inspection scheduling and violation tracking work correctly.
+
+**Acceptance Criteria:**
+
+**Given** Story 7.3 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**Compliance Scheduling:**
+- Create compliance requirement → verify auto-scheduled
+- Complete inspection with PASSED result → verify certificate uploaded
+- Complete inspection with FAILED result → verify remediation work order created
+
+**Violation Tracking:**
+- Record violation → verify fine amount and status tracked
+- Track violations per property → verify reporting accurate
+
+**Prerequisites:** Story 7.3 (status: done)
+
+**Technical Notes:**
+- Test scheduled compliance generation
+- Verify work order creation for failed inspections
+- Clean up test compliance records
+
+---

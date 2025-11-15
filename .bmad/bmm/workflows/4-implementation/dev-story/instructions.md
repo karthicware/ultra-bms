@@ -142,6 +142,45 @@ Expected ready-for-dev or in-progress. Continuing anyway...
     </check>
   </step>
 
+  <step n="1.7" goal="Validate component strategy (shadcn/ui MCP compliance)">
+    <critical>Prevents developers from skipping component discovery and rebuilding existing components</critical>
+
+    <action>Check if story file contains "## Component Mapping" section</action>
+
+    <check if="Component mapping section missing or incomplete">
+      <output>⚠️ Component Mapping Missing
+
+Story does not have required "Component Mapping" section. Running component discovery now...
+      </output>
+      <action>Identify UI components needed from acceptance criteria and tasks</action>
+      <action>Use MCP shadcn tools to discover available components:</action>
+        - mcp__shadcn__search_items_in_registries with registries=['@shadcn']
+        - mcp__shadcn__view_items_in_registries for component details
+      <action>Update story file with "Component Mapping" section before continuing</action>
+      <action>Notify user: Component mapping added - review before proceeding</action>
+    </check>
+
+    <check if="Component mapping exists">
+      <action>Review component mapping to understand implementation strategy</action>
+      <action>Note which shadcn components to install and use</action>
+      <action>Note any custom components and their rationale</action>
+    </check>
+
+    <critical>Priority Order: 1) Use shadcn/ui, 2) Compose from shadcn primitives, 3) Custom only if necessary</critical>
+
+    <reminder>Before creating ANY custom component during implementation:</reminder>
+      - Verify shadcn alternative doesn't exist using mcp__shadcn__search_items_in_registries
+      - Document rationale for custom component in code comments
+      - Ensure custom component follows UX Design Spec patterns
+      - Add to story's Component Mapping section with justification
+
+    <output>✅ Component strategy validated
+
+shadcn/ui components: {{shadcn_components_count}}
+Custom components: {{custom_components_count}}
+    </output>
+  </step>
+
   <step n="2" goal="Plan and implement task">
     <action>Review acceptance criteria and dev notes for the selected task</action>
     <action>Plan implementation steps and edge cases; write down a brief plan in Dev Agent Record → Debug Log</action>

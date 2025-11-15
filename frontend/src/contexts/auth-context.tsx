@@ -70,13 +70,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const credentials: LoginRequest = { email, password, rememberMe };
         const response = await authApi.login(credentials);
 
-        if (response.success && response.data) {
-          setAccessToken(response.data.accessToken);
-          setUser(response.data.user);
-          // Redirect will be handled by the calling component
-        } else {
-          throw new Error('Login failed');
+        // Set access token
+        setAccessToken(response.accessToken);
+
+        // Extract user information from JWT token (includes permissions)
+        const userData = getUserFromToken(response.accessToken);
+        if (userData) {
+          setUser(userData);
         }
+        // Redirect will be handled by the calling component
       } catch (error) {
         console.error('Login error:', error);
         throw error;

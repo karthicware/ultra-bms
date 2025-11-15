@@ -151,6 +151,43 @@ Will update existing story file rather than creating new one.
     <template-output file="{default_output_file}">requirements_context_summary</template-output>
   </step>
 
+  <step n="4.5" goal="Identify and map UI components (shadcn/ui MCP)">
+    <critical>This step ensures component discovery happens during planning, not during rushed implementation</critical>
+    <action>Review story acceptance criteria and tasks to identify all UI components needed</action>
+    <action>Use MCP shadcn tools to discover available components:</action>
+      - Search: mcp__shadcn__search_items_in_registries with registries=['@shadcn'] and relevant query
+      - View details: mcp__shadcn__view_items_in_registries for specific components
+      - Get examples: mcp__shadcn__get_item_examples_from_registries to see usage patterns
+
+    <action>Document component mapping in story file under "## Component Mapping" section with:</action>
+      - shadcn/ui components to use (list with brief purpose)
+      - Custom components required (only if shadcn alternative doesn't exist)
+      - Installation command: npx shadcn@latest add [components]
+      - Rationale for any custom components
+
+    <action>Identify custom components needed only if shadcn alternative verified as non-existent</action>
+
+    <example>
+      ## Component Mapping
+
+      ### shadcn/ui Components to Use
+      - Lead form: shadcn `form`, `input`, `select` components
+      - Quotation table: shadcn `data-table` component
+      - Status badges: shadcn `badge` component
+      - Action buttons: shadcn `button` component
+
+      ### Custom Components Required
+      - QuotationCalculator: Complex pricing logic with real-time calculation (no shadcn equivalent)
+
+      ### Installation Command
+      ```bash
+      npx shadcn@latest add form input select data-table badge button
+      ```
+    </example>
+
+    <template-output file="{default_output_file}">component_mapping</template-output>
+  </step>
+
   <step n="5" goal="Project structure alignment and lessons learned">
     <action>Review {{previous_story_learnings}} and extract actionable intelligence:
       - New patterns/services created → Note for reuse (DO NOT recreate)

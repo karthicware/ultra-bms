@@ -4,9 +4,10 @@ import { Button, ButtonProps } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface SubmitButtonProps extends ButtonProps {
+interface SubmitButtonProps extends Omit<ButtonProps, 'children'> {
   isLoading?: boolean;
   loadingText?: string;
+  children?: React.ReactNode;
 }
 
 export function SubmitButton({

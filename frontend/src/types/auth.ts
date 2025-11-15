@@ -82,14 +82,20 @@ export interface ChangePasswordRequest {
 // ===========================
 
 export interface LoginResponse {
-  success: boolean;
-  data: {
-    accessToken: string;
-    refreshToken: string;
-    user: User;
-    sessionId: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    roleName: string;
+    active: boolean;
+    mfaEnabled: boolean;
+    createdAt: string;
+    updatedAt: string;
   };
-  timestamp: string;
 }
 
 export interface RegisterResponse {

@@ -170,28 +170,38 @@ public class SessionService {
 
         // Blacklist access token
         if (session.getAccessTokenHash() != null) {
-            LocalDateTime accessTokenExpiry = LocalDateTime.now()
-                    .plusSeconds(jwtTokenProvider.getAccessTokenExpirationSeconds());
-            TokenBlacklist accessBlacklist = new TokenBlacklist(
-                    session.getAccessTokenHash(),
-                    TokenType.ACCESS,
-                    accessTokenExpiry,
-                    reason
-            );
-            tokenBlacklistRepository.save(accessBlacklist);
+            // Check if already blacklisted to avoid duplicate key violations
+            if (!tokenBlacklistRepository.existsByTokenHash(session.getAccessTokenHash())) {
+                LocalDateTime accessTokenExpiry = LocalDateTime.now()
+                        .plusSeconds(jwtTokenProvider.getAccessTokenExpirationSeconds());
+                TokenBlacklist accessBlacklist = new TokenBlacklist(
+                        session.getAccessTokenHash(),
+                        TokenType.ACCESS,
+                        accessTokenExpiry,
+                        reason
+                );
+                tokenBlacklistRepository.save(accessBlacklist);
+            } else {
+                log.debug("Access token already blacklisted, skipping: {}", session.getAccessTokenHash());
+            }
         }
 
         // Blacklist refresh token
         if (session.getRefreshTokenHash() != null) {
-            LocalDateTime refreshTokenExpiry = LocalDateTime.now()
-                    .plusSeconds(jwtTokenProvider.getRefreshTokenExpirationSeconds());
-            TokenBlacklist refreshBlacklist = new TokenBlacklist(
-                    session.getRefreshTokenHash(),
-                    TokenType.REFRESH,
-                    refreshTokenExpiry,
-                    reason
-            );
-            tokenBlacklistRepository.save(refreshBlacklist);
+            // Check if already blacklisted to avoid duplicate key violations
+            if (!tokenBlacklistRepository.existsByTokenHash(session.getRefreshTokenHash())) {
+                LocalDateTime refreshTokenExpiry = LocalDateTime.now()
+                        .plusSeconds(jwtTokenProvider.getRefreshTokenExpirationSeconds());
+                TokenBlacklist refreshBlacklist = new TokenBlacklist(
+                        session.getRefreshTokenHash(),
+                        TokenType.REFRESH,
+                        refreshTokenExpiry,
+                        reason
+                );
+                tokenBlacklistRepository.save(refreshBlacklist);
+            } else {
+                log.debug("Refresh token already blacklisted, skipping: {}", session.getRefreshTokenHash());
+            }
         }
 
         log.info("Invalidated session {} (reason: {})", sessionId, reason);

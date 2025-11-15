@@ -234,3 +234,78 @@ So that I can monitor and manage my area of responsibility effectively.
 - Add customization: users can hide/show dashboard widgets (optional)
 
 ---
+
+## E2E Testing Stories
+
+**Note:** The following E2E test stories should be implemented AFTER all technical implementation stories (8.1-8.2) are completed. Each E2E story corresponds to its technical story and contains comprehensive end-to-end tests covering all user flows.
+
+## Story 8.1.e2e: E2E Tests for Executive Dashboard
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for the executive dashboard,
+So that I can ensure KPIs and visualizations are accurate.
+
+**Acceptance Criteria:**
+
+**Given** Story 8.1 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**KPI Card Calculations:**
+- Verify net profit/loss calculated correctly (revenue - expenses)
+- Verify occupancy rate = (occupied units / total units) * 100
+- Verify overdue maintenance count accurate
+- Verify outstanding receivables sum correct
+
+**Dashboard Charts:**
+- Verify all charts render without errors
+- Click chart elements → verify drill-down navigation works
+- Filter by date range → verify charts update
+
+**Critical Alerts:**
+- Create overdue compliance item → verify appears in alerts panel
+- Create bounced cheque → verify alert shown
+
+**Prerequisites:** Story 8.1 (status: done)
+
+**Technical Notes:**
+- Test KPI calculations with known data
+- Verify chart rendering
+- Test drill-down functionality
+- Verify auto-refresh mechanism
+
+## Story 8.2.e2e: E2E Tests for Operational Dashboards
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for operational dashboards,
+So that I can ensure role-specific dashboards display correct data.
+
+**Acceptance Criteria:**
+
+**Given** Story 8.2 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**Role-Based Dashboard Access:**
+- Login as MAINTENANCE_SUPERVISOR → verify maintenance dashboard shown
+- Login as FINANCE_MANAGER → verify financial dashboard shown
+- Login as PROPERTY_MANAGER → verify occupancy dashboard shown
+
+**Dashboard Data Accuracy:**
+- Verify work order counts match database
+- Verify financial calculations accurate
+- Verify occupancy metrics correct
+
+**Export Functionality:**
+- Export dashboard to PDF → verify PDF contains all data
+- Export to Excel → verify Excel has correct sheets
+
+**Prerequisites:** Story 8.2 (status: done)
+
+**Technical Notes:**
+- Test role-based access control
+- Verify data accuracy for each dashboard
+- Test export functionality
+- Clean up test data
+
+---

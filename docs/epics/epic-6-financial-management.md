@@ -415,3 +415,493 @@ So that I can understand income, expenses, and profitability.
 - Support custom date range selection
 
 ---
+
+## E2E Testing Stories
+
+**Note:** The following E2E test stories should be implemented AFTER all technical implementation stories (6.1-6.4) are completed. Each E2E story corresponds to its technical story and contains comprehensive end-to-end tests covering all user flows.
+
+## Story 6.1.e2e: E2E Tests for Rent Invoicing and Payment Management
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for invoicing and payment management,
+So that I can ensure rent collection processes work correctly.
+
+**Acceptance Criteria:**
+
+**Given** Story 6.1 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**Automatic Invoice Generation:**
+- Create tenant with active lease starting this month
+- Trigger scheduled job for monthly invoice generation (test endpoint)
+- Verify invoice created with number INV-2025-XXXX
+- Verify invoice includes:
+  - Tenant name and unit
+  - Invoice date (1st of month)
+  - Due date (5th of month by default)
+  - Base rent from lease
+  - Service charges from lease
+  - Parking fees from lease
+  - Total amount calculated correctly
+- Verify invoice status = SENT
+- Verify email sent to tenant with PDF attachment
+
+**Manual Invoice Generation:**
+- Navigate to invoice creation page
+- Select tenant from dropdown
+- Verify lease details auto-populated
+- Add additional charge: "Utility bill" with amount 200.00
+- Set custom due date
+- Create invoice
+- Verify invoice number generated
+- Verify status = DRAFT
+- Send invoice → verify status = SENT
+
+**Payment Recording:**
+- View invoice detail page
+- Click "Record Payment" button
+- Fill payment form:
+  - Amount paid: 5000.00 (partial payment)
+  - Payment method: BANK_TRANSFER
+  - Payment date: today
+  - Transaction reference: "TXN123456"
+  - Notes: "First installment"
+- Submit payment
+- Verify payment number generated (PAY-2025-XXXX)
+- Verify invoice paidAmount updated
+- Verify balanceAmount = totalAmount - paidAmount
+- Verify invoice status = PARTIALLY_PAID
+- Verify receipt PDF generated
+- Verify receipt email sent to tenant
+
+**Full Payment:**
+- Record second payment for remaining balance
+- Verify invoice status changed to PAID
+- Verify balanceAmount = 0
+- Verify paidAt timestamp set
+
+**Overdue Invoice Tracking:**
+- Create invoice with due date yesterday
+- Trigger scheduled job for overdue checking
+- Verify invoice status changed to OVERDUE
+- Verify late fee calculated (5% after 7 days)
+- Verify overdue reminder email sent to tenant
+
+**Invoice List and Filtering:**
+- View invoice list page
+- Filter by status: OVERDUE → verify only overdue invoices shown
+- Filter by tenant → verify tenant-specific invoices
+- Filter by date range → verify invoices in range
+- Search by invoice number → verify found
+- Sort by due date ascending → verify sorting
+
+**Invoice PDF Generation:**
+- Click "Download PDF" on invoice
+- Verify PDF downloads with correct filename
+- Verify PDF contains all invoice details
+- Verify print-friendly layout
+
+**Tenant Invoice History:**
+- Login as tenant
+- View my invoices page
+- Verify only own invoices displayed
+- View invoice detail → verify payment history shown
+- Download invoice PDF → verify accessible
+
+**Validation and Error Handling:**
+- Record payment with amount > balanceAmount → verify error
+- Record payment with negative amount → verify validation error
+- Record payment without payment method → verify required field error
+- Create invoice for tenant without active lease → verify error
+
+**Prerequisites:** Story 6.1 (status: done), Story 3.3 (for tenants with leases)
+
+**Technical Notes:**
+- Test scheduled job for automatic invoice generation
+- Test scheduled job for overdue tracking
+- Verify PDF generation for invoices and receipts
+- Test email notifications (mock email service)
+- Verify late fee calculation logic
+- Clean up test invoices and payments
+- Use test fixtures for tenants with active leases
+
+## Story 6.2.e2e: E2E Tests for Expense Management
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for expense management,
+So that I can ensure expense tracking and vendor payments work correctly.
+
+**Acceptance Criteria:**
+
+**Given** Story 6.2 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**Manual Expense Recording:**
+- Navigate to expense creation page
+- Fill expense form:
+  - Category: MAINTENANCE
+  - Property: Select from dropdown
+  - Vendor: Select vendor
+  - Work order: Leave blank (optional)
+  - Amount: 1500.00
+  - Expense date: today
+  - Payment status: PENDING
+  - Description: "HVAC repair parts"
+  - Upload receipt (PDF < 5MB)
+- Submit expense
+- Verify expense number generated (EXP-2025-XXXX)
+- Verify expense appears in list
+- Verify receipt uploaded and downloadable
+
+**Automatic Expense from Work Order:**
+- Complete work order with actualCost = 2000.00
+- Mark work order as COMPLETED
+- Verify expense auto-created
+- Verify expense linked to work order
+- Verify category = MAINTENANCE
+- Verify vendorId matches work order vendor
+- Verify paymentStatus = PENDING
+
+**Vendor Payment Processing:**
+- Navigate to pending payments page
+- Filter by vendor
+- Verify list of pending expenses for vendor
+- Select multiple expenses (batch selection)
+- Click "Process Payment" button
+- Enter payment date and transaction reference
+- Confirm batch payment
+- Verify all selected expenses status = PAID
+- Verify paymentDate set for all
+- Verify payment summary PDF generated
+- Verify payment confirmation email sent to vendor
+
+**Expense List and Filtering:**
+- View expense list
+- Filter by category: UTILITIES → verify only utilities shown
+- Filter by property → verify property-specific expenses
+- Filter by vendor → verify vendor-specific expenses
+- Filter by payment status: PENDING → verify unpaid expenses
+- Filter by date range → verify expenses in range
+- Search by expense number → verify search works
+
+**Expense Summary Dashboard:**
+- Navigate to expense summary page
+- Verify total expenses by category (pie chart displayed)
+- Verify monthly expense trend (line chart for last 12 months)
+- Verify top vendors by payment amount table
+- Verify expense vs budget comparison (if budget set)
+
+**Mark Individual Expense as Paid:**
+- View pending expense detail
+- Click "Mark as Paid"
+- Enter payment date and reference
+- Confirm payment
+- Verify status = PAID
+- Verify paymentDate updated
+
+**Receipt Management:**
+- Upload receipt to expense
+- View receipt → verify PDF opens
+- Download receipt → verify file downloads
+- Replace receipt → verify old receipt replaced
+
+**Validation and Error Handling:**
+- Create expense without category → verify required field error
+- Create expense without amount → verify required field error
+- Create expense with negative amount → verify validation error
+- Upload receipt > 5MB → verify size error
+- Upload non-PDF/JPG file → verify type error
+
+**Prerequisites:** Story 6.2 (status: done), Story 5.1 (for vendors)
+
+**Technical Notes:**
+- Test auto-creation of expenses from work orders
+- Test batch payment processing
+- Verify payment summary PDF generation
+- Test email notifications to vendors
+- Verify expense charts render correctly
+- Clean up test expenses
+- Use test fixtures for vendors and work orders
+
+## Story 6.3.e2e: E2E Tests for PDC Management
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for PDC management,
+So that I can ensure cheque tracking and bounce handling work correctly.
+
+**Acceptance Criteria:**
+
+**Given** Story 6.3 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**PDC Registration (Bulk Entry):**
+- Navigate to PDC registration page
+- Select tenant
+- Enter number of cheques: 12
+- Fill bulk entry table:
+  - Row 1: Cheque #001, Emirates NBD, 5000, date: next month 1st
+  - Row 2: Cheque #002, Emirates NBD, 5000, date: next month + 1
+  - ... continue for 12 cheques
+- Save all PDCs
+- Verify all 12 PDCs created with status = RECEIVED
+- Verify all cheques appear in PDC list
+
+**PDC Dashboard:**
+- View PDC dashboard
+- Verify KPI cards:
+  - PDCs due this week (count and value)
+  - PDCs deposited (count and value)
+  - Total outstanding PDC value
+  - Recently bounced cheques
+- View upcoming PDCs list (next 30 days)
+- Verify cheques sorted by cheque date
+
+**PDC Status Workflow - Deposit:**
+- Create PDC with chequeDate = today
+- Trigger scheduled job → verify status changed to DUE
+- Click "Mark as Deposited" on PDC
+- Enter deposit date
+- Confirm deposit
+- Verify status changed to DEPOSITED
+- Verify depositDate set
+- Verify deposit confirmation email sent
+
+**PDC Status Workflow - Cleared:**
+- View deposited PDC
+- Click "Mark as Cleared"
+- Enter cleared date
+- Confirm clearance
+- Verify status = CLEARED
+- Verify clearedDate set
+- If PDC linked to invoice → verify payment auto-recorded on invoice
+- Verify invoice paidAmount updated
+
+**PDC Status Workflow - Bounced:**
+- View deposited PDC
+- Click "Report Bounce"
+- Fill bounce form:
+  - Bounced date: today
+  - Bounce reason: "Insufficient funds"
+- Confirm bounce
+- Verify status = BOUNCED
+- Verify bouncedDate and bounceReason set
+- Verify bounce notification email sent to manager and tenant
+- Verify tenant account flagged for follow-up
+- Verify late fee added to tenant invoice (if configured)
+
+**PDC Replacement:**
+- View bounced PDC
+- Click "Register Replacement"
+- Register new PDC with new cheque number
+- Link to bounced PDC
+- Verify new PDC created
+- Verify original PDC status = REPLACED
+- Verify replacementChequeId linked
+
+**PDC List and Filtering:**
+- View PDC list page
+- Filter by status: DEPOSITED → verify only deposited cheques
+- Filter by tenant → verify tenant-specific cheques
+- Filter by bank → verify bank-specific cheques
+- Filter by date range → verify cheques in range
+- Search by cheque number → verify search
+- Verify color-coded status badges
+
+**PDC Calendar View:**
+- Navigate to PDC calendar
+- Verify all upcoming cheque dates displayed on calendar
+- Click date → verify PDCs for that date shown
+- Verify visual indicators for different statuses
+
+**Bulk Deposit:**
+- Select multiple PDCs with status DUE
+- Click "Bulk Deposit"
+- Enter deposit date
+- Confirm bulk deposit
+- Verify all selected PDCs status = DEPOSITED
+
+**Tenant PDC History:**
+- Navigate to tenant profile
+- View PDC history tab
+- Verify all tenant PDCs listed
+- Verify bounce rate calculated (bounces / total PDCs)
+- Identify payment reliability trend
+
+**PDC Due Reminders:**
+- Create PDC with chequeDate = 3 days from now
+- Trigger scheduled job for due reminders
+- Verify reminder email sent to finance manager
+
+**Validation and Error Handling:**
+- Register PDC with chequeDate in past → verify validation error
+- Register PDC without cheque number → verify required field error
+- Register PDC without amount → verify required field error
+- Mark as deposited without deposit date → verify required field error
+- Report bounce without reason → verify required field error
+
+**Prerequisites:** Story 6.3 (status: done), Story 6.1 (for invoices)
+
+**Technical Notes:**
+- Test scheduled job for PDC status updates (RECEIVED → DUE)
+- Test scheduled job for due reminders
+- Verify bulk entry table functionality
+- Test bounce handling and late fee calculation
+- Verify calendar view rendering
+- Test auto-payment recording when PDC cleared
+- Clean up test PDCs
+- Use test fixtures for tenants with payment terms = PDC
+
+## Story 6.4.e2e: E2E Tests for Financial Reporting
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for financial reporting,
+So that I can ensure reports are accurate and exports work correctly.
+
+**Acceptance Criteria:**
+
+**Given** Story 6.4 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**Income Statement (P&L) Report:**
+- Navigate to income statement report
+- Select date range: current month
+- Select property: All properties
+- Verify revenue section displays:
+  - Rental income (sum of invoice amounts)
+  - Service charges
+  - Parking fees
+  - Late fees
+  - Total revenue calculated correctly
+- Verify expense section displays:
+  - Maintenance expenses
+  - Utilities
+  - Salaries
+  - Total expenses calculated correctly
+- Verify net profit/loss = total revenue - total expenses
+- Verify profit margin percentage calculated
+
+**Cash Flow Summary:**
+- View cash flow report
+- Verify cash inflows (payments received)
+- Verify cash outflows (expenses paid)
+- Verify net cash flow = inflows - outflows
+- Verify month-over-month comparison shown
+
+**Accounts Receivable Aging:**
+- View AR aging report
+- Verify outstanding invoices grouped by age:
+  - Current (not yet due)
+  - 1-30 days overdue
+  - 31-60 days overdue
+  - 61-90 days overdue
+  - 90+ days overdue
+- Verify total outstanding amount calculated
+- Verify collection rate percentage displayed
+
+**Revenue Breakdown Charts:**
+- View revenue dashboard
+- Verify revenue by property pie chart renders
+- Verify revenue by type pie chart (rent, service, parking)
+- Verify monthly revenue trend line chart (last 12 months)
+- Verify year-over-year comparison data
+- Click chart segment → verify drill-down to details
+
+**Expense Breakdown Charts:**
+- View expense dashboard
+- Verify expenses by category pie chart
+- Verify monthly expense trend line chart
+- Verify top 5 vendors by payment amount table
+- Verify maintenance cost per property chart
+
+**Financial Dashboard KPIs:**
+- Navigate to financial dashboard
+- Verify KPI cards:
+  - Total revenue (current month)
+  - Total expenses (current month)
+  - Net profit/loss
+  - Collection rate (payments / invoices)
+  - Outstanding receivables
+- Verify quick insights:
+  - Revenue growth vs last month
+  - Expense growth vs last month
+  - Top performing property
+  - Highest expense category
+
+**Custom Date Range:**
+- Select custom date range: Last quarter
+- Verify all reports update with filtered data
+- Verify charts recalculate for selected range
+
+**Property-Specific Reporting:**
+- Filter by specific property
+- Verify all metrics calculated for that property only
+- Verify charts show property-specific data
+
+**Export to PDF:**
+- Click "Export to PDF" on P&L report
+- Verify PDF downloads
+- Verify PDF contains:
+  - Report title and date range
+  - All revenue and expense data
+  - Charts embedded as images
+  - Net profit/loss highlighted
+- Verify print-friendly formatting
+
+**Export to Excel:**
+- Click "Export to Excel"
+- Verify Excel file downloads
+- Verify Excel contains:
+  - Multiple sheets (P&L, Cash Flow, AR Aging, etc.)
+  - Data in tabular format
+  - Formulas for calculations
+  - Conditional formatting for negatives
+
+**Email Reports:**
+- Click "Email Report"
+- Enter recipient email addresses
+- Add optional message
+- Send report
+- Verify email sent with PDF attachment
+
+**Comparative Reporting:**
+- Enable "Compare with previous period"
+- Verify current vs previous period columns shown
+- Verify variance calculated (amount and percentage)
+- Verify positive/negative variance color-coded
+
+**Report Caching and Performance:**
+- Load financial dashboard
+- Verify KPIs load quickly (<2 seconds)
+- Verify charts render within 3 seconds
+- Refresh dashboard → verify cached data used (check network tab)
+- Trigger manual refresh → verify data refetched
+
+**Drill-Down Capability:**
+- Click "Total revenue" on dashboard
+- Verify navigates to detailed invoice list
+- Click expense category on pie chart
+- Verify navigates to expenses filtered by that category
+
+**Validation and Error Handling:**
+- Select invalid date range (end < start) → verify error
+- Export report with no data → verify graceful handling with message
+- Select future date range → verify warning or empty report
+
+**Prerequisites:** Story 6.4 (status: done), Story 6.1 and 6.2 (for data)
+
+**Technical Notes:**
+- Test with realistic financial data (multiple invoices, payments, expenses)
+- Verify all chart calculations are accurate
+- Test PDF generation with charts
+- Test Excel export with formulas
+- Verify email functionality (mock email service)
+- Test report caching mechanism
+- Verify drill-down navigation
+- Clean up test financial data
+- Use test fixtures for properties with transaction history
+
+---

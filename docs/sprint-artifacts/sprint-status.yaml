@@ -51,56 +51,86 @@ development_status:
   2-5-frontend-authentication-components-and-protected-routes: done  # Completed 2025-11-15 - All 18 tasks complete: JWT auth, RBAC, route protection, session management, E2E tests, docs (24 files created/modified)
   epic-2-retrospective: completed  # Completed 2025-11-15 - Retrospective document: docs/retrospectives/epic-2-retrospective.md
 
-  # Epic 3: Tenant Management & Portal (5 stories)
-  # NOTE: Epic 3 has duplicate Story 3.2 numbering in epics.md - both included below
+  # Epic 3: Tenant Management & Portal (5 technical stories + 5 E2E stories)
+  # NOTE: Story numbering fixed - was duplicate 3.2, now corrected to 3.1-3.5
   epic-3: backlog
-  3-1-lead-management-and-quotation-system: in-progress  # Started 2025-11-15 - Implementation in progress
-  3-2-property-and-unit-management: backlog
-  3-2-tenant-onboarding-and-registration: backlog
-  3-3-tenant-portal-dashboard-and-profile-management: backlog
-  3-4-tenant-portal-maintenance-request-submission: backlog
+  3-1-lead-management-and-quotation-system: drafted  # Drafted 2025-11-15 - Story file created, needs story-context
+  3-2-property-and-unit-management: drafted  # Drafted 2025-11-15 - Story file created by SM workflow
+  3-3-tenant-onboarding-and-registration: ready-for-dev  # Context generated 2025-11-15 - Story ready for implementation
+  3-4-tenant-portal-dashboard-and-profile-management: backlog
+  3-5-tenant-portal-maintenance-request-submission: backlog
+  # E2E Testing Stories (implement after all technical stories complete)
+  3-1-e2e-lead-management-and-quotation-system: backlog
+  3-2-e2e-property-and-unit-management: backlog
+  3-3-e2e-tenant-onboarding: backlog
+  3-4-e2e-tenant-portal-dashboard: backlog
+  3-5-e2e-maintenance-requests: backlog
   epic-3-retrospective: optional
 
-  # Epic 4: Maintenance Operations (4 stories)
+  # Epic 4: Maintenance Operations (4 technical stories + 4 E2E stories)
   epic-4: backlog
   4-1-work-order-creation-and-management: backlog
   4-2-preventive-maintenance-scheduling: backlog
   4-3-work-order-assignment-and-vendor-coordination: backlog
   4-4-job-progress-tracking-and-completion: backlog
+  # E2E Testing Stories (implement after all technical stories complete)
+  4-1-e2e-work-order-creation-and-management: backlog
+  4-2-e2e-preventive-maintenance-scheduling: backlog
+  4-3-e2e-work-order-assignment: backlog
+  4-4-e2e-job-progress-tracking-and-completion: backlog
   epic-4-retrospective: optional
 
-  # Epic 5: Vendor Management (3 stories)
+  # Epic 5: Vendor Management (3 technical stories + 3 E2E stories)
   epic-5: backlog
   5-1-vendor-registration-and-profile-management: backlog
   5-2-vendor-document-and-license-management: backlog
   5-3-vendor-performance-tracking-and-rating: backlog
+  # E2E Testing Stories (implement after all technical stories complete)
+  5-1-e2e-vendor-registration-and-profile-management: backlog
+  5-2-e2e-vendor-document-management: backlog
+  5-3-e2e-vendor-performance-tracking: backlog
   epic-5-retrospective: optional
 
-  # Epic 6: Financial Management (4 stories)
+  # Epic 6: Financial Management (4 technical stories + 4 E2E stories)
   epic-6: backlog
   6-1-rent-invoicing-and-payment-management: backlog
   6-2-expense-management-and-vendor-payments: backlog
   6-3-post-dated-cheque-pdc-management: backlog
   6-4-financial-reporting-and-analytics: backlog
+  # E2E Testing Stories (implement after all technical stories complete)
+  6-1-e2e-rent-invoicing-and-payment-management: backlog
+  6-2-e2e-expense-management: backlog
+  6-3-e2e-pdc-management: backlog
+  6-4-e2e-financial-reporting: backlog
   epic-6-retrospective: optional
 
-  # Epic 7: Asset & Compliance Management (3 stories)
+  # Epic 7: Asset & Compliance Management (3 technical stories + 3 E2E stories)
   epic-7: backlog
   7-1-asset-registry-and-tracking: backlog
   7-2-document-management-system: backlog
   7-3-compliance-and-inspection-tracking: backlog
+  # E2E Testing Stories (implement after all technical stories complete)
+  7-1-e2e-asset-registry-and-tracking: backlog
+  7-2-e2e-document-management: backlog
+  7-3-e2e-compliance-tracking: backlog
   epic-7-retrospective: optional
 
-  # Epic 8: Dashboard & Reporting (2 stories)
+  # Epic 8: Dashboard & Reporting (2 technical stories + 2 E2E stories)
   epic-8: backlog
   8-1-executive-summary-dashboard: backlog
   8-2-operational-dashboards: backlog
+  # E2E Testing Stories (implement after all technical stories complete)
+  8-1-e2e-executive-dashboard: backlog
+  8-2-e2e-operational-dashboards: backlog
   epic-8-retrospective: optional
 
-  # Epic 9: Communication & Notifications (2 stories)
+  # Epic 9: Communication & Notifications (2 technical stories + 2 E2E stories)
   epic-9: backlog
   9-1-email-notification-system: backlog
   9-2-announcement-management: backlog
+  # E2E Testing Stories (implement after all technical stories complete)
+  9-1-e2e-email-notification-system: backlog
+  9-2-e2e-announcement-management: backlog
   epic-9-retrospective: optional
 
 # ==============================================================================

@@ -218,3 +218,83 @@ So that I can communicate important information to residents.
 - Optional: Add in-app notification banner for high-priority announcements
 
 ---
+
+## E2E Testing Stories
+
+**Note:** The following E2E test stories should be implemented AFTER all technical implementation stories (9.1-9.2) are completed. Each E2E story corresponds to its technical story and contains comprehensive end-to-end tests covering all user flows.
+
+## Story 9.1.e2e: E2E Tests for Email Notification System
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for email notifications,
+So that I can ensure all notification triggers send emails correctly.
+
+**Acceptance Criteria:**
+
+**Given** Story 9.1 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**Notification Triggers:**
+- Create new user → verify welcome email sent
+- Generate invoice → verify invoice email sent to tenant
+- Record payment → verify receipt email sent
+- Submit maintenance request → verify confirmation email sent
+
+**Email Queue and Retry:**
+- Simulate email sending failure → verify queued for retry
+- Trigger retry job → verify retry attempted with exponential backoff
+
+**Email Templates:**
+- Verify all email templates render correctly
+- Verify variables substituted ({{tenantName}}, {{invoiceNumber}})
+- Verify attachments included (invoice PDFs, receipts)
+
+**Notification Settings:**
+- Admin enables/disables specific notifications → verify respected
+- Test digest mode (daily, weekly) if implemented
+
+**Prerequisites:** Story 9.1 (status: done)
+
+**Technical Notes:**
+- Use email testing service (MailHog, Mailtrap) to capture emails
+- Verify email content and attachments
+- Test retry mechanism
+- Clean up email queue after tests
+
+## Story 9.2.e2e: E2E Tests for Announcement Management
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for announcements,
+So that I can ensure announcement delivery and read tracking work correctly.
+
+**Acceptance Criteria:**
+
+**Given** Story 9.2 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**Announcement Creation and Delivery:**
+- Create immediate announcement → verify sent immediately
+- Create scheduled announcement → verify sent at scheduled time
+- Target specific property → verify only property tenants receive email
+- Target specific tenants → verify only selected tenants receive email
+
+**Tenant Announcement View:**
+- Login as tenant → view announcements
+- Click announcement → verify marked as read
+- Download attachment → verify file downloads
+
+**Read Tracking:**
+- View announcement detail as manager → verify read count displayed
+- Verify read count increments when tenants view
+
+**Prerequisites:** Story 9.2 (status: done), Story 9.1 (for email delivery)
+
+**Technical Notes:**
+- Test scheduled announcement job
+- Verify targeting logic (all, property, specific tenants)
+- Test read tracking
+- Clean up test announcements
+
+---
