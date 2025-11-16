@@ -1,0 +1,1739 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Story Context: 3-5 Tenant Portal - Maintenance Request Submission
+Generated: 2025-11-16
+Purpose: Provide comprehensive context for development of maintenance request submission feature
+-->
+
+<story-context epic-id="3" story-id="5" story-key="3-5-tenant-portal-maintenance-request-submission">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- STORY OVERVIEW -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <overview>
+    <title>Tenant Portal - Maintenance Request Submission</title>
+    <user-story>
+      <as-a>a tenant</as-a>
+      <i-want>to submit maintenance requests through the portal</i-want>
+      <so-that>I can report issues and track their resolution</so-that>
+    </user-story>
+
+    <description>
+      This story implements a complete maintenance request submission and tracking system for tenants.
+      Tenants can report issues by selecting a category, providing details, uploading photos, and
+      specifying preferred access times. The system auto-suggests priority based on category, validates
+      inputs, compresses images, stores requests with unique IDs, and notifies property managers.
+
+      Tenants can track their requests through a filterable list view and detailed status timeline,
+      receive email notifications on status changes, provide feedback after completion, and cancel
+      requests in SUBMITTED status.
+    </description>
+
+    <prerequisites>
+      <prerequisite story="3.4">Tenant Portal - Dashboard and Profile Management (for tenant authentication and navigation)</prerequisite>
+      <prerequisite story="1.4">Core domain models (Unit entity must exist)</prerequisite>
+      <prerequisite story="2.1">User authentication and authorization</prerequisite>
+    </prerequisites>
+
+    <related-stories>
+      <story id="3.6">Property Manager - Work Order Management (will consume maintenance requests)</story>
+      <story id="4.2">Vendor Portal - Job Acceptance and Completion (will update request status)</story>
+    </related-stories>
+  </overview>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ACCEPTANCE CRITERIA (20 ACs) -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <acceptance-criteria>
+
+    <criterion id="AC1" priority="MUST">
+      <title>Request form includes all required fields</title>
+      <description>
+        The maintenance request form must include:
+        - Category dropdown: PLUMBING, ELECTRICAL, HVAC, APPLIANCE, CARPENTRY, PEST_CONTROL, CLEANING, OTHER
+        - Priority field (auto-suggested based on category, editable by tenant)
+        - Title field (required, max 100 chars, e.g., "Leaking kitchen faucet")
+        - Description rich text editor (required, max 1000 chars, formatting supported)
+        - Preferred access time: Immediate, Morning (8 AM-12 PM), Afternoon (12 PM-5 PM), Evening (5 PM-8 PM), Any time
+        - Preferred access date: date picker, default today for HIGH priority, tomorrow for others
+      </description>
+      <validation>
+        - Category selection is required
+        - Priority is auto-populated but editable
+        - Title: 1-100 characters
+        - Description: 20-1000 characters (minimum enforced)
+        - Access date cannot be in the past
+      </validation>
+    </criterion>
+
+    <criterion id="AC2" priority="MUST">
+      <title>Priority auto-suggestion based on category</title>
+      <description>
+        When tenant selects a category, system auto-suggests priority:
+        - HIGH: No water, no electricity, AC not working in summer, gas leak (PLUMBING critical, ELECTRICAL critical, HVAC in summer)
+        - MEDIUM: Leaking faucet, broken appliance, door lock issue (default for most categories)
+        - LOW: Paint touch-up, minor repairs, general maintenance (CLEANING, OTHER)
+        Tenant can override the suggested priority.
+      </description>
+      <validation>
+        - Priority field updates when category changes
+        - Tenant can manually change priority after auto-suggestion
+        - Priority must be one of: HIGH, MEDIUM, LOW
+      </validation>
+    </criterion>
+
+    <criterion id="AC3" priority="MUST">
+      <title>Photo attachments with upload and preview</title>
+      <description>
+        Form supports uploading up to 5 photos (JPG/PNG, max 5MB each):
+        - Drag-and-drop or click to upload
+        - Photo preview thumbnails shown after upload
+        - Remove option for each photo
+        - No video uploads supported
+        - Character count shown for description (1000 chars max)
+      </description>
+      <validation>
+        - File type validation: only JPG, PNG allowed
+        - File size validation: max 5MB per file
+        - Max 5 photos total
+        - Video files rejected with clear error message
+        - Images compressed to ~500KB before upload
+        - Thumbnails generated (200x200px) for list view
+      </validation>
+    </criterion>
+
+    <criterion id="AC4" priority="MUST">
+      <title>Form validation with inline errors</title>
+      <description>
+        All form fields validated with inline error messages:
+        - Title required
+        - Description required (min 20 chars)
+        - Category required
+        - Character counter for description
+        - Clear error messages with red border on invalid fields
+      </description>
+      <validation>
+        - Validate on blur (per field)
+        - Validate on submit (entire form)
+        - Show error messages below fields
+        - Prevent submission until all validation passes
+      </validation>
+    </criterion>
+
+    <criterion id="AC5" priority="MUST">
+      <title>Request submission creates MaintenanceRequest entity</title>
+      <description>
+        On submit, API call POST /api/v1/maintenance-requests creates entity with:
+        - id (UUID)
+        - tenantId (auto-filled from logged-in user)
+        - unitId (auto-filled from tenant's unit)
+        - propertyId (auto-filled from tenant's property)
+        - requestNumber (unique, format: MR-2025-0001, auto-increment)
+        - category, priority, title, description
+        - status (default: SUBMITTED)
+        - preferredAccessTime, preferredAccessDate
+        - submittedAt (timestamp, auto-generated)
+        - assignedTo (null initially, assigned by property manager later)
+        - attachments (array of file paths: /uploads/maintenance/{requestId}/filename.jpg)
+      </description>
+      <validation>
+        - Request number auto-generated with year prefix
+        - Files uploaded to /uploads/maintenance/{requestId}/
+        - All required fields validated server-side
+        - Tenant can only submit for their own unit
+      </validation>
+    </criterion>
+
+    <criterion id="AC6" priority="MUST">
+      <title>Success feedback and redirect after submission</title>
+      <description>
+        After successful submission:
+        - Success message: "Request #{requestNumber} submitted successfully"
+        - Redirect to request details page (/tenant/requests/{id})
+        - Email confirmation sent to tenant with request number
+        - Push notification to property manager (if enabled)
+      </description>
+      <validation>
+        - Toast notification shown with success message
+        - Redirect happens after 2 seconds or on user click
+        - Email sent asynchronously (doesn't block UI)
+      </validation>
+    </criterion>
+
+    <criterion id="AC7" priority="MUST">
+      <title>Request tracking page at /tenant/requests</title>
+      <description>
+        List all tenant's requests (newest first) with:
+        - Filter by status: All, Open (SUBMITTED, ASSIGNED), In Progress, Completed, Closed
+        - Filter by category
+        - Search by request number, title, or description
+        - Each request card shows:
+          - Request number (clickable link)
+          - Title and category
+          - Status badge with color coding
+          - Submitted date and priority
+          - Last updated timestamp
+      </description>
+      <validation>
+        - Filters applied instantly (debounced search)
+        - Pagination: 10 requests per page
+        - Newest requests shown first (default sort)
+        - Status badge colors match design system
+      </validation>
+    </criterion>
+
+    <criterion id="AC8" priority="MUST">
+      <title>Status badge color coding</title>
+      <description>
+        Each status has distinct badge color:
+        - SUBMITTED (yellow): "Waiting for assignment"
+        - ASSIGNED (blue): "Assigned to {vendorName}"
+        - IN_PROGRESS (orange): "Work in progress"
+        - COMPLETED (green): "Work completed"
+        - CLOSED (gray): "Request closed"
+      </description>
+      <validation>
+        - Badge component from shadcn/ui used
+        - Colors match UX design specification
+        - Status text updated dynamically
+      </validation>
+    </criterion>
+
+    <criterion id="AC9" priority="MUST">
+      <title>Request details page at /tenant/requests/{id}</title>
+      <description>
+        Full request information displayed:
+        - Title, description, category, priority
+        - Photo gallery (thumbnails, click to enlarge in lightbox)
+        - Status timeline with dates:
+          - Submitted on {date}
+          - Assigned to {vendor} on {date} (if assigned)
+          - In progress on {date} (if started)
+          - Completed on {date} (if completed)
+          - Closed on {date} (if closed)
+        - Assigned vendor information (name, contact - if assigned)
+        - Estimated completion date (if provided by vendor)
+        - Actual completion date (if completed)
+        - Work notes from vendor (visible after completion)
+        - Completion photos (before/after from vendor)
+      </description>
+      <validation>
+        - Timeline shows only completed steps
+        - Photos open in lightbox (shadcn Dialog)
+        - Vendor info only shown if request is assigned
+        - Work notes only visible after completion
+      </validation>
+    </criterion>
+
+    <criterion id="AC10" priority="MUST">
+      <title>Tenant rating and feedback after completion</title>
+      <description>
+        After request status = COMPLETED, show feedback section:
+        - Rate service: 1-5 stars (required)
+        - Comment field (optional, max 500 chars)
+        - Submit feedback button
+        - Feedback saved and shown on request details
+      </description>
+      <validation>
+        - Feedback section only visible when status = COMPLETED
+        - Rating is required (1-5 stars)
+        - Comment is optional
+        - Feedback saved via POST /api/v1/maintenance-requests/{id}/feedback
+        - Cannot submit feedback twice (disable after first submission)
+      </validation>
+    </criterion>
+
+    <criterion id="AC11" priority="MUST">
+      <title>Status update notifications</title>
+      <description>
+        Email notifications sent on status changes:
+        - Assigned: "Your request has been assigned to {vendor}"
+        - In Progress: "Work has started on your request"
+        - Completed: "Your request has been completed. Please review."
+        - Closed: "Your request has been closed"
+        In-app notification badge shown on dashboard
+      </description>
+      <validation>
+        - Emails sent asynchronously
+        - Email templates include request number and link to details
+        - Notification badge count updated on dashboard
+      </validation>
+    </criterion>
+
+    <criterion id="AC12" priority="MUST">
+      <title>Real-time or polling status updates</title>
+      <description>
+        Request details page shows real-time status changes:
+        - Polling every 30 seconds (or WebSocket if available)
+        - UI updates without page reload when status changes
+        - Status badge and timeline update automatically
+      </description>
+      <validation>
+        - Polling implemented with 30-second interval
+        - Cleanup polling on component unmount
+        - WebSocket optional (can be deferred to Phase 2)
+      </validation>
+    </criterion>
+
+    <criterion id="AC13" priority="MUST">
+      <title>Cancel request (only if status = SUBMITTED)</title>
+      <description>
+        Tenant can cancel request if status = SUBMITTED:
+        - Cancel button shown on request details page
+        - Confirmation dialog: "Are you sure you want to cancel this request?"
+        - On confirm: DELETE /api/v1/maintenance-requests/{id}
+        - Success message: "Request cancelled successfully"
+        - Redirect to requests list
+      </description>
+      <validation>
+        - Cancel button only visible if status = SUBMITTED
+        - Confirmation required before deletion
+        - Cannot cancel ASSIGNED, IN_PROGRESS, COMPLETED, or CLOSED requests
+        - Error message if trying to cancel non-submitted request
+      </validation>
+    </criterion>
+
+    <criterion id="AC14" priority="SHOULD">
+      <title>Image compression before upload</title>
+      <description>
+        Before uploading photos:
+        - Compress 5MB images to ~500KB
+        - Maintain reasonable quality
+        - Show compression progress if needed
+      </description>
+      <validation>
+        - Use browser-based compression (canvas API or library like browser-image-compression)
+        - Target compressed size: ~500KB
+        - Preserve EXIF data if possible
+        - Show upload progress bar
+      </validation>
+    </criterion>
+
+    <criterion id="AC15" priority="SHOULD">
+      <title>Offline request drafts (Progressive Web App)</title>
+      <description>
+        Save request drafts to IndexedDB for offline creation:
+        - Form data saved to browser storage
+        - Restored when user returns to form
+        - Submitted when online
+      </description>
+      <validation>
+        - Service worker installed
+        - IndexedDB used for draft storage
+        - Auto-save every 30 seconds
+        - Clear draft after successful submission
+      </validation>
+      <note>This is a nice-to-have feature, can be deferred to Phase 2 if time-constrained</note>
+    </criterion>
+
+    <criterion id="AC16" priority="MUST">
+      <title>Responsive design for mobile</title>
+      <description>
+        Request form and list view optimized for mobile:
+        - Touch-optimized buttons (min 44x44px)
+        - Single column layout on mobile
+        - Bottom sheet for filters on mobile
+        - Photo gallery swipeable on mobile
+      </description>
+      <validation>
+        - Test on mobile viewport (375px)
+        - Touch targets meet accessibility standards
+        - Form inputs full-width on mobile
+        - Photo upload drag-drop disabled on mobile (use file picker)
+      </validation>
+    </criterion>
+
+    <criterion id="AC17" priority="MUST">
+      <title>Accessibility compliance (WCAG 2.1 AA)</title>
+      <description>
+        All components meet WCAG 2.1 Level AA:
+        - Form labels associated with inputs
+        - Error messages announced to screen readers
+        - Keyboard navigation supported
+        - Color contrast meets 4.5:1 ratio
+        - Focus indicators visible
+      </description>
+      <validation>
+        - Run Lighthouse accessibility audit
+        - Test with keyboard-only navigation
+        - Verify screen reader announcements
+        - Check color contrast ratios
+      </validation>
+    </criterion>
+
+    <criterion id="AC18" priority="MUST">
+      <title>Analytics tracking for request categories</title>
+      <description>
+        Track maintenance request categories to identify common issues:
+        - Log category on each request submission
+        - Property managers can view category trends
+        - Helps identify recurring problems (e.g., plumbing issues in specific units)
+      </description>
+      <validation>
+        - Category tracked in database
+        - Analytics endpoint available for reporting
+        - No personal data exposed in analytics
+      </validation>
+    </criterion>
+
+    <criterion id="AC19" priority="MUST">
+      <title>Security: Tenant can only view own requests</title>
+      <description>
+        Authorization checks ensure:
+        - Tenant can only submit requests for their assigned unit
+        - Tenant can only view their own requests
+        - API rejects requests from unauthorized tenants (403 Forbidden)
+      </description>
+      <validation>
+        - Backend verifies tenant ownership before returning data
+        - Unit ID auto-filled from authenticated tenant's lease
+        - Cannot submit for other tenants' units
+        - List endpoint filters by logged-in tenant ID
+      </validation>
+    </criterion>
+
+    <criterion id="AC20" priority="MUST">
+      <title>Email notification templates</title>
+      <description>
+        Professional email templates for:
+        - Request confirmation (to tenant)
+        - New request notification (to property manager)
+        - Status change notifications (to tenant)
+        Templates include:
+        - Request number and link to details
+        - Property and unit information
+        - Issue description
+        - Next steps
+      </description>
+      <validation>
+        - HTML email templates in /templates/emails/
+        - Responsive email design
+        - Unsubscribe link included (for non-critical emails)
+        - Test emails sent to development mailbox
+      </validation>
+    </criterion>
+
+  </acceptance-criteria>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- TASKS AND SUBTASKS -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <tasks>
+
+    <task id="T1" title="Backend: Create MaintenanceRequest entity and enums">
+      <description>
+        Create JPA entity for maintenance requests with all required fields and relationships
+      </description>
+      <subtasks>
+        <subtask id="T1.1">Create Category enum: PLUMBING, ELECTRICAL, HVAC, APPLIANCE, CARPENTRY, PEST_CONTROL, CLEANING, OTHER</subtask>
+        <subtask id="T1.2">Create Priority enum: HIGH, MEDIUM, LOW</subtask>
+        <subtask id="T1.3">Create Status enum: SUBMITTED, ASSIGNED, IN_PROGRESS, COMPLETED, CLOSED</subtask>
+        <subtask id="T1.4">Create PreferredAccessTime enum: IMMEDIATE, MORNING, AFTERNOON, EVENING, ANY_TIME</subtask>
+        <subtask id="T1.5">Create MaintenanceRequest entity with fields: id, tenantId, unitId, propertyId, requestNumber, category, priority, title, description, status, preferredAccessTime, preferredAccessDate, submittedAt, assignedTo, attachments (JSON array), assignedAt, startedAt, completedAt, closedAt, estimatedCompletionDate, workNotes, rating, feedback, feedbackSubmittedAt</subtask>
+        <subtask id="T1.6">Add relationships: @ManyToOne to Tenant, Unit, Property, Vendor (assignedTo)</subtask>
+        <subtask id="T1.7">Add audit fields: createdAt, updatedAt, createdBy</subtask>
+        <subtask id="T1.8">Create database migration (Flyway/Liquibase) for maintenance_requests table</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T2" title="Backend: Create DTOs for request and response">
+      <description>
+        Create request/response DTOs with validation annotations
+      </description>
+      <subtasks>
+        <subtask id="T2.1">Create CreateMaintenanceRequestDto with fields: category, priority, title, description, preferredAccessTime, preferredAccessDate</subtask>
+        <subtask id="T2.2">Add Jakarta validation: @NotNull, @Size, @NotBlank, @FutureOrPresent</subtask>
+        <subtask id="T2.3">Create MaintenanceRequestResponse DTO with all entity fields plus vendorName, vendorContact</subtask>
+        <subtask id="T2.4">Create MaintenanceRequestListResponse (paginated) DTO</subtask>
+        <subtask id="T2.5">Create SubmitFeedbackDto with rating (1-5) and comment (max 500 chars)</subtask>
+        <subtask id="T2.6">Create UpdateStatusDto for property manager status updates</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T3" title="Backend: Create MaintenanceRequestRepository">
+      <description>
+        JPA repository with custom queries for filtering and search
+      </description>
+      <subtasks>
+        <subtask id="T3.1">Extend JpaRepository&lt;MaintenanceRequest, UUID&gt;</subtask>
+        <subtask id="T3.2">Add query: findByTenantIdOrderBySubmittedAtDesc(UUID tenantId, Pageable pageable)</subtask>
+        <subtask id="T3.3">Add query: findByTenantIdAndStatusIn(UUID tenantId, List&lt;Status&gt; statuses, Pageable pageable)</subtask>
+        <subtask id="T3.4">Add query: findByTenantIdAndCategoryIn(UUID tenantId, List&lt;Category&gt; categories, Pageable pageable)</subtask>
+        <subtask id="T3.5">Add search query: findByTenantIdAndTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase</subtask>
+        <subtask id="T3.6">Add query to generate request number: findTopByOrderByRequestNumberDesc() for auto-increment</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T4" title="Backend: Implement MaintenanceRequestService">
+      <description>
+        Business logic for request creation, retrieval, status updates, and feedback
+      </description>
+      <subtasks>
+        <subtask id="T4.1">Implement createRequest(CreateMaintenanceRequestDto, tenantId, files): auto-fill unitId/propertyId from tenant, generate requestNumber, save attachments, send notifications</subtask>
+        <subtask id="T4.2">Implement getRequestById(UUID id, tenantId): verify tenant ownership, return MaintenanceRequestResponse</subtask>
+        <subtask id="T4.3">Implement getRequestsByTenant(tenantId, filters, pageable): apply status/category filters, return paginated list</subtask>
+        <subtask id="T4.4">Implement submitFeedback(requestId, tenantId, SubmitFeedbackDto): verify status=COMPLETED, save rating and comment</subtask>
+        <subtask id="T4.5">Implement cancelRequest(requestId, tenantId): verify status=SUBMITTED, soft delete or mark as CANCELLED</subtask>
+        <subtask id="T4.6">Implement priority auto-suggestion logic based on category</subtask>
+        <subtask id="T4.7">Implement file upload to /uploads/maintenance/{requestId}/, generate thumbnails (200x200px)</subtask>
+        <subtask id="T4.8">Integrate email service: send confirmation to tenant, notification to property manager</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T5" title="Backend: Create MaintenanceRequestController REST API">
+      <description>
+        REST endpoints for request CRUD operations
+      </description>
+      <subtasks>
+        <subtask id="T5.1">POST /api/v1/maintenance-requests: create request with file uploads (multipart/form-data)</subtask>
+        <subtask id="T5.2">GET /api/v1/maintenance-requests: list tenant's requests with filters (status, category, search)</subtask>
+        <subtask id="T5.3">GET /api/v1/maintenance-requests/{id}: get request details</subtask>
+        <subtask id="T5.4">POST /api/v1/maintenance-requests/{id}/feedback: submit rating and feedback</subtask>
+        <subtask id="T5.5">DELETE /api/v1/maintenance-requests/{id}: cancel request (only if SUBMITTED)</subtask>
+        <subtask id="T5.6">Add @PreAuthorize("hasRole('TENANT')") to all endpoints</subtask>
+        <subtask id="T5.7">Add Swagger/OpenAPI annotations for API documentation</subtask>
+        <subtask id="T5.8">Implement error handling: validation errors, not found, unauthorized, file upload errors</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T6" title="Backend: Email notification service">
+      <description>
+        Send email notifications for request lifecycle events
+      </description>
+      <subtasks>
+        <subtask id="T6.1">Create email templates: request-confirmation.html, new-request-notification.html, status-changed.html</subtask>
+        <subtask id="T6.2">Implement sendRequestConfirmation(tenant, request): send to tenant email</subtask>
+        <subtask id="T6.3">Implement sendNewRequestNotification(propertyManager, request): notify manager of new request</subtask>
+        <subtask id="T6.4">Implement sendStatusChangeNotification(tenant, request, newStatus): notify tenant of status change</subtask>
+        <subtask id="T6.5">Use asynchronous email sending (@Async) to avoid blocking API responses</subtask>
+        <subtask id="T6.6">Include request number, link to details, property/unit info in all emails</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T7" title="Frontend: Create maintenance request types and API service">
+      <description>
+        TypeScript types and API client for maintenance requests
+      </description>
+      <subtasks>
+        <subtask id="T7.1">Create types/maintenance.ts: MaintenanceRequest, Category, Priority, Status, PreferredAccessTime interfaces</subtask>
+        <subtask id="T7.2">Create types/maintenance.ts: CreateMaintenanceRequestDto, MaintenanceRequestResponse, SubmitFeedbackDto types</subtask>
+        <subtask id="T7.3">Create services/maintenance.service.ts: createRequest(data, files) with FormData</subtask>
+        <subtask id="T7.4">Implement getRequests(filters): list with pagination</subtask>
+        <subtask id="T7.5">Implement getRequestById(id): fetch details</subtask>
+        <subtask id="T7.6">Implement submitFeedback(id, feedback): POST rating and comment</subtask>
+        <subtask id="T7.7">Implement cancelRequest(id): DELETE endpoint</subtask>
+        <subtask id="T7.8">Add JSDoc comments following existing service pattern</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T8" title="Frontend: Create request submission form component">
+      <description>
+        Multi-field form with validation, file upload, and auto-suggestions
+      </description>
+      <subtasks>
+        <subtask id="T8.1">Create components/maintenance/RequestForm.tsx with React Hook Form + Zod validation</subtask>
+        <subtask id="T8.2">Add form fields: category (Select), priority (Select with auto-suggestion), title (Input), description (Textarea with rich text)</subtask>
+        <subtask id="T8.3">Add preferred access time (Select) and access date (DatePicker)</subtask>
+        <subtask id="T8.4">Implement priority auto-suggestion: category change triggers priority update</subtask>
+        <subtask id="T8.5">Add character counter for description (1000 max)</subtask>
+        <subtask id="T8.6">Create file upload component: drag-drop zone, preview thumbnails, remove option</subtask>
+        <subtask id="T8.7">Implement file validation: type (JPG/PNG), size (5MB), max 5 files</subtask>
+        <subtask id="T8.8">Implement image compression using browser-image-compression library</subtask>
+        <subtask id="T8.9">Add form submission: createRequest API call with FormData</subtask>
+        <subtask id="T8.10">Show success toast and redirect to request details on success</subtask>
+        <subtask id="T8.11">Show error messages for validation and API errors</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T9" title="Frontend: Create request list page">
+      <description>
+        Paginated list with filters and search
+      </description>
+      <subtasks>
+        <subtask id="T9.1">Create pages/tenant/requests/index.tsx: list view page</subtask>
+        <subtask id="T9.2">Implement filter panel: status dropdown, category multi-select</subtask>
+        <subtask id="T9.3">Add search input with debounced search (300ms delay)</subtask>
+        <subtask id="T9.4">Create request card component: show request number, title, category, status badge, submitted date, priority</subtask>
+        <subtask id="T9.5">Implement status badge with color coding (shadcn Badge)</subtask>
+        <subtask id="T9.6">Add pagination controls (shadcn Pagination)</subtask>
+        <subtask id="T9.7">Implement "New Request" button → opens RequestForm in modal or navigates to form page</subtask>
+        <subtask id="T9.8">Add empty state: "No requests yet. Submit your first maintenance request."</subtask>
+        <subtask id="T9.9">Add loading skeleton while fetching data</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T10" title="Frontend: Create request details page with timeline">
+      <description>
+        Full request details with status timeline and feedback form
+      </description>
+      <subtasks>
+        <subtask id="T10.1">Create pages/tenant/requests/[id].tsx: details page</subtask>
+        <subtask id="T10.2">Display all request information: title, description, category, priority, preferred access</subtask>
+        <subtask id="T10.3">Create photo gallery component with thumbnails and lightbox (shadcn Dialog)</subtask>
+        <subtask id="T10.4">Implement status timeline component: show completed steps with dates</subtask>
+        <subtask id="T10.5">Display vendor information if request is assigned</subtask>
+        <subtask id="T10.6">Show work notes and completion photos if request is completed</subtask>
+        <subtask id="T10.7">Create feedback form: star rating (1-5), comment textarea, submit button</subtask>
+        <subtask id="T10.8">Show feedback section only if status = COMPLETED and feedback not submitted</subtask>
+        <subtask id="T10.9">Implement cancel button with confirmation dialog (only if status = SUBMITTED)</subtask>
+        <subtask id="T10.10">Add polling (30 seconds) or WebSocket for real-time status updates</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T11" title="Frontend: Implement status badge component">
+      <description>
+        Reusable badge component with status-specific colors
+      </description>
+      <subtasks>
+        <subtask id="T11.1">Create components/maintenance/StatusBadge.tsx using shadcn Badge</subtask>
+        <subtask id="T11.2">Map status to color: SUBMITTED → yellow, ASSIGNED → blue, IN_PROGRESS → orange, COMPLETED → green, CLOSED → gray</subtask>
+        <subtask id="T11.3">Map status to text: "Waiting for assignment", "Assigned to {vendor}", etc.</subtask>
+        <subtask id="T11.4">Add icon for each status (optional)</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T12" title="Frontend: Responsive design and mobile optimization">
+      <description>
+        Ensure all components work on mobile devices
+      </description>
+      <subtasks>
+        <subtask id="T12.1">Test form on mobile viewport (375px): single column layout</subtask>
+        <subtask id="T12.2">Use bottom sheet (shadcn Sheet) for filters on mobile</subtask>
+        <subtask id="T12.3">Ensure touch targets are min 44x44px</subtask>
+        <subtask id="T12.4">Test photo gallery swipe on mobile</subtask>
+        <subtask id="T12.5">Disable drag-drop on mobile (use file picker only)</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T13" title="Frontend: Accessibility implementation">
+      <description>
+        Ensure WCAG 2.1 AA compliance
+      </description>
+      <subtasks>
+        <subtask id="T13.1">Add aria-labels to all form inputs</subtask>
+        <subtask id="T13.2">Associate error messages with inputs using aria-describedby</subtask>
+        <subtask id="T13.3">Ensure keyboard navigation works for all interactive elements</subtask>
+        <subtask id="T13.4">Test with screen reader (VoiceOver or NVDA)</subtask>
+        <subtask id="T13.5">Verify color contrast ratios using Lighthouse</subtask>
+        <subtask id="T13.6">Add focus indicators to all focusable elements</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T14" title="Integration testing: E2E tests with Playwright">
+      <description>
+        Comprehensive end-to-end tests for all user flows
+      </description>
+      <subtasks>
+        <subtask id="T14.1">Write test: Submit maintenance request with all fields and photos</subtask>
+        <subtask id="T14.2">Write test: Verify request appears in list with correct status badge</subtask>
+        <subtask id="T14.3">Write test: Filter requests by status and category</subtask>
+        <subtask id="T14.4">Write test: Search requests by title/description</subtask>
+        <subtask id="T14.5">Write test: View request details and photo gallery</subtask>
+        <subtask id="T14.6">Write test: Submit feedback after completion</subtask>
+        <subtask id="T14.7">Write test: Cancel request (only if SUBMITTED)</subtask>
+        <subtask id="T14.8">Write test: Validation errors (missing title, description &lt; 20 chars, file size &gt; 5MB, video upload)</subtask>
+        <subtask id="T14.9">Write test: Image compression and thumbnail generation</subtask>
+        <subtask id="T14.10">Write test: Email notifications sent (use email testing service)</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T15" title="Unit testing: Backend service and controller tests">
+      <description>
+        Unit tests for business logic and API endpoints
+      </description>
+      <subtasks>
+        <subtask id="T15.1">Test MaintenanceRequestService.createRequest: verify entity created, files saved, emails sent</subtask>
+        <subtask id="T15.2">Test priority auto-suggestion logic</subtask>
+        <subtask id="T15.3">Test authorization: tenant can only view own requests</subtask>
+        <subtask id="T15.4">Test submitFeedback: verify rating/comment saved, cannot submit twice</subtask>
+        <subtask id="T15.5">Test cancelRequest: verify only SUBMITTED requests can be cancelled</subtask>
+        <subtask id="T15.6">Test controller endpoints with MockMvc: verify request/response formats, error handling</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T16" title="Unit testing: Frontend component tests">
+      <description>
+        Jest/RTL tests for React components
+      </description>
+      <subtasks>
+        <subtask id="T16.1">Test RequestForm: validation, priority auto-suggestion, file upload</subtask>
+        <subtask id="T16.2">Test StatusBadge: correct colors for each status</subtask>
+        <subtask id="T16.3">Test request list: filtering, search, pagination</subtask>
+        <subtask id="T16.4">Test request details: timeline, feedback form, cancel button visibility</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T17" title="Documentation and code review">
+      <description>
+        Document API, update story status, code review
+      </description>
+      <subtasks>
+        <subtask id="T17.1">Update Swagger/OpenAPI documentation for all endpoints</subtask>
+        <subtask id="T17.2">Add JSDoc comments to all service functions</subtask>
+        <subtask id="T17.3">Update sprint-status.yaml: mark story as done</subtask>
+        <subtask id="T17.4">Create pull request and request code review</subtask>
+        <subtask id="T17.5">Address code review feedback</subtask>
+        <subtask id="T17.6">Merge to main branch after approval</subtask>
+      </subtasks>
+    </task>
+
+  </tasks>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- TECHNICAL CONTEXT FROM ARCHITECTURE -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <technical-context>
+
+    <tech-stack>
+      <backend>
+        <framework>Spring Boot 3.2.x</framework>
+        <language>Java 21</language>
+        <database>PostgreSQL 15</database>
+        <orm>Spring Data JPA with Hibernate</orm>
+        <security>Spring Security with JWT</security>
+        <validation>Jakarta Validation (Bean Validation 3.0)</validation>
+        <email>Spring Mail (JavaMailSender)</email>
+        <file-storage>Local file system (/uploads directory) - Future: AWS S3</file-storage>
+      </backend>
+
+      <frontend>
+        <framework>Next.js 14 (App Router)</framework>
+        <language>TypeScript 5.x</language>
+        <ui-library>shadcn/ui with Tailwind CSS</ui-library>
+        <forms>React Hook Form with Zod validation</forms>
+        <http-client>Axios with interceptors</http-client>
+        <state-management>React Context + Server Components</state-management>
+      </frontend>
+    </tech-stack>
+
+    <authentication>
+      <method>JWT with refresh tokens</method>
+      <access-token>Short-lived (15 minutes), stored in memory</access-token>
+      <refresh-token>Long-lived (7 days), stored in HttpOnly cookie</refresh-token>
+      <csrf>X-XSRF-TOKEN header for state-changing operations</csrf>
+      <authorization>Role-based access control (RBAC) with @PreAuthorize</authorization>
+      <tenant-role>ROLE_TENANT required for all endpoints</tenant-role>
+    </authentication>
+
+    <file-handling>
+      <upload-directory>/uploads/maintenance/{requestId}/</upload-directory>
+      <allowed-types>image/jpeg, image/png</allowed-types>
+      <max-file-size>5MB per file</max-file-size>
+      <max-files>5 photos per request</max-files>
+      <compression>Client-side compression to ~500KB using browser-image-compression</compression>
+      <thumbnails>Server-side thumbnail generation (200x200px) for list view</thumbnails>
+      <storage>Local file system initially, migrate to AWS S3 in Phase 2</storage>
+    </file-handling>
+
+    <email-configuration>
+      <smtp-host>smtp.gmail.com (or SendGrid/AWS SES)</smtp-host>
+      <smtp-port>587 (TLS)</smtp-port>
+      <from-email>noreply@ultrabms.com</from-email>
+      <templates>Thymeleaf templates in /templates/emails/</templates>
+      <async>@Async for non-blocking email sending</async>
+    </email-configuration>
+
+    <real-time-updates>
+      <polling>30-second interval on request details page</polling>
+      <websocket>Optional for Phase 2 (using Spring WebSocket + STOMP)</websocket>
+      <sse>Server-Sent Events as alternative to WebSocket</sse>
+    </real-time-updates>
+
+    <database-schema>
+      <table>maintenance_requests</table>
+      <columns>
+        id UUID PRIMARY KEY,
+        tenant_id UUID NOT NULL REFERENCES tenants(id),
+        unit_id UUID NOT NULL REFERENCES units(id),
+        property_id UUID NOT NULL REFERENCES properties(id),
+        request_number VARCHAR(20) UNIQUE NOT NULL,
+        category VARCHAR(20) NOT NULL,
+        priority VARCHAR(10) NOT NULL,
+        title VARCHAR(100) NOT NULL,
+        description TEXT NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'SUBMITTED',
+        preferred_access_time VARCHAR(20),
+        preferred_access_date DATE,
+        submitted_at TIMESTAMP NOT NULL,
+        assigned_to UUID REFERENCES vendors(id),
+        assigned_at TIMESTAMP,
+        started_at TIMESTAMP,
+        completed_at TIMESTAMP,
+        closed_at TIMESTAMP,
+        estimated_completion_date DATE,
+        attachments JSONB,
+        work_notes TEXT,
+        completion_photos JSONB,
+        rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+        feedback TEXT,
+        feedback_submitted_at TIMESTAMP,
+        created_at TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP NOT NULL,
+        created_by UUID
+      </columns>
+      <indexes>
+        INDEX idx_tenant_id ON maintenance_requests(tenant_id),
+        INDEX idx_status ON maintenance_requests(status),
+        INDEX idx_category ON maintenance_requests(category),
+        INDEX idx_submitted_at ON maintenance_requests(submitted_at DESC),
+        INDEX idx_request_number ON maintenance_requests(request_number)
+      </indexes>
+    </database-schema>
+
+  </technical-context>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- UX/UI DESIGN SPECIFICATIONS -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <ux-design>
+
+    <design-system>
+      <library>shadcn/ui (headless components built on Radix UI)</library>
+      <styling>Tailwind CSS utility-first framework</styling>
+      <accessibility>WCAG 2.1 Level AA compliance built-in</accessibility>
+    </design-system>
+
+    <color-palette>
+      <primary>#0A2342 (Deep Navy - primary buttons, navigation)</primary>
+      <secondary>#1152D4 (Professional Blue - interactive elements, links)</secondary>
+      <accent>#D4AF37 (Gold - highlights, premium features)</accent>
+      <success>#22C55E (Green - completed status, positive trends)</success>
+      <warning>#F59E0B (Amber - pending approvals, attention needed)</warning>
+      <error>#EF4444 (Red - errors, critical alerts, delete actions)</error>
+      <info>#3B82F6 (Blue - informational messages)</info>
+
+      <status-badges>
+        <submitted>bg-yellow-100 text-yellow-800 border-yellow-300</submitted>
+        <assigned>bg-blue-100 text-blue-800 border-blue-300</assigned>
+        <in-progress>bg-orange-100 text-orange-800 border-orange-300</in-progress>
+        <completed>bg-green-100 text-green-800 border-green-300</completed>
+        <closed>bg-gray-100 text-gray-800 border-gray-300</closed>
+      </status-badges>
+    </color-palette>
+
+    <typography>
+      <font-family>Inter (Google Fonts)</font-family>
+      <headings>
+        <h1>text-2xl font-bold (24px)</h1>
+        <h2>text-xl font-semibold (20px)</h2>
+        <h3>text-lg font-semibold (18px)</h3>
+        <h4>text-base font-semibold (16px)</h4>
+      </headings>
+      <body>
+        <large>text-base (16px)</large>
+        <default>text-sm (14px)</default>
+        <small>text-xs (12px)</small>
+      </body>
+    </typography>
+
+    <components-used>
+      <shadcn-components>
+        button (primary, secondary, destructive, ghost variants),
+        input (with error states),
+        textarea (for description field),
+        select (for category, priority, access time),
+        date-picker (for preferred access date),
+        badge (for status indicators),
+        card (for request cards in list view),
+        dialog (for lightbox photo gallery, confirmation modals),
+        sheet (for mobile filter panel),
+        toast (for success/error messages),
+        form (React Hook Form integration),
+        label (associated with form inputs),
+        skeleton (loading state),
+        pagination (for request list),
+        tabs (future: for request status tabs),
+        alert (for info/warning messages)
+      </shadcn-components>
+
+      <custom-components>
+        FileUploadZone (drag-drop with preview and remove),
+        PhotoGallery (thumbnails with lightbox),
+        StatusTimeline (visual timeline with completed/pending steps),
+        StarRating (1-5 stars for feedback),
+        CharacterCounter (for description field)
+      </custom-components>
+    </components-used>
+
+    <form-patterns>
+      <validation-timing>
+        <on-blur>Validate individual field when user leaves it</on-blur>
+        <on-submit>Final validation of entire form</on-submit>
+        <real-time>Character count, priority auto-suggestion</real-time>
+      </validation-timing>
+
+      <error-display>
+        <pattern>Inline error message below field + red border on input</pattern>
+        <format>Clear, actionable message (e.g., "Description must be at least 20 characters")</format>
+      </error-display>
+
+      <labels>
+        <position>Above input field (vertical stacking)</position>
+        <required>Red asterisk (*) next to label for required fields</required>
+      </labels>
+
+      <help-text>
+        <pattern>Small gray text below input for guidance</pattern>
+        <example>"Upload up to 5 photos (JPG/PNG, max 5MB each)"</example>
+      </help-text>
+    </form-patterns>
+
+    <responsive-breakpoints>
+      <mobile>max-width: 640px (single column, bottom sheet for filters)</mobile>
+      <tablet>641px - 1024px (2-column layout, collapsible sidebar)</tablet>
+      <desktop>min-width: 1025px (full layout, persistent sidebar)</desktop>
+    </responsive-breakpoints>
+
+    <accessibility-requirements>
+      <contrast>4.5:1 minimum for normal text, 3:1 for large text</contrast>
+      <keyboard-nav>All interactive elements accessible via Tab key</keyboard-nav>
+      <focus-indicators>2px solid ring in accent color, visible on all focusable elements</focus-indicators>
+      <screen-reader>ARIA labels for all form inputs, buttons, and dynamic content</screen-reader>
+      <touch-targets>Minimum 44x44 pixels for mobile</touch-targets>
+    </accessibility-requirements>
+
+  </ux-design>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- EXISTING CODE PATTERNS -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <code-patterns>
+
+    <backend-controller-pattern>
+      <example>
+        /**
+         * REST Controller for Maintenance Request management
+         */
+        @Tag(name = "Maintenance Requests", description = "Tenant maintenance request APIs")
+        @RestController
+        @RequestMapping("/api/v1/maintenance-requests")
+        @RequiredArgsConstructor
+        @SecurityRequirement(name = "Bearer Authentication")
+        public class MaintenanceRequestController {
+
+            private final MaintenanceRequestService maintenanceRequestService;
+
+            @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+            @Operation(summary = "Create a new maintenance request")
+            @PreAuthorize("hasRole('TENANT')")
+            public ResponseEntity&lt;ApiResponse&lt;MaintenanceRequestResponse&gt;&gt; createRequest(
+                    @Valid @RequestPart("request") CreateMaintenanceRequestDto request,
+                    @RequestPart(value = "files", required = false) List&lt;MultipartFile&gt; files,
+                    @AuthenticationPrincipal UserDetails userDetails
+            ) {
+                UUID tenantId = getUserId(userDetails);
+                MaintenanceRequestResponse response = maintenanceRequestService.createRequest(request, tenantId, files);
+                return ResponseEntity
+                        .status(HttpStatus.CREATED)
+                        .body(ApiResponse.success(response, "Request submitted successfully"));
+            }
+        }
+      </example>
+
+      <notes>
+        - Use @Tag for Swagger grouping
+        - Use @PreAuthorize for role-based authorization
+        - Wrap responses in ApiResponse&lt;T&gt;
+        - Extract user ID from UserDetails (JWT token)
+        - Use @Valid for DTO validation
+        - For file uploads: @RequestPart with MediaType.MULTIPART_FORM_DATA_VALUE
+      </notes>
+    </backend-controller-pattern>
+
+    <frontend-service-pattern>
+      <example>
+        /**
+         * Maintenance Request API Service
+         * All maintenance request-related API calls
+         */
+
+        import { apiClient } from '@/lib/api';
+        import type { MaintenanceRequest, CreateMaintenanceRequestDto, MaintenanceRequestResponse } from '@/types';
+
+        const MAINTENANCE_BASE_PATH = '/v1/maintenance-requests';
+
+        /**
+         * Create a new maintenance request with file uploads
+         *
+         * @param data - Request data (category, priority, title, description, etc.)
+         * @param files - Array of image files (max 5, JPG/PNG, max 5MB each)
+         *
+         * @returns Promise that resolves to the created MaintenanceRequestResponse
+         *
+         * @throws {ValidationException} When validation fails (400)
+         * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+         *
+         * @example
+         * ```typescript
+         * const request = await createMaintenanceRequest({
+         *   category: 'PLUMBING',
+         *   priority: 'HIGH',
+         *   title: 'Leaking kitchen faucet',
+         *   description: 'Water dripping from kitchen faucet...',
+         *   preferredAccessTime: 'MORNING',
+         *   preferredAccessDate: '2025-11-17'
+         * }, [imageFile1, imageFile2]);
+         * console.log(request.requestNumber); // MR-2025-0001
+         * ```
+         */
+        export async function createMaintenanceRequest(
+          data: CreateMaintenanceRequestDto,
+          files?: File[]
+        ): Promise&lt;MaintenanceRequestResponse&gt; {
+          const formData = new FormData();
+          formData.append('request', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+
+          if (files &amp;&amp; files.length > 0) {
+            files.forEach(file => formData.append('files', file));
+          }
+
+          const response = await apiClient.post&lt;{ data: MaintenanceRequestResponse }&gt;(
+            MAINTENANCE_BASE_PATH,
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            }
+          );
+          return response.data.data;
+        }
+      </example>
+
+      <notes>
+        - Use JSDoc comments with @param, @returns, @throws, @example
+        - Import types from @/types
+        - Import apiClient from @/lib/api
+        - For file uploads: use FormData, append JSON as Blob, append files individually
+        - Response wrapped in { data: T } - extract with response.data.data
+        - Set Content-Type: multipart/form-data for file uploads
+      </notes>
+    </frontend-service-pattern>
+
+    <react-hook-form-pattern>
+      <example>
+        import { useForm } from 'react-hook-form';
+        import { zodResolver } from '@hookform/resolvers/zod';
+        import { z } from 'zod';
+
+        const requestSchema = z.object({
+          category: z.enum(['PLUMBING', 'ELECTRICAL', 'HVAC', 'APPLIANCE', 'CARPENTRY', 'PEST_CONTROL', 'CLEANING', 'OTHER']),
+          priority: z.enum(['HIGH', 'MEDIUM', 'LOW']),
+          title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),
+          description: z.string().min(20, 'Description must be at least 20 characters').max(1000, 'Description must be less than 1000 characters'),
+          preferredAccessTime: z.enum(['IMMEDIATE', 'MORNING', 'AFTERNOON', 'EVENING', 'ANY_TIME']),
+          preferredAccessDate: z.date().min(new Date(), 'Date cannot be in the past'),
+        });
+
+        type RequestFormData = z.infer&lt;typeof requestSchema&gt;;
+
+        export function RequestForm() {
+          const form = useForm&lt;RequestFormData&gt;({
+            resolver: zodResolver(requestSchema),
+            defaultValues: {
+              priority: 'MEDIUM',
+              preferredAccessTime: 'ANY_TIME',
+            },
+          });
+
+          const onSubmit = async (data: RequestFormData) => {
+            try {
+              await createMaintenanceRequest(data, files);
+              toast.success('Request submitted successfully');
+              router.push('/tenant/requests');
+            } catch (error) {
+              toast.error('Failed to submit request');
+            }
+          };
+
+          return (
+            &lt;Form {...form}&gt;
+              &lt;form onSubmit={form.handleSubmit(onSubmit)}&gt;
+                &lt;FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    &lt;FormItem&gt;
+                      &lt;FormLabel&gt;Title &lt;span className="text-red-500"&gt;*&lt;/span&gt;&lt;/FormLabel&gt;
+                      &lt;FormControl&gt;
+                        &lt;Input {...field} placeholder="e.g., Leaking kitchen faucet" /&gt;
+                      &lt;/FormControl&gt;
+                      &lt;FormDescription&gt;Brief description of the issue&lt;/FormDescription&gt;
+                      &lt;FormMessage /&gt;
+                    &lt;/FormItem&gt;
+                  )}
+                /&gt;
+              &lt;/form&gt;
+            &lt;/Form&gt;
+          );
+        }
+      </example>
+
+      <notes>
+        - Use Zod for schema validation
+        - Use zodResolver to integrate with React Hook Form
+        - Define TypeScript type from Zod schema with z.infer
+        - Use shadcn Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage
+        - FormMessage automatically shows validation errors
+        - Red asterisk (*) for required fields
+      </notes>
+    </react-hook-form-pattern>
+
+  </code-patterns>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- PRD REQUIREMENTS -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <prd-requirements>
+
+    <functional-requirements>
+      <requirement id="FR1">
+        Tenants can submit maintenance requests through a self-service portal without needing to contact
+        property management directly. This reduces communication overhead and provides a clear audit trail.
+      </requirement>
+
+      <requirement id="FR2">
+        Maintenance requests must capture sufficient detail (category, priority, description, photos) to
+        enable property managers to assess urgency and assign appropriate vendors without additional
+        back-and-forth communication.
+      </requirement>
+
+      <requirement id="FR3">
+        Priority auto-suggestion based on category helps tenants correctly identify urgent issues
+        (e.g., no water, no electricity) and ensures high-priority requests are addressed promptly.
+      </requirement>
+
+      <requirement id="FR4">
+        Photo uploads (up to 5 images) provide visual evidence of the issue, reducing ambiguity and
+        enabling faster diagnosis and vendor assignment.
+      </requirement>
+
+      <requirement id="FR5">
+        Tenants can track request status through a transparent timeline showing submission, assignment,
+        work in progress, and completion dates. This reduces "status check" calls to property management.
+      </requirement>
+
+      <requirement id="FR6">
+        Email notifications at each status change (assigned, in progress, completed) keep tenants informed
+        without requiring them to check the portal constantly.
+      </requirement>
+
+      <requirement id="FR7">
+        Tenant feedback (star rating + comment) after request completion provides performance metrics for
+        vendors and helps property managers identify recurring issues or low-quality service.
+      </requirement>
+
+      <requirement id="FR8">
+        Tenants can cancel requests only in SUBMITTED status (before assignment) to prevent disruption
+        of scheduled work. Once assigned, cancellation requires property manager approval.
+      </requirement>
+
+      <requirement id="FR9">
+        Request analytics (category trends) help property managers identify systemic issues
+        (e.g., recurring plumbing problems in specific units) and plan preventive maintenance.
+      </requirement>
+
+      <requirement id="FR10">
+        Image compression (5MB → ~500KB) reduces storage costs and improves upload/download performance
+        on mobile devices with limited bandwidth.
+      </requirement>
+    </functional-requirements>
+
+    <non-functional-requirements>
+      <performance>
+        - Request submission should complete within 3 seconds (excluding file upload time)
+        - Request list page should load within 2 seconds
+        - Image compression should not block UI (use Web Workers if needed)
+        - Support up to 100 concurrent request submissions
+      </performance>
+
+      <security>
+        - Tenant can only submit requests for their assigned unit (verified server-side)
+        - Tenant can only view their own requests (tenant ID filter enforced in database query)
+        - File uploads validated for type and size (prevent malicious uploads)
+        - All API endpoints require JWT authentication with ROLE_TENANT
+        - CSRF protection enabled for all state-changing operations
+      </security>
+
+      <scalability>
+        - System should support 10,000+ maintenance requests per year
+        - Database indexes on tenant_id, status, category, submitted_at for fast queries
+        - Pagination prevents loading all requests at once
+        - Asynchronous email sending prevents API slowdown
+      </scalability>
+
+      <reliability>
+        - File upload failures should not prevent request submission (allow retry)
+        - Email notification failures should not block request creation (log errors, retry later)
+        - Database transactions ensure request creation is atomic (rollback on failure)
+      </reliability>
+
+      <usability>
+        - Form should be completable on mobile in under 2 minutes
+        - Validation errors should be clear and actionable
+        - Photo upload should support drag-and-drop on desktop
+        - Status timeline should be visually clear with completed/pending indicators
+      </usability>
+    </non-functional-requirements>
+
+  </prd-requirements>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- API CONTRACTS -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <api-contracts>
+
+    <endpoint method="POST" path="/api/v1/maintenance-requests">
+      <description>Create a new maintenance request with optional file attachments</description>
+      <auth>Required: Bearer token with ROLE_TENANT</auth>
+      <content-type>multipart/form-data</content-type>
+
+      <request>
+        <part name="request" type="application/json">
+          {
+            "category": "PLUMBING",
+            "priority": "HIGH",
+            "title": "Leaking kitchen faucet",
+            "description": "Water dripping from kitchen faucet handle. Started 2 days ago and getting worse.",
+            "preferredAccessTime": "MORNING",
+            "preferredAccessDate": "2025-11-17"
+          }
+        </part>
+        <part name="files" type="multipart" required="false">
+          [file1.jpg, file2.jpg, file3.png]
+        </part>
+      </request>
+
+      <response status="201">
+        {
+          "success": true,
+          "message": "Request submitted successfully",
+          "data": {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "requestNumber": "MR-2025-0001",
+            "tenantId": "tenant-uuid",
+            "unitId": "unit-uuid",
+            "propertyId": "property-uuid",
+            "category": "PLUMBING",
+            "priority": "HIGH",
+            "title": "Leaking kitchen faucet",
+            "description": "Water dripping from kitchen faucet handle...",
+            "status": "SUBMITTED",
+            "preferredAccessTime": "MORNING",
+            "preferredAccessDate": "2025-11-17",
+            "submittedAt": "2025-11-16T10:30:00Z",
+            "attachments": [
+              "/uploads/maintenance/550e8400-e29b-41d4-a716-446655440000/file1.jpg",
+              "/uploads/maintenance/550e8400-e29b-41d4-a716-446655440000/file2.jpg"
+            ],
+            "assignedTo": null,
+            "assignedAt": null
+          }
+        }
+      </response>
+
+      <errors>
+        <error status="400">Validation error: title/description required, description min 20 chars, invalid file type/size</error>
+        <error status="401">Unauthorized: JWT token missing or invalid</error>
+        <error status="413">Payload too large: file exceeds 5MB</error>
+      </errors>
+    </endpoint>
+
+    <endpoint method="GET" path="/api/v1/maintenance-requests">
+      <description>Get paginated list of tenant's maintenance requests with filters</description>
+      <auth>Required: Bearer token with ROLE_TENANT</auth>
+
+      <query-params>
+        <param name="page" type="integer" default="0">Page number (0-indexed)</param>
+        <param name="size" type="integer" default="10">Page size (max 100)</param>
+        <param name="status" type="string[]" required="false">Filter by status (comma-separated)</param>
+        <param name="category" type="string[]" required="false">Filter by category (comma-separated)</param>
+        <param name="search" type="string" required="false">Search in title and description</param>
+        <param name="sort" type="string" default="submittedAt">Sort field</param>
+        <param name="direction" type="string" default="DESC">Sort direction (ASC or DESC)</param>
+      </query-params>
+
+      <response status="200">
+        {
+          "success": true,
+          "data": {
+            "content": [
+              {
+                "id": "request-uuid",
+                "requestNumber": "MR-2025-0001",
+                "title": "Leaking kitchen faucet",
+                "category": "PLUMBING",
+                "priority": "HIGH",
+                "status": "SUBMITTED",
+                "submittedAt": "2025-11-16T10:30:00Z",
+                "updatedAt": "2025-11-16T10:30:00Z"
+              }
+            ],
+            "totalElements": 15,
+            "totalPages": 2,
+            "number": 0,
+            "size": 10
+          }
+        }
+      </response>
+
+      <errors>
+        <error status="401">Unauthorized: JWT token missing or invalid</error>
+      </errors>
+    </endpoint>
+
+    <endpoint method="GET" path="/api/v1/maintenance-requests/{id}">
+      <description>Get detailed maintenance request by ID</description>
+      <auth>Required: Bearer token with ROLE_TENANT (can only view own requests)</auth>
+
+      <response status="200">
+        {
+          "success": true,
+          "data": {
+            "id": "request-uuid",
+            "requestNumber": "MR-2025-0001",
+            "tenantId": "tenant-uuid",
+            "unitId": "unit-uuid",
+            "propertyId": "property-uuid",
+            "category": "PLUMBING",
+            "priority": "HIGH",
+            "title": "Leaking kitchen faucet",
+            "description": "Water dripping from kitchen faucet handle...",
+            "status": "ASSIGNED",
+            "preferredAccessTime": "MORNING",
+            "preferredAccessDate": "2025-11-17",
+            "submittedAt": "2025-11-16T10:30:00Z",
+            "assignedTo": "vendor-uuid",
+            "assignedVendorName": "ABC Plumbing",
+            "assignedVendorContact": "+971-50-123-4567",
+            "assignedAt": "2025-11-16T11:00:00Z",
+            "estimatedCompletionDate": "2025-11-17",
+            "attachments": [
+              "/uploads/maintenance/request-uuid/file1.jpg",
+              "/uploads/maintenance/request-uuid/file2.jpg"
+            ],
+            "workNotes": null,
+            "completionPhotos": [],
+            "rating": null,
+            "feedback": null
+          }
+        }
+      </response>
+
+      <errors>
+        <error status="401">Unauthorized: JWT token missing or invalid</error>
+        <error status="403">Forbidden: Cannot view other tenant's requests</error>
+        <error status="404">Not found: Request ID does not exist</error>
+      </errors>
+    </endpoint>
+
+    <endpoint method="POST" path="/api/v1/maintenance-requests/{id}/feedback">
+      <description>Submit tenant feedback (rating and comment) after request completion</description>
+      <auth>Required: Bearer token with ROLE_TENANT</auth>
+      <content-type>application/json</content-type>
+
+      <request>
+        {
+          "rating": 5,
+          "comment": "Quick response and excellent service. The technician was very professional."
+        }
+      </request>
+
+      <response status="200">
+        {
+          "success": true,
+          "message": "Feedback submitted successfully",
+          "data": {
+            "id": "request-uuid",
+            "rating": 5,
+            "feedback": "Quick response and excellent service...",
+            "feedbackSubmittedAt": "2025-11-18T14:30:00Z"
+          }
+        }
+      </response>
+
+      <errors>
+        <error status="400">Validation error: rating must be 1-5, comment max 500 chars</error>
+        <error status="401">Unauthorized: JWT token missing or invalid</error>
+        <error status="403">Forbidden: Cannot submit feedback for other tenant's requests</error>
+        <error status="404">Not found: Request ID does not exist</error>
+        <error status="409">Conflict: Request status is not COMPLETED or feedback already submitted</error>
+      </errors>
+    </endpoint>
+
+    <endpoint method="DELETE" path="/api/v1/maintenance-requests/{id}">
+      <description>Cancel maintenance request (only if status = SUBMITTED)</description>
+      <auth>Required: Bearer token with ROLE_TENANT</auth>
+
+      <response status="200">
+        {
+          "success": true,
+          "message": "Request cancelled successfully"
+        }
+      </response>
+
+      <errors>
+        <error status="401">Unauthorized: JWT token missing or invalid</error>
+        <error status="403">Forbidden: Cannot cancel other tenant's requests</error>
+        <error status="404">Not found: Request ID does not exist</error>
+        <error status="409">Conflict: Cannot cancel request with status other than SUBMITTED</error>
+      </errors>
+    </endpoint>
+
+  </api-contracts>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- TESTING STRATEGY -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <testing-strategy>
+
+    <unit-tests>
+      <backend>
+        <test>MaintenanceRequestService.createRequest: verify entity created with auto-generated requestNumber</test>
+        <test>MaintenanceRequestService.createRequest: verify tenantId, unitId, propertyId auto-filled from tenant</test>
+        <test>MaintenanceRequestService.createRequest: verify files saved to /uploads/maintenance/{requestId}/</test>
+        <test>MaintenanceRequestService.createRequest: verify thumbnail generation (200x200px)</test>
+        <test>MaintenanceRequestService.createRequest: verify email notification sent to tenant and property manager</test>
+        <test>MaintenanceRequestService.prioritySuggestion: verify HIGH for PLUMBING/ELECTRICAL critical issues</test>
+        <test>MaintenanceRequestService.getRequestsByTenant: verify only tenant's own requests returned</test>
+        <test>MaintenanceRequestService.submitFeedback: verify rating/comment saved, cannot submit twice</test>
+        <test>MaintenanceRequestService.cancelRequest: verify only SUBMITTED requests can be cancelled</test>
+        <test>MaintenanceRequestController: verify all endpoints return correct HTTP status codes</test>
+        <test>MaintenanceRequestController: verify validation errors return 400 with field-level errors</test>
+      </backend>
+
+      <frontend>
+        <test>RequestForm: verify priority auto-updates when category changes</test>
+        <test>RequestForm: verify validation errors shown for title/description</test>
+        <test>RequestForm: verify character counter for description</test>
+        <test>RequestForm: verify file upload validation (type, size, max 5 files)</test>
+        <test>FileUploadZone: verify drag-drop works, preview thumbnails shown, remove option works</test>
+        <test>StatusBadge: verify correct color for each status</test>
+        <test>RequestList: verify filtering by status and category</test>
+        <test>RequestList: verify search debounced (300ms)</test>
+        <test>RequestDetails: verify cancel button only shown if status = SUBMITTED</test>
+        <test>FeedbackForm: verify rating required, comment optional, submit disabled after submission</test>
+      </frontend>
+    </unit-tests>
+
+    <integration-tests>
+      <test>Submit request end-to-end: form submission → API call → database insert → email sent → redirect</test>
+      <test>File upload: compress image → upload → save to disk → thumbnail generation → URL returned</test>
+      <test>Authorization: tenant A cannot view tenant B's requests (403 Forbidden)</test>
+      <test>Email notifications: verify emails sent on request creation and status changes</test>
+      <test>Polling: verify request details page polls every 30 seconds for status updates</test>
+    </integration-tests>
+
+    <e2e-tests>
+      <test>Complete user flow: login as tenant → submit request with photos → verify in list → view details → submit feedback</test>
+      <test>Validation: submit form with missing fields → verify inline errors shown</test>
+      <test>Validation: upload file > 5MB → verify error message</test>
+      <test>Validation: upload video file → verify rejection with error message</test>
+      <test>Filter and search: apply status filter → verify filtered results</test>
+      <test>Cancel request: submit request → cancel from details page → verify removed from list</test>
+      <test>Photo gallery: click thumbnail → verify lightbox opens with full-size image</test>
+      <test>Responsive: test form on mobile viewport (375px) → verify single column layout, touch targets 44x44px</test>
+      <test>Accessibility: keyboard navigation → verify all interactive elements accessible via Tab</test>
+      <test>Accessibility: screen reader → verify form labels announced correctly</test>
+    </e2e-tests>
+
+    <performance-tests>
+      <test>Load test: 100 concurrent request submissions → verify response time &lt; 3 seconds</test>
+      <test>Image compression: 5MB image → verify compressed to ~500KB in &lt; 2 seconds</test>
+      <test>Request list: 1000 requests in database → verify list loads in &lt; 2 seconds (with pagination)</test>
+    </performance-tests>
+
+  </testing-strategy>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- DEFINITION OF DONE -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <definition-of-done>
+    <criteria>
+      <item>All 20 acceptance criteria implemented and verified</item>
+      <item>Backend: MaintenanceRequest entity, repository, service, controller created and tested</item>
+      <item>Backend: All 5 API endpoints implemented with Swagger documentation</item>
+      <item>Backend: Email notification service implemented (confirmation, status updates)</item>
+      <item>Backend: File upload and thumbnail generation working</item>
+      <item>Backend: Unit tests written for service and controller (80%+ coverage)</item>
+      <item>Frontend: Request submission form with validation, file upload, priority auto-suggestion</item>
+      <item>Frontend: Request list page with filters, search, pagination</item>
+      <item>Frontend: Request details page with timeline, photo gallery, feedback form</item>
+      <item>Frontend: Status badge component with correct colors</item>
+      <item>Frontend: Responsive design tested on mobile (375px), tablet (768px), desktop (1920px)</item>
+      <item>Frontend: Accessibility compliance verified with Lighthouse (score 90+)</item>
+      <item>Frontend: Component tests written (Jest/RTL)</item>
+      <item>E2E tests: All critical user flows tested with Playwright</item>
+      <item>Code review: Pull request approved by senior developer</item>
+      <item>Security: Authorization verified (tenant can only view own requests)</item>
+      <item>Performance: Request submission completes in &lt; 3 seconds</item>
+      <item>Documentation: API endpoints documented in Swagger, JSDoc comments added to services</item>
+      <item>Sprint status: Story marked as "done" in sprint-status.yaml</item>
+      <item>No critical or high-severity bugs reported in QA testing</item>
+    </criteria>
+  </definition-of-done>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- DEPENDENCIES AND BLOCKERS -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <dependencies>
+    <dependency type="prerequisite">
+      <story>3.4 - Tenant Portal Dashboard</story>
+      <reason>Tenant authentication and navigation required</reason>
+      <status>Must be completed before starting this story</status>
+    </dependency>
+
+    <dependency type="prerequisite">
+      <story>1.4 - Core Domain Models</story>
+      <reason>Unit entity must exist to link maintenance requests to units</reason>
+      <status>Must be completed before starting this story</status>
+    </dependency>
+
+    <dependency type="external">
+      <service>Email Service (SMTP)</service>
+      <reason>Required for sending notifications to tenants and property managers</reason>
+      <impact>If not available, email notifications will fail (non-blocking, can log errors and retry)</impact>
+    </dependency>
+
+    <dependency type="library">
+      <library>browser-image-compression (npm)</library>
+      <reason>Client-side image compression before upload</reason>
+      <install>npm install browser-image-compression</install>
+    </dependency>
+
+    <dependency type="library">
+      <library>Thumbnailator (Java) or java.awt</library>
+      <reason>Server-side thumbnail generation (200x200px)</reason>
+      <install>Already available in Java, no additional dependency needed</install>
+    </dependency>
+  </dependencies>
+
+  <blockers>
+    <blocker>
+      <issue>If Story 3.4 (Tenant Dashboard) is not completed, tenant authentication will not work</issue>
+      <mitigation>Wait for Story 3.4 to be completed before starting backend work. Frontend components can be developed in parallel using mock data.</mitigation>
+    </blocker>
+
+    <blocker>
+      <issue>If file storage directory /uploads/maintenance/ does not have write permissions, file uploads will fail</issue>
+      <mitigation>Create directory with appropriate permissions during deployment setup. Add to deployment checklist.</mitigation>
+    </blocker>
+
+    <blocker>
+      <issue>If email service is not configured, notifications will fail</issue>
+      <mitigation>Use @Async for email sending to prevent blocking. Log errors and implement retry mechanism. Add fallback to in-app notifications.</mitigation>
+    </blocker>
+  </blockers>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- RISK ASSESSMENT -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <risks>
+    <risk level="MEDIUM">
+      <description>Large image uploads (5MB) may timeout on slow internet connections</description>
+      <impact>Tenant frustration, incomplete request submissions</impact>
+      <mitigation>Implement client-side compression to reduce upload size to ~500KB. Add retry mechanism for failed uploads. Show upload progress bar.</mitigation>
+    </risk>
+
+    <risk level="LOW">
+      <description>Email notifications may be marked as spam</description>
+      <impact>Tenants miss important status updates</impact>
+      <mitigation>Use proper SPF/DKIM/DMARC configuration. Use professional email service (SendGrid/AWS SES). Include unsubscribe link for non-critical emails.</mitigation>
+    </risk>
+
+    <risk level="MEDIUM">
+      <description>Polling every 30 seconds for status updates may cause high server load with many concurrent users</description>
+      <impact>Performance degradation, increased server costs</impact>
+      <mitigation>Implement WebSocket (or Server-Sent Events) in Phase 2 for real-time updates. Use caching for frequently accessed requests. Add rate limiting for polling endpoints.</mitigation>
+    </risk>
+
+    <risk level="LOW">
+      <description>File storage on local disk may run out of space</description>
+      <impact>New file uploads fail, disrupting request submissions</impact>
+      <mitigation>Monitor disk usage. Implement file cleanup for cancelled requests. Plan migration to AWS S3 in Phase 2 for scalable storage.</mitigation>
+    </risk>
+
+    <risk level="HIGH">
+      <description>Accessibility compliance may be overlooked, resulting in WCAG violations</description>
+      <impact>Potential legal issues, poor user experience for users with disabilities</impact>
+      <mitigation>Run Lighthouse accessibility audit after each component. Include accessibility checklist in Definition of Done. Test with screen reader and keyboard-only navigation.</mitigation>
+    </risk>
+  </risks>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- IMPLEMENTATION NOTES -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <implementation-notes>
+
+    <note category="BACKEND">
+      Request number generation: Use format MR-{YEAR}-{SEQUENCE} where SEQUENCE is auto-incremented.
+      Example implementation:
+      ```java
+      private String generateRequestNumber() {
+          int year = LocalDate.now().getYear();
+          MaintenanceRequest lastRequest = repository.findTopByOrderByRequestNumberDesc();
+          int sequence = 1;
+          if (lastRequest != null) {
+              String lastNumber = lastRequest.getRequestNumber();
+              sequence = Integer.parseInt(lastNumber.split("-")[2]) + 1;
+          }
+          return String.format("MR-%d-%04d", year, sequence);
+      }
+      ```
+    </note>
+
+    <note category="BACKEND">
+      Priority auto-suggestion logic:
+      - PLUMBING + keywords (no water, leak, flood) → HIGH
+      - ELECTRICAL + keywords (no power, sparking, fire) → HIGH
+      - HVAC + (summer months OR temperature > 35°C) → HIGH
+      - PEST_CONTROL → MEDIUM
+      - CLEANING, OTHER → LOW
+      - Default fallback → MEDIUM
+    </note>
+
+    <note category="BACKEND">
+      File upload security:
+      - Validate MIME type (not just extension)
+      - Sanitize filenames (remove special characters, spaces)
+      - Generate UUID-based filenames to prevent collisions
+      - Store files outside web root to prevent direct access
+      - Use Content-Disposition: attachment for downloads
+    </note>
+
+    <note category="BACKEND">
+      Thumbnail generation:
+      ```java
+      BufferedImage original = ImageIO.read(uploadedFile.getInputStream());
+      BufferedImage thumbnail = Scalr.resize(original, 200, 200);
+      File thumbnailFile = new File(uploadDir, "thumb_" + filename);
+      ImageIO.write(thumbnail, "jpg", thumbnailFile);
+      ```
+    </note>
+
+    <note category="FRONTEND">
+      Image compression using browser-image-compression:
+      ```typescript
+      import imageCompression from 'browser-image-compression';
+
+      const options = {
+        maxSizeMB: 0.5, // 500KB
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+
+      const compressedFile = await imageCompression(file, options);
+      ```
+    </note>
+
+    <note category="FRONTEND">
+      Polling implementation for status updates:
+      ```typescript
+      useEffect(() => {
+        const interval = setInterval(() => {
+          if (document.visibilityState === 'visible') {
+            refetch(); // React Query refetch
+          }
+        }, 30000); // 30 seconds
+
+        return () => clearInterval(interval);
+      }, [refetch]);
+      ```
+    </note>
+
+    <note category="FRONTEND">
+      Photo gallery lightbox using shadcn Dialog:
+      ```tsx
+      &lt;Dialog&gt;
+        &lt;DialogTrigger&gt;
+          &lt;img src={thumbnail} alt="Request photo" className="cursor-pointer" /&gt;
+        &lt;/DialogTrigger&gt;
+        &lt;DialogContent className="max-w-4xl"&gt;
+          &lt;img src={fullSizeImage} alt="Request photo" className="w-full" /&gt;
+        &lt;/DialogContent&gt;
+      &lt;/Dialog&gt;
+      ```
+    </note>
+
+    <note category="UX">
+      Character counter for description field:
+      ```tsx
+      &lt;div className="text-sm text-muted-foreground mt-1"&gt;
+        {description.length} / 1000 characters
+      &lt;/div&gt;
+      ```
+    </note>
+
+    <note category="TESTING">
+      E2E test data setup:
+      - Create test tenant with assigned unit
+      - Create test property manager
+      - Mock email service in test environment
+      - Use test file uploads (sample images in /tests/fixtures/)
+      - Clean up uploaded files after each test
+    </note>
+
+  </implementation-notes>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- FUTURE ENHANCEMENTS -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <future-enhancements>
+    <enhancement priority="MEDIUM">
+      <title>WebSocket for real-time status updates</title>
+      <description>Replace polling with WebSocket (or Server-Sent Events) for instant status updates without page refresh</description>
+      <benefit>Reduced server load, better user experience</benefit>
+      <effort>2-3 days</effort>
+    </enhancement>
+
+    <enhancement priority="HIGH">
+      <title>AWS S3 integration for file storage</title>
+      <description>Migrate from local file system to AWS S3 for scalable, reliable file storage</description>
+      <benefit>Unlimited storage, better reliability, CDN integration</benefit>
+      <effort>3-4 days</effort>
+    </enhancement>
+
+    <enhancement priority="LOW">
+      <title>Voice input for description field</title>
+      <description>Add voice-to-text option for description field (useful for mobile users)</description>
+      <benefit>Improved mobile UX, accessibility for users with typing difficulties</benefit>
+      <effort>1-2 days</effort>
+    </enhancement>
+
+    <enhancement priority="MEDIUM">
+      <title>Offline request drafts (PWA)</title>
+      <description>Save request drafts to IndexedDB for offline creation, submit when online</description>
+      <benefit>Support for on-site maintenance supervisors without internet</benefit>
+      <effort>2-3 days</effort>
+    </enhancement>
+
+    <enhancement priority="LOW">
+      <title>Video upload support</title>
+      <description>Allow tenants to upload short videos (max 30 seconds, 50MB) to demonstrate issues</description>
+      <benefit>Better issue documentation, faster diagnosis</benefit>
+      <effort>3-4 days (video compression, streaming)</effort>
+    </enhancement>
+
+    <enhancement priority="HIGH">
+      <title>Predictive maintenance suggestions</title>
+      <description>Analyze request history and suggest preventive maintenance (e.g., recurring AC issues in summer)</description>
+      <benefit>Proactive maintenance, reduced emergency requests</benefit>
+      <effort>1-2 weeks (requires analytics engine)</effort>
+    </enhancement>
+  </future-enhancements>
+
+</story-context>

@@ -29,3 +29,6 @@ export interface PaginatedResponse<T> {
 export * from './auth';
 export * from './leads';
 export * from './quotations';
+export * from './properties';
+export * from './units';
+export * from './tenant';

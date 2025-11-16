@@ -1,0 +1,462 @@
+/**
+ * Tenant Onboarding Validation Schemas
+ * Zod schemas for 7-step tenant onboarding wizard with comprehensive validation rules
+ */
+
+import { z } from 'zod';
+import { differenceInYears } from 'date-fns';
+import { LeaseType, PaymentFrequency, PaymentMethod } from '@/types/tenant';
+
+// ===========================
+// Common Validation Rules
+// ===========================
+
+/**
+ * E.164 phone number format
+ * Must start with + followed by country code and number
+ * Example: +971501234567
+ */
+const e164PhoneRegex = /^\+?[1-9]\d{1,14}$/;
+
+/**
+ * Email validation (RFC 5322 compliant via Zod)
+ */
+const emailSchema = z
+  .string()
+  .min(1, 'Email is required')
+  .email('Please enter a valid email address')
+  .toLowerCase();
+
+/**
+ * Phone number validation (E.164 format)
+ */
+const phoneSchema = z
+  .string()
+  .min(1, 'Phone number is required')
+  .regex(e164PhoneRegex, 'Please enter a valid phone number (e.g., +971501234567)');
+
+/**
+ * Name validation
+ */
+const nameSchema = z
+  .string()
+  .min(1, 'Name is required')
+  .max(100, 'Name must be less than 100 characters')
+  .regex(/^[a-zA-Z\s'-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes');
+
+/**
+ * National ID validation
+ */
+const nationalIdSchema = z
+  .string()
+  .min(1, 'National ID / Passport number is required')
+  .max(50, 'National ID must be less than 50 characters');
+
+/**
+ * Date of birth validation (must be 18+ years)
+ */
+const dateOfBirthSchema = z
+  .date({
+    required_error: 'Date of birth is required',
+    invalid_type_error: 'Please enter a valid date',
+  })
+  .refine(
+    (date) => {
+      const age = differenceInYears(new Date(), date);
+      return age >= 18;
+    },
+    {
+      message: 'Tenant must be at least 18 years old',
+    }
+  );
+
+/**
+ * File validation (PDF/JPG/PNG, max 5MB)
+ */
+const fileSchema5MB = z
+  .instanceof(File, { message: 'Please select a file' })
+  .refine(
+    (file) => file.size <= 5 * 1024 * 1024,
+    {
+      message: 'File size must be less than 5MB',
+    }
+  )
+  .refine(
+    (file) => ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'].includes(file.type),
+    {
+      message: 'File must be PDF, JPG, or PNG',
+    }
+  );
+
+/**
+ * File validation (PDF only, max 10MB for lease agreement)
+ */
+const fileSchema10MB = z
+  .instanceof(File, { message: 'Please select a file' })
+  .refine(
+    (file) => file.size <= 10 * 1024 * 1024,
+    {
+      message: 'File size must be less than 10MB',
+    }
+  )
+  .refine(
+    (file) => ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'].includes(file.type),
+    {
+      message: 'File must be PDF, JPG, or PNG',
+    }
+  );
+
+// ===========================
+// Step 1: Personal Information Schema
+// ===========================
+
+export const personalInfoSchema = z.object({
+  firstName: nameSchema,
+  lastName: nameSchema,
+  email: emailSchema,
+  phone: phoneSchema,
+  dateOfBirth: dateOfBirthSchema,
+  nationalId: nationalIdSchema,
+  nationality: z
+    .string()
+    .min(1, 'Nationality is required')
+    .max(100, 'Nationality must be less than 100 characters'),
+  emergencyContactName: z
+    .string()
+    .min(1, 'Emergency contact name is required')
+    .max(100, 'Emergency contact name must be less than 100 characters'),
+  emergencyContactPhone: phoneSchema,
+});
+
+export type PersonalInfoFormData = z.infer<typeof personalInfoSchema>;
+
+// ===========================
+// Step 2: Lease Information Schema
+// ===========================
+
+export const leaseInfoSchema = z.object({
+  propertyId: z
+    .string()
+    .min(1, 'Property selection is required'),
+  unitId: z
+    .string()
+    .min(1, 'Unit selection is required'),
+  leaseStartDate: z
+    .date({
+      required_error: 'Lease start date is required',
+      invalid_type_error: 'Please enter a valid date',
+    })
+    .refine(
+      (date) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to start of day
+        return date >= today;
+      },
+      {
+        message: 'Lease start date must be today or in the future',
+      }
+    ),
+  leaseEndDate: z
+    .date({
+      required_error: 'Lease end date is required',
+      invalid_type_error: 'Please enter a valid date',
+    }),
+  leaseType: z.nativeEnum(LeaseType, {
+    errorMap: () => ({ message: 'Please select a lease type' }),
+  }),
+  renewalOption: z.boolean().default(false),
+}).refine(
+  (data) => data.leaseEndDate > data.leaseStartDate,
+  {
+    message: 'Lease end date must be after start date',
+    path: ['leaseEndDate'],
+  }
+);
+
+export type LeaseInfoFormData = z.infer<typeof leaseInfoSchema>;
+
+// ===========================
+// Step 3: Rent Breakdown Schema
+// ===========================
+
+export const rentBreakdownSchema = z.object({
+  baseRent: z
+    .number({
+      required_error: 'Base rent is required',
+      invalid_type_error: 'Base rent must be a number',
+    })
+    .min(0, 'Base rent must be 0 or greater')
+    .max(999999.99, 'Base rent must be less than 1,000,000'),
+  adminFee: z
+    .number({
+      invalid_type_error: 'Admin fee must be a number',
+    })
+    .min(0, 'Admin fee must be 0 or greater')
+    .max(999999.99, 'Admin fee must be less than 1,000,000')
+    .default(0),
+  serviceCharge: z
+    .number({
+      invalid_type_error: 'Service charge must be a number',
+    })
+    .min(0, 'Service charge must be 0 or greater')
+    .max(999999.99, 'Service charge must be less than 1,000,000')
+    .default(0),
+  securityDeposit: z
+    .number({
+      required_error: 'Security deposit is required',
+      invalid_type_error: 'Security deposit must be a number',
+    })
+    .min(0.01, 'Security deposit must be greater than 0')
+    .max(999999.99, 'Security deposit must be less than 1,000,000'),
+});
+
+export type RentBreakdownFormData = z.infer<typeof rentBreakdownSchema>;
+
+// ===========================
+// Step 4: Parking Allocation Schema (Optional)
+// ===========================
+
+export const parkingAllocationSchema = z.object({
+  parkingSpots: z
+    .number({
+      invalid_type_error: 'Parking spots must be a number',
+    })
+    .min(0, 'Parking spots must be 0 or greater')
+    .max(10, 'Maximum 10 parking spots allowed')
+    .default(0),
+  parkingFeePerSpot: z
+    .number({
+      invalid_type_error: 'Parking fee must be a number',
+    })
+    .min(0, 'Parking fee must be 0 or greater')
+    .max(999999.99, 'Parking fee must be less than 1,000,000')
+    .default(0),
+  spotNumbers: z
+    .string()
+    .max(200, 'Spot numbers must be less than 200 characters')
+    .optional(),
+  mulkiyaFile: z
+    .instanceof(File)
+    .refine(
+      (file) => !file || file.size <= 5 * 1024 * 1024,
+      {
+        message: 'File size must be less than 5MB',
+      }
+    )
+    .refine(
+      (file) => !file || ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'].includes(file.type),
+      {
+        message: 'File must be PDF, JPG, or PNG',
+      }
+    )
+    .nullable()
+    .optional(),
+}).refine(
+  (data) => {
+    // If parking spots > 0, parkingFeePerSpot and spotNumbers should be provided
+    if (data.parkingSpots > 0) {
+      return data.parkingFeePerSpot !== undefined && data.spotNumbers !== undefined && data.spotNumbers.length > 0;
+    }
+    return true;
+  },
+  {
+    message: 'Please provide parking fee and spot numbers when allocating parking',
+    path: ['spotNumbers'],
+  }
+);
+
+export type ParkingAllocationFormData = z.infer<typeof parkingAllocationSchema>;
+
+// ===========================
+// Step 5: Payment Schedule Schema
+// ===========================
+
+export const paymentScheduleSchema = z.object({
+  paymentFrequency: z.nativeEnum(PaymentFrequency, {
+    errorMap: () => ({ message: 'Please select a payment frequency' }),
+  }),
+  paymentDueDate: z
+    .number({
+      required_error: 'Payment due date is required',
+      invalid_type_error: 'Payment due date must be a number',
+    })
+    .min(1, 'Due date must be between 1 and 31')
+    .max(31, 'Due date must be between 1 and 31'),
+  paymentMethod: z.nativeEnum(PaymentMethod, {
+    errorMap: () => ({ message: 'Please select a payment method' }),
+  }),
+  pdcChequeCount: z
+    .number({
+      invalid_type_error: 'PDC cheque count must be a number',
+    })
+    .min(1, 'At least 1 PDC cheque is required')
+    .max(12, 'Maximum 12 PDC cheques allowed')
+    .optional(),
+}).refine(
+  (data) => {
+    // If payment method is PDC, pdcChequeCount is required
+    if (data.paymentMethod === PaymentMethod.PDC) {
+      return data.pdcChequeCount !== undefined && data.pdcChequeCount > 0;
+    }
+    return true;
+  },
+  {
+    message: 'PDC cheque count is required when payment method is PDC',
+    path: ['pdcChequeCount'],
+  }
+);
+
+export type PaymentScheduleFormData = z.infer<typeof paymentScheduleSchema>;
+
+// ===========================
+// Step 6: Document Upload Schema
+// ===========================
+
+export const documentUploadSchema = z.object({
+  emiratesIdFile: fileSchema5MB,
+  passportFile: fileSchema5MB,
+  visaFile: fileSchema5MB.nullable().optional(),
+  signedLeaseFile: fileSchema10MB,
+  additionalFiles: z
+    .array(fileSchema5MB)
+    .max(5, 'Maximum 5 additional files allowed')
+    .optional()
+    .default([]),
+});
+
+export type DocumentUploadFormData = z.infer<typeof documentUploadSchema>;
+
+// ===========================
+// Step 7: Review Schema (Combines all schemas)
+// ===========================
+
+export const createTenantSchema = z.object({
+  // Step 1: Personal Information
+  firstName: personalInfoSchema.shape.firstName,
+  lastName: personalInfoSchema.shape.lastName,
+  email: personalInfoSchema.shape.email,
+  phone: personalInfoSchema.shape.phone,
+  dateOfBirth: personalInfoSchema.shape.dateOfBirth,
+  nationalId: personalInfoSchema.shape.nationalId,
+  nationality: personalInfoSchema.shape.nationality,
+  emergencyContactName: personalInfoSchema.shape.emergencyContactName,
+  emergencyContactPhone: personalInfoSchema.shape.emergencyContactPhone,
+
+  // Step 2: Lease Information
+  propertyId: leaseInfoSchema.shape.propertyId,
+  unitId: leaseInfoSchema.shape.unitId,
+  leaseStartDate: leaseInfoSchema.shape.leaseStartDate,
+  leaseEndDate: leaseInfoSchema.shape.leaseEndDate,
+  leaseType: leaseInfoSchema.shape.leaseType,
+  renewalOption: leaseInfoSchema.shape.renewalOption,
+
+  // Step 3: Rent Breakdown
+  baseRent: rentBreakdownSchema.shape.baseRent,
+  adminFee: rentBreakdownSchema.shape.adminFee,
+  serviceCharge: rentBreakdownSchema.shape.serviceCharge,
+  securityDeposit: rentBreakdownSchema.shape.securityDeposit,
+
+  // Step 4: Parking Allocation
+  parkingSpots: parkingAllocationSchema.shape.parkingSpots,
+  parkingFeePerSpot: parkingAllocationSchema.shape.parkingFeePerSpot,
+  spotNumbers: parkingAllocationSchema.shape.spotNumbers,
+
+  // Step 5: Payment Schedule
+  paymentFrequency: paymentScheduleSchema.shape.paymentFrequency,
+  paymentDueDate: paymentScheduleSchema.shape.paymentDueDate,
+  paymentMethod: paymentScheduleSchema.shape.paymentMethod,
+  pdcChequeCount: paymentScheduleSchema.shape.pdcChequeCount,
+
+  // Lead conversion (optional)
+  leadId: z.string().optional(),
+  quotationId: z.string().optional(),
+}).refine(
+  (data) => data.leaseEndDate > data.leaseStartDate,
+  {
+    message: 'Lease end date must be after start date',
+    path: ['leaseEndDate'],
+  }
+);
+
+export type CreateTenantFormData = z.infer<typeof createTenantSchema>;
+
+// ===========================
+// Validation Helpers
+// ===========================
+
+/**
+ * Calculate age from date of birth
+ */
+export function calculateAge(dateOfBirth: Date | string): number {
+  const dob = typeof dateOfBirth === 'string' ? new Date(dateOfBirth) : dateOfBirth;
+  return differenceInYears(new Date(), dob);
+}
+
+/**
+ * Validate if age is 18 or older
+ */
+export function isAgeValid(dateOfBirth: Date | string): boolean {
+  return calculateAge(dateOfBirth) >= 18;
+}
+
+/**
+ * Calculate lease duration in months
+ */
+export function calculateLeaseDuration(startDate: Date | string, endDate: Date | string): number {
+  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+  const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
+
+  const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  return months;
+}
+
+/**
+ * Calculate total monthly rent (including parking)
+ */
+export function calculateTotalMonthlyRent(
+  baseRent: number,
+  serviceCharge: number,
+  parkingSpots: number,
+  parkingFeePerSpot: number
+): number {
+  return baseRent + serviceCharge + (parkingSpots * parkingFeePerSpot);
+}
+
+/**
+ * Format currency (AED)
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-AE', {
+    style: 'currency',
+    currency: 'AED',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+/**
+ * Validate file size
+ */
+export function isFileSizeValid(file: File, maxSizeMB: number): boolean {
+  return file.size <= maxSizeMB * 1024 * 1024;
+}
+
+/**
+ * Validate file type
+ */
+export function isFileTypeValid(file: File, allowedTypes: string[]): boolean {
+  return allowedTypes.includes(file.type);
+}
+
+/**
+ * Get file size in human-readable format
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+}

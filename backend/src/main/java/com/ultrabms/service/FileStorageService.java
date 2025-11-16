@@ -3,35 +3,45 @@ package com.ultrabms.service;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * Service interface for file storage operations
+ * File Storage Service Interface
+ * Defines file operations for property images and other uploads
+ * AC: #2 - File upload with validation
  */
 public interface FileStorageService {
 
     /**
-     * Store a file in the specified directory
-     * @param file The file to store
-     * @param directory The directory path relative to upload root
-     * @return The stored file path
+     * Store uploaded file in the filesystem
+     *
+     * @param file The multipart file to store
+     * @param directory The target directory (e.g., "properties/{propertyId}/images")
+     * @return The relative file path where the file was stored
+     * @throws IllegalArgumentException if file type or size is invalid
+     * @throws RuntimeException if storage operation fails
      */
     String storeFile(MultipartFile file, String directory);
 
     /**
-     * Load a file as byte array
-     * @param filePath The file path
-     * @return File content as byte array
-     */
-    byte[] loadFile(String filePath);
-
-    /**
-     * Delete a file
-     * @param filePath The file path
+     * Delete a file from the filesystem
+     *
+     * @param filePath The relative file path to delete
+     * @throws RuntimeException if file not found or deletion fails
      */
     void deleteFile(String filePath);
 
     /**
-     * Check if file exists
-     * @param filePath The file path
-     * @return true if file exists
+     * Get the absolute path for a relative file path
+     *
+     * @param filePath The relative file path
+     * @return The absolute path in the filesystem
      */
-    boolean fileExists(String filePath);
+    String getAbsolutePath(String filePath);
+
+    /**
+     * Load a file as byte array
+     *
+     * @param filePath The relative file path to load
+     * @return byte array of the file content
+     * @throws RuntimeException if file not found or read fails
+     */
+    byte[] loadFile(String filePath);
 }
