@@ -121,7 +121,7 @@ describe('Lead Service', () => {
       mockedApiClient.get.mockResolvedValueOnce({ data: mockResponse });
 
       const result = await getLeads({
-        status: LeadStatus.NEW,
+        status: [LeadStatus.NEW],
         page: 0,
         size: 20,
       });
@@ -133,7 +133,7 @@ describe('Lead Service', () => {
           size: 20,
         }),
       });
-      expect(result).toEqual(mockResponse.data);
+      expect(result).toEqual(mockResponse);
     });
 
     it('should fetch leads with search query', async () => {
@@ -150,11 +150,11 @@ describe('Lead Service', () => {
 
       mockedApiClient.get.mockResolvedValueOnce({ data: mockResponse });
 
-      await getLeads({ search: 'Ahmed' });
+      await getLeads({ searchTerm: 'Ahmed' });
 
       expect(mockedApiClient.get).toHaveBeenCalledWith('/v1/leads', {
         params: expect.objectContaining({
-          search: 'Ahmed',
+          searchTerm: 'Ahmed',
         }),
       });
     });
@@ -232,7 +232,7 @@ describe('Lead Service', () => {
         '/v1/leads/lead-123/documents/doc-123/download',
         { responseType: 'blob' }
       );
-      expect(result).toEqual(mockBlob);
+      expect(result).toBe(mockBlob);
     });
   });
 
@@ -248,14 +248,12 @@ describe('Lead Service', () => {
       ];
 
       mockedApiClient.get.mockResolvedValueOnce({
-        data: { success: true, data: mockHistory },
+        data: { success: true, data: { history: mockHistory } },
       });
 
       const result = await getLeadHistory('lead-123');
 
-      expect(mockedApiClient.get).toHaveBeenCalledWith('/v1/leads/lead-123/history', {
-        params: { page: 0, size: 100 },
-      });
+      expect(mockedApiClient.get).toHaveBeenCalledWith('/v1/leads/lead-123/history');
       expect(result).toEqual(mockHistory);
     });
   });

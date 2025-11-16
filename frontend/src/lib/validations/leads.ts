@@ -18,24 +18,25 @@ const emiratesIdRegex = /^\d{3}-\d{4}-\d{7}-\d{1}$/;
 
 /**
  * E.164 phone number format
- * Must start with + followed by country code and number
+ * Must start with + followed by country code and number (minimum 8 digits total)
  * Example: +971501234567
  */
-const e164PhoneRegex = /^\+?[1-9]\d{1,14}$/;
+const e164PhoneRegex = /^\+[1-9]\d{7,14}$/;
 
 /**
  * Email validation (RFC 5322 compliant via Zod)
  */
-const emailSchema = z
+export const emailSchema = z
   .string()
   .min(1, 'Email is required')
+  .max(255, 'Email must be less than 255 characters')
   .email('Please enter a valid email address')
   .toLowerCase();
 
 /**
  * Emirates ID validation
  */
-const emiratesIdSchema = z
+export const emiratesIdSchema = z
   .string()
   .min(1, 'Emirates ID is required')
   .max(50, 'Emirates ID must be less than 50 characters')
@@ -44,7 +45,7 @@ const emiratesIdSchema = z
 /**
  * Phone number validation (E.164 format)
  */
-const phoneSchema = z
+export const phoneSchema = z
   .string()
   .min(1, 'Contact number is required')
   .regex(e164PhoneRegex, 'Please enter a valid phone number (e.g., +971501234567)');
@@ -52,9 +53,9 @@ const phoneSchema = z
 /**
  * Passport number validation
  */
-const passportNumberSchema = z
+export const passportNumberSchema = z
   .string()
-  .min(1, 'Passport number is required')
+  .min(6, 'Passport number must be at least 6 characters')
   .max(50, 'Passport number must be less than 50 characters')
   .regex(/^[A-Z0-9]+$/, 'Passport number must contain only uppercase letters and numbers');
 
@@ -76,9 +77,9 @@ const passportExpirySchema = z
 /**
  * Full name validation
  */
-const fullNameSchema = z
+export const fullNameSchema = z
   .string()
-  .min(1, 'Full name is required')
+  .min(2, 'Full name must be at least 2 characters')
   .max(200, 'Full name must be less than 200 characters')
   .regex(/^[a-zA-Z\s'-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes');
 

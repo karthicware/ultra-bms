@@ -218,11 +218,11 @@ describe('Quotation Service', () => {
     });
 
     it('should throw error when conversion fails', async () => {
-      mockedApiClient.post.mockRejectedValueOnce({
-        response: {
-          data: { message: 'Only ACCEPTED quotations can be converted' },
-        },
-      });
+      const error = new Error('Only ACCEPTED quotations can be converted');
+      (error as any).response = {
+        data: { message: 'Only ACCEPTED quotations can be converted' },
+      };
+      mockedApiClient.post.mockRejectedValueOnce(error);
 
       await expect(convertToTenant('quot-123')).rejects.toThrow();
     });
@@ -259,7 +259,7 @@ describe('Quotation Service', () => {
           size: 20,
         }),
       });
-      expect(result).toEqual(mockResponse.data);
+      expect(result).toEqual(mockResponse);
     });
 
     it('should fetch quotations for specific lead', async () => {

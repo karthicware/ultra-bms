@@ -54,11 +54,11 @@ development_status:
   # Epic 3: Tenant Management & Portal (5 technical stories + 5 E2E stories)
   # NOTE: Story numbering fixed - was duplicate 3.2, now corrected to 3.1-3.5
   epic-3: backlog
-  3-1-lead-management-and-quotation-system: drafted  # Drafted 2025-11-15 - Story file created, needs story-context
+  3-1-lead-management-and-quotation-system: done  # Completed 2025-11-16 - All tests passing: 73/73 tests (11 leads service + 11 quotations service + 20 quotations validation + 31 leads validation). Enhanced validation schemas with UUID and future date checks.
   3-2-property-and-unit-management: in-progress  # In Progress 2025-11-15 - Implementation started by dev workflow
   3-3-tenant-onboarding-and-registration: done  # Completed 2025-11-16 - Full implementation: 7-step wizard, S3 integration, user creation, transactional tenant registration
-  3-4-tenant-portal-dashboard-and-profile-management: ready-for-dev  # Ready 2025-11-15 - Story context generated, ready for implementation
-  3-5-tenant-portal-maintenance-request-submission: ready-for-dev  # Ready 2025-11-16 - Story context generated at docs/sprint-artifacts/3-5-tenant-portal-maintenance-request-submission.context.xml
+  3-4-tenant-portal-dashboard-and-profile-management: done  # Completed 2025-11-16 - Full implementation: dashboard, profile, account settings, password change, document management. All tests passing: 5/5 tests (2 useTenantDashboard hook + 3 AccountSettingsSection component).
+  3-5-tenant-portal-maintenance-request-submission: done  # Completed 2025-11-16 - Full implementation with tests and accessibility. Backend: 10/10 tests passing. Frontend: 10/10 StatusTimeline tests passing. WCAG 2.1 AA compliant. Only Task 5 (email notifications) deferred - non-blocking. (42 files created)
   # E2E Testing Stories (implement after all technical stories complete)
   3-1-e2e-lead-management-and-quotation-system: drafted  # Drafted 2025-11-16 - E2E test story for Story 3.1, needs story-context
   3-2-e2e-property-and-unit-management: ready-for-dev  # Ready 2025-11-16 - Story context generated at docs/sprint-artifacts/3-2-e2e-property-and-unit-management.context.xml

@@ -32,3 +32,5 @@ export * from './quotations';
 export * from './properties';
 export * from './units';
 export * from './tenant';
+export * from './tenant-portal';
+export * from './maintenance';

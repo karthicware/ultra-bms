@@ -21,8 +21,8 @@ describe('Quotation Validation Schemas', () => {
         securityDeposit: 5000,
         adminFee: 1000,
       });
-      // 5000 + 500 + (2 * 200) + 5000 + 1000 = 12,100
-      expect(total).toBe(12100);
+      // 5000 + 500 + (2 * 200) + 5000 + 1000 = 11,900
+      expect(total).toBe(11900);
     });
 
     it('should calculate total correctly with zero parking', () => {
@@ -66,10 +66,10 @@ describe('Quotation Validation Schemas', () => {
       parkingFee: 200,
       securityDeposit: 5000,
       adminFee: 1000,
-      documentRequirements: 'Emirates ID, Passport, Salary Certificate',
-      paymentTerms: 'Payment due on 1st of each month',
-      moveinProcedures: 'Complete inspection checklist',
-      cancellationPolicy: '30 days notice required',
+      documentRequirements: ['Emirates ID', 'Passport', 'Salary Certificate'],
+      paymentTerms: 'Payment due on 1st of each month by bank transfer',
+      moveinProcedures: 'Complete inspection checklist before moving in',
+      cancellationPolicy: '30 days written notice required for cancellation',
       specialTerms: 'Pet-friendly unit',
     };
 

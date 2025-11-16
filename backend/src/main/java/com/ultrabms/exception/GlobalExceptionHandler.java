@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
  *   <li>{@link ValidationException} → 400 Bad Request</li>
  *   <li>{@link MethodArgumentNotValidException} → 400 Bad Request (with field errors)</li>
  *   <li>{@link ConstraintViolationException} → 400 Bad Request</li>
+ *   <li>{@link UnauthorizedException} → 403 Forbidden</li>
  *   <li>{@link AccessDeniedException} → 403 Forbidden</li>
  *   <li>{@link AuthenticationException} → 401 Unauthorized</li>
  *   <li>{@link Exception} → 500 Internal Server Error</li>
@@ -214,6 +215,37 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse);
+    }
+
+    /**
+     * Handles UnauthorizedException (403 Forbidden).
+     *
+     * <p>This exception is thrown when a user attempts to access a resource
+     * they don't have permission to access (e.g., tenant accessing another tenant's data).</p>
+     *
+     * @param ex the exception
+     * @param request the HTTP request
+     * @return 403 response with error details
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(
+            UnauthorizedException ex,
+            HttpServletRequest request) {
+
+        String requestId = generateRequestId();
+        log.warn("Unauthorized access attempt [requestId={}]: {}", requestId, ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+                HttpStatus.FORBIDDEN.value(),
+                HttpStatus.FORBIDDEN.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI(),
+                requestId
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
                 .body(errorResponse);
     }
 

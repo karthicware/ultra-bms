@@ -54,15 +54,12 @@ const futureDateSchema = (fieldName: string) =>
 
 export const createQuotationSchema = z
   .object({
-    leadId: z.string().min(1, 'Please select a lead'),
+    leadId: z.string().uuid('Please provide a valid lead ID'),
     issueDate: z.date({
       required_error: 'Issue date is required',
       invalid_type_error: 'Please enter a valid date',
     }),
-    validityDate: z.date({
-      required_error: 'Validity date is required',
-      invalid_type_error: 'Please enter a valid date',
-    }),
+    validityDate: futureDateSchema('Validity date'),
     propertyId: z.string().min(1, 'Please select a property'),
     unitId: z.string().min(1, 'Please select a unit'),
     stayType: z.nativeEnum(StayType, {
