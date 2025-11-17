@@ -107,7 +107,16 @@ export async function refreshAccessToken(): Promise<RefreshTokenResponse> {
     throw new Error('Token refresh failed');
   }
 
-  return response.json();
+  // Backend returns TokenResponse directly { accessToken: string }
+  // Wrap it in the expected RefreshTokenResponse format
+  const tokenData = await response.json();
+  return {
+    success: true,
+    data: {
+      accessToken: tokenData.accessToken,
+    },
+    timestamp: new Date().toISOString(),
+  };
 }
 
 /**

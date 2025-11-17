@@ -28,19 +28,32 @@ export function ProtectedRoute({
   requireAllPermissions = false,
   fallbackUrl = '/403',
 }: ProtectedRouteProps) {
+  console.log('[PROTECTED ROUTE] Component rendering...');
   const router = useRouter();
   const { isAuthenticated, isLoading, user } = useAuth();
   const { hasRole, hasAnyRole, hasPermission, hasAnyPermission, hasAllPermissions } =
     usePermission();
 
-  useEffect(() => {
-    // Wait for auth to load
-    if (isLoading) return;
+  console.log('[PROTECTED ROUTE] Initial render state:', { isAuthenticated, isLoading, user: user?.email });
 
-    // Redirect to login if not authenticated
-    if (!isAuthenticated) {
+  useEffect(() => {
+    console.log('[PROTECTED ROUTE] Auth state:', { isAuthenticated, isLoading, user: user?.email });
+
+    // CRITICAL: Always wait for loading to complete before making any decisions
+    if (isLoading) {
+      console.log('[PROTECTED ROUTE] Still loading, waiting...');
+      return;
+    }
+
+    // Only redirect if we're sure the user is not authenticated AND loading is complete
+    if (!isAuthenticated && !isLoading) {
+      console.log('[PROTECTED ROUTE] Not authenticated after loading complete, redirecting to login');
       router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
       return;
+    }
+
+    if (isAuthenticated) {
+      console.log('[PROTECTED ROUTE] Authenticated, rendering children');
     }
 
     // Check role requirements

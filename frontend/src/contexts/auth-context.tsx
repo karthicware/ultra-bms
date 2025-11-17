@@ -36,23 +36,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Try to restore session on mount
   useEffect(() => {
+    console.log('[AUTH CONTEXT] Starting session restoration...');
     const restoreSession = async () => {
       try {
+        console.log('[AUTH CONTEXT] Calling refreshAccessToken...');
         // Try to refresh token to restore session
         const response = await authApi.refreshAccessToken();
+        console.log('[AUTH CONTEXT] Refresh response:', { success: response.success, hasToken: !!response.data?.accessToken });
         if (response.success && response.data.accessToken) {
           const token = response.data.accessToken;
-          setAccessToken(token);
 
           // Extract user information from JWT token
           const userData = getUserFromToken(token);
+          console.log('[AUTH CONTEXT] User data extracted:', { email: userData?.email, role: userData?.role });
+
           if (userData) {
+            // CRITICAL: Set both token and user in a single batched update to avoid race conditions
+            // Only set isLoading to false AFTER both states are set
+            setAccessToken(token);
             setUser(userData);
+            // Wait for next tick to ensure states are updated
+            setTimeout(() => {
+              console.log('[AUTH CONTEXT] Session restoration complete, setting isLoading = false');
+              setIsLoading(false);
+            }, 0);
+          } else {
+            console.log('[AUTH CONTEXT] No user data found, setting isLoading = false');
+            setIsLoading(false);
           }
+        } else {
+          console.log('[AUTH CONTEXT] No valid token, setting isLoading = false');
+          setIsLoading(false);
         }
       } catch (error) {
-        console.log('No existing session found');
-      } finally {
+        console.log('[AUTH CONTEXT] Session restoration failed:', error);
         setIsLoading(false);
       }
     };

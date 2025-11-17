@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 
 import { useAuth } from '@/contexts/auth-context';
@@ -27,7 +26,6 @@ import { Input } from '@/components/ui/input';
 import { AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
   const [error, setError] = useState<string>('');
@@ -50,13 +48,9 @@ export default function LoginPage() {
 
     try {
       await login(data.email, data.password, data.rememberMe);
-
-      toast.success('Login successful', {
-        description: 'Welcome back!',
-      });
-
-      // Redirect to intended page or dashboard
-      router.push(redirectTo);
+      // Redirect immediately with full page reload to restore session via refresh token
+      console.log('[LOGIN PAGE] Login successful, redirecting to:', redirectTo);
+      window.location.href = redirectTo;
     } catch (err) {
       console.error('Login failed:', err);
 
