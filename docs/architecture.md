@@ -99,8 +99,8 @@ npx shadcn@latest init
 | Frontend Framework | Next.js | 15.5 | All | SSR, API routes, Turbopack, production-ready | ✓ create-next-app |
 | Language (Frontend) | TypeScript | 5.8 | All Frontend | Type safety, better IDE support, fewer runtime errors | ✓ create-next-app |
 | React Version | React | 19.2.0 | All Frontend | Latest stable with improved hooks and type inference | ✓ create-next-app |
-| UI Components | shadcn/ui | Latest | All Frontend | Accessible, customizable, Radix UI primitives | ✓ Manual setup |
-| Styling | Tailwind CSS | 4.0 | All Frontend | Utility-first, mobile-first, dark mode support | ✓ create-next-app |
+| UI Components | shadcn/ui | Latest | All Frontend | Accessible, customizable, Radix UI primitives, Airbnb theme | ✓ Manual setup |
+| Styling | Tailwind CSS | 4.0 | All Frontend | Utility-first, mobile-first, Airbnb coral theme with OKLCH | ✓ create-next-app |
 | Database | PostgreSQL | 17.6 | All | ACID compliance, JSON support, proven at scale | ✓ Spring Initializr |
 | Database Migration | Flyway | Latest | All | Version-controlled schema changes | Manual |
 | ORM | Spring Data JPA | 3.4.x | All | Type-safe queries, repository pattern | ✓ Spring Initializr |
@@ -683,7 +683,10 @@ format(date, 'hh:mm a')     // "10:30 AM"
 - Mobile-first responsive design
 - Consistent spacing: `gap-4`, `space-y-4`, `px-4`, `py-2`
 - Dark theme support via CSS variables
-- Color palette: Blue/teal accents on dark background
+- Color palette: Airbnb-inspired warm coral/salmon (OKLCH color space)
+- Shadow system: 7 levels from 2xs to 2xl (see UX Design Specification Section 3.3)
+- Border radius: 0.75rem base radius
+- Reference: UX Design Specification v2.0 Section 3 (Visual Foundation)
 
 #### Form Validation Messages
 ```typescript

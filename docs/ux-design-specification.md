@@ -106,29 +106,31 @@ While Ultra BMS leverages established enterprise patterns (dashboards, CRUD oper
 
 ### 3.1 Color System
 
-**Brand Identity:** Professional, trustworthy, and modern
+**Brand Identity Update (November 17, 2025):**
+Transitioning from corporate navy/blue to **Airbnb-inspired warm and approachable** design system. This shift reflects a more consumer-friendly, welcoming brand personality while maintaining professionalism.
 
-#### Primary Palette
+**Design Philosophy:** Warm, friendly, and approachable - inspired by Airbnb's human-centered design language. The coral/salmon primary color creates a welcoming, energetic feel while remaining professional for property management contexts.
+
+#### Primary Palette (Airbnb-Inspired Theme)
 
 ```css
-/* Primary - Deep Navy (Trust, Stability) */
---primary: #0A2342
---primary-hover: #081B34
---primary-light: #1A3A5C
---primary-foreground: #FFFFFF
+/* Primary - Warm Coral/Salmon (Welcoming, Energetic, Friendly) */
+--primary: oklch(0.6579 0.2309 17.0745)  /* Airbnb-inspired coral */
+--primary-hover: oklch(0.6079 0.2309 17.0745)  /* Slightly darker */
+--primary-light: oklch(0.7079 0.2309 17.0745)  /* Lighter variant */
+--primary-foreground: oklch(1.0000 0 0)  /* Pure white */
 
-/* Secondary - Professional Blue (Action, Clarity) */
---secondary: #1152D4
---secondary-hover: #0D42B0
---secondary-light: #3474F4
---secondary-foreground: #FFFFFF
+/* Secondary - Supporting Coral Tones */
+--secondary: oklch(0.6922 0.1996 16.6660)  /* Lighter coral */
+--secondary-hover: oklch(0.6422 0.1996 16.6660)
+--secondary-light: oklch(0.7422 0.1996 16.6660)
+--secondary-foreground: oklch(1.0000 0 0)
 
-/* Accent - Gold (Premium, Value) */
---accent: #D4AF37
---accent-hover: #C09F2F
---accent-light: #E5C965
---accent-foreground: #0A2342
-```
+/* Accent - Warm Peach (Subtle Emphasis) */
+--accent: oklch(0.7551 0.1517 9.1596)  /* Warm peach */
+--accent-hover: oklch(0.7051 0.1517 9.1596)
+--accent-light: oklch(0.8051 0.1517 9.1596)
+--accent-foreground: oklch(0.2520 0 0)
 
 #### Semantic Colors
 
@@ -150,64 +152,100 @@ While Ultra BMS leverages established enterprise patterns (dashboards, CRUD oper
 --info-foreground: #FFFFFF
 ```
 
-#### Neutral/Grayscale
+#### Neutral/Grayscale (Airbnb Theme)
 
 ```css
 /* Light Mode Backgrounds */
---background: #FFFFFF
---background-secondary: #F6F6F8
---background-tertiary: #F5F6F8
+--background: oklch(1.0000 0 0)  /* Pure white */
+--card: oklch(1.0000 0 0)  /* Card background */
+--popover: oklch(1.0000 0 0)  /* Popover background */
+--secondary-bg: oklch(0.9761 0 0)  /* Very light gray */
+--muted: oklch(0.9761 0 0)  /* Muted background */
+--input: oklch(0.9761 0 0)  /* Input field background */
 
 /* Light Mode Foreground/Text */
---foreground: #333333
---foreground-muted: #6B7280
---foreground-subtle: #9CA3AF
+--foreground: oklch(0.2520 0 0)  /* Almost black text */
+--card-foreground: oklch(0.2520 0 0)
+--popover-foreground: oklch(0.2520 0 0)
+--muted-foreground: oklch(0.5486 0 0)  /* Muted text */
 
 /* Light Mode Borders */
---border: #CED4DA
---border-subtle: #E5E7EB
---border-strong: #9CA3AF
+--border: oklch(0.9401 0 0)  /* Light gray border */
+--input-border: oklch(0.9401 0 0)
+
+/* Sidebar (Light Mode) */
+--sidebar: oklch(1.0000 0 0)  /* White sidebar */
+--sidebar-foreground: oklch(0.2520 0 0)
+--sidebar-accent: oklch(0.9761 0 0)
+--sidebar-accent-foreground: oklch(0.2520 0 0)
+--sidebar-border: oklch(0.9401 0 0)
 
 /* Dark Mode Backgrounds */
---dark-background: #0B0F19
---dark-background-secondary: #111827
---dark-background-tertiary: #1F2937
---dark-sidebar: #0F1419
+--dark-background: oklch(0.2393 0 0)  /* Dark canvas */
+--dark-card: oklch(0.2931 0 0)  /* Slightly lighter cards */
+--dark-popover: oklch(0.2931 0 0)
+--dark-secondary: oklch(0.3485 0 0)  /* Secondary background */
+--dark-muted: oklch(0.3485 0 0)
+--dark-input: oklch(0.3485 0 0)
 
 /* Dark Mode Foreground/Text */
---dark-foreground: #F9FAFB
---dark-foreground-muted: #9CA3AF
---dark-foreground-subtle: #6B7280
+--dark-foreground: oklch(1.0000 0 0)  /* White text */
+--dark-card-foreground: oklch(1.0000 0 0)
+--dark-popover-foreground: oklch(1.0000 0 0)
+--dark-muted-foreground: oklch(0.7380 0 0)  /* Muted text */
 
 /* Dark Mode Borders */
---dark-border: #374151
---dark-border-subtle: #1F2937
---dark-border-strong: #4B5563
+--dark-border: oklch(0.4276 0 0)  /* Medium gray border */
+--dark-input-border: oklch(0.3485 0 0)
+
+/* Sidebar (Dark Mode) */
+--dark-sidebar: oklch(0.2393 0 0)
+--dark-sidebar-foreground: oklch(1.0000 0 0)
+--dark-sidebar-accent: oklch(0.3485 0 0)
+--dark-sidebar-accent-foreground: oklch(1.0000 0 0)
+--dark-sidebar-border: oklch(0.4276 0 0)
 ```
 
-#### Color Usage Guidelines
+#### Chart Colors (Airbnb Theme)
+
+```css
+--chart-1: oklch(0.6579 0.2309 17.0745)  /* Primary coral */
+--chart-2: oklch(0.6922 0.1996 16.6660)  /* Secondary coral */
+--chart-3: oklch(0.7551 0.1517 9.1596)   /* Warm peach */
+--chart-4: oklch(0.8314 0.0983 5.0477)   /* Light peach */
+--chart-5: oklch(0.9154 0.0460 2.8728)   /* Very light peach */
+```
+
+#### Color Usage Guidelines (Airbnb Theme)
 
 **Light Mode:**
-- **Primary (#0A2342):** Main navigation, primary CTAs, header elements
-- **Secondary (#1152D4):** Interactive elements, links, active states
-- **Accent (#D4AF37):** Highlights, premium features, financial metrics
+- **Primary (Coral):** Main navigation, primary CTAs, header elements, key actions
+- **Secondary (Light Coral):** Interactive elements, links, active states
+- **Accent (Warm Peach):** Highlights, premium features, financial metrics, subtle emphasis
 - **Success (#22C55E):** Completed jobs, paid invoices, positive trends
 - **Warning (#F59E0B):** Pending approvals, upcoming deadlines, requires attention
 - **Destructive (#EF4444):** Overdue items, critical alerts, delete actions
-- **Background (#FFFFFF):** Main content areas, cards, modals
-- **Foreground (#333333):** Primary text, headings
+- **Background (White):** Main content areas, cards, modals
+- **Foreground (Near Black):** Primary text, headings
+- **Muted:** Secondary text, descriptions, supporting content
 
 **Dark Mode:**
-- **Primary (#1A3A5C):** Lightened navy for better dark mode contrast
-- **Secondary (#3474F4):** Brighter blue for visibility on dark backgrounds
-- **Accent (#E5C965):** Lightened gold for contrast on dark surfaces
+- **Primary (Coral):** Same warmth maintained in dark mode
+- **Secondary (Light Coral):** Adjusted for dark background visibility
+- **Accent (Warm Peach):** Maintains warmth on dark surfaces
 - **Success (#22C55E):** Same (already high contrast)
 - **Warning (#F59E0B):** Same (already high contrast)
 - **Destructive (#EF4444):** Same (already high contrast)
-- **Background (#0B0F19):** Dark canvas, main app background
-- **Background Secondary (#111827):** Cards, elevated surfaces
-- **Foreground (#F9FAFB):** Primary text color
-- **Foreground Muted (#9CA3AF):** Secondary text, descriptions
+- **Background (Dark Gray):** Dark canvas, main app background
+- **Card Background:** Slightly lighter than main background for elevation
+- **Foreground (White):** Primary text color
+- **Muted Foreground:** Secondary text, descriptions
+
+**Airbnb Theme Personality:**
+- **Warm & Approachable:** Coral replaces corporate blue for friendlier feel
+- **Human-Centered:** Colors evoke comfort and trust rather than corporate authority
+- **Energetic:** Warm tones create a more dynamic, less formal atmosphere
+- **Modern:** OKLCH color space ensures consistent perceptual brightness
 
 #### Dark Mode Strategy
 
@@ -231,11 +269,40 @@ While Ultra BMS leverages established enterprise patterns (dashboards, CRUD oper
 - Ensure images/logos have dark mode variants if needed
 - Test transitions between modes (smooth, no flash)
 
-### 3.2 Typography
+### 3.2 Typography (Airbnb Theme)
 
-**Font Family:** Inter (Google Fonts)
+**Font Family:** 'Airbnb Cereal App', sans-serif (Primary) | Georgia, serif (Secondary) | 'Fira Code', monospace (Code)
 
-**Rationale:** Inter is designed for UI legibility at small sizes, excellent readability, wide language support, and professional appearance suitable for enterprise applications.
+**Rationale:** Airbnb Cereal App is Airbnb's custom typeface, designed for warmth and approachability while maintaining excellent legibility. It creates a friendly, human-centered feel that aligns with the new design direction. Georgia provides elegant serif contrast for special emphasis, and Fira Code ensures readable code snippets.
+
+**Font Loading:**
+```css
+@font-face {
+  font-family: 'Airbnb Cereal App';
+  src: local('Airbnb Cereal App'), url('/fonts/AirbnbCereal-Book.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Airbnb Cereal App';
+  src: local('Airbnb Cereal App Medium'), url('/fonts/AirbnbCereal-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Airbnb Cereal App';
+  src: local('Airbnb Cereal App Bold'), url('/fonts/AirbnbCereal-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+```
+
+**Note:** If Airbnb Cereal App fonts are not available, the system will fall back to standard sans-serif fonts. Consider using @next/font or similar for optimal loading.
 
 #### Type Scale
 
@@ -268,14 +335,14 @@ While Ultra BMS leverages established enterprise patterns (dashboards, CRUD oper
 - **700 (Bold):** Page titles, primary headings
 - **800 (Extrabold):** Dashboard metrics, hero numbers
 
-### 3.3 Spacing & Layout
+### 3.3 Spacing, Layout & Shadows (Airbnb Theme)
 
-**Base Unit:** 4px (0.25rem)
+**Base Unit:** 4px (0.25rem / 0.25rem spacing)
 
 **Spacing Scale:**
 ```css
 --spacing-0: 0px
---spacing-1: 4px    (0.25rem)
+--spacing-1: 4px    (0.25rem)  /* Base spacing unit */
 --spacing-2: 8px    (0.5rem)
 --spacing-3: 12px   (0.75rem)
 --spacing-4: 16px   (1rem)
@@ -287,6 +354,77 @@ While Ultra BMS leverages established enterprise patterns (dashboards, CRUD oper
 --spacing-16: 64px  (4rem)
 --spacing-20: 80px  (5rem)
 --spacing-24: 96px  (6rem)
+```
+
+**Border Radius System (Airbnb Theme):**
+```css
+--radius: 0.75rem  /* 12px - Base radius, warm and friendly */
+--radius-sm: calc(var(--radius) - 4px)  /* 8px - Small elements */
+--radius-md: calc(var(--radius) - 2px)  /* 10px - Medium elements */
+--radius-lg: var(--radius)  /* 12px - Large elements */
+--radius-xl: calc(var(--radius) + 4px)  /* 16px - Extra large */
+```
+
+**Shadow System (Airbnb Theme):**
+The Airbnb theme includes a comprehensive shadow system for depth and elevation:
+
+```css
+/* Shadow Configuration Variables */
+--shadow-x: 0
+--shadow-y: 0.125rem  /* 2px - Consistent vertical offset */
+--shadow-blur: 0.5rem  /* 8px - Soft, friendly blur */
+--shadow-spread: 0
+--shadow-opacity: 0.1  /* Light mode default */
+--shadow-color: #000000
+
+/* Light Mode Shadows */
+--shadow-2xs: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.05)
+--shadow-xs: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.05)
+--shadow-sm: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10)
+--shadow: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10)
+--shadow-md: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10)
+--shadow-lg: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10)
+--shadow-xl: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10)
+--shadow-2xl: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.25)
+
+/* Dark Mode Shadows (Higher opacity for visibility on dark backgrounds) */
+.dark {
+  --shadow-opacity: 0.3  /* Increased for dark mode */
+  --shadow-2xs: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.15)
+  --shadow-xs: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.15)
+  --shadow-sm: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.30), 0 1px 2px -1px hsl(0 0% 0% / 0.30)
+  --shadow: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.30), 0 1px 2px -1px hsl(0 0% 0% / 0.30)
+  --shadow-md: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.30), 0 2px 4px -1px hsl(0 0% 0% / 0.30)
+  --shadow-lg: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.30), 0 4px 6px -1px hsl(0 0% 0% / 0.30)
+  --shadow-xl: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.30), 0 8px 10px -1px hsl(0 0% 0% / 0.30)
+  --shadow-2xl: 0 0.125rem 0.5rem 0 hsl(0 0% 0% / 0.75)
+}
+```
+
+**Shadow Usage Guidelines:**
+- **shadow-2xs/xs:** Subtle elevation for hover states, input fields
+- **shadow-sm:** Default cards, buttons, small elevated surfaces
+- **shadow (default):** Standard cards, dropdown menus
+- **shadow-md:** Prominent cards, active/focused elements
+- **shadow-lg:** Modals, popovers, important floating elements
+- **shadow-xl:** Major overlays, full-screen modals
+- **shadow-2xl:** Maximum elevation for critical overlays
+
+**Letter Spacing (Tracking):**
+```css
+--tracking-normal: 0  /* Default - no additional tracking */
+--tracking-tighter: calc(var(--tracking-normal) - 0.05em)
+--tracking-tight: calc(var(--tracking-normal) - 0.025em)
+--tracking-wide: calc(var(--tracking-normal) + 0.025em)
+--tracking-wider: calc(var(--tracking-normal) + 0.05em)
+--tracking-widest: calc(var(--tracking-normal) + 0.1em)
+```
+
+**Body Default:**
+```css
+body {
+  letter-spacing: var(--tracking-normal);
+}
 ```
 
 **Layout Grid:**
@@ -1429,7 +1567,320 @@ npm run lighthouse # or use Chrome DevTools
 
 ---
 
-## 10. Next Steps & Deliverables
+## 10. Airbnb Theme Migration Guide
+
+### 10.1 Theme Overview
+
+**Design Direction Change:** Corporate Navy/Blue → Warm Airbnb-Inspired Coral
+
+This represents a significant brand personality shift:
+- **Previous:** Professional, corporate, trustworthy (navy blue)
+- **New:** Warm, approachable, human-centered (coral/salmon)
+
+**Benefits of the Airbnb Theme:**
+- **More Inviting:** Warm colors create a friendlier, less intimidating interface
+- **Modern Color Science:** OKLCH color space ensures perceptual consistency across devices
+- **Proven Design Language:** Leverages Airbnb's extensive UX research and testing
+- **Better Emotional Connection:** Coral evokes energy and warmth vs. corporate authority
+
+### 10.2 Implementation Steps
+
+#### Step 1: Install the Airbnb Theme via shadcn
+
+The complete theme is available from tweakcn.com:
+
+```bash
+npx shadcn@latest add https://tweakcn.com/r/themes/cmi3cq5te000004jvd2g0aq35
+```
+
+This command will:
+- Update your `tailwind.config.ts` or `globals.css` with all design tokens
+- Apply color variables, typography, spacing, shadows, and radius
+- Configure both light and dark mode variants
+
+#### Step 2: Install Airbnb Cereal App Font
+
+**Option A: Self-Hosted (Recommended for Performance)**
+
+1. Obtain Airbnb Cereal App font files (.woff2 format)
+2. Place in `/public/fonts/` directory
+3. Add `@font-face` declarations to `globals.css`:
+
+```css
+@font-face {
+  font-family: 'Airbnb Cereal App';
+  src: url('/fonts/AirbnbCereal-Book.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Airbnb Cereal App';
+  src: url('/fonts/AirbnbCereal-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Airbnb Cereal App';
+  src: url('/fonts/AirbnbCereal-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+```
+
+4. Update Tailwind config to use the font:
+
+```javascript
+// tailwind.config.ts
+export default {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Airbnb Cereal App', 'sans-serif'],
+        serif: ['Georgia', 'serif'],
+        mono: ['Fira Code', 'monospace'],
+      },
+    },
+  },
+}
+```
+
+**Option B: System Font Fallback (If fonts unavailable)**
+
+If Airbnb Cereal App fonts are not available, use Inter or system fonts as fallback:
+
+```javascript
+fontFamily: {
+  sans: ['Inter', 'system-ui', 'sans-serif'],
+}
+```
+
+#### Step 3: Update Component Styles
+
+The theme installation will automatically update:
+- ✅ Colors (primary, secondary, accent, semantic)
+- ✅ Typography scale
+- ✅ Spacing and layout
+- ✅ Shadow system
+- ✅ Border radius
+- ✅ Dark mode variants
+
+**Manual Updates Required:**
+
+1. **Review Custom Components:**
+   Check any custom-built components that use hardcoded colors:
+   ```tsx
+   // ❌ Before (hardcoded)
+   className="bg-[#0A2342] text-white"
+
+   // ✅ After (theme tokens)
+   className="bg-primary text-primary-foreground"
+   ```
+
+2. **Update Inline Styles:**
+   Replace any inline style objects:
+   ```tsx
+   // ❌ Before
+   style={{ backgroundColor: '#0A2342', color: '#FFFFFF' }}
+
+   // ✅ After (use Tailwind classes or CSS variables)
+   className="bg-primary text-primary-foreground"
+   // OR
+   style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
+   ```
+
+3. **Chart Colors:**
+   Update chart/graph color schemes to use new theme:
+   ```typescript
+   // ❌ Before
+   const chartColors = ['#0A2342', '#1152D4', '#D4AF37']
+
+   // ✅ After (Airbnb theme)
+   const chartColors = [
+     'oklch(0.6579 0.2309 17.0745)',  // Primary coral
+     'oklch(0.6922 0.1996 16.6660)',  // Secondary coral
+     'oklch(0.7551 0.1517 9.1596)',   // Warm peach
+   ]
+
+   // OR use CSS variables for dynamic theme support
+   const chartColors = [
+     'hsl(var(--chart-1))',
+     'hsl(var(--chart-2))',
+     'hsl(var(--chart-3))',
+   ]
+   ```
+
+#### Step 4: Test Across All Screens
+
+**Visual Regression Testing:**
+1. Screenshot key pages before migration
+2. Apply theme
+3. Screenshot same pages after
+4. Compare for unintended changes
+
+**Critical Pages to Test:**
+- Dashboard (KPI cards, charts)
+- Login/Authentication screens
+- Forms (tenant onboarding, work orders)
+- Tables (PDC management, tenant lists)
+- Modals and dialogs
+- Navigation (sidebar, header)
+- Dark mode variants of all above
+
+**Accessibility Testing:**
+```bash
+# Run Lighthouse accessibility audit
+npm run lighthouse
+
+# Or use axe DevTools in browser
+```
+
+Verify:
+- ✅ Color contrast ratios meet WCAG AA (4.5:1 for text)
+- ✅ Focus indicators visible on all interactive elements
+- ✅ Dark mode maintains readability
+
+#### Step 5: Update Brand Assets
+
+1. **Logo:** Consider updating logo colors to complement coral theme
+2. **Icons:** Review icon colors for consistency
+3. **Images:** Ensure photos/graphics harmonize with warm color palette
+4. **Marketing Materials:** Update website, docs, presentations to match new theme
+
+### 10.3 Configuration Reference
+
+**Complete CSS Custom Properties (Airbnb Theme):**
+
+```css
+:root {
+  /* Colors */
+  --background: oklch(1.0000 0 0);
+  --foreground: oklch(0.2520 0 0);
+  --primary: oklch(0.6579 0.2309 17.0745);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.9761 0 0);
+  --secondary-foreground: oklch(0.2520 0 0);
+  --muted: oklch(0.9761 0 0);
+  --muted-foreground: oklch(0.5486 0 0);
+  --accent: oklch(0.9761 0 0);
+  --accent-foreground: oklch(0.2520 0 0);
+  --destructive: oklch(0.6579 0.2309 17.0745);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0.9401 0 0);
+  --input: oklch(0.9761 0 0);
+  --ring: oklch(0.6579 0.2309 17.0745);
+
+  /* Charts */
+  --chart-1: oklch(0.6579 0.2309 17.0745);
+  --chart-2: oklch(0.6922 0.1996 16.6660);
+  --chart-3: oklch(0.7551 0.1517 9.1596);
+  --chart-4: oklch(0.8314 0.0983 5.0477);
+  --chart-5: oklch(0.9154 0.0460 2.8728);
+
+  /* Typography */
+  --font-sans: 'Airbnb Cereal App', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: 'Fira Code', monospace;
+
+  /* Spacing & Layout */
+  --radius: 0.75rem;
+  --spacing: 0.25rem;
+
+  /* Shadows */
+  --shadow-x: 0;
+  --shadow-y: 0.125rem;
+  --shadow-blur: 0.5rem;
+  --shadow-spread: 0;
+  --shadow-opacity: 0.1;
+  --shadow-color: #000000;
+
+  /* Letter Spacing */
+  --tracking-normal: 0;
+}
+
+.dark {
+  --background: oklch(0.2393 0 0);
+  --foreground: oklch(1.0000 0 0);
+  --primary: oklch(0.6579 0.2309 17.0745);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.3485 0 0);
+  --secondary-foreground: oklch(1.0000 0 0);
+  --muted: oklch(0.3485 0 0);
+  --muted-foreground: oklch(0.7380 0 0);
+  --destructive: oklch(0.6579 0.2309 17.0745);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0.4276 0 0);
+  --input: oklch(0.3485 0 0);
+  --ring: oklch(0.6579 0.2309 17.0745);
+  --shadow-opacity: 0.3;
+}
+```
+
+### 10.4 Rollout Strategy
+
+**Recommended Approach: Phased Rollout**
+
+1. **Phase 1: Development Environment**
+   - Apply theme to dev environment
+   - Internal team review and feedback
+   - Fix any visual issues
+
+2. **Phase 2: Staging with User Testing**
+   - Deploy to staging environment
+   - Conduct user acceptance testing with 5-10 users
+   - Gather feedback on new warm aesthetic
+   - Measure task completion time (ensure no regression)
+
+3. **Phase 3: Gradual Production Rollout**
+   - **Option A:** Feature flag - Allow users to opt-in to new theme
+   - **Option B:** Roll out to 10% of users, monitor feedback, then 100%
+   - Monitor analytics for any drop in engagement
+
+4. **Phase 4: Full Deployment**
+   - Remove old theme code
+   - Update all documentation
+   - Announce rebrand to users
+
+**Rollback Plan:**
+Keep old theme configuration in git history. If issues arise, revert is one command:
+```bash
+git revert <commit-hash-of-theme-update>
+```
+
+### 10.5 Migration Checklist
+
+**Pre-Migration:**
+- [ ] Backup current theme configuration
+- [ ] Screenshot all key pages for comparison
+- [ ] Install theme from tweakcn.com
+- [ ] Install Airbnb Cereal App fonts (or configure fallback)
+- [ ] Update Tailwind config with font family
+
+**During Migration:**
+- [ ] Review and update custom components with hardcoded colors
+- [ ] Update chart/graph color schemes
+- [ ] Test all pages in light mode
+- [ ] Test all pages in dark mode
+- [ ] Run accessibility audit (Lighthouse/axe)
+- [ ] Verify responsive behavior on mobile/tablet
+- [ ] Update logo/brand assets if needed
+
+**Post-Migration:**
+- [ ] Compare before/after screenshots
+- [ ] Conduct internal team review
+- [ ] User acceptance testing (5-10 users)
+- [ ] Monitor user feedback
+- [ ] Update design system documentation
+- [ ] Train team on new theme tokens
+- [ ] Celebrate the refreshed brand!
+
+---
+
+## 11. Next Steps & Deliverables
 
 ### 10.1 Completion Summary
 
@@ -1563,7 +2014,8 @@ module.exports = {
 
 | Date | Version | Changes | Author |
 |---|---|---|---|
-| Nov 13, 2025 | 1.0 | Initial UX Design Specification | Nata |
+| Nov 13, 2025 | 1.0 | Initial UX Design Specification with Navy/Blue corporate theme | Nata |
+| Nov 17, 2025 | 2.0 | **Major Update:** Migrated to Airbnb-inspired warm coral theme. Updated Visual Foundation (colors, typography, shadows, spacing). Added comprehensive migration guide. Design direction shift: Corporate → Human-Centered. | Nata |
 
 ---
 

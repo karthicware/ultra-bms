@@ -341,12 +341,13 @@ To become the leading integrated property management platform in the MENA region
 
 ### 4.2 UI Components
 - **Component Library:** shadcn/ui for consistent, accessible components
-- **Color Scheme:** Dark theme with blue/teal accents
-- **Typography:** Inter font family for clarity
+- **Color Scheme:** Airbnb-inspired warm coral/salmon theme with OKLCH color space
+- **Typography:** Airbnb Cereal App font family (with Circular/Helvetica fallback)
 - **Icons:** Consistent iconography from Lucide library
-- **Data Visualization:** Interactive charts and graphs using Recharts
+- **Data Visualization:** Interactive charts and graphs using Recharts with Airbnb color palette
 - **Forms:** Progressive disclosure with validation using React Hook Form
 - **Styling:** Tailwind CSS for utility-first styling
+- **Reference:** See UX Design Specification v2.0 for complete visual foundation
 
 ### 4.3 User Workflows
 - **Quick Actions:** One-click access to frequent tasks
