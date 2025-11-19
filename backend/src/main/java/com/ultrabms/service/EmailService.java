@@ -246,6 +246,198 @@ public class EmailService {
     }
 
     /**
+     * Send maintenance request confirmation email to tenant asynchronously.
+     * Confirms request submission with request number, details, and tracking link.
+     * Fails silently (logs error) to avoid blocking user workflow if email delivery fails.
+     *
+     * @param tenant Tenant entity who submitted the request
+     * @param request MaintenanceRequest entity with request details
+     */
+    @Async("emailTaskExecutor")
+    public void sendMaintenanceRequestConfirmation(com.ultrabms.entity.Tenant tenant, com.ultrabms.entity.MaintenanceRequest request) {
+        try {
+            // Build tracking URL
+            String trackingUrl = frontendUrl + "/tenant/requests/" + request.getId();
+
+            // Build Thymeleaf context with template variables
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("requestNumber", request.getRequestNumber());
+            context.setVariable("category", request.getCategory().toString().replace("_", " "));
+            context.setVariable("priority", request.getPriority().toString());
+            context.setVariable("title", request.getTitle());
+            context.setVariable("submittedAt", request.getSubmittedAt().format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")));
+            context.setVariable("propertyName", tenant.getProperty().getName());
+            context.setVariable("unitNumber", tenant.getUnit().getUnitNumber());
+            context.setVariable("trackingUrl", trackingUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            // Render HTML and plain text templates
+            String htmlContent = templateEngine.process("email/maintenance-request-confirmation", context);
+            String textContent = templateEngine.process("email/maintenance-request-confirmation.txt", context);
+
+            // Send email
+            sendEmail(
+                tenant.getEmail(),
+                String.format("Maintenance Request Confirmed: %s", request.getRequestNumber()),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Maintenance request confirmation email sent successfully to tenant: {} ({})",
+                    tenant.getId(), tenant.getEmail());
+
+        } catch (Exception e) {
+            // Fail silently - don't throw exception to user, just log error
+            log.error("Failed to send maintenance request confirmation email to tenant: {} ({})",
+                    tenant.getId(), tenant.getEmail(), e);
+        }
+    }
+
+    /**
+     * Send new maintenance request notification to property manager asynchronously.
+     * Notifies property manager of new request with full details and management link.
+     * Fails silently (logs error) to avoid blocking user workflow if email delivery fails.
+     *
+     * @param tenant Tenant entity who submitted the request
+     * @param request MaintenanceRequest entity with request details
+     */
+    @Async("emailTaskExecutor")
+    public void sendMaintenanceRequestNotification(com.ultrabms.entity.Tenant tenant, com.ultrabms.entity.MaintenanceRequest request) {
+        try {
+            // Build management URL
+            String managementUrl = frontendUrl + "/property-manager/requests/" + request.getId();
+
+            // Build Thymeleaf context with template variables
+            Context context = new Context();
+            context.setVariable("requestNumber", request.getRequestNumber());
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantEmail", tenant.getEmail());
+            context.setVariable("tenantPhone", tenant.getPhone() != null ? tenant.getPhone() : "Not provided");
+            context.setVariable("propertyName", tenant.getProperty().getName());
+            context.setVariable("unitNumber", tenant.getUnit().getUnitNumber());
+            context.setVariable("category", request.getCategory().toString().replace("_", " "));
+            context.setVariable("priority", request.getPriority().toString());
+            context.setVariable("title", request.getTitle());
+            context.setVariable("description", request.getDescription());
+            context.setVariable("preferredAccessTime", request.getPreferredAccessTime().toString().replace("_", " "));
+            context.setVariable("preferredAccessDate", request.getPreferredAccessDate().format(DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("photoCount", request.getAttachments() != null ? request.getAttachments().size() : 0);
+            context.setVariable("managementUrl", managementUrl);
+
+            // Render HTML and plain text templates
+            String htmlContent = templateEngine.process("email/maintenance-request-new", context);
+            String textContent = templateEngine.process("email/maintenance-request-new.txt", context);
+
+            // Send email to property manager (using support email for now)
+            sendEmail(
+                supportEmail,
+                String.format("New Maintenance Request: %s - %s",
+                        request.getRequestNumber(),
+                        request.getTitle()),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Maintenance request notification email sent successfully to property manager for request: {} ({})",
+                    request.getId(), request.getRequestNumber());
+
+        } catch (Exception e) {
+            // Fail silently - don't throw exception to user, just log error
+            log.error("Failed to send maintenance request notification email for request: {} ({})",
+                    request.getId(), request.getRequestNumber(), e);
+        }
+    }
+
+    /**
+     * Send maintenance request status change notification to tenant asynchronously.
+     * Notifies tenant when request status changes (ASSIGNED, IN_PROGRESS, COMPLETED, CLOSED).
+     * Fails silently (logs error) to avoid blocking user workflow if email delivery fails.
+     *
+     * @param tenant Tenant entity who owns the request
+     * @param request MaintenanceRequest entity with updated status
+     * @param vendorName Name of assigned vendor (if applicable)
+     * @param vendorContact Contact info of assigned vendor (if applicable)
+     */
+    @Async("emailTaskExecutor")
+    public void sendMaintenanceRequestStatusChange(
+            com.ultrabms.entity.Tenant tenant,
+            com.ultrabms.entity.MaintenanceRequest request,
+            String vendorName,
+            String vendorContact
+    ) {
+        try {
+            // Build tracking URL
+            String trackingUrl = frontendUrl + "/tenant/requests/" + request.getId();
+
+            // Build status-specific message and label
+            String statusMessage;
+            String statusLabel;
+            switch (request.getStatus()) {
+                case ASSIGNED:
+                    statusMessage = "Your maintenance request has been assigned to a vendor.";
+                    statusLabel = "Assigned to Vendor";
+                    break;
+                case IN_PROGRESS:
+                    statusMessage = "Work has started on your maintenance request.";
+                    statusLabel = "Work in Progress";
+                    break;
+                case COMPLETED:
+                    statusMessage = "Your maintenance request has been completed. Please review and provide feedback.";
+                    statusLabel = "Work Completed";
+                    break;
+                case CLOSED:
+                    statusMessage = "Your maintenance request has been closed.";
+                    statusLabel = "Request Closed";
+                    break;
+                default:
+                    statusMessage = "Your maintenance request status has been updated.";
+                    statusLabel = request.getStatus().toString();
+            }
+
+            // Build Thymeleaf context with template variables
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("requestNumber", request.getRequestNumber());
+            context.setVariable("title", request.getTitle());
+            context.setVariable("status", request.getStatus().toString());
+            context.setVariable("statusMessage", statusMessage);
+            context.setVariable("statusLabel", statusLabel);
+            context.setVariable("vendorName", vendorName);
+            context.setVariable("vendorContact", vendorContact);
+            context.setVariable("estimatedCompletionDate",
+                    request.getEstimatedCompletionDate() != null
+                            ? request.getEstimatedCompletionDate().format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                            : null);
+            context.setVariable("workNotes", request.getWorkNotes());
+            context.setVariable("trackingUrl", trackingUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            // Render HTML and plain text templates
+            String htmlContent = templateEngine.process("email/maintenance-request-status-change", context);
+            String textContent = templateEngine.process("email/maintenance-request-status-change.txt", context);
+
+            // Send email
+            sendEmail(
+                tenant.getEmail(),
+                String.format("Update: Maintenance Request %s - %s",
+                        request.getRequestNumber(),
+                        statusLabel),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Maintenance request status change email sent successfully to tenant: {} ({}) for request: {}",
+                    tenant.getId(), tenant.getEmail(), request.getRequestNumber());
+
+        } catch (Exception e) {
+            // Fail silently - don't throw exception to user, just log error
+            log.error("Failed to send maintenance request status change email to tenant: {} ({}) for request: {}",
+                    tenant.getId(), tenant.getEmail(), request.getRequestNumber(), e);
+        }
+    }
+
+    /**
      * Internal helper method to send multipart email (HTML + plain text fallback).
      * Creates MimeMessage with both HTML and text content for email client compatibility.
      *

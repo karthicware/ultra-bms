@@ -15,7 +15,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
@@ -32,7 +38,7 @@ import java.util.UUID;
 @Tag(name = "Tenants", description = "Tenant onboarding and management")
 public class TenantController {
 
-    private static final Logger logger = LoggerFactory.getLogger(TenantController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TenantController.class);
 
     private final TenantService tenantService;
 
@@ -65,7 +71,7 @@ public class TenantController {
             @RequestParam(value = "mulkiyaFile", required = false) MultipartFile mulkiyaFile,
             @RequestParam(value = "additionalFiles", required = false) List<MultipartFile> additionalFiles
     ) {
-        logger.info("Creating tenant: {}", request.getEmail());
+        LOGGER.info("Creating tenant: {}", request.getEmail());
 
         CreateTenantResponse response = tenantService.createTenant(
                 request,
@@ -94,7 +100,7 @@ public class TenantController {
     @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN', 'TENANT')")
     @Operation(summary = "Get tenant by ID", description = "Retrieve full tenant details including documents")
     public ResponseEntity<Map<String, Object>> getTenantById(@PathVariable UUID id) {
-        logger.info("Getting tenant by ID: {}", id);
+        LOGGER.info("Getting tenant by ID: {}", id);
 
         TenantResponse tenant = tenantService.getTenantById(id);
 
@@ -114,7 +120,7 @@ public class TenantController {
     @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
     @Operation(summary = "Get all tenants", description = "Retrieve paginated list of all active tenants")
     public ResponseEntity<Page<TenantResponse>> getAllTenants(Pageable pageable) {
-        logger.info("Getting all tenants with pagination: {}", pageable);
+        LOGGER.info("Getting all tenants with pagination: {}", pageable);
 
         Page<TenantResponse> tenants = tenantService.getAllTenants(pageable);
 
@@ -132,7 +138,7 @@ public class TenantController {
             @RequestParam("q") String searchTerm,
             Pageable pageable
     ) {
-        logger.info("Searching tenants with term: {}", searchTerm);
+        LOGGER.info("Searching tenants with term: {}", searchTerm);
 
         Page<TenantResponse> tenants = tenantService.searchTenants(searchTerm, pageable);
 
@@ -147,7 +153,7 @@ public class TenantController {
     @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
     @Operation(summary = "Check email availability", description = "Check if email is available for new tenant registration")
     public ResponseEntity<Map<String, Object>> checkEmailAvailability(@PathVariable String email) {
-        logger.info("Checking email availability: {}", email);
+        LOGGER.info("Checking email availability: {}", email);
 
         boolean available = tenantService.isEmailAvailable(email);
 

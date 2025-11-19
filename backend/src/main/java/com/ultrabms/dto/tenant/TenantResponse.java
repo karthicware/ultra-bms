@@ -1,6 +1,9 @@
 package com.ultrabms.dto.tenant;
 
-import com.ultrabms.entity.enums.*;
+import com.ultrabms.entity.enums.LeaseType;
+import com.ultrabms.entity.enums.PaymentFrequency;
+import com.ultrabms.entity.enums.PaymentMethod;
+import com.ultrabms.entity.enums.TenantStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

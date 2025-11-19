@@ -28,10 +28,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -46,7 +57,7 @@ import java.util.stream.Collectors;
 @SecurityRequirement(name = "Bearer Authentication")
 public class MaintenanceRequestController {
 
-    private static final Logger logger = LoggerFactory.getLogger(MaintenanceRequestController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaintenanceRequestController.class);
 
     private final MaintenanceRequestService maintenanceRequestService;
     private final TenantRepository tenantRepository;
@@ -84,7 +95,7 @@ public class MaintenanceRequestController {
         UUID userId = getUserId(userDetails);
         UUID tenantId = getTenantIdByUserId(userId);
 
-        logger.info("Creating maintenance request for tenant: {}", tenantId);
+        LOGGER.info("Creating maintenance request for tenant: {}", tenantId);
 
         MaintenanceRequestResponse response = maintenanceRequestService.createRequest(dto, tenantId, files);
 
@@ -115,7 +126,7 @@ public class MaintenanceRequestController {
         UUID userId = getUserId(userDetails);
         UUID tenantId = getTenantIdByUserId(userId);
 
-        logger.info("Fetching maintenance requests for tenant: {}", tenantId);
+        LOGGER.info("Fetching maintenance requests for tenant: {}", tenantId);
 
         // Parse status filter
         List<MaintenanceStatus> statuses = null;
@@ -177,7 +188,7 @@ public class MaintenanceRequestController {
         UUID userId = getUserId(userDetails);
         UUID tenantId = getTenantIdByUserId(userId);
 
-        logger.info("Fetching request: {} for tenant: {}", id, tenantId);
+        LOGGER.info("Fetching request: {} for tenant: {}", id, tenantId);
 
         MaintenanceRequestResponse response = maintenanceRequestService.getRequestById(id, tenantId);
 
@@ -203,7 +214,7 @@ public class MaintenanceRequestController {
         UUID userId = getUserId(userDetails);
         UUID tenantId = getTenantIdByUserId(userId);
 
-        logger.info("Submitting feedback for request: {} by tenant: {}", id, tenantId);
+        LOGGER.info("Submitting feedback for request: {} by tenant: {}", id, tenantId);
 
         MaintenanceRequestResponse response = maintenanceRequestService.submitFeedback(id, tenantId, dto);
 
@@ -228,7 +239,7 @@ public class MaintenanceRequestController {
         UUID userId = getUserId(userDetails);
         UUID tenantId = getTenantIdByUserId(userId);
 
-        logger.info("Cancelling request: {} by tenant: {}", id, tenantId);
+        LOGGER.info("Cancelling request: {} by tenant: {}", id, tenantId);
 
         maintenanceRequestService.cancelRequest(id, tenantId);
 

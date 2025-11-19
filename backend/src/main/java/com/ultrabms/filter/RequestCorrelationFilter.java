@@ -37,7 +37,7 @@ import java.util.UUID;
  */
 public class RequestCorrelationFilter implements Filter {
 
-    private static final Logger log = LoggerFactory.getLogger(RequestCorrelationFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RequestCorrelationFilter.class);
     private static final String CORRELATION_ID_KEY = "correlationId";
     private static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
 

@@ -1,6 +1,9 @@
 package com.ultrabms.service.impl;
 
-import com.ultrabms.dto.properties.*;
+import com.ultrabms.dto.properties.CreatePropertyRequest;
+import com.ultrabms.dto.properties.PropertyImageResponse;
+import com.ultrabms.dto.properties.PropertyResponse;
+import com.ultrabms.dto.properties.UpdatePropertyRequest;
 import com.ultrabms.entity.Property;
 import com.ultrabms.entity.PropertyImage;
 import com.ultrabms.entity.User;

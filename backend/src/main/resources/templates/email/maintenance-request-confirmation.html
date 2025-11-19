@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Request Confirmed</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #0A2342 0%, #1152D4 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .request-number {
+            background-color: #f0f7ff;
+            border-left: 4px solid #1152D4;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .request-number strong {
+            color: #1152D4;
+            font-size: 20px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 35%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .priority-high {
+            background-color: #fee;
+            color: #c00;
+        }
+        .priority-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .priority-low {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #1152D4 0%, #0A2342 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .info-box {
+            background-color: #fff8e1;
+            border-left: 4px solid #D4AF37;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #1152D4;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+            .details-table th,
+            .details-table td {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">✅</div>
+            <h1>Request Submitted Successfully</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${tenantName}">Tenant</span>,
+            </div>
+
+            <p>Your maintenance request has been successfully submitted to property management. We've received your issue report and will review it shortly.</p>
+
+            <div class="request-number">
+                <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Your Request Number</div>
+                <strong th:text="${requestNumber}">MR-2025-0001</strong>
+            </div>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Request Details</h3>
+            <table class="details-table">
+                <tr>
+                    <th>Category</th>
+                    <td th:text="${category}">Plumbing</td>
+                </tr>
+                <tr>
+                    <th>Priority</th>
+                    <td>
+                        <span th:class="'priority-badge priority-' + ${#strings.toLowerCase(priority)}"
+                              th:text="${priority}">HIGH</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Title</th>
+                    <td th:text="${title}">Leaking kitchen faucet</td>
+                </tr>
+                <tr>
+                    <th>Submitted</th>
+                    <td th:text="${submittedAt}">Nov 17, 2025 10:30 AM</td>
+                </tr>
+                <tr>
+                    <th>Property</th>
+                    <td><span th:text="${propertyName}">Property Name</span> - Unit <span th:text="${unitNumber}">101</span></td>
+                </tr>
+            </table>
+
+            <div class="info-box" th:if="${priority == 'HIGH'}">
+                <strong>⚠️ High Priority Request</strong><br>
+                Your request has been flagged as high priority. Property management will review and assign it immediately. You'll receive a notification once a vendor has been assigned.
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${trackingUrl}" class="button">Track Your Request</a>
+            </div>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">What Happens Next?</h3>
+            <ol style="color: #666; padding-left: 20px;">
+                <li><strong>Review:</strong> Property management will review your request within 24 hours</li>
+                <li><strong>Assignment:</strong> We'll assign an appropriate vendor or technician</li>
+                <li><strong>Contact:</strong> The assigned vendor will contact you to schedule a visit</li>
+                <li><strong>Resolution:</strong> Work will be completed based on priority and scheduling</li>
+                <li><strong>Feedback:</strong> After completion, you'll be asked to rate the service</li>
+            </ol>
+
+            <p style="margin-top: 25px; color: #666;">
+                You can track the status of your request anytime by visiting the tenant portal or clicking the button above.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Need Help?</strong></p>
+            <p>
+                Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

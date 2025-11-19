@@ -1,0 +1,40 @@
+========================================
+MAINTENANCE REQUEST SUBMITTED
+========================================
+
+Hi [(${tenantName})],
+
+Your maintenance request has been successfully submitted to property management.
+
+YOUR REQUEST NUMBER: [(${requestNumber})]
+
+REQUEST DETAILS:
+--------------------------------
+Category:    [(${category})]
+Priority:    [(${priority})]
+Title:       [(${title})]
+Submitted:   [(${submittedAt})]
+Property:    [(${propertyName})] - Unit [(${unitNumber})]
+
+[(${priority == 'HIGH' ? '⚠️ HIGH PRIORITY: Your request has been flagged as high priority and will be assigned immediately.' : '')]]
+
+WHAT HAPPENS NEXT?
+--------------------------------
+1. Review: Property management will review your request within 24 hours
+2. Assignment: We'll assign an appropriate vendor or technician
+3. Contact: The assigned vendor will contact you to schedule a visit
+4. Resolution: Work will be completed based on priority and scheduling
+5. Feedback: After completion, you'll be asked to rate the service
+
+TRACK YOUR REQUEST:
+[(${trackingUrl})]
+
+You can track the status of your request anytime by visiting the tenant portal.
+
+========================================
+Need Help?
+Contact us at: [(${supportEmail})]
+========================================
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

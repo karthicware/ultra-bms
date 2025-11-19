@@ -25,7 +25,7 @@ import java.util.UUID;
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
 
-    private static final Logger logger = LoggerFactory.getLogger(FileStorageServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileStorageServiceImpl.class);
 
     // Allowed MIME types for images
     private static final List<String> ALLOWED_MIME_TYPES = Arrays.asList(
@@ -97,12 +97,12 @@ public class FileStorageServiceImpl implements FileStorageService {
             // Return relative path: directory/filename
             String relativePath = Paths.get(directory, uniqueFilename).toString();
 
-            logger.info("File stored successfully: {} (original: {})", relativePath, originalFilename);
+            LOGGER.info("File stored successfully: {} (original: {})", relativePath, originalFilename);
 
             return relativePath;
 
         } catch (IOException ex) {
-            logger.error("Failed to store file: {}", ex.getMessage(), ex);
+            LOGGER.error("Failed to store file: {}", ex.getMessage(), ex);
             throw new RuntimeException("Failed to store file: " + ex.getMessage(), ex);
         }
     }
@@ -113,15 +113,15 @@ public class FileStorageServiceImpl implements FileStorageService {
             Path fileToDelete = Paths.get(uploadDir, filePath);
 
             if (!Files.exists(fileToDelete)) {
-                logger.warn("File not found for deletion: {}", filePath);
+                LOGGER.warn("File not found for deletion: {}", filePath);
                 throw new RuntimeException("File not found: " + filePath);
             }
 
             Files.delete(fileToDelete);
-            logger.info("File deleted successfully: {}", filePath);
+            LOGGER.info("File deleted successfully: {}", filePath);
 
         } catch (IOException ex) {
-            logger.error("Failed to delete file: {} - {}", filePath, ex.getMessage(), ex);
+            LOGGER.error("Failed to delete file: {} - {}", filePath, ex.getMessage(), ex);
             throw new RuntimeException("Failed to delete file: " + ex.getMessage(), ex);
         }
     }
@@ -137,17 +137,17 @@ public class FileStorageServiceImpl implements FileStorageService {
             Path fileToLoad = Paths.get(uploadDir, filePath);
 
             if (!Files.exists(fileToLoad)) {
-                logger.warn("File not found for loading: {}", filePath);
+                LOGGER.warn("File not found for loading: {}", filePath);
                 throw new RuntimeException("File not found: " + filePath);
             }
 
             byte[] fileContent = Files.readAllBytes(fileToLoad);
-            logger.info("File loaded successfully: {} ({} bytes)", filePath, fileContent.length);
+            LOGGER.info("File loaded successfully: {} ({} bytes)", filePath, fileContent.length);
 
             return fileContent;
 
         } catch (IOException ex) {
-            logger.error("Failed to load file: {} - {}", filePath, ex.getMessage(), ex);
+            LOGGER.error("Failed to load file: {} - {}", filePath, ex.getMessage(), ex);
             throw new RuntimeException("Failed to load file: " + ex.getMessage(), ex);
         }
     }

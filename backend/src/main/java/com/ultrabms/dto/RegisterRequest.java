@@ -2,7 +2,10 @@ package com.ultrabms.dto;
 
 import com.ultrabms.validator.StrongPassword;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 /**
  * Data Transfer Object for user registration requests.

@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class TenantPortalServiceImpl implements TenantPortalService {
 
-    private static final Logger logger = LoggerFactory.getLogger(TenantPortalServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TenantPortalServiceImpl.class);
 
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
@@ -61,7 +61,7 @@ public class TenantPortalServiceImpl implements TenantPortalService {
     @Override
     @Transactional(readOnly = true)
     public DashboardResponse getDashboardData(UUID userId) {
-        logger.info("Getting dashboard data for user: {}", userId);
+        LOGGER.info("Getting dashboard data for user: {}", userId);
 
         Tenant tenant = tenantRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant not found for user ID: " + userId));
@@ -106,7 +106,7 @@ public class TenantPortalServiceImpl implements TenantPortalService {
     @Override
     @Transactional(readOnly = true)
     public TenantProfileResponse getTenantProfile(UUID userId) {
-        logger.info("Getting profile for user: {}", userId);
+        LOGGER.info("Getting profile for user: {}", userId);
 
         Tenant tenant = tenantRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant not found for user ID: " + userId));
@@ -177,7 +177,7 @@ public class TenantPortalServiceImpl implements TenantPortalService {
 
     @Override
     public void changePassword(UUID userId, ChangePasswordRequest request) {
-        logger.info("Changing password for user: {}", userId);
+        LOGGER.info("Changing password for user: {}", userId);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
@@ -191,13 +191,13 @@ public class TenantPortalServiceImpl implements TenantPortalService {
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
-        logger.info("Password changed successfully for user: {}", userId);
+        LOGGER.info("Password changed successfully for user: {}", userId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public String getLeasePdfPath(UUID userId) {
-        logger.info("Getting lease PDF path for user: {}", userId);
+        LOGGER.info("Getting lease PDF path for user: {}", userId);
 
         Tenant tenant = tenantRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant not found for user ID: " + userId));
@@ -211,7 +211,7 @@ public class TenantPortalServiceImpl implements TenantPortalService {
 
     @Override
     public TenantDocument uploadDocument(UUID userId, MultipartFile file, String documentType) {
-        logger.info("Uploading document for user: {} , type: {}", userId, documentType);
+        LOGGER.info("Uploading document for user: {} , type: {}", userId, documentType);
 
         Tenant tenant = tenantRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant not found for user ID: " + userId));
@@ -245,7 +245,7 @@ public class TenantPortalServiceImpl implements TenantPortalService {
     @Override
     @Transactional(readOnly = true)
     public String getDocumentPath(UUID userId, UUID documentId) {
-        logger.info("Getting document path for user: {}, document: {}", userId, documentId);
+        LOGGER.info("Getting document path for user: {}, document: {}", userId, documentId);
 
         Tenant tenant = tenantRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant not found for user ID: " + userId));
@@ -264,7 +264,7 @@ public class TenantPortalServiceImpl implements TenantPortalService {
     @Override
     @Transactional(readOnly = true)
     public String getMulkiyaPath(UUID userId) {
-        logger.info("Getting Mulkiya path for user: {}", userId);
+        LOGGER.info("Getting Mulkiya path for user: {}", userId);
 
         Tenant tenant = tenantRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant not found for user ID: " + userId));
@@ -278,11 +278,11 @@ public class TenantPortalServiceImpl implements TenantPortalService {
 
     @Override
     public void updateLanguagePreference(UUID userId, String language) {
-        logger.info("Updating language preference for user: {} to {}", userId, language);
+        LOGGER.info("Updating language preference for user: {} to {}", userId, language);
 
         // TODO: Implement when User entity has language preference field
         // For now, this is a placeholder
-        logger.warn("Language preference update not yet implemented");
+        LOGGER.warn("Language preference update not yet implemented");
     }
 
     // Helper methods

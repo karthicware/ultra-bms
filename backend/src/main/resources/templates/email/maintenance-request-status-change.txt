@@ -1,0 +1,58 @@
+========================================
+MAINTENANCE REQUEST STATUS UPDATE
+========================================
+
+Hi [(${tenantName})],
+
+[(${statusMessage})]
+
+REQUEST: #[(${requestNumber})]
+TITLE: [(${title})]
+STATUS: [(${statusLabel})]
+
+[# th:if="${vendorName != null}"]
+ASSIGNED VENDOR: [(${vendorName})]
+CONTACT: [(${vendorContact})]
+[/]
+
+[# th:if="${estimatedCompletionDate != null}"]
+ESTIMATED COMPLETION: [(${estimatedCompletionDate})]
+[/]
+
+[# th:if="${workNotes != null}"]
+WORK NOTES:
+[(${workNotes})]
+[/]
+
+[# th:if="${status == 'ASSIGNED'}"]
+WHAT'S NEXT?
+--------------------------------
+The assigned vendor will contact you shortly to schedule a visit based on your preferred access time. Make sure you're available at the scheduled time.
+[/]
+
+[# th:if="${status == 'IN_PROGRESS'}"]
+WORK IN PROGRESS
+--------------------------------
+The vendor is currently working on resolving your issue. You can track progress in real-time through the tenant portal.
+[/]
+
+[# th:if="${status == 'COMPLETED'}"]
+PLEASE PROVIDE FEEDBACK
+--------------------------------
+The work has been completed! We'd love to hear about your experience. Please rate the service and leave a comment through the tenant portal.
+
+Your feedback helps us ensure quality service and identify areas for improvement.
+[/]
+
+VIEW REQUEST DETAILS:
+[(${trackingUrl})]
+
+You can view complete details, timeline, and photos anytime in the tenant portal.
+
+========================================
+Need Help?
+Contact us at: [(${supportEmail})]
+========================================
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

@@ -39,7 +39,7 @@ import java.util.UUID;
 @Service
 public class MaintenanceRequestServiceImpl implements MaintenanceRequestService {
 
-    private static final Logger logger = LoggerFactory.getLogger(MaintenanceRequestServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaintenanceRequestServiceImpl.class);
     private static final int MAX_PHOTOS = 5;
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -47,17 +47,20 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final S3Service s3Service;
+    private final com.ultrabms.service.EmailService emailService;
 
     public MaintenanceRequestServiceImpl(
             MaintenanceRequestRepository maintenanceRequestRepository,
             TenantRepository tenantRepository,
             UserRepository userRepository,
-            S3Service s3Service
+            S3Service s3Service,
+            com.ultrabms.service.EmailService emailService
     ) {
         this.maintenanceRequestRepository = maintenanceRequestRepository;
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
         this.s3Service = s3Service;
+        this.emailService = emailService;
     }
 
     @Override
@@ -67,7 +70,7 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
             UUID tenantId,
             List<MultipartFile> photos
     ) {
-        logger.info("Creating maintenance request for tenant: {}", tenantId);
+        LOGGER.info("Creating maintenance request for tenant: {}", tenantId);
 
         // Validate tenant exists and is active
         Tenant tenant = tenantRepository.findById(tenantId)
@@ -112,10 +115,11 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
             request = maintenanceRequestRepository.save(request);
         }
 
-        logger.info("Maintenance request created successfully: {}", requestNumber);
+        LOGGER.info("Maintenance request created successfully: {}", requestNumber);
 
-        // TODO: Send email notifications (to tenant and property manager)
-        // This will be implemented in email notification task
+        // Send email notifications asynchronously
+        emailService.sendMaintenanceRequestConfirmation(tenant, request);
+        emailService.sendMaintenanceRequestNotification(tenant, request);
 
         return mapToResponse(request, null);
     }
@@ -123,7 +127,7 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
     @Override
     @Transactional(readOnly = true)
     public MaintenanceRequestResponse getRequestById(UUID id, UUID tenantId) {
-        logger.info("Fetching maintenance request: {} for tenant: {}", id, tenantId);
+        LOGGER.info("Fetching maintenance request: {} for tenant: {}", id, tenantId);
 
         MaintenanceRequest request = maintenanceRequestRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Maintenance request not found: " + id));
@@ -156,7 +160,7 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
             String searchTerm,
             Pageable pageable
     ) {
-        logger.info("Fetching maintenance requests for tenant: {} with filters", tenantId);
+        LOGGER.info("Fetching maintenance requests for tenant: {} with filters", tenantId);
 
         Page<MaintenanceRequest> requests;
 
@@ -196,7 +200,7 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
             UUID tenantId,
             SubmitFeedbackDto dto
     ) {
-        logger.info("Submitting feedback for request: {} by tenant: {}", requestId, tenantId);
+        LOGGER.info("Submitting feedback for request: {} by tenant: {}", requestId, tenantId);
 
         MaintenanceRequest request = maintenanceRequestRepository.findById(requestId)
                 .orElseThrow(() -> new EntityNotFoundException("Maintenance request not found: " + requestId));
@@ -227,9 +231,9 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
 
         request = maintenanceRequestRepository.save(request);
 
-        logger.info("Feedback submitted successfully for request: {}", requestId);
+        LOGGER.info("Feedback submitted successfully for request: {}", requestId);
 
-        // TODO: Send notification to property manager about feedback
+        // Note: Status change notification will be sent by the property manager service when status is updated to CLOSED
 
         return mapToResponse(request, null);
     }
@@ -237,7 +241,7 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
     @Override
     @Transactional
     public void cancelRequest(UUID requestId, UUID tenantId) {
-        logger.info("Cancelling request: {} by tenant: {}", requestId, tenantId);
+        LOGGER.info("Cancelling request: {} by tenant: {}", requestId, tenantId);
 
         MaintenanceRequest request = maintenanceRequestRepository.findById(requestId)
                 .orElseThrow(() -> new EntityNotFoundException("Maintenance request not found: " + requestId));
@@ -261,9 +265,9 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
 
         maintenanceRequestRepository.save(request);
 
-        logger.info("Request cancelled successfully: {}", requestId);
+        LOGGER.info("Request cancelled successfully: {}", requestId);
 
-        // TODO: Send cancellation notification to property manager
+        // Note: Cancellation notification handled by status change notification mechanism
     }
 
     @Override
@@ -342,9 +346,9 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
             try {
                 String photoUrl = s3Service.uploadFile(photo, directory);
                 photoUrls.add(photoUrl);
-                logger.info("Photo uploaded successfully: {}", photoUrl);
+                LOGGER.info("Photo uploaded successfully: {}", photoUrl);
             } catch (Exception e) {
-                logger.error("Failed to upload photo: {}", photo.getOriginalFilename(), e);
+                LOGGER.error("Failed to upload photo: {}", photo.getOriginalFilename(), e);
                 // Continue with other photos, don't fail entire request
             }
         }

@@ -1,6 +1,9 @@
 package com.ultrabms.service;
 
-import com.ultrabms.dto.*;
+import com.ultrabms.dto.LoginRequest;
+import com.ultrabms.dto.LoginResponse;
+import com.ultrabms.dto.RegisterRequest;
+import com.ultrabms.dto.TokenResponse;
 import com.ultrabms.entity.AuditLog;
 import com.ultrabms.entity.Role;
 import com.ultrabms.entity.TokenBlacklist;
@@ -314,7 +317,9 @@ public class AuthServiceImpl implements AuthService {
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
                 String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
                 hexString.append(hex);
             }
             return hexString.toString();

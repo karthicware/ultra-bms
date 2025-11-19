@@ -18,7 +18,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -39,7 +46,7 @@ import java.util.UUID;
 @PreAuthorize("hasRole('TENANT')")
 public class TenantPortalController {
 
-    private static final Logger logger = LoggerFactory.getLogger(TenantPortalController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TenantPortalController.class);
 
     private final TenantPortalService tenantPortalService;
 
@@ -54,7 +61,7 @@ public class TenantPortalController {
     @GetMapping("/dashboard")
     @Operation(summary = "Get tenant dashboard", description = "Retrieve dashboard data with unit info, stats, and quick actions")
     public ResponseEntity<Map<String, Object>> getDashboard(Authentication authentication) {
-        logger.info("Getting dashboard for user: {}", authentication.getName());
+        LOGGER.info("Getting dashboard for user: {}", authentication.getName());
 
         UUID userId = UUID.fromString(authentication.getName());
         DashboardResponse dashboard = tenantPortalService.getDashboardData(userId);
@@ -74,7 +81,7 @@ public class TenantPortalController {
     @GetMapping("/profile")
     @Operation(summary = "Get tenant profile", description = "Retrieve complete profile with personal info, lease, parking, and documents")
     public ResponseEntity<Map<String, Object>> getProfile(Authentication authentication) {
-        logger.info("Getting profile for user: {}", authentication.getName());
+        LOGGER.info("Getting profile for user: {}", authentication.getName());
 
         UUID userId = UUID.fromString(authentication.getName());
         TenantProfileResponse profile = tenantPortalService.getTenantProfile(userId);
@@ -97,7 +104,7 @@ public class TenantPortalController {
             @Valid @RequestBody ChangePasswordRequest request,
             Authentication authentication
     ) {
-        logger.info("Changing password for user: {}", authentication.getName());
+        LOGGER.info("Changing password for user: {}", authentication.getName());
 
         UUID userId = UUID.fromString(authentication.getName());
         tenantPortalService.changePassword(userId, request);
@@ -117,7 +124,7 @@ public class TenantPortalController {
     @GetMapping("/lease/download")
     @Operation(summary = "Download lease agreement", description = "Download the signed lease agreement PDF")
     public ResponseEntity<Resource> downloadLease(Authentication authentication) {
-        logger.info("Downloading lease for user: {}", authentication.getName());
+        LOGGER.info("Downloading lease for user: {}", authentication.getName());
 
         UUID userId = UUID.fromString(authentication.getName());
         String filePath = tenantPortalService.getLeasePdfPath(userId);
@@ -142,7 +149,7 @@ public class TenantPortalController {
             @RequestParam(value = "type", required = false) String documentType,
             Authentication authentication
     ) {
-        logger.info("Uploading document for user: {}, type: {}", authentication.getName(), documentType);
+        LOGGER.info("Uploading document for user: {}, type: {}", authentication.getName(), documentType);
 
         UUID userId = UUID.fromString(authentication.getName());
         TenantDocument document = tenantPortalService.uploadDocument(userId, file, documentType);
@@ -166,7 +173,7 @@ public class TenantPortalController {
             @PathVariable UUID id,
             Authentication authentication
     ) {
-        logger.info("Downloading document {} for user: {}", id, authentication.getName());
+        LOGGER.info("Downloading document {} for user: {}", id, authentication.getName());
 
         UUID userId = UUID.fromString(authentication.getName());
         String filePath = tenantPortalService.getDocumentPath(userId, id);
@@ -182,7 +189,7 @@ public class TenantPortalController {
                 contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
             }
         } catch (Exception e) {
-            logger.warn("Could not determine file content type for: {}", filePath);
+            LOGGER.warn("Could not determine file content type for: {}", filePath);
         }
 
         return ResponseEntity.ok()
@@ -198,7 +205,7 @@ public class TenantPortalController {
     @GetMapping("/parking/mulkiya/download")
     @Operation(summary = "Download Mulkiya", description = "Download the Mulkiya parking document if available")
     public ResponseEntity<Resource> downloadMulkiya(Authentication authentication) {
-        logger.info("Downloading Mulkiya for user: {}", authentication.getName());
+        LOGGER.info("Downloading Mulkiya for user: {}", authentication.getName());
 
         UUID userId = UUID.fromString(authentication.getName());
         String filePath = tenantPortalService.getMulkiyaPath(userId);
@@ -214,7 +221,7 @@ public class TenantPortalController {
                 contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
             }
         } catch (Exception e) {
-            logger.warn("Could not determine file content type for Mulkiya: {}", filePath);
+            LOGGER.warn("Could not determine file content type for Mulkiya: {}", filePath);
         }
 
         return ResponseEntity.ok()
@@ -233,7 +240,7 @@ public class TenantPortalController {
             @RequestBody Map<String, String> preferences,
             Authentication authentication
     ) {
-        logger.info("Updating preferences for user: {}", authentication.getName());
+        LOGGER.info("Updating preferences for user: {}", authentication.getName());
 
         UUID userId = UUID.fromString(authentication.getName());
         String language = preferences.get("language");

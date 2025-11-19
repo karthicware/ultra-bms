@@ -65,7 +65,7 @@ public class SecurityConfig {
             .authenticationProvider(authenticationProvider())
             // Configure security headers
             .headers(headers -> headers
-                .contentTypeOptions(contentTypeOptions -> {})  // Enabled by default
+                .contentTypeOptions(contentTypeOptions -> { })  // Enabled by default
                 .xssProtection(xss -> xss
                     .headerValue(org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
                 .frameOptions(frame -> frame.deny())

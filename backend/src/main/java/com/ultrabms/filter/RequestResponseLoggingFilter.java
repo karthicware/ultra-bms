@@ -38,7 +38,7 @@ import java.util.Map;
  */
 public class RequestResponseLoggingFilter implements Filter {
 
-    private static final Logger log = LoggerFactory.getLogger(RequestResponseLoggingFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RequestResponseLoggingFilter.class);
 
     private static final String[] SENSITIVE_HEADERS = {
             "authorization",

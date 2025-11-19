@@ -4,12 +4,25 @@ import com.ultrabms.dto.tenant.CreateTenantRequest;
 import com.ultrabms.dto.tenant.CreateTenantResponse;
 import com.ultrabms.dto.tenant.TenantDocumentResponse;
 import com.ultrabms.dto.tenant.TenantResponse;
-import com.ultrabms.entity.*;
-import com.ultrabms.entity.enums.*;
+import com.ultrabms.entity.Property;
+import com.ultrabms.entity.Role;
+import com.ultrabms.entity.Tenant;
+import com.ultrabms.entity.TenantDocument;
+import com.ultrabms.entity.Unit;
+import com.ultrabms.entity.User;
+import com.ultrabms.entity.enums.DocumentType;
+import com.ultrabms.entity.enums.PaymentMethod;
+import com.ultrabms.entity.enums.TenantStatus;
+import com.ultrabms.entity.enums.UnitStatus;
 import com.ultrabms.exception.DuplicateResourceException;
 import com.ultrabms.exception.EntityNotFoundException;
 import com.ultrabms.exception.ValidationException;
-import com.ultrabms.repository.*;
+import com.ultrabms.repository.PropertyRepository;
+import com.ultrabms.repository.RoleRepository;
+import com.ultrabms.repository.TenantDocumentRepository;
+import com.ultrabms.repository.TenantRepository;
+import com.ultrabms.repository.UnitRepository;
+import com.ultrabms.repository.UserRepository;
 import com.ultrabms.service.S3Service;
 import com.ultrabms.service.TenantService;
 import org.slf4j.Logger;
@@ -24,7 +37,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.*;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
@@ -34,7 +48,7 @@ import java.util.stream.Collectors;
 @Service
 public class TenantServiceImpl implements TenantService {
 
-    private static final Logger logger = LoggerFactory.getLogger(TenantServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TenantServiceImpl.class);
 
     private final TenantRepository tenantRepository;
     private final TenantDocumentRepository tenantDocumentRepository;
@@ -76,7 +90,7 @@ public class TenantServiceImpl implements TenantService {
             MultipartFile mulkiyaFile,
             List<MultipartFile> additionalFiles
     ) {
-        logger.info("Creating tenant for email: {}", request.getEmail());
+        LOGGER.info("Creating tenant for email: {}", request.getEmail());
 
         // Validate email is unique
         if (tenantRepository.existsByEmail(request.getEmail())) {
@@ -163,7 +177,7 @@ public class TenantServiceImpl implements TenantService {
                     .build();
 
             Tenant savedTenant = tenantRepository.save(tenant);
-            logger.info("Created tenant record: {} ({})", savedTenant.getTenantNumber(), savedTenant.getId());
+            LOGGER.info("Created tenant record: {} ({})", savedTenant.getTenantNumber(), savedTenant.getId());
 
             // Step 5: Upload documents to S3
             uploadDocuments(savedTenant, emiratesIdFile, passportFile, visaFile, signedLeaseFile, mulkiyaFile, additionalFiles);
@@ -171,7 +185,7 @@ public class TenantServiceImpl implements TenantService {
             // Step 6: Update unit status to OCCUPIED
             unit.setStatus(UnitStatus.OCCUPIED);
             unitRepository.save(unit);
-            logger.info("Updated unit {} status to OCCUPIED", unit.getUnitNumber());
+            LOGGER.info("Updated unit {} status to OCCUPIED", unit.getUnitNumber());
 
             // Step 7: Send welcome email (TODO: implement email service)
             // sendWelcomeEmail(savedTenant, userDto.getPassword());
@@ -184,7 +198,7 @@ public class TenantServiceImpl implements TenantService {
                     .build();
 
         } catch (Exception e) {
-            logger.error("Failed to create tenant: {}", e.getMessage(), e);
+            LOGGER.error("Failed to create tenant: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to create tenant", e);
         }
     }
@@ -240,11 +254,11 @@ public class TenantServiceImpl implements TenantService {
         user.setFailedLoginAttempts(0);
 
         User savedUser = userRepository.save(user);
-        logger.info("Created user account for tenant: {} (userId: {})", savedUser.getEmail(), savedUser.getId());
+        LOGGER.info("Created user account for tenant: {} (userId: {})", savedUser.getEmail(), savedUser.getId());
 
         // TODO: Store randomPassword for welcome email (Story 9.1)
         // For now, log the password (REMOVE IN PRODUCTION!)
-        logger.warn("Generated password for {}: {} (MUST BE SENT VIA EMAIL)", savedUser.getEmail(), randomPassword);
+        LOGGER.warn("Generated password for {}: {} (MUST BE SENT VIA EMAIL)", savedUser.getEmail(), randomPassword);
 
         return savedUser.getId();
     }
@@ -304,7 +318,7 @@ public class TenantServiceImpl implements TenantService {
                 .build();
 
         tenantDocumentRepository.save(document);
-        logger.info("Uploaded document: {} for tenant {}", documentType, tenant.getTenantNumber());
+        LOGGER.info("Uploaded document: {} for tenant {}", documentType, tenant.getTenantNumber());
     }
 
     private String generateTenantNumber() {

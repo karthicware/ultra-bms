@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Request Update</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #0A2342 0%, #1152D4 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .status-update {
+            background-color: #f0f7ff;
+            border-left: 4px solid #1152D4;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin: 10px 0;
+        }
+        .status-assigned {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        .status-in_progress {
+            background-color: #fed7aa;
+            color: #c2410c;
+        }
+        .status-completed {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-closed {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 40%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #1152D4 0%, #0A2342 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .info-box {
+            background-color: #e7f3ff;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 25px 0;
+        }
+        .info-box h4 {
+            margin: 0 0 10px 0;
+            color: #0A2342;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #1152D4;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">🔔</div>
+            <h1>Request Status Updated</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${tenantName}">Tenant</span>,
+            </div>
+
+            <p th:text="${statusMessage}">Your maintenance request has been updated.</p>
+
+            <div class="status-update">
+                <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Request #<span th:text="${requestNumber}">MR-2025-0001</span></div>
+                <div style="color: #0A2342; font-weight: 600; font-size: 18px; margin: 10px 0;" th:text="${title}">Leaking kitchen faucet</div>
+                <span th:class="'status-badge status-' + ${#strings.toLowerCase(#strings.replace(status, '_', '-'))}"
+                      th:text="${statusLabel}">Assigned to Vendor</span>
+            </div>
+
+            <table class="details-table" th:if="${vendorName != null or estimatedCompletionDate != null or workNotes != null}">
+                <tr th:if="${vendorName != null}">
+                    <th>Assigned Vendor</th>
+                    <td th:text="${vendorName}">ABC Plumbing</td>
+                </tr>
+                <tr th:if="${vendorContact != null}">
+                    <th>Contact</th>
+                    <td th:text="${vendorContact}">+971-XX-XXX-XXXX</td>
+                </tr>
+                <tr th:if="${estimatedCompletionDate != null}">
+                    <th>Est. Completion</th>
+                    <td th:text="${estimatedCompletionDate}">Nov 18, 2025</td>
+                </tr>
+                <tr th:if="${workNotes != null}">
+                    <th>Work Notes</th>
+                    <td th:text="${workNotes}">Parts ordered, will complete by Friday</td>
+                </tr>
+            </table>
+
+            <div class="info-box" th:if="${status == 'ASSIGNED'}">
+                <h4>📋 What's Next?</h4>
+                <p style="margin: 0; color: #666;">
+                    The assigned vendor will contact you shortly to schedule a visit based on your preferred access time.
+                    Make sure you're available at the scheduled time.
+                </p>
+            </div>
+
+            <div class="info-box" th:if="${status == 'IN_PROGRESS'}">
+                <h4>🔧 Work in Progress</h4>
+                <p style="margin: 0; color: #666;">
+                    The vendor is currently working on resolving your issue. You can track progress in real-time through the tenant portal.
+                </p>
+            </div>
+
+            <div class="info-box" th:if="${status == 'COMPLETED'}">
+                <h4>✅ Please Provide Feedback</h4>
+                <p style="margin: 0 0 10px 0; color: #666;">
+                    The work has been completed! We'd love to hear about your experience. Please rate the service and leave a comment.
+                </p>
+                <p style="margin: 0; color: #666; font-size: 14px;">
+                    Your feedback helps us ensure quality service and identify areas for improvement.
+                </p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${trackingUrl}" class="button" th:text="${status == 'COMPLETED' ? 'View Details & Provide Feedback' : 'View Request Details'}">View Request Details</a>
+            </div>
+
+            <p style="color: #666; font-size: 14px; margin-top: 25px;">
+                You can view complete details, timeline, and photos anytime in the tenant portal.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Need Help?</strong></p>
+            <p>
+                Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

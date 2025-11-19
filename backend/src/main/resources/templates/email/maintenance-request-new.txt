@@ -1,0 +1,48 @@
+========================================
+NEW MAINTENANCE REQUEST
+========================================
+
+[(${priority == 'HIGH' ? '🚨 HIGH PRIORITY REQUEST' : '📋 New Request Received')]]
+
+A new maintenance request has been submitted and requires your attention.
+[(${priority == 'HIGH' ? 'This request has been marked as high priority and requires immediate action.' : '')]]
+
+REQUEST NUMBER: [(${requestNumber})]
+
+TENANT INFORMATION:
+--------------------------------
+Name:      [(${tenantName})]
+Email:     [(${tenantEmail})]
+Phone:     [(${tenantPhone})]
+Property:  [(${propertyName})] - Unit [(${unitNumber})]
+
+REQUEST DETAILS:
+--------------------------------
+Category:          [(${category})]
+Priority:          [(${priority})]
+Title:             [(${title})]
+Preferred Access:  [(${preferredAccessTime})]
+Preferred Date:    [(${preferredAccessDate})]
+
+DESCRIPTION:
+--------------------------------
+[(${description})]
+
+[(${photoCount > 0 ? '📷 PHOTOS ATTACHED: ' + photoCount + ' photo(s) - View in management portal' : '')]]
+
+MANAGEMENT PORTAL:
+[(${managementUrl})]
+
+NEXT STEPS:
+--------------------------------
+1. Review the request details and photos
+2. Assign to an appropriate vendor or technician
+3. Set estimated completion date
+4. Tenant will be notified automatically when assigned
+
+========================================
+Ultra BMS Management Portal
+========================================
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

@@ -9,7 +9,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
@@ -27,7 +30,7 @@ import java.util.UUID;
 @Service
 public class S3ServiceImpl implements S3Service {
 
-    private static final Logger logger = LoggerFactory.getLogger(S3ServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(S3ServiceImpl.class);
 
     // Allowed MIME types for documents
     private static final List<String> ALLOWED_MIME_TYPES = Arrays.asList(
@@ -109,15 +112,15 @@ public class S3ServiceImpl implements S3Service {
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
 
-            logger.info("File uploaded successfully to S3: {} (original: {})", s3Key, originalFilename);
+            LOGGER.info("File uploaded successfully to S3: {} (original: {})", s3Key, originalFilename);
 
             return s3Key;
 
         } catch (IOException e) {
-            logger.error("Failed to upload file to S3: {}", e.getMessage(), e);
+            LOGGER.error("Failed to upload file to S3: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to upload file to S3", e);
         } catch (S3Exception e) {
-            logger.error("S3 error while uploading file: {}", e.getMessage(), e);
+            LOGGER.error("S3 error while uploading file: {}", e.getMessage(), e);
             throw new RuntimeException("S3 error while uploading file", e);
         }
     }
@@ -132,10 +135,10 @@ public class S3ServiceImpl implements S3Service {
 
             s3Client.deleteObject(deleteObjectRequest);
 
-            logger.info("File deleted successfully from S3: {}", filePath);
+            LOGGER.info("File deleted successfully from S3: {}", filePath);
 
         } catch (S3Exception e) {
-            logger.error("S3 error while deleting file: {}", e.getMessage(), e);
+            LOGGER.error("S3 error while deleting file: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to delete file from S3", e);
         }
     }
@@ -160,14 +163,14 @@ public class S3ServiceImpl implements S3Service {
 
             String url = presignedRequest.url().toString();
 
-            logger.info("Generated presigned URL for file: {}", filePath);
+            LOGGER.info("Generated presigned URL for file: {}", filePath);
 
             presigner.close();
 
             return url;
 
         } catch (S3Exception e) {
-            logger.error("S3 error while generating presigned URL: {}", e.getMessage(), e);
+            LOGGER.error("S3 error while generating presigned URL: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to generate presigned URL", e);
         }
     }

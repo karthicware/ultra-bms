@@ -1,6 +1,9 @@
 package com.ultrabms.service;
 
-import com.ultrabms.dto.*;
+import com.ultrabms.dto.LoginRequest;
+import com.ultrabms.dto.LoginResponse;
+import com.ultrabms.dto.RegisterRequest;
+import com.ultrabms.dto.TokenResponse;
 
 /**
  * Service interface for authentication operations.

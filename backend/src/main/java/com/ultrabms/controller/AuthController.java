@@ -1,6 +1,14 @@
 package com.ultrabms.controller;
 
-import com.ultrabms.dto.*;
+import com.ultrabms.dto.ApiResponse;
+import com.ultrabms.dto.ForgotPasswordRequest;
+import com.ultrabms.dto.LoginRequest;
+import com.ultrabms.dto.LoginResponse;
+import com.ultrabms.dto.RefreshTokenRequest;
+import com.ultrabms.dto.RegisterRequest;
+import com.ultrabms.dto.ResetPasswordRequest;
+import com.ultrabms.dto.SuccessResponse;
+import com.ultrabms.dto.TokenResponse;
 import com.ultrabms.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -17,7 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller for authentication endpoints.

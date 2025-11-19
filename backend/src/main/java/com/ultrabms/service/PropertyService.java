@@ -1,6 +1,9 @@
 package com.ultrabms.service;
 
-import com.ultrabms.dto.properties.*;
+import com.ultrabms.dto.properties.CreatePropertyRequest;
+import com.ultrabms.dto.properties.PropertyImageResponse;
+import com.ultrabms.dto.properties.PropertyResponse;
+import com.ultrabms.dto.properties.UpdatePropertyRequest;
 import com.ultrabms.entity.enums.PropertyStatus;
 import com.ultrabms.entity.enums.PropertyType;
 import org.springframework.data.domain.Page;

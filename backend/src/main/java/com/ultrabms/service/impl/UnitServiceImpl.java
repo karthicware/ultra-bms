@@ -1,6 +1,12 @@
 package com.ultrabms.service.impl;
 
-import com.ultrabms.dto.units.*;
+import com.ultrabms.dto.units.BulkCreateUnitsRequest;
+import com.ultrabms.dto.units.BulkUpdateStatusRequest;
+import com.ultrabms.dto.units.CreateUnitRequest;
+import com.ultrabms.dto.units.UnitHistoryResponse;
+import com.ultrabms.dto.units.UnitResponse;
+import com.ultrabms.dto.units.UpdateUnitRequest;
+import com.ultrabms.dto.units.UpdateUnitStatusRequest;
 import com.ultrabms.entity.Property;
 import com.ultrabms.entity.Unit;
 import com.ultrabms.entity.UnitHistory;
@@ -22,17 +28,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream;
 import java.util.stream.Collectors;
 
-/**
- * Implementation of UnitService
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UnitServiceImpl implements UnitService {
-
     private final UnitRepository unitRepository;
     private final PropertyRepository propertyRepository;
     private final UnitHistoryRepository unitHistoryRepository;
@@ -51,15 +59,12 @@ public class UnitServiceImpl implements UnitService {
     public UnitResponse createUnit(CreateUnitRequest request, UUID createdBy) {
         log.info("Creating new unit: {} for property: {}", request.getUnitNumber(), request.getPropertyId());
 
-        // Validate property exists
         Property property = findPropertyById(request.getPropertyId());
 
-        // Validate unique unit number within property
         if (unitRepository.findByPropertyIdAndUnitNumber(request.getPropertyId(), request.getUnitNumber()).isPresent()) {
             throw new ValidationException("Unit with this number already exists in the property");
         }
 
-        // Create unit entity
         Unit unit = Unit.builder()
                 .property(property)
                 .unitNumber(request.getUnitNumber())
@@ -83,7 +88,6 @@ public class UnitServiceImpl implements UnitService {
     public BulkCreateResult bulkCreateUnits(BulkCreateUnitsRequest request, UUID createdBy) {
         log.info("Bulk creating {} units for property: {}", request.getCount(), request.getPropertyId());
 
-        // Validate property exists
         Property property = findPropertyById(request.getPropertyId());
 
         List<UnitResponse> createdUnits = new ArrayList<>();
@@ -101,14 +105,12 @@ public class UnitServiceImpl implements UnitService {
 
         for (String unitNumber : unitNumbers) {
             try {
-                // Check if unit number already exists
                 if (unitRepository.findByPropertyIdAndUnitNumber(request.getPropertyId(), unitNumber).isPresent()) {
                     errors.add("Unit " + unitNumber + " already exists");
                     failureCount++;
                     continue;
                 }
 
-                // Create unit
                 Unit unit = Unit.builder()
                         .property(property)
                         .unitNumber(unitNumber)
@@ -157,9 +159,7 @@ public class UnitServiceImpl implements UnitService {
 
         Unit unit = findUnitById(id);
 
-        // Update fields if provided
         if (request.getUnitNumber() != null) {
-            // Check uniqueness if changed
             if (!request.getUnitNumber().equals(unit.getUnitNumber()) &&
                     unitRepository.findByPropertyIdAndUnitNumber(
                             unit.getProperty().getId(),
@@ -272,7 +272,6 @@ public class UnitServiceImpl implements UnitService {
         UnitStatus oldStatus = unit.getStatus();
         UnitStatus newStatus = request.getNewStatus();
 
-        // Validate status transition
         if (!isValidStatusTransition(oldStatus, newStatus)) {
             throw new ValidationException(
                     String.format("Invalid status transition from %s to %s", oldStatus, newStatus)
@@ -282,7 +281,6 @@ public class UnitServiceImpl implements UnitService {
         unit.setStatus(newStatus);
         unit = unitRepository.save(unit);
 
-        // Create history entry
         createHistoryEntry(unit, oldStatus, newStatus, request.getReason(), updatedBy);
 
         log.info("Unit status updated successfully: {} -> {}", oldStatus, newStatus);
@@ -306,7 +304,6 @@ public class UnitServiceImpl implements UnitService {
                 UnitStatus oldStatus = unit.getStatus();
                 UnitStatus newStatus = request.getNewStatus();
 
-                // Validate status transition
                 if (!isValidStatusTransition(oldStatus, newStatus)) {
                     errors.add("Unit " + unit.getUnitNumber() + ": Invalid transition from " + oldStatus + " to " + newStatus);
                     failedUnitIds.add(unitId);
@@ -317,7 +314,6 @@ public class UnitServiceImpl implements UnitService {
                 unit.setStatus(newStatus);
                 unit = unitRepository.save(unit);
 
-                // Create history entry
                 createHistoryEntry(unit, oldStatus, newStatus, request.getReason(), updatedBy);
 
                 updatedUnitIds.add(unitId);
@@ -373,7 +369,6 @@ public class UnitServiceImpl implements UnitService {
         log.info("Soft deleting unit: {}", id);
         Unit unit = findUnitById(id);
 
-        // Validate unit is not occupied
         if (unit.getStatus() == UnitStatus.OCCUPIED) {
             throw new ValidationException("Cannot delete an occupied unit");
         }
@@ -405,27 +400,18 @@ public class UnitServiceImpl implements UnitService {
         return validNextStatuses != null && validNextStatuses.contains(newStatus);
     }
 
-    /**
-     * Helper method to find property by ID
-     */
     private Property findPropertyById(UUID id) {
         return propertyRepository.findById(id)
                 .filter(Property::getActive)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found with ID: " + id));
     }
 
-    /**
-     * Helper method to find unit by ID
-     */
     private Unit findUnitById(UUID id) {
         return unitRepository.findById(id)
                 .filter(Unit::getActive)
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found with ID: " + id));
     }
 
-    /**
-     * Helper method to create unit history entry
-     */
     private void createHistoryEntry(
             Unit unit,
             UnitStatus oldStatus,
@@ -447,9 +433,6 @@ public class UnitServiceImpl implements UnitService {
         unitHistoryRepository.save(history);
     }
 
-    /**
-     * Helper method to generate unit numbers based on increment pattern
-     */
     private List<String> generateUnitNumbers(
             String startingNumber,
             int count,
