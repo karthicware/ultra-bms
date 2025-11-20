@@ -34,24 +34,7 @@ import {
 import { useDebounce } from '@/hooks/useDebounce';
 import { getMaintenanceRequests } from '@/services/maintenance.service';
 import { MaintenanceStatus, MaintenanceCategory } from '@/types/maintenance';
-
-const STATUS_COLORS = {
-  [MaintenanceStatus.SUBMITTED]: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  [MaintenanceStatus.ASSIGNED]: 'bg-blue-100 text-blue-800 border-blue-300',
-  [MaintenanceStatus.IN_PROGRESS]: 'bg-orange-100 text-orange-800 border-orange-300',
-  [MaintenanceStatus.COMPLETED]: 'bg-green-100 text-green-800 border-green-300',
-  [MaintenanceStatus.CLOSED]: 'bg-gray-100 text-gray-800 border-gray-300',
-  [MaintenanceStatus.CANCELLED]: 'bg-gray-100 text-gray-800 border-gray-300',
-};
-
-const STATUS_LABELS = {
-  [MaintenanceStatus.SUBMITTED]: 'Waiting for assignment',
-  [MaintenanceStatus.ASSIGNED]: 'Assigned',
-  [MaintenanceStatus.IN_PROGRESS]: 'In progress',
-  [MaintenanceStatus.COMPLETED]: 'Completed',
-  [MaintenanceStatus.CLOSED]: 'Closed',
-  [MaintenanceStatus.CANCELLED]: 'Cancelled',
-};
+import { StatusBadge } from '@/components/maintenance/StatusBadge';
 
 export default function MaintenanceRequestsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -182,9 +165,7 @@ export default function MaintenanceRequestsPage() {
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center gap-2">
                           <CardTitle className="text-lg">{request.title}</CardTitle>
-                          <Badge className={STATUS_COLORS[request.status]}>
-                            {STATUS_LABELS[request.status]}
-                          </Badge>
+                          <StatusBadge status={request.status} />
                         </div>
                         <CardDescription>
                           Request #{request.requestNumber} • {request.category}

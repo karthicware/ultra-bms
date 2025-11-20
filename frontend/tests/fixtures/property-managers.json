@@ -1,0 +1,14 @@
+[
+    {
+        "firstName": "John",
+        "lastName": "Manager",
+        "email": "john.manager@example.com",
+        "role": "PROPERTY_MANAGER"
+    },
+    {
+        "firstName": "Sarah",
+        "lastName": "Admin",
+        "email": "sarah.admin@example.com",
+        "role": "PROPERTY_MANAGER"
+    }
+]

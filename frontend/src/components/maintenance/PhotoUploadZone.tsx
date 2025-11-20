@@ -42,7 +42,8 @@ export function PhotoUploadZone({
     if (!ALLOWED_TYPES.includes(file.type)) {
       return `${file.name} must be JPG or PNG`;
     }
-    if (file.size > MAX_FILE_SIZE) {
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
       return `${file.name} exceeds ${maxSizeMB}MB`;
     }
     return null;

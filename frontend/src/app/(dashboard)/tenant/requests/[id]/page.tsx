@@ -16,9 +16,9 @@
 
 import { use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tantml:parameter>
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { ArrowLeft, MapPin, Calendar, Clock, User } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft, User } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,15 +32,7 @@ import { StatusTimeline } from '@/components/maintenance/StatusTimeline';
 import { PhotoGallery } from '@/components/maintenance/PhotoGallery';
 import { FeedbackForm } from '@/components/maintenance/FeedbackForm';
 import { CancelRequestButton } from '@/components/maintenance/CancelRequestButton';
-
-const STATUS_COLORS = {
-  [MaintenanceStatus.SUBMITTED]: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  [MaintenanceStatus.ASSIGNED]: 'bg-blue-100 text-blue-800 border-blue-300',
-  [MaintenanceStatus.IN_PROGRESS]: 'bg-orange-100 text-orange-800 border-orange-300',
-  [MaintenanceStatus.COMPLETED]: 'bg-green-100 text-green-800 border-green-300',
-  [MaintenanceStatus.CLOSED]: 'bg-gray-100 text-gray-800 border-gray-300',
-  [MaintenanceStatus.CANCELLED]: 'bg-gray-100 text-gray-800 border-gray-300',
-};
+import { StatusBadge } from '@/components/maintenance/StatusBadge';
 
 const PRIORITY_COLORS = {
   HIGH: 'bg-red-100 text-red-800 border-red-300',
@@ -111,7 +103,7 @@ export default function RequestDetailsPage({ params }: { params: Promise<{ id: s
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{request.title}</h1>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-muted-foreground">Request #{request.requestNumber}</span>
-              <Badge className={STATUS_COLORS[request.status]}>{request.status}</Badge>
+              <StatusBadge status={request.status} />
               <Badge className={PRIORITY_COLORS[request.priority]}>{request.priority}</Badge>
               <Badge variant="outline">
                 {CATEGORY_ICONS[request.category]} {request.category}

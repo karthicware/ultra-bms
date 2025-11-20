@@ -1,0 +1,35 @@
+[
+    {
+        "name": "Sunset Heights",
+        "address": "123 Sunset Blvd, Dubai",
+        "type": "RESIDENTIAL",
+        "totalUnits": 20,
+        "amenities": [
+            "Pool",
+            "Gym",
+            "Parking"
+        ]
+    },
+    {
+        "name": "Business Tower",
+        "address": "456 Business Bay, Dubai",
+        "type": "COMMERCIAL",
+        "totalUnits": 50,
+        "amenities": [
+            "Conference Room",
+            "Security",
+            "Parking"
+        ]
+    },
+    {
+        "name": "Mixed Plaza",
+        "address": "789 Main St, Dubai",
+        "type": "MIXED_USE",
+        "totalUnits": 30,
+        "amenities": [
+            "Retail",
+            "Gym",
+            "Parking"
+        ]
+    }
+]
