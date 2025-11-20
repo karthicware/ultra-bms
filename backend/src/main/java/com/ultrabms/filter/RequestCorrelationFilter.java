@@ -67,7 +67,7 @@ public class RequestCorrelationFilter implements Filter {
             // Add to response headers for client-side tracking
             httpResponse.setHeader(CORRELATION_ID_HEADER, correlationId);
 
-            log.debug("Request received: {} {} [correlationId={}]",
+            LOG.debug("Request received: {} {} [correlationId={}]",
                     httpRequest.getMethod(),
                     httpRequest.getRequestURI(),
                     correlationId);
@@ -75,7 +75,7 @@ public class RequestCorrelationFilter implements Filter {
             // Continue with request processing
             chain.doFilter(request, response);
 
-            log.debug("Request completed: {} {} [correlationId={}] [status={}]",
+            LOG.debug("Request completed: {} {} [correlationId={}] [status={}]",
                     httpRequest.getMethod(),
                     httpRequest.getRequestURI(),
                     correlationId,

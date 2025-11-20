@@ -1,7 +1,9 @@
 package com.ultrabms.controller;
 
 import com.ultrabms.dto.ApiResponse;
+import com.ultrabms.dto.units.BulkCreateResult;
 import com.ultrabms.dto.units.BulkCreateUnitsRequest;
+import com.ultrabms.dto.units.BulkUpdateResult;
 import com.ultrabms.dto.units.BulkUpdateStatusRequest;
 import com.ultrabms.dto.units.CreateUnitRequest;
 import com.ultrabms.dto.units.UnitHistoryResponse;
@@ -54,12 +56,12 @@ public class UnitController {
 
     @PostMapping
     @Operation(summary = "Create a new unit")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROPERTY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     public ResponseEntity<ApiResponse<UnitResponse>> createUnit(
             @Valid @RequestBody CreateUnitRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal Object principal
     ) {
-        UUID createdBy = getUserId(userDetails);
+        UUID createdBy = getUserId(principal);
         UnitResponse response = unitService.createUnit(request, createdBy);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -68,12 +70,12 @@ public class UnitController {
 
     @PostMapping("/bulk-create")
     @Operation(summary = "Bulk create units")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROPERTY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     public ResponseEntity<ApiResponse<BulkCreateResult>> bulkCreateUnits(
             @Valid @RequestBody BulkCreateUnitsRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal Object principal
     ) {
-        UUID createdBy = getUserId(userDetails);
+        UUID createdBy = getUserId(principal);
         BulkCreateResult response = unitService.bulkCreateUnits(request, createdBy);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -89,7 +91,7 @@ public class UnitController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update unit")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROPERTY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     public ResponseEntity<ApiResponse<UnitResponse>> updateUnit(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateUnitRequest request
@@ -152,25 +154,25 @@ public class UnitController {
 
     @PatchMapping("/{id}/status")
     @Operation(summary = "Update unit status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROPERTY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     public ResponseEntity<ApiResponse<UnitResponse>> updateUnitStatus(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateUnitStatusRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal Object principal
     ) {
-        UUID updatedBy = getUserId(userDetails);
+        UUID updatedBy = getUserId(principal);
         UnitResponse response = unitService.updateUnitStatus(id, request, updatedBy);
         return ResponseEntity.ok(ApiResponse.success(response, "Unit status updated successfully"));
     }
 
     @PatchMapping("/bulk-status")
     @Operation(summary = "Bulk update unit status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROPERTY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     public ResponseEntity<ApiResponse<BulkUpdateResult>> bulkUpdateUnitStatus(
             @Valid @RequestBody BulkUpdateStatusRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal Object principal
     ) {
-        UUID updatedBy = getUserId(userDetails);
+        UUID updatedBy = getUserId(principal);
         BulkUpdateResult response = unitService.bulkUpdateUnitStatus(request, updatedBy);
         return ResponseEntity.ok(ApiResponse.success(response, "Bulk status update completed"));
     }
@@ -191,7 +193,7 @@ public class UnitController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Soft delete unit")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROPERTY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     public ResponseEntity<ApiResponse<Void>> deleteUnit(@PathVariable UUID id) {
         unitService.deleteUnit(id);
         return ResponseEntity.ok(ApiResponse.success(null, "Unit deleted successfully"));
@@ -199,7 +201,7 @@ public class UnitController {
 
     @PatchMapping("/{id}/restore")
     @Operation(summary = "Restore soft deleted unit")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROPERTY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     public ResponseEntity<ApiResponse<UnitResponse>> restoreUnit(@PathVariable UUID id) {
         UnitResponse response = unitService.restoreUnit(id);
         return ResponseEntity.ok(ApiResponse.success(response, "Unit restored successfully"));
@@ -208,7 +210,7 @@ public class UnitController {
     /**
      * Helper method to extract user ID from UserDetails
      */
-    private UUID getUserId(UserDetails userDetails) {
-        return UUID.fromString(userDetails.getUsername());
+    private UUID getUserId(Object principal) {
+        return getUserIdFromPrincipal(principal);
     }
 }

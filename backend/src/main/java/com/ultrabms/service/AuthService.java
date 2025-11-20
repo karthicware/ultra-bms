@@ -4,6 +4,7 @@ import com.ultrabms.dto.LoginRequest;
 import com.ultrabms.dto.LoginResponse;
 import com.ultrabms.dto.RegisterRequest;
 import com.ultrabms.dto.TokenResponse;
+import com.ultrabms.dto.UserDto;
 
 /**
  * Service interface for authentication operations.

@@ -1,6 +1,5 @@
 package com.ultrabms.controller;
 
-import com.ultrabms.dto.ApiResponse;
 import com.ultrabms.dto.ForgotPasswordRequest;
 import com.ultrabms.dto.LoginRequest;
 import com.ultrabms.dto.LoginResponse;
@@ -9,6 +8,7 @@ import com.ultrabms.dto.RegisterRequest;
 import com.ultrabms.dto.ResetPasswordRequest;
 import com.ultrabms.dto.SuccessResponse;
 import com.ultrabms.dto.TokenResponse;
+import com.ultrabms.dto.UserDto;
 import com.ultrabms.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

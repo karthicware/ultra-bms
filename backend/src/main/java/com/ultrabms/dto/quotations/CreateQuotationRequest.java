@@ -2,6 +2,7 @@ package com.ultrabms.dto.quotations;
 
 import com.ultrabms.entity.Quotation;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

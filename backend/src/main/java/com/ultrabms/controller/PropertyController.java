@@ -2,6 +2,7 @@ package com.ultrabms.controller;
 
 import com.ultrabms.dto.ApiResponse;
 import com.ultrabms.dto.properties.CreatePropertyRequest;
+import com.ultrabms.dto.properties.OccupancyResponse;
 import com.ultrabms.dto.properties.PropertyImageResponse;
 import com.ultrabms.dto.properties.PropertyResponse;
 import com.ultrabms.dto.properties.UpdatePropertyRequest;
@@ -51,12 +52,12 @@ public class PropertyController {
 
     @PostMapping
     @Operation(summary = "Create a new property")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROPERTY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     public ResponseEntity<ApiResponse<PropertyResponse>> createProperty(
             @Valid @RequestBody CreatePropertyRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal Object principal
     ) {
-        UUID createdBy = getUserId(userDetails);
+        UUID createdBy = getUserId(principal);
         PropertyResponse response = propertyService.createProperty(request, createdBy);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -79,7 +80,7 @@ public class PropertyController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update property")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROPERTY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     public ResponseEntity<ApiResponse<PropertyResponse>> updateProperty(
             @PathVariable UUID id,
             @Valid @RequestBody UpdatePropertyRequest request
@@ -138,7 +139,7 @@ public class PropertyController {
 
     @PatchMapping("/{id}/assign-manager")
     @Operation(summary = "Assign property manager")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<PropertyResponse>> assignManager(
             @PathVariable UUID id,
             @RequestParam UUID managerId
@@ -149,14 +150,14 @@ public class PropertyController {
 
     @PostMapping("/{id}/images")
     @Operation(summary = "Upload image for property")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROPERTY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     public ResponseEntity<ApiResponse<PropertyImageResponse>> uploadImage(
             @PathVariable UUID id,
             @RequestParam("file") MultipartFile file,
             @RequestParam(required = false) Integer displayOrder,
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal Object principal
     ) {
-        UUID uploadedBy = getUserId(userDetails);
+        UUID uploadedBy = getUserId(principal);
         PropertyImageResponse response = propertyService.uploadImage(id, file, displayOrder, uploadedBy);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -172,7 +173,7 @@ public class PropertyController {
 
     @DeleteMapping("/images/{imageId}")
     @Operation(summary = "Delete property image")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROPERTY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     public ResponseEntity<ApiResponse<Void>> deleteImage(@PathVariable UUID imageId) {
         propertyService.deleteImage(imageId);
         return ResponseEntity.ok(ApiResponse.success(null, "Image deleted successfully"));
@@ -180,7 +181,7 @@ public class PropertyController {
 
     @PutMapping("/{id}/images/reorder")
     @Operation(summary = "Reorder property images")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROPERTY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     public ResponseEntity<ApiResponse<Void>> reorderImages(
             @PathVariable UUID id,
             @RequestBody List<UUID> imageIds
@@ -198,7 +199,7 @@ public class PropertyController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Soft delete property")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteProperty(@PathVariable UUID id) {
         propertyService.deleteProperty(id);
         return ResponseEntity.ok(ApiResponse.success(null, "Property deleted successfully"));
@@ -206,16 +207,24 @@ public class PropertyController {
 
     @PatchMapping("/{id}/restore")
     @Operation(summary = "Restore soft deleted property")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<PropertyResponse>> restoreProperty(@PathVariable UUID id) {
         PropertyResponse response = propertyService.restoreProperty(id);
         return ResponseEntity.ok(ApiResponse.success(response, "Property restored successfully"));
     }
 
     /**
-     * Helper method to extract user ID from UserDetails
+     * Helper method to extract user ID from authentication principal.
+     * Supports both UUID (from JWT filter) and UserDetails (from other auth methods).
      */
-    private UUID getUserId(UserDetails userDetails) {
-        return UUID.fromString(userDetails.getUsername());
+    private UUID getUserId(Object principal) {
+        if (principal instanceof UUID) {
+            return (UUID) principal;
+        } else if (principal instanceof UserDetails) {
+            return UUID.fromString(((UserDetails) principal).getUsername());
+        } else if (principal instanceof String) {
+            return UUID.fromString((String) principal);
+        }
+        throw new IllegalArgumentException("Unsupported principal type: " + principal.getClass().getName());
     }
 }

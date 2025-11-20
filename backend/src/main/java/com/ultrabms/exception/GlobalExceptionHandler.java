@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String requestId = generateRequestId();
-        log.warn("Entity not found [requestId={}]: {}", requestId, ex.getMessage());
+        LOG.warn("Entity not found [requestId={}]: {}", requestId, ex.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 HttpStatus.NOT_FOUND.value(),
@@ -85,7 +85,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String requestId = generateRequestId();
-        log.warn("Duplicate resource [requestId={}]: {}", requestId, ex.getMessage());
+        LOG.warn("Duplicate resource [requestId={}]: {}", requestId, ex.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 HttpStatus.CONFLICT.value(),
@@ -113,7 +113,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String requestId = generateRequestId();
-        log.warn("Validation failed [requestId={}]: {}", requestId, ex.getMessage());
+        LOG.warn("Validation failed [requestId={}]: {}", requestId, ex.getMessage());
 
         List<ErrorResponse.FieldError> fieldErrors = null;
         if (ex.getField() != null) {
@@ -150,7 +150,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String requestId = generateRequestId();
-        log.warn("Request validation failed [requestId={}]: {} validation errors",
+        LOG.warn("Request validation failed [requestId={}]: {} validation errors",
                 requestId, ex.getBindingResult().getErrorCount());
 
         List<ErrorResponse.FieldError> fieldErrors = ex.getBindingResult()
@@ -194,7 +194,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String requestId = generateRequestId();
-        log.warn("Constraint violation [requestId={}]: {}", requestId, ex.getMessage());
+        LOG.warn("Constraint violation [requestId={}]: {}", requestId, ex.getMessage());
 
         List<ErrorResponse.FieldError> fieldErrors = ex.getConstraintViolations()
                 .stream()
@@ -234,7 +234,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String requestId = generateRequestId();
-        log.warn("Unauthorized access attempt [requestId={}]: {}", requestId, ex.getMessage());
+        LOG.warn("Unauthorized access attempt [requestId={}]: {}", requestId, ex.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 HttpStatus.FORBIDDEN.value(),
@@ -265,7 +265,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String requestId = generateRequestId();
-        log.warn("Access denied [requestId={}]: {}", requestId, ex.getMessage());
+        LOG.warn("Access denied [requestId={}]: {}", requestId, ex.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 HttpStatus.FORBIDDEN.value(),
@@ -296,7 +296,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String requestId = generateRequestId();
-        log.warn("Authentication failed [requestId={}]: {}", requestId, ex.getMessage());
+        LOG.warn("Authentication failed [requestId={}]: {}", requestId, ex.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 HttpStatus.UNAUTHORIZED.value(),
@@ -327,7 +327,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String requestId = generateRequestId();
-        log.warn("Account locked [requestId={}]: {}", requestId, ex.getMessage());
+        LOG.warn("Account locked [requestId={}]: {}", requestId, ex.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 HttpStatus.LOCKED.value(),
@@ -358,7 +358,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String requestId = generateRequestId();
-        log.warn("Rate limit exceeded [requestId={}]: {}", requestId, ex.getMessage());
+        LOG.warn("Rate limit exceeded [requestId={}]: {}", requestId, ex.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 HttpStatus.TOO_MANY_REQUESTS.value(),
@@ -389,7 +389,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String requestId = generateRequestId();
-        log.warn("Invalid token [requestId={}]: {}", requestId, ex.getMessage());
+        LOG.warn("Invalid token [requestId={}]: {}", requestId, ex.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 HttpStatus.BAD_REQUEST.value(),
@@ -420,7 +420,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         String requestId = generateRequestId();
-        log.error("Unhandled exception [requestId={}]: {}", requestId, ex.getMessage(), ex);
+        LOG.error("Unhandled exception [requestId={}]: {}", requestId, ex.getMessage(), ex);
 
         ErrorResponse errorResponse = ErrorResponse.of(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

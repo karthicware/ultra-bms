@@ -5,13 +5,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1
 export class TestApiClient {
   private token: string | null = null;
 
-  async login(email = 'admin@ultrabms.com', password = 'password') {
+  async login(email = 'admin@ultrabms.com', password = 'Admin@123') {
     try {
       const response = await axios.post(`${API_URL}/auth/login`, {
         email,
         password,
       });
-      this.token = response.data.token;
+      this.token = response.data.accessToken;
       return this.token;
     } catch (error) {
       console.error('Login failed:', error);

@@ -89,18 +89,18 @@ public class RequestResponseLoggingFilter implements Filter {
 
         // INFO level: Basic request info
         if (queryString != null) {
-            log.info("→ {} {} ? {}", method, uri, queryString);
+            LOG.info("→ {} {} ? {}", method, uri, queryString);
         } else {
-            log.info("→ {} {}", method, uri);
+            LOG.info("→ {} {}", method, uri);
         }
 
         // DEBUG level: Detailed info (headers, params)
-        if (log.isDebugEnabled()) {
+        if (LOG.isDebugEnabled()) {
             Map<String, String> headers = getHeaders(request);
-            log.debug("  Headers: {}", headers);
+            LOG.debug("  Headers: {}", headers);
 
             if (request.getParameterMap() != null && !request.getParameterMap().isEmpty()) {
-                log.debug("  Query Params: {}", request.getParameterMap());
+                LOG.debug("  Query Params: {}", request.getParameterMap());
             }
         }
     }
@@ -118,21 +118,21 @@ public class RequestResponseLoggingFilter implements Filter {
         int status = response.getStatus();
 
         // INFO level: Response status and duration
-        log.info("← {} {} → {} ({}ms)", method, uri, status, duration);
+        LOG.info("← {} {} → {} ({}ms)", method, uri, status, duration);
 
         // WARN level: Slow requests (>2 seconds)
         if (duration > 2000) {
-            log.warn("SLOW REQUEST: {} {} took {}ms", method, uri, duration);
+            LOG.warn("SLOW REQUEST: {} {} took {}ms", method, uri, duration);
         }
 
         // WARN level: Client errors (4xx)
         if (status >= 400 && status < 500) {
-            log.warn("CLIENT ERROR: {} {} → {}", method, uri, status);
+            LOG.warn("CLIENT ERROR: {} {} → {}", method, uri, status);
         }
 
         // ERROR level: Server errors (5xx)
         if (status >= 500) {
-            log.error("SERVER ERROR: {} {} → {}", method, uri, status);
+            LOG.error("SERVER ERROR: {} {} → {}", method, uri, status);
         }
     }
 

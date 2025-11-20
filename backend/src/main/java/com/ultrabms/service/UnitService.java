@@ -1,6 +1,8 @@
 package com.ultrabms.service;
 
+import com.ultrabms.dto.units.BulkCreateResult;
 import com.ultrabms.dto.units.BulkCreateUnitsRequest;
+import com.ultrabms.dto.units.BulkUpdateResult;
 import com.ultrabms.dto.units.BulkUpdateStatusRequest;
 import com.ultrabms.dto.units.CreateUnitRequest;
 import com.ultrabms.dto.units.UnitHistoryResponse;

@@ -37,6 +37,19 @@ export class SeedUtils {
         return createdUnits;
     }
 
+    async seedPropertyWithUnits() {
+        // Seed properties first
+        const createdProperties = await this.seedProperties();
+
+        // Seed units for the first property if any properties were created
+        if (createdProperties.length > 0) {
+            const firstProperty = createdProperties[0];
+            await this.seedUnits(firstProperty.id);
+        }
+
+        return createdProperties;
+    }
+
     async cleanup() {
         for (const id of this.createdPropertyIds) {
             try {

@@ -1,6 +1,7 @@
 package com.ultrabms.service.impl;
 
 import com.ultrabms.dto.properties.CreatePropertyRequest;
+import com.ultrabms.dto.properties.OccupancyResponse;
 import com.ultrabms.dto.properties.PropertyImageResponse;
 import com.ultrabms.dto.properties.PropertyResponse;
 import com.ultrabms.dto.properties.UpdatePropertyRequest;

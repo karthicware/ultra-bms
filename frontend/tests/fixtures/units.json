@@ -2,31 +2,25 @@
     {
         "unitNumber": "101",
         "floor": 1,
-        "bedrooms": 2,
-        "bathrooms": 2,
-        "size": 1200,
-        "rentAmount": 85000,
-        "status": "AVAILABLE",
-        "type": "RESIDENTIAL"
+        "bedroomCount": 2,
+        "bathroomCount": 2.0,
+        "squareFootage": 1200.0,
+        "monthlyRent": 85000.0
     },
     {
         "unitNumber": "102",
         "floor": 1,
-        "bedrooms": 1,
-        "bathrooms": 1,
-        "size": 800,
-        "rentAmount": 65000,
-        "status": "OCCUPIED",
-        "type": "RESIDENTIAL"
+        "bedroomCount": 1,
+        "bathroomCount": 1.0,
+        "squareFootage": 800.0,
+        "monthlyRent": 65000.0
     },
     {
         "unitNumber": "201",
         "floor": 2,
-        "bedrooms": 3,
-        "bathrooms": 3,
-        "size": 1800,
-        "rentAmount": 120000,
-        "status": "UNDER_MAINTENANCE",
-        "type": "RESIDENTIAL"
+        "bedroomCount": 3,
+        "bathroomCount": 3.0,
+        "squareFootage": 1800.0,
+        "monthlyRent": 120000.0
     }
 ]
