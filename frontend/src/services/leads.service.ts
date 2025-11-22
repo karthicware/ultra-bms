@@ -248,7 +248,7 @@ export async function getLeadDocuments(leadId: string): Promise<LeadDocument[]> 
   const response = await apiClient.get<LeadDocumentListResponse>(
     `${LEADS_BASE_PATH}/${leadId}/documents`
   );
-  return response.data.data.documents;
+  return response.data.data;
 }
 
 /**
@@ -297,13 +297,30 @@ export async function deleteDocument(leadId: string, documentId: string): Promis
  * ```
  */
 export async function downloadDocument(leadId: string, documentId: string): Promise<Blob> {
-  const response = await apiClient.get<Blob>(
-    `${LEADS_BASE_PATH}/${leadId}/documents/${documentId}/download`,
-    {
-      responseType: 'blob',
-    }
-  );
-  return response.data;
+  try {
+    console.log('[DOWNLOAD] Starting download:', { leadId, documentId });
+    const response = await apiClient.get<Blob>(
+      `${LEADS_BASE_PATH}/${leadId}/documents/${documentId}/download`,
+      {
+        responseType: 'blob',
+      }
+    );
+    console.log('[DOWNLOAD] Success:', {
+      status: response.status,
+      contentType: response.headers['content-type'],
+      size: response.data.size
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('[DOWNLOAD] Error details:', {
+      message: error.message,
+      response: error.response,
+      request: error.request,
+      config: error.config,
+      error: error,
+    });
+    throw error;
+  }
 }
 
 /**
@@ -335,7 +352,7 @@ export async function downloadDocument(leadId: string, documentId: string): Prom
  */
 export async function getLeadHistory(leadId: string): Promise<LeadHistory[]> {
   const response = await apiClient.get<LeadHistoryResponse>(`${LEADS_BASE_PATH}/${leadId}/history`);
-  return response.data.data.history;
+  return response.data.data.content;
 }
 
 /**

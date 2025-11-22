@@ -263,11 +263,28 @@ public class LeadServiceImpl implements LeadService {
 
     @Override
     @Transactional(readOnly = true)
+    public LeadDocument getDocumentById(UUID documentId) {
+        log.info("Getting document by ID: {}", documentId);
+        return leadDocumentRepository.findById(documentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public byte[] downloadDocument(UUID documentId) {
         log.info("Downloading document: {}", documentId);
         LeadDocument document = leadDocumentRepository.findById(documentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
-        return fileStorageService.loadFile(document.getFilePath());
+
+        try {
+            return fileStorageService.loadFile(document.getFilePath());
+        } catch (Exception e) {
+            log.error("Failed to load document file: {} - {}", document.getFilePath(), e.getMessage());
+            throw new ResourceNotFoundException(
+                "Document file not found on server. The file may have been deleted or corrupted. " +
+                "Please delete this document entry and upload a new one."
+            );
+        }
     }
 
     @Override
@@ -277,7 +294,14 @@ public class LeadServiceImpl implements LeadService {
         LeadDocument document = leadDocumentRepository.findById(documentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
 
-        fileStorageService.deleteFile(document.getFilePath());
+        // Try to delete physical file, but don't fail if it doesn't exist
+        try {
+            fileStorageService.deleteFile(document.getFilePath());
+        } catch (Exception e) {
+            log.warn("Failed to delete physical file (may not exist): {} - {}", document.getFilePath(), e.getMessage());
+        }
+
+        // Always delete database record
         leadDocumentRepository.delete(document);
         log.info("Document deleted successfully: {}", documentId);
     }

@@ -19,19 +19,20 @@ import java.util.UUID;
 
 /**
  * File Storage Service Implementation
- * Handles file storage operations for property images
- * AC: #2 - Image upload with type and size validation
+ * Handles file storage operations for documents and images
+ * Supports PDF, JPG, and PNG files with type and size validation (max 5MB)
  */
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileStorageServiceImpl.class);
 
-    // Allowed MIME types for images
+    // Allowed MIME types for documents (images and PDFs)
     private static final List<String> ALLOWED_MIME_TYPES = Arrays.asList(
             "image/jpeg",
             "image/jpg",
-            "image/png"
+            "image/png",
+            "application/pdf"
     );
 
     // Maximum file size: 5MB
@@ -59,7 +60,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_MIME_TYPES.contains(contentType.toLowerCase())) {
             throw new IllegalArgumentException(
-                    "Invalid file type. Only JPG and PNG images are allowed. Received: " + contentType
+                    "Invalid file type. Only PDF, JPG, and PNG files are allowed. Received: " + contentType
             );
         }
 

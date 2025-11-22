@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { useAuth } from '@/contexts/auth-context';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,6 +68,7 @@ export default function LeadDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const leadId = params.id as string;
 
   const [lead, setLead] = useState<Lead | null>(null);
@@ -81,23 +83,63 @@ export default function LeadDetailPage() {
   const [convertingQuotationId, setConvertingQuotationId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchLeadData();
-  }, [leadId]);
+    // Wait for auth to finish loading before fetching data
+    if (!authLoading) {
+      if (isAuthenticated) {
+        fetchLeadData();
+      } else {
+        // Auth loaded but user not authenticated - redirect to login
+        router.push('/login');
+      }
+    }
+  }, [leadId, authLoading, isAuthenticated, router]);
 
   const fetchLeadData = async () => {
     try {
       setIsLoading(true);
-      const [leadData, docsData, quoteData, historyData] = await Promise.all([
+      const [leadData, docsData, quoteData, historyData] = await Promise.allSettled([
         getLeadById(leadId),
         getLeadDocuments(leadId),
         getQuotationsByLeadId(leadId),
         getLeadHistory(leadId),
       ]);
 
-      setLead(leadData);
-      setDocuments(docsData);
-      setQuotations(quoteData);
-      setHistory(historyData);
+      // Handle lead data
+      if (leadData.status === 'fulfilled') {
+        setLead(leadData.value);
+      } else {
+        console.error('Failed to fetch lead:', leadData.reason);
+        throw new Error('Failed to load lead details');
+      }
+
+      // Handle documents (set empty array if failed)
+      if (docsData.status === 'fulfilled') {
+        setDocuments(docsData.value || []);
+      } else {
+        console.error('Failed to fetch documents:', docsData.reason);
+        setDocuments([]);
+        toast({
+          title: 'Warning',
+          description: 'Failed to load documents',
+          variant: 'destructive',
+        });
+      }
+
+      // Handle quotations (set empty array if failed)
+      if (quoteData.status === 'fulfilled') {
+        setQuotations(quoteData.value || []);
+      } else {
+        console.error('Failed to fetch quotations:', quoteData.reason);
+        setQuotations([]);
+      }
+
+      // Handle history (set empty array if failed)
+      if (historyData.status === 'fulfilled') {
+        setHistory(historyData.value || []);
+      } else {
+        console.error('Failed to fetch history:', historyData.reason);
+        setHistory([]);
+      }
     } catch (error) {
       toast({
         title: 'Error',
@@ -152,7 +194,10 @@ export default function LeadDetailPage() {
 
   const handleDownloadDocument = async (docId: string, fileName: string) => {
     try {
+      console.log('[PAGE] Starting download:', { docId, fileName, leadId });
       const blob = await downloadDocument(leadId, docId);
+      console.log('[PAGE] Blob received:', { size: blob.size, type: blob.type });
+
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -161,10 +206,16 @@ export default function LeadDetailPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
+
+      toast({
+        title: 'Success',
+        description: `Downloaded ${fileName}`,
+      });
+    } catch (error: any) {
+      console.error('[PAGE] Download error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to download document',
+        description: error.response?.data?.message || error.message || 'Failed to download document',
         variant: 'destructive',
       });
     }
@@ -194,7 +245,7 @@ export default function LeadDetailPage() {
     }
   };
 
-  if (isLoading || !lead) {
+  if (authLoading || isLoading || !lead) {
     return (
       <div className="container mx-auto py-6 space-y-6">
         <Skeleton className="h-10 w-64" />
@@ -285,9 +336,9 @@ export default function LeadDetailPage() {
       {/* Tabs for Documents, Quotations, History */}
       <Tabs defaultValue="documents" className="w-full">
         <TabsList>
-          <TabsTrigger value="documents">Documents ({documents.length})</TabsTrigger>
-          <TabsTrigger value="quotations">Quotations ({quotations.length})</TabsTrigger>
-          <TabsTrigger value="history">History ({history.length})</TabsTrigger>
+          <TabsTrigger value="documents">Documents ({documents?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="quotations">Quotations ({quotations?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="history">History ({history?.length ?? 0})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="documents" className="mt-6">
@@ -348,13 +399,13 @@ export default function LeadDetailPage() {
               </Dialog>
             </CardHeader>
             <CardContent>
-              {documents.length === 0 ? (
+              {(documents?.length ?? 0) === 0 ? (
                 <p className="text-center py-8 text-muted-foreground">
                   No documents uploaded yet
                 </p>
               ) : (
                 <div className="space-y-2" data-testid="list-documents">
-                  {documents.map((doc) => (
+                  {documents?.map((doc) => (
                     <div
                       key={doc.id}
                       className="flex items-center justify-between p-3 border rounded-lg"
@@ -398,13 +449,13 @@ export default function LeadDetailPage() {
               <CardTitle>Quotations Issued</CardTitle>
             </CardHeader>
             <CardContent>
-              {quotations.length === 0 ? (
+              {(quotations?.length ?? 0) === 0 ? (
                 <p className="text-center py-8 text-muted-foreground">
                   No quotations created yet
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {quotations.map((quote) => (
+                  {quotations?.map((quote) => (
                     <div
                       key={quote.id}
                       className="flex items-center justify-between p-3 border rounded-lg"
@@ -450,15 +501,15 @@ export default function LeadDetailPage() {
               <CardTitle>Communication History</CardTitle>
             </CardHeader>
             <CardContent>
-              {history.length === 0 ? (
+              {(history?.length ?? 0) === 0 ? (
                 <p className="text-center py-8 text-muted-foreground">No history available</p>
               ) : (
                 <div className="space-y-4" data-testid="timeline-lead-history">
-                  {history.map((item, index) => (
+                  {history?.map((item, index) => (
                     <div key={item.id} className="flex gap-4" data-testid={`timeline-item-${index}`}>
                       <div className="flex flex-col items-center">
                         <div className="w-3 h-3 rounded-full bg-primary" />
-                        {index < history.length - 1 && (
+                        {index < (history?.length ?? 0) - 1 && (
                           <div className="w-0.5 h-full bg-border mt-2" />
                         )}
                       </div>

@@ -165,16 +165,18 @@ export interface LeadDocumentResponse {
 
 export interface LeadDocumentListResponse {
   success: boolean;
-  data: {
-    documents: LeadDocument[];
-  };
+  data: LeadDocument[];
   timestamp: string;
 }
 
 export interface LeadHistoryResponse {
   success: boolean;
   data: {
-    history: LeadHistory[];
+    content: LeadHistory[];
+    totalElements: number;
+    totalPages: number;
+    number: number;
+    size: number;
   };
   timestamp: string;
 }

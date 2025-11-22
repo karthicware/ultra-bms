@@ -35,8 +35,22 @@ test.describe('Property Management Flow', () => {
             totalUnits: '50'
         });
 
+        // After successful creation, we should be on the property detail page
+        // Or we navigate back to list to verify
+        const currentUrl = page.url();
+        if (currentUrl.includes('/properties/') && !currentUrl.endsWith('/properties')) {
+            // We're on property detail page, navigate back to list
+            await page.goto('/properties');
+            await page.waitForLoadState('networkidle');
+        }
+
+        // Search for the newly created property
+        await page.getByTestId('input-search-property').fill('New Test Property');
+        await page.waitForTimeout(500); // Wait for debounce
+
         await expect(page.getByText('New Test Property')).toBeVisible();
-        await expect(page.getByText('RESIDENTIAL')).toBeVisible();
+        // UI displays "Residential" (proper case), not "RESIDENTIAL" (all caps)
+        await expect(page.getByText('Residential').first()).toBeVisible();
     });
 
     test('should search properties by name', async ({ page }) => {

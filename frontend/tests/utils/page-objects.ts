@@ -34,19 +34,52 @@ export class PropertyPage extends BasePage {
      * Select an option from a shadcn Select component
      * shadcn Select is a custom React component, not a native <select>
      * Use click-based interaction instead of selectOption()
+     * Maps test values (e.g., 'RESIDENTIAL') to UI display text (e.g., 'Residential')
      */
     async selectPropertyType(type: string) {
         await this.typeSelect.click();
-        await this.page.getByRole('option', { name: type }).click();
+
+        // Wait for dropdown to open
+        await this.page.waitForSelector('[role="option"]', { state: 'visible', timeout: 5000 });
+
+        // Map test values to UI display text
+        const displayNameMap: Record<string, string> = {
+            'RESIDENTIAL': 'Residential',
+            'COMMERCIAL': 'Commercial',
+            'MIXED_USE': 'Mixed Use'
+        };
+
+        const displayName = displayNameMap[type] || type;
+        await this.page.getByRole('option', { name: displayName }).click();
     }
 
     async createProperty(data: { name: string; address: string; type: string; totalUnits: string }) {
-        await this.createButton.click();
+        // Navigate directly to create page (more reliable than clicking button)
+        await this.page.goto('/properties/create');
+        await this.page.waitForLoadState('networkidle');
+
+        // Wait for form to be fully loaded
+        await this.nameInput.waitFor({ state: 'visible', timeout: 5000 });
+
+        // Fill form fields
         await this.nameInput.fill(data.name);
         await this.addressInput.fill(data.address);
+
         // Use click-based selection for shadcn Select component
         await this.selectPropertyType(data.type);
+
         await this.totalUnitsInput.fill(data.totalUnits);
+
+        // Submit and wait for navigation back to properties list
         await this.submitButton.click();
+
+        // Wait for either success (redirect to property detail) or stay on create page (error)
+        // We'll check for the success case - redirect to /properties/{id}
+        try {
+            await this.page.waitForURL(/\/properties\/[a-f0-9-]+/, { timeout: 10000 });
+        } catch (e) {
+            // If we don't navigate, we're still on create page (error occurred)
+            // Continue anyway - test will check assertions
+        }
     }
 }

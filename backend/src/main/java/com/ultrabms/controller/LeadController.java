@@ -125,19 +125,37 @@ public class LeadController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @GetMapping("/documents/{documentId}/download")
+    @GetMapping("/{id}/documents/{documentId}/download")
     @Operation(summary = "Download document")
-    public ResponseEntity<byte[]> downloadDocument(@PathVariable UUID documentId) {
+    public ResponseEntity<byte[]> downloadDocument(
+            @PathVariable UUID id,
+            @PathVariable UUID documentId) {
+        // Get document metadata first
+        LeadDocument document = leadService.getDocumentById(documentId);
         byte[] fileContent = leadService.downloadDocument(documentId);
+
+        // Determine content type from file extension or use the stored one
+        MediaType contentType = MediaType.APPLICATION_OCTET_STREAM;
+        String fileName = document.getFileName();
+        if (fileName.toLowerCase().endsWith(".pdf")) {
+            contentType = MediaType.APPLICATION_PDF;
+        } else if (fileName.toLowerCase().matches(".*\\.(jpg|jpeg)$")) {
+            contentType = MediaType.IMAGE_JPEG;
+        } else if (fileName.toLowerCase().endsWith(".png")) {
+            contentType = MediaType.IMAGE_PNG;
+        }
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"document.pdf\"")
-                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .contentType(contentType)
                 .body(fileContent);
     }
 
-    @DeleteMapping("/documents/{documentId}")
+    @DeleteMapping("/{id}/documents/{documentId}")
     @Operation(summary = "Delete document")
-    public ResponseEntity<ApiResponse<Void>> deleteDocument(@PathVariable UUID documentId) {
+    public ResponseEntity<ApiResponse<Void>> deleteDocument(
+            @PathVariable UUID id,
+            @PathVariable UUID documentId) {
         leadService.deleteDocument(documentId);
         return ResponseEntity.ok(ApiResponse.success(null, "Document deleted successfully"));
     }

@@ -14,13 +14,20 @@ export class AuthHelper {
   async login(email: string, password: string) {
     await this.page.goto('/login');
 
+    // Wait for login form to be ready
+    await this.page.waitForSelector('[data-testid="email-input"]', { state: 'visible' });
+
     await this.page.fill('[data-testid="email-input"]', email);
     await this.page.fill('[data-testid="password-input"]', password);
+
     // Use force: true to bypass Next.js dev overlay interference
     await this.page.click('[data-testid="login-button"]', { force: true });
 
-    // Wait for redirect to dashboard (supports /dashboard, /(dashboard), or /)
-    await this.page.waitForURL(/\/(dashboard)?/, { timeout: 15000 });
+    // Wait for navigation away from login page
+    await this.page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 15000 });
+
+    // Additional wait for page to be stable after login
+    await this.page.waitForLoadState('networkidle', { timeout: 10000 });
   }
 
   /**

@@ -149,8 +149,16 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Global error handling
-    console.error('API Error:', error.response?.data || error.message);
+    // Global error handling with detailed logging
+    console.error('API Error Details:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+      code: error.code,
+    });
     return Promise.reject(error);
   }
 );

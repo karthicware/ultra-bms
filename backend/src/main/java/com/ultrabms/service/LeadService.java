@@ -65,6 +65,11 @@ public interface LeadService {
     List<LeadDocumentResponse> getLeadDocuments(UUID leadId);
 
     /**
+     * Get document by ID
+     */
+    LeadDocument getDocumentById(UUID documentId);
+
+    /**
      * Download document
      */
     byte[] downloadDocument(UUID documentId);
