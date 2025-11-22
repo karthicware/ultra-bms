@@ -6,9 +6,12 @@ import com.ultrabms.dto.properties.OccupancyResponse;
 import com.ultrabms.dto.properties.PropertyImageResponse;
 import com.ultrabms.dto.properties.PropertyResponse;
 import com.ultrabms.dto.properties.UpdatePropertyRequest;
+import com.ultrabms.dto.units.CreateUnitRequest;
+import com.ultrabms.dto.units.UnitResponse;
 import com.ultrabms.entity.enums.PropertyStatus;
 import com.ultrabms.entity.enums.PropertyType;
 import com.ultrabms.service.PropertyService;
+import com.ultrabms.service.UnitService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,6 +52,7 @@ import java.util.UUID;
 public class PropertyController {
 
     private final PropertyService propertyService;
+    private final UnitService unitService;
 
     @PostMapping
     @Operation(summary = "Create a new property")
@@ -62,6 +66,23 @@ public class PropertyController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Property created successfully"));
+    }
+
+    @PostMapping("/{propertyId}/units")
+    @Operation(summary = "Create a new unit for a property")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
+    public ResponseEntity<ApiResponse<UnitResponse>> createUnitForProperty(
+            @PathVariable UUID propertyId,
+            @Valid @RequestBody CreateUnitRequest request,
+            @AuthenticationPrincipal Object principal
+    ) {
+        UUID createdBy = getUserId(principal);
+        // Set propertyId from path variable to ensure consistency
+        request.setPropertyId(propertyId);
+        UnitResponse response = unitService.createUnit(request, createdBy);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success(response, "Unit created successfully"));
     }
 
     @GetMapping("/{id}")
@@ -92,18 +113,22 @@ public class PropertyController {
     @GetMapping
     @Operation(summary = "Search properties with filters")
     public ResponseEntity<ApiResponse<Page<PropertyResponse>>> searchProperties(
-            @RequestParam(required = false) PropertyType type,
+            @RequestParam(required = false) List<PropertyType> types,
             @RequestParam(required = false) PropertyStatus status,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) UUID managerId,
+            @RequestParam(required = false) Double occupancyMin,
+            @RequestParam(required = false) Double occupancyMax,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") String sortDir
+            @RequestParam(defaultValue = "name") String sort,
+            @RequestParam(defaultValue = "ASC") String direction
     ) {
-        Sort.Direction direction = sortDir.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
 
-        Page<PropertyResponse> response = propertyService.searchProperties(type, status, search, pageable);
+        Page<PropertyResponse> response = propertyService.searchProperties(
+                types, status, search, managerId, occupancyMin, occupancyMax, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

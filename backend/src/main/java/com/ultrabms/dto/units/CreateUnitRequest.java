@@ -25,7 +25,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CreateUnitRequest {
 
-    @NotNull(message = "Property ID is required")
+    // Optional in request body - can be set from path variable in nested endpoints
     private UUID propertyId;
 
     @NotBlank(message = "Unit number is required")

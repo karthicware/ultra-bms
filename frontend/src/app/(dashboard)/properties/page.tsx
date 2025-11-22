@@ -41,7 +41,7 @@ import { getProperties } from '@/services/properties.service';
 import type { Property, PropertyType } from '@/types/properties';
 import { getPropertyManagers, type PropertyManager } from '@/services/users.service';
 import { PropertyDeleteDialog } from '@/components/properties/PropertyDeleteDialog';
-import { Plus, Search, Eye, Pencil, Trash2, Building2 } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Trash2, Building2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 /**
  * Get occupancy badge color based on percentage
@@ -70,7 +70,7 @@ export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>('all');
   const [managerFilter, setManagerFilter] = useState<string>('all');
   const [occupancyMin, setOccupancyMin] = useState<string>('');
   const [occupancyMax, setOccupancyMax] = useState<string>('');
@@ -78,6 +78,8 @@ export default function PropertiesPage() {
   const [pageSize, setPageSize] = useState(20);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
+  const [sortField, setSortField] = useState<string>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState<{ id: string; name: string } | null>(null);
   const [managers, setManagers] = useState<PropertyManager[]>([]);
@@ -103,10 +105,12 @@ export default function PropertiesPage() {
         page: currentPage,
         size: pageSize,
         search: searchTerm || undefined,
-        types: typeFilter !== 'all' ? [typeFilter as PropertyType] : undefined,
-        managerId: managerFilter !== 'all' ? managerFilter : undefined,
+        types: propertyTypeFilter !== 'all' ? [propertyTypeFilter as PropertyType] : undefined,
+        managerId: managerFilter !== 'all' ? (managerFilter === 'unassigned' ? undefined : managerFilter) : undefined,
         occupancyMin: occupancyMin ? parseFloat(occupancyMin) : undefined,
         occupancyMax: occupancyMax ? parseFloat(occupancyMax) : undefined,
+        sort: sortField,
+        direction: sortDirection,
       });
 
       setProperties(response.content);
@@ -121,7 +125,7 @@ export default function PropertiesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm, typeFilter, managerFilter, occupancyMin, occupancyMax, toast]);
+  }, [currentPage, pageSize, searchTerm, propertyTypeFilter, managerFilter, occupancyMin, occupancyMax, sortField, sortDirection, toast]);
 
   // Debounced search (300ms as per Story 3.1 pattern)
   const debouncedFetchProperties = useMemo(
@@ -166,6 +170,26 @@ export default function PropertiesPage() {
     setCurrentPage(0); // Reset to first page
   };
 
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field with ascending direction
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 ml-1" />;
+    }
+    return sortDirection === 'asc' ?
+      <ArrowUp className="h-4 w-4 ml-1" /> :
+      <ArrowDown className="h-4 w-4 ml-1" />;
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -204,17 +228,17 @@ export default function PropertiesPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
-                data-testid="input-search-properties"
+                data-testid="input-search-property"
               />
             </div>
 
             {/* Property Type Filter */}
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger data-testid="select-property-type-filter">
-                <SelectValue placeholder="All Property Types" />
+            <Select value={propertyTypeFilter} onValueChange={setPropertyTypeFilter}>
+              <SelectTrigger data-testid="select-filter-type">
+                <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Property Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="RESIDENTIAL">Residential</SelectItem>
                 <SelectItem value="COMMERCIAL">Commercial</SelectItem>
                 <SelectItem value="MIXED_USE">Mixed Use</SelectItem>
@@ -223,11 +247,12 @@ export default function PropertiesPage() {
 
             {/* Property Manager Filter */}
             <Select value={managerFilter} onValueChange={setManagerFilter}>
-              <SelectTrigger data-testid="select-manager-filter">
+              <SelectTrigger data-testid="select-filter-manager">
                 <SelectValue placeholder="All Managers" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Managers</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
                 {managers.map((manager) => (
                   <SelectItem key={manager.id} value={manager.id}>
                     {manager.firstName} {manager.lastName}
@@ -294,11 +319,11 @@ export default function PropertiesPage() {
               <Building2 className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-semibold mb-2">No properties found</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm || typeFilter !== 'all'
+                {searchTerm || propertyTypeFilter !== 'all'
                   ? 'Try adjusting your filters'
                   : 'Get started by creating your first property'}
               </p>
-              {!searchTerm && typeFilter === 'all' && (
+              {!searchTerm && propertyTypeFilter === 'all' && (
                 <Button onClick={handleCreateProperty} className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create Property
@@ -306,15 +331,49 @@ export default function PropertiesPage() {
               )}
             </div>
           ) : (
-            <Table data-testid="table-properties">
+            <div className="overflow-x-auto">
+              <Table data-testid="table-properties">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSort('name')}
+                      className="h-8 p-0 hover:bg-transparent"
+                      data-testid="btn-sort-name"
+                    >
+                      Name
+                      {getSortIcon('name')}
+                    </Button>
+                  </TableHead>
                   <TableHead>Address</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead className="text-center">Total Units</TableHead>
+                  <TableHead className="text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSort('totalUnitsCount')}
+                      className="h-8 p-0 hover:bg-transparent"
+                      data-testid="sort-total-units"
+                    >
+                      Total Units
+                      {getSortIcon('totalUnitsCount')}
+                    </Button>
+                  </TableHead>
                   <TableHead className="text-center">Occupied</TableHead>
-                  <TableHead className="text-center">Occupancy</TableHead>
+                  <TableHead className="text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSort('occupancyRate')}
+                      className="h-8 p-0 hover:bg-transparent"
+                      data-testid="btn-sort-occupancy"
+                    >
+                      Occupancy
+                      {getSortIcon('occupancyRate')}
+                    </Button>
+                  </TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -325,7 +384,7 @@ export default function PropertiesPage() {
                   const totalUnits = property.totalUnitsCount || 0;
 
                   return (
-                    <TableRow key={property.id} className="hover:bg-muted/50">
+                    <TableRow key={property.id} className="hover:bg-muted/50" data-testid="property-row">
                       <TableCell className="font-medium">
                         {property.name}
                       </TableCell>
@@ -408,6 +467,7 @@ export default function PropertiesPage() {
                 })}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

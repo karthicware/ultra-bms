@@ -21,7 +21,11 @@ import com.ultrabms.service.FileStorageService;
 import com.ultrabms.service.PropertyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -48,6 +52,7 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "properties", allEntries = true)
     public PropertyResponse createProperty(CreatePropertyRequest request, UUID createdBy) {
         log.info("Creating new property: {}", request.getName());
 
@@ -84,6 +89,7 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "propertyById", key = "#id")
     public PropertyResponse getPropertyById(UUID id) {
         log.info("Fetching property by ID: {}", id);
         Property property = findPropertyById(id);
@@ -92,6 +98,7 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "propertyWithOccupancy", key = "#id")
     public PropertyResponse getPropertyByIdWithOccupancy(UUID id) {
         log.info("Fetching property with occupancy by ID: {}", id);
         Property property = findPropertyById(id);
@@ -100,6 +107,11 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "properties", allEntries = true),
+            @CacheEvict(value = "propertyById", key = "#id"),
+            @CacheEvict(value = "propertyWithOccupancy", key = "#id")
+    })
     public PropertyResponse updateProperty(UUID id, UpdatePropertyRequest request) {
         log.info("Updating property: {}", id);
 
@@ -149,30 +161,64 @@ public class PropertyServiceImpl implements PropertyService {
     @Override
     @Transactional(readOnly = true)
     public Page<PropertyResponse> searchProperties(
-            PropertyType type,
+            List<PropertyType> types,
             PropertyStatus status,
             String search,
+            UUID managerId,
+            Double occupancyMin,
+            Double occupancyMax,
             Pageable pageable
     ) {
-        log.info("Searching properties with type: {}, status: {}, search: {}", type, status, search);
+        log.info("Searching properties with types: {}, status: {}, search: {}, managerId: {}, occupancyMin: {}, occupancyMax: {}",
+                types, status, search, managerId, occupancyMin, occupancyMax);
 
         Specification<Property> spec = Specification.where(null);
 
         // Only show active properties by default
         spec = spec.and((root, query, cb) -> cb.equal(root.get("active"), true));
 
-        if (type != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("propertyType"), type));
+        // Filter by property types (multi-select)
+        if (types != null && !types.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("propertyType").in(types));
         }
+
+        // Filter by status
         if (status != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));
         }
+
+        // Search by name or address
         if (search != null && !search.trim().isEmpty()) {
             String searchTerm = "%" + search.toLowerCase() + "%";
             spec = spec.and((root, query, cb) -> cb.or(
                     cb.like(cb.lower(root.get("name")), searchTerm),
                     cb.like(cb.lower(root.get("address")), searchTerm)
             ));
+        }
+
+        // Filter by manager ID
+        if (managerId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("manager").get("id"), managerId));
+        }
+
+        // Filter properties with occupancy data
+        if (occupancyMin != null || occupancyMax != null) {
+            Page<Property> propertyPage = propertyRepository.findAll(spec, pageable);
+            List<PropertyResponse> filteredResponses = propertyPage.stream()
+                    .map(this::buildPropertyResponseWithOccupancy)
+                    .filter(response -> {
+                        boolean matches = true;
+                        if (occupancyMin != null && response.getOccupancyRate() < occupancyMin) {
+                            matches = false;
+                        }
+                        if (occupancyMax != null && response.getOccupancyRate() > occupancyMax) {
+                            matches = false;
+                        }
+                        return matches;
+                    })
+                    .collect(Collectors.toList());
+
+            return new PageImpl<>(filteredResponses, pageable, propertyPage.getTotalElements());
         }
 
         return propertyRepository.findAll(spec, pageable)
@@ -335,6 +381,11 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "properties", allEntries = true),
+            @CacheEvict(value = "propertyById", key = "#id"),
+            @CacheEvict(value = "propertyWithOccupancy", key = "#id")
+    })
     public void deleteProperty(UUID id) {
         log.info("Soft deleting property: {}", id);
         Property property = findPropertyById(id);

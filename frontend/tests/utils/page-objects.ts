@@ -30,11 +30,22 @@ export class PropertyPage extends BasePage {
         this.submitButton = page.getByTestId('btn-submit-property');
     }
 
+    /**
+     * Select an option from a shadcn Select component
+     * shadcn Select is a custom React component, not a native <select>
+     * Use click-based interaction instead of selectOption()
+     */
+    async selectPropertyType(type: string) {
+        await this.typeSelect.click();
+        await this.page.getByRole('option', { name: type }).click();
+    }
+
     async createProperty(data: { name: string; address: string; type: string; totalUnits: string }) {
         await this.createButton.click();
         await this.nameInput.fill(data.name);
         await this.addressInput.fill(data.address);
-        await this.typeSelect.selectOption(data.type);
+        // Use click-based selection for shadcn Select component
+        await this.selectPropertyType(data.type);
         await this.totalUnitsInput.fill(data.totalUnits);
         await this.submitButton.click();
     }

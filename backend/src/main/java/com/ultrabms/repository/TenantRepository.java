@@ -124,10 +124,10 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
      * @return Page of matching tenants
      */
     @Query("SELECT t FROM Tenant t WHERE " +
-           "(LOWER(t.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(t.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(t.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(t.tenantNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
+           "(LOWER(t.firstName) LIKE LOWER(:searchTerm) OR " +
+           "LOWER(t.lastName) LIKE LOWER(:searchTerm) OR " +
+           "LOWER(t.email) LIKE LOWER(:searchTerm) OR " +
+           "LOWER(t.tenantNumber) LIKE LOWER(:searchTerm)) " +
            "AND t.active = :active")
     Page<Tenant> searchTenants(
         @Param("searchTerm") String searchTerm,

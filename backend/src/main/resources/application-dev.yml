@@ -106,6 +106,8 @@ jwt:
 # Cookie Configuration (Development)
 cookie:
   secure: false  # Set to true in production with HTTPS
+  same-site: Lax  # Lax allows same-site requests (localhost:3000 and localhost:8080 are same-site)
+  http-only: false  # Set to false for development to allow debugging, true in production
 
 # Application Configuration
 app:

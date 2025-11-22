@@ -89,9 +89,9 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
      * @return Page of matching maintenance requests
      */
     @Query("SELECT mr FROM MaintenanceRequest mr WHERE mr.tenantId = :tenantId AND " +
-           "(LOWER(mr.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(mr.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(mr.requestNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+           "(LOWER(mr.title) LIKE LOWER(:searchTerm) OR " +
+           "LOWER(mr.description) LIKE LOWER(:searchTerm) OR " +
+           "LOWER(mr.requestNumber) LIKE LOWER(:searchTerm))")
     Page<MaintenanceRequest> searchByTenantIdAndKeyword(
         @Param("tenantId") UUID tenantId,
         @Param("searchTerm") String searchTerm,
@@ -117,9 +117,9 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
            "AND (:statuses IS NULL OR mr.status IN :statuses) " +
            "AND (:categories IS NULL OR mr.category IN :categories) " +
            "AND (:searchTerm IS NULL OR " +
-           "LOWER(mr.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(mr.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(mr.requestNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+           "LOWER(mr.title) LIKE LOWER(:searchTerm) OR " +
+           "LOWER(mr.description) LIKE LOWER(:searchTerm) OR " +
+           "LOWER(mr.requestNumber) LIKE LOWER(:searchTerm))")
     Page<MaintenanceRequest> searchWithFilters(
         @Param("tenantId") UUID tenantId,
         @Param("statuses") List<MaintenanceStatus> statuses,

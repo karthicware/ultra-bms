@@ -220,7 +220,8 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     public Page<TenantResponse> searchTenants(String searchTerm, Pageable pageable) {
-        return tenantRepository.searchTenants(searchTerm, true, pageable)
+        String searchPattern = searchTerm != null ? "%" + searchTerm + "%" : null;
+        return tenantRepository.searchTenants(searchPattern, true, pageable)
                 .map(this::mapToResponse);
     }
 

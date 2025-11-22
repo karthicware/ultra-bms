@@ -30,6 +30,13 @@ test.describe('Occupancy Calculations', () => {
 
         // Create property with 10 total units
         await page.getByTestId('btn-create-property').click();
+
+        // Wait for navigation to create page
+        await page.waitForURL('**/properties/create', { timeout: 5000 });
+
+        // Wait for form to be ready (managers loading to complete)
+        await page.waitForTimeout(1000);
+
         await page.getByTestId('input-property-name').fill('Occupancy Test Property');
         await page.getByTestId('input-property-address').fill('Occupancy Test Address');
         await page.getByTestId('select-property-type').click();
@@ -37,11 +44,8 @@ test.describe('Occupancy Calculations', () => {
         await page.getByTestId('input-total-units').fill('10');
         await page.getByTestId('btn-submit-property').click();
 
-        // Wait for property creation
-        await expect(page.getByText(/property created successfully/i)).toBeVisible({ timeout: 5000 });
-
-        // Navigate to property details
-        await page.getByText('Occupancy Test Property').click();
+        // Wait for redirect to property details page after creation
+        await page.waitForURL(/\/properties\/[a-f0-9-]+$/, { timeout: 10000 });
 
         // Navigate to units tab
         await page.getByTestId('tab-units').click();

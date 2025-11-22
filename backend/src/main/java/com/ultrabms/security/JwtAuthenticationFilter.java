@@ -48,6 +48,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             // Extract JWT token from Authorization header
             String token = extractTokenFromRequest(request);
+            String authHeader = request.getHeader("Authorization");
+            log.info("[JWT Filter] Request: {} {} - Auth Header: {} - Token extracted: {}",
+                request.getMethod(), request.getRequestURI(),
+                authHeader != null ? authHeader.substring(0, Math.min(30, authHeader.length())) + "..." : "null",
+                token != null ? "YES" : "NO");
 
             if (token != null) {
                 // Validate token

@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -51,6 +52,11 @@ public class SessionActivityFilter extends OncePerRequestFilter {
                 try {
                     // Update session activity and check for timeouts
                     sessionService.updateSessionActivity(token);
+                } catch (ObjectOptimisticLockingFailureException e) {
+                    // Session update conflict due to concurrent requests
+                    // Log and continue - activity timestamp update is not critical for request success
+                    log.debug("Session activity update conflict (optimistic locking), continuing request: {}", e.getMessage());
+                    // DO NOT stop filter chain - this is a transient concurrency issue
                 } catch (IllegalStateException e) {
                     // Session expired (idle or absolute timeout) or not found
                     log.warn("Session validation failed: {}. Clearing SecurityContext.", e.getMessage());

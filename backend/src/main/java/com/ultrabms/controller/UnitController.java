@@ -208,9 +208,17 @@ public class UnitController {
     }
 
     /**
-     * Helper method to extract user ID from UserDetails
+     * Helper method to extract user ID from authentication principal.
+     * Supports both UUID (from JWT filter) and UserDetails (from other auth methods).
      */
     private UUID getUserId(Object principal) {
-        return getUserIdFromPrincipal(principal);
+        if (principal instanceof UUID) {
+            return (UUID) principal;
+        } else if (principal instanceof UserDetails) {
+            return UUID.fromString(((UserDetails) principal).getUsername());
+        } else if (principal instanceof String) {
+            return UUID.fromString((String) principal);
+        }
+        throw new IllegalArgumentException("Unsupported principal type: " + principal.getClass().getName());
     }
 }

@@ -3,9 +3,9 @@
  * Handles API calls related to user management
  */
 
-import apiClient from '@/lib/apiClient';
+import { apiClient } from '@/lib/api';
 
-const USERS_BASE_PATH = '/api/v1/users';
+const USERS_BASE_PATH = '/v1/users';
 
 export interface PropertyManager {
   id: string;

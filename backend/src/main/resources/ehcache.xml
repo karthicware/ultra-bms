@@ -1,20 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns="http://www.ehcache.org/v3"
-        xmlns:jsr107="http://www.ehcache.org/v3/jsr107"
-        xsi:schemaLocation="http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.10.xsd
-                            http://www.ehcache.org/v3/jsr107 http://www.ehcache.org/schema/ehcache-107-ext-3.10.xsd">
+        xsi:schemaLocation="http://www.ehcache.org/v3
+        http://www.ehcache.org/schema/ehcache-core-3.0.xsd">
 
-    <!-- Service configuration for statistics and management -->
-    <service>
-        <jsr107:defaults enable-management="true" enable-statistics="true"/>
-    </service>
-
-    <!-- Cache definitions: Total heap allocation across all caches = 100 MB -->
-    <!-- User Cache: User profiles and authentication data -->
-    <cache alias="userCache">
+    <!-- Properties Cache Configuration -->
+    <cache alias="properties">
         <key-type>java.lang.String</key-type>
-        <value-type>java.lang.Object</value-type>
+        <value-type>org.springframework.data.domain.Page</value-type>
         <expiry>
             <ttl unit="minutes">30</ttl>
         </expiry>
@@ -23,55 +16,31 @@
         </resources>
     </cache>
 
-    <!-- Session Cache: Active user sessions -->
-    <cache alias="sessionCache">
-        <key-type>java.lang.String</key-type>
-        <value-type>java.lang.Object</value-type>
+    <!-- Property By ID Cache Configuration -->
+    <cache alias="propertyById">
+        <key-type>java.util.UUID</key-type>
+        <value-type>com.ultrabms.dto.properties.PropertyResponse</value-type>
         <expiry>
-            <ttl unit="hours">24</ttl>
-        </expiry>
-        <resources>
-            <heap unit="entries">5000</heap>
-        </resources>
-    </cache>
-
-    <!-- Tenant Cache: Tenant details -->
-    <cache alias="tenantCache">
-        <key-type>java.lang.String</key-type>
-        <value-type>java.lang.Object</value-type>
-        <expiry>
-            <ttl unit="hours">1</ttl>
-        </expiry>
-        <resources>
-            <heap unit="entries">2000</heap>
-        </resources>
-    </cache>
-
-    <!-- Property Cache: Property metadata -->
-    <cache alias="propertyCache">
-        <key-type>java.lang.String</key-type>
-        <value-type>java.lang.Object</value-type>
-        <expiry>
-            <ttl unit="hours">2</ttl>
+            <ttl unit="minutes">30</ttl>
         </expiry>
         <resources>
             <heap unit="entries">500</heap>
         </resources>
     </cache>
 
-    <!-- Lookup Cache: Reference data (dropdowns, enums, system config) -->
-    <cache alias="lookupCache">
-        <key-type>java.lang.String</key-type>
-        <value-type>java.lang.Object</value-type>
+    <!-- Property With Occupancy Cache Configuration -->
+    <cache alias="propertyWithOccupancy">
+        <key-type>java.util.UUID</key-type>
+        <value-type>com.ultrabms.dto.properties.PropertyResponse</value-type>
         <expiry>
-            <ttl unit="minutes">12</ttl>
+            <ttl unit="minutes">15</ttl>
         </expiry>
         <resources>
-            <heap unit="entries">10000</heap>
+            <heap unit="entries">500</heap>
         </resources>
     </cache>
 
-    <!-- Login Attempts Cache: Track failed login attempts for rate limiting -->
+    <!-- Login Attempts Cache Configuration -->
     <cache alias="loginAttemptsCache">
         <key-type>java.lang.String</key-type>
         <value-type>java.lang.Integer</value-type>
@@ -83,16 +52,14 @@
         </resources>
     </cache>
 
-    <!-- User Permissions Cache: Cache permission evaluation results for RBAC -->
-    <cache alias="userPermissions">
-        <key-type>java.lang.String</key-type>
-        <value-type>java.lang.Boolean</value-type>
+    <!-- Default cache template for other caches -->
+    <cache-template name="default">
         <expiry>
             <ttl unit="minutes">10</ttl>
         </expiry>
         <resources>
-            <heap unit="entries">5000</heap>
+            <heap unit="entries">100</heap>
         </resources>
-    </cache>
+    </cache-template>
 
 </config>

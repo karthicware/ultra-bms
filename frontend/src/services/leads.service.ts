@@ -103,14 +103,11 @@ export async function getLeads(params: LeadSearchParams = {}): Promise<LeadListR
     params: {
       page: params.page || 0,
       size: params.size || 20,
-      sort: params.sort,
-      direction: params.direction,
-      status: params.status?.join(','),
-      propertyId: params.propertyId,
-      leadSource: params.leadSource?.join(','),
-      searchTerm: params.searchTerm,
-      dateFrom: params.dateFrom,
-      dateTo: params.dateTo,
+      sortBy: params.sort,
+      sortDir: params.direction,
+      status: params.status?.[0], // Backend expects single enum value, not array
+      source: params.leadSource?.[0], // Backend expects single enum value, not array
+      search: params.searchTerm,
     },
   });
   return response.data;

@@ -82,7 +82,7 @@ export default function LeadsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm, statusFilter, sourceFilter, toast]);
+  }, [currentPage, pageSize, searchTerm, statusFilter, sourceFilter]); // Removed toast to prevent infinite loop
 
   // Debounced search
   const debouncedFetchLeads = useMemo(

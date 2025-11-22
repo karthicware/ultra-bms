@@ -57,6 +57,9 @@ class MaintenanceRequestServiceTest {
     @Mock
     private S3Service s3Service;
 
+    @Mock
+    private com.ultrabms.service.EmailService emailService;
+
     @InjectMocks
     private MaintenanceRequestServiceImpl maintenanceRequestService;
 

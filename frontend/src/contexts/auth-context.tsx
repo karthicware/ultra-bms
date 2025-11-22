@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { setupAuthInterceptors } from '@/lib/api';
 import * as authApi from '@/lib/auth-api';
@@ -21,10 +21,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Setup API interceptors on mount
+  // Use a ref to store the latest access token value
+  // This prevents race conditions where the token changes but the interceptor hasn't been updated yet
+  const accessTokenRef = useRef<string | null>(null);
+
+  // Update ref whenever access token changes
+  useEffect(() => {
+    accessTokenRef.current = accessToken;
+  }, [accessToken]);
+
+  // Setup API interceptors once on mount
   useEffect(() => {
     setupAuthInterceptors(
-      () => accessToken,
+      () => accessTokenRef.current,  // Always gets the latest token from the ref
       (token: string) => setAccessToken(token),
       async () => {
         setAccessToken(null);
@@ -32,44 +41,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.push('/login');
       }
     );
-  }, [accessToken, router]);
+  }, [router]);  // Only depend on router, not accessToken
 
   // Try to restore session on mount
   useEffect(() => {
-    console.log('[AUTH CONTEXT] Starting session restoration...');
     const restoreSession = async () => {
       try {
-        console.log('[AUTH CONTEXT] Calling refreshAccessToken...');
         // Try to refresh token to restore session
         const response = await authApi.refreshAccessToken();
-        console.log('[AUTH CONTEXT] Refresh response:', { success: response.success, hasToken: !!response.data?.accessToken });
         if (response.success && response.data.accessToken) {
           const token = response.data.accessToken;
+          setAccessToken(token);
 
           // Extract user information from JWT token
           const userData = getUserFromToken(token);
-          console.log('[AUTH CONTEXT] User data extracted:', { email: userData?.email, role: userData?.role });
-
           if (userData) {
-            // CRITICAL: Set both token and user in a single batched update to avoid race conditions
-            // Only set isLoading to false AFTER both states are set
-            setAccessToken(token);
             setUser(userData);
-            // Wait for next tick to ensure states are updated
-            setTimeout(() => {
-              console.log('[AUTH CONTEXT] Session restoration complete, setting isLoading = false');
-              setIsLoading(false);
-            }, 0);
-          } else {
-            console.log('[AUTH CONTEXT] No user data found, setting isLoading = false');
-            setIsLoading(false);
           }
-        } else {
-          console.log('[AUTH CONTEXT] No valid token, setting isLoading = false');
-          setIsLoading(false);
         }
       } catch (error) {
-        console.log('[AUTH CONTEXT] Session restoration failed:', error);
+        // Session restoration failed - user needs to login
+        console.log('Session restoration failed:', error);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -87,8 +80,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const credentials: LoginRequest = { email, password, rememberMe };
         const response = await authApi.login(credentials);
 
-        // Set access token
+        // Set access token (refresh token is stored as HTTP-only cookie by backend)
         setAccessToken(response.accessToken);
+        // IMPORTANT: Also update ref immediately so token is available for next API call
+        accessTokenRef.current = response.accessToken;
 
         // Extract user information from JWT token (includes permissions)
         const userData = getUserFromToken(response.accessToken);

@@ -53,6 +53,7 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Add Authorization header if token exists
     const token = getAccessToken?.();
+    console.log('[API Interceptor] Request to:', config.url, 'Token:', token ? `${token.substring(0, 20)}...` : 'null');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -102,12 +103,12 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Call refresh token endpoint
+        // Call refresh token endpoint (refresh token is in HTTP-only cookie)
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/v1/auth/refresh`,
           {
             method: 'POST',
-            credentials: 'include', // Send refresh token cookie
+            credentials: 'include', // Send cookies (refresh token)
             headers: {
               'Content-Type': 'application/json',
             },

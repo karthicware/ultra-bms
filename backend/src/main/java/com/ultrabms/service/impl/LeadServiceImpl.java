@@ -163,8 +163,9 @@ public class LeadServiceImpl implements LeadService {
             String search,
             Pageable pageable
     ) {
+        String searchPattern = search != null ? "%" + search + "%" : null;
         log.info("Searching leads with status: {}, source: {}, search: {}", status, source, search);
-        return leadRepository.searchLeads(status, source, search, pageable)
+        return leadRepository.searchLeads(status, source, searchPattern, pageable)
                 .map(LeadResponse::fromEntity);
     }
 

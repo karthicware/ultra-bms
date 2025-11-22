@@ -35,8 +35,10 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST controller for authentication endpoints.
  *
- * <p>Provides endpoints for user registration, login, token refresh, and logout.
- * Implements JWT-based authentication with access and refresh tokens.</p>
+ * <p>
+ * Provides endpoints for user registration, login, token refresh, and logout.
+ * Implements JWT-based authentication with access and refresh tokens.
+ * </p>
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -57,6 +59,12 @@ public class AuthController {
     @Value("${cookie.secure:false}")
     private boolean cookieSecure;
 
+    @Value("${cookie.same-site:None}")
+    private String cookieSameSite;
+
+    @Value("${cookie.http-only:true}")
+    private boolean cookieHttpOnly;
+
     /**
      * Registers a new user in the system.
      *
@@ -66,8 +74,7 @@ public class AuthController {
     @PostMapping("/register")
     @Operation(summary = "Register new user", description = "Creates a new user account with email and password")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "User registered successfully",
-                    content = @Content(schema = @Schema(implementation = UserDto.class))),
+            @ApiResponse(responseCode = "201", description = "User registered successfully", content = @Content(schema = @Schema(implementation = UserDto.class))),
             @ApiResponse(responseCode = "400", description = "Invalid input or validation error"),
             @ApiResponse(responseCode = "409", description = "Email already exists")
     })
@@ -87,16 +94,15 @@ public class AuthController {
     /**
      * Authenticates a user and issues JWT tokens.
      *
-     * @param request login request with email and password
-     * @param httpRequest HTTP servlet request for extracting IP and user agent
+     * @param request      login request with email and password
+     * @param httpRequest  HTTP servlet request for extracting IP and user agent
      * @param httpResponse HTTP servlet response for setting refresh token cookie
      * @return 200 OK with login response containing tokens and user profile
      */
     @PostMapping("/login")
     @Operation(summary = "Login user", description = "Authenticates user and returns JWT access and refresh tokens")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Login successful",
-                    content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "200", description = "Login successful", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
             @ApiResponse(responseCode = "401", description = "Invalid credentials"),
             @ApiResponse(responseCode = "423", description = "Account locked due to too many failed attempts")
     })
@@ -120,15 +126,15 @@ public class AuthController {
     /**
      * Refreshes an access token using a valid refresh token.
      *
-     * @param request refresh token request (can be from body or cookie)
-     * @param httpRequest HTTP servlet request for extracting refresh token from cookie
+     * @param request     refresh token request (can be from body or cookie)
+     * @param httpRequest HTTP servlet request for extracting refresh token from
+     *                    cookie
      * @return 200 OK with new access token
      */
     @PostMapping("/refresh")
     @Operation(summary = "Refresh access token", description = "Generates a new access token using a valid refresh token")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Token refreshed successfully",
-                    content = @Content(schema = @Schema(implementation = TokenResponse.class))),
+            @ApiResponse(responseCode = "200", description = "Token refreshed successfully", content = @Content(schema = @Schema(implementation = TokenResponse.class))),
             @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
     })
     public ResponseEntity<TokenResponse> refreshToken(
@@ -161,7 +167,7 @@ public class AuthController {
     /**
      * Logs out a user by blacklisting their tokens.
      *
-     * @param httpRequest HTTP servlet request for extracting tokens
+     * @param httpRequest  HTTP servlet request for extracting tokens
      * @param httpResponse HTTP servlet response for clearing refresh token cookie
      * @return 204 No Content
      */
@@ -237,15 +243,14 @@ public class AuthController {
         return ResponseEntity.ok(java.util.Map.of(
                 "success", true,
                 "message", String.format("Logged out from %d other device(s)", revokedCount),
-                "revokedSessions", revokedCount
-        ));
+                "revokedSessions", revokedCount));
     }
 
     /**
      * Initiates password reset workflow by sending reset email.
      * Always returns 200 OK for security (doesn't reveal if email exists).
      *
-     * @param request forgot password request with email address
+     * @param request     forgot password request with email address
      * @param httpRequest HTTP servlet request for extracting IP address
      * @return 200 OK with success message
      */
@@ -268,11 +273,9 @@ public class AuthController {
 
         // Always return success message (security: don't reveal if email exists)
         return ResponseEntity.ok(
-            new SuccessResponse(
-                true,
-                "If your email is registered, you'll receive password reset instructions shortly."
-            )
-        );
+                new SuccessResponse(
+                        true,
+                        "If your email is registered, you'll receive password reset instructions shortly."));
     }
 
     /**
@@ -301,9 +304,10 @@ public class AuthController {
 
     /**
      * Completes password reset by setting new password.
-     * Validates token and password, updates password, invalidates tokens, sends confirmation.
+     * Validates token and password, updates password, invalidates tokens, sends
+     * confirmation.
      *
-     * @param request Reset password request with token and new password
+     * @param request     Reset password request with token and new password
      * @param httpRequest HTTP servlet request for extracting IP address
      * @return 200 OK with success message
      */
@@ -324,11 +328,9 @@ public class AuthController {
         passwordResetService.resetPassword(request.token(), request.newPassword(), ipAddress);
 
         return ResponseEntity.ok(
-            new SuccessResponse(
-                true,
-                "Password reset successful. You can now log in with your new password."
-            )
-        );
+                new SuccessResponse(
+                        true,
+                        "Password reset successful. You can now log in with your new password."));
     }
 
     /**
@@ -380,16 +382,18 @@ public class AuthController {
     /**
      * Sets the refresh token as an HTTP-only secure cookie.
      *
-     * @param response HTTP servlet response
+     * @param response     HTTP servlet response
      * @param refreshToken refresh token value
      */
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(cookieHttpOnly); // Environment-specific: false for dev/E2E tests, true for prod
         cookie.setSecure(cookieSecure); // Environment-specific: false for dev, true for prod
-        cookie.setPath("/api/v1/auth");
+        cookie.setPath("/"); // Set path to root so cookie is sent with all API requests
+        cookie.setDomain("localhost"); // Set domain to localhost (without port) to share across ports in development
         cookie.setMaxAge(REFRESH_TOKEN_MAX_AGE);
-        cookie.setAttribute("SameSite", "Strict");
+        cookie.setAttribute("SameSite", cookieSameSite); // Environment-specific: None for dev (cross-origin), Strict
+                                                         // for prod
         response.addCookie(cookie);
     }
 
@@ -400,10 +404,12 @@ public class AuthController {
      */
     private void clearRefreshTokenCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, "");
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(cookieHttpOnly);
         cookie.setSecure(cookieSecure); // Environment-specific: false for dev, true for prod
-        cookie.setPath("/api/v1/auth");
+        cookie.setPath("/"); // Must match the path used when setting the cookie
+        cookie.setDomain("localhost"); // Must match the domain used when setting the cookie
         cookie.setMaxAge(0); // Expire immediately
+        cookie.setAttribute("SameSite", cookieSameSite); // Must match SameSite used when setting the cookie
         response.addCookie(cookie);
     }
 }

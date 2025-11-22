@@ -33,6 +33,9 @@ test.describe('Validation and Error Handling', () => {
         // Click create property
         await page.getByTestId('btn-create-property').click();
 
+        // Wait for navigation to create page
+        await page.waitForURL('**/properties/create', { timeout: 5000 });
+
         // Submit without filling fields
         await page.getByTestId('btn-submit-property').click();
 
@@ -47,6 +50,9 @@ test.describe('Validation and Error Handling', () => {
         await page.goto('/properties');
 
         await page.getByTestId('btn-create-property').click();
+
+        // Wait for navigation to create page
+        await page.waitForURL('**/properties/create', { timeout: 5000 });
 
         // Fill form with negative total units
         await page.getByTestId('input-property-name').fill('Negative Units Test');
@@ -69,6 +75,9 @@ test.describe('Validation and Error Handling', () => {
         await page.goto('/properties');
 
         await page.getByTestId('btn-create-property').click();
+
+        // Wait for navigation to create page
+        await page.waitForURL('**/properties/create', { timeout: 5000 });
 
         // Fill form with zero total units
         await page.getByTestId('input-property-name').fill('Zero Units Test');
@@ -192,6 +201,9 @@ test.describe('Validation and Error Handling', () => {
         // Create a property with occupied units
         // First, create property
         await page.getByTestId('btn-create-property').click();
+
+        // Wait for navigation to create page
+        await page.waitForURL('**/properties/create', { timeout: 5000 });
         await page.getByTestId('input-property-name').fill('Delete Constraint Test');
         await page.getByTestId('input-property-address').fill('456 Delete St');
         await page.getByTestId('select-property-type').click();
@@ -199,11 +211,8 @@ test.describe('Validation and Error Handling', () => {
         await page.getByTestId('input-total-units').fill('5');
         await page.getByTestId('btn-submit-property').click();
 
-        // Wait for creation
-        await expect(page.getByText(/property created successfully/i)).toBeVisible({ timeout: 5000 });
-
-        // Navigate to property
-        await page.getByText('Delete Constraint Test').click();
+        // Wait for redirect to property details page after creation
+        await page.waitForURL(/\/properties\/[a-f0-9-]+$/, { timeout: 10000 });
 
         // Add an occupied unit
         await page.getByTestId('tab-units').click();
@@ -283,6 +292,9 @@ test.describe('Validation and Error Handling', () => {
 
         await page.getByTestId('btn-create-property').click();
 
+        // Wait for navigation to create page
+        await page.waitForURL('**/properties/create', { timeout: 5000 });
+
         // Create a string longer than 200 characters
         const longName = 'A'.repeat(201);
         await page.getByTestId('input-property-name').fill(longName);
@@ -318,6 +330,9 @@ test.describe('Validation and Error Handling', () => {
         await page.goto('/properties');
 
         await page.getByTestId('btn-create-property').click();
+
+        // Wait for navigation to create page
+        await page.waitForURL('**/properties/create', { timeout: 5000 });
 
         // Trigger multiple validation errors
         await page.getByTestId('btn-submit-property').click();

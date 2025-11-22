@@ -69,19 +69,17 @@ export default function CreatePropertyPage() {
         const response = await getPropertyManagers();
         setManagers(response.content);
       } catch (error) {
+        // Silently handle error - property manager assignment is optional
         console.error('Failed to fetch managers:', error);
-        toast({
-          title: 'Warning',
-          description: 'Failed to load property managers',
-          variant: 'destructive',
-        });
+        setManagers([]);
       } finally {
         setIsLoadingManagers(false);
       }
     };
 
     fetchManagers();
-  }, [toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onSubmit = async (data: CreatePropertyFormData) => {
     try {
@@ -233,7 +231,11 @@ export default function CreatePropertyPage() {
                           min={1}
                           placeholder="10"
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                          value={field.value ?? 1}
+                          onChange={(e) => {
+                            const value = e.target.value === '' ? 1 : parseInt(e.target.value, 10);
+                            field.onChange(isNaN(value) ? 1 : value);
+                          }}
                           data-testid="input-total-units"
                         />
                       </FormControl>
@@ -265,11 +267,17 @@ export default function CreatePropertyPage() {
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      disabled={isLoadingManagers}
+                      disabled={isLoadingManagers || managers.length === 0}
                     >
                       <FormControl>
                         <SelectTrigger data-testid="select-property-manager">
-                          <SelectValue placeholder={isLoadingManagers ? "Loading managers..." : "Select a manager (optional)"} />
+                          <SelectValue placeholder={
+                            isLoadingManagers
+                              ? "Loading managers..."
+                              : managers.length === 0
+                                ? "No managers available (optional)"
+                                : "Select a manager (optional)"
+                          } />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

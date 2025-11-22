@@ -17,41 +17,40 @@ import java.util.UUID;
 @Repository
 public interface LeadRepository extends JpaRepository<Lead, UUID> {
 
-    /**
-     * Find lead by lead number
-     */
-    Optional<Lead> findByLeadNumber(String leadNumber);
+        /**
+         * Find lead by lead number
+         */
+        Optional<Lead> findByLeadNumber(String leadNumber);
 
-    /**
-     * Check if lead exists by Emirates ID
-     */
-    boolean existsByEmiratesId(String emiratesId);
+        /**
+         * Check if lead exists by Emirates ID
+         */
+        boolean existsByEmiratesId(String emiratesId);
 
-    /**
-     * Check if lead exists by passport number
-     */
-    boolean existsByPassportNumber(String passportNumber);
+        /**
+         * Check if lead exists by passport number
+         */
+        boolean existsByPassportNumber(String passportNumber);
 
-    /**
-     * Search leads with filters
-     */
-    @Query("SELECT l FROM Lead l WHERE " +
-            "(:status IS NULL OR l.status = :status) AND " +
-            "(:source IS NULL OR l.leadSource = :source) AND " +
-            "(:search IS NULL OR " +
-            "LOWER(l.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(l.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(l.contactNumber) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(l.leadNumber) LIKE LOWER(CONCAT('%', :search, '%')))")
-    Page<Lead> searchLeads(
-            @Param("status") Lead.LeadStatus status,
-            @Param("source") Lead.LeadSource source,
-            @Param("search") String search,
-            Pageable pageable
-    );
+        /**
+         * Search leads with filters
+         */
+        @Query("SELECT l FROM Lead l WHERE " +
+                        "(:status IS NULL OR l.status = :status) AND " +
+                        "(:source IS NULL OR l.leadSource = :source) AND " +
+                        "(:search IS NULL OR " +
+                        "LOWER(l.fullName) LIKE LOWER(CAST(:search AS string)) OR " +
+                        "LOWER(l.email) LIKE LOWER(CAST(:search AS string)) OR " +
+                        "LOWER(l.contactNumber) LIKE LOWER(CAST(:search AS string)) OR " +
+                        "LOWER(l.leadNumber) LIKE LOWER(CAST(:search AS string)))")
+        Page<Lead> searchLeads(
+                        @Param("status") Lead.LeadStatus status,
+                        @Param("source") Lead.LeadSource source,
+                        @Param("search") String search,
+                        Pageable pageable);
 
-    /**
-     * Count leads by status
-     */
-    long countByStatus(Lead.LeadStatus status);
+        /**
+         * Count leads by status
+         */
+        long countByStatus(Lead.LeadStatus status);
 }

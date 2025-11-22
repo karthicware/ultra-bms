@@ -172,7 +172,8 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
             requests = maintenanceRequestRepository.findByTenantIdOrderBySubmittedAtDesc(tenantId, pageable);
         } else if (searchTerm != null && !searchTerm.isBlank()) {
             // Search with keyword (ignores other filters for now, can be enhanced)
-            requests = maintenanceRequestRepository.searchByTenantIdAndKeyword(tenantId, searchTerm, pageable);
+            String searchPattern = "%" + searchTerm + "%";
+            requests = maintenanceRequestRepository.searchByTenantIdAndKeyword(tenantId, searchPattern, pageable);
         } else if (statuses != null && !statuses.isEmpty() && (categories == null || categories.isEmpty())) {
             // Filter by status only
             requests = maintenanceRequestRepository.findByTenantIdAndStatusIn(tenantId, statuses, pageable);
@@ -181,11 +182,12 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
             requests = maintenanceRequestRepository.findByTenantIdAndCategoryIn(tenantId, categories, pageable);
         } else {
             // Combined filters (advanced search)
+            String searchPattern = (searchTerm != null && !searchTerm.isBlank()) ? "%" + searchTerm + "%" : null;
             requests = maintenanceRequestRepository.searchWithFilters(
                     tenantId,
                     statuses,
                     categories,
-                    searchTerm,
+                    searchPattern,
                     pageable
             );
         }

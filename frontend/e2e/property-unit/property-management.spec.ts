@@ -10,9 +10,9 @@ test.describe('Property Management Flow', () => {
 
     test.beforeAll(async () => {
         seedUtils = new SeedUtils();
-        // Clean up any existing test data
-        await seedUtils.cleanup();
-        // Seed initial data for search/filter tests
+        // Clean up old test data from previous failed runs
+        await seedUtils.cleanupOldTestData();
+        // Seed fresh data for this test run
         await seedUtils.seedProperties();
     });
 

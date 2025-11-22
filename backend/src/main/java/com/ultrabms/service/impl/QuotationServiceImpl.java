@@ -185,8 +185,9 @@ public class QuotationServiceImpl implements QuotationService {
             String search,
             Pageable pageable
     ) {
+        String searchPattern = search != null ? "%" + search + "%" : null;
         log.info("Searching quotations with status: {}, leadId: {}, search: {}", status, leadId, search);
-        return quotationRepository.searchQuotations(status, leadId, search, pageable)
+        return quotationRepository.searchQuotations(status, leadId, searchPattern, pageable)
                 .map(QuotationResponse::fromEntity);
     }
 

@@ -32,9 +32,6 @@ test.describe('Property Manager Assignment', () => {
 
         // Create a new property
         await page.getByTestId('btn-create-property').click();
-
-        // Wait for navigation to create page
-        await page.waitForURL('**/properties/create', { timeout: 5000 });
         await page.getByTestId('input-property-name').fill('Manager Assignment Test Property');
         await page.getByTestId('input-property-address').fill('123 Manager St');
         await page.getByTestId('select-property-type').click();
@@ -137,9 +134,6 @@ test.describe('Property Manager Assignment', () => {
 
         // Create or edit property
         await page.getByTestId('btn-create-property').click();
-
-        // Wait for navigation to create page
-        await page.waitForURL('**/properties/create', { timeout: 5000 });
 
         // Open property manager dropdown
         await page.getByTestId('select-property-manager').click();

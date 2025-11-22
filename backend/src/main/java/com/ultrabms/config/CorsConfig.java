@@ -34,53 +34,38 @@ import java.util.List;
  * @see WebMvcConfigurer#addCorsMappings(CorsRegistry)
  */
 @Configuration
-public class CorsConfig implements WebMvcConfigurer {
+public class CorsConfig {
 
     @Value("${app.cors.allowed-origins:http://localhost:3000}")
     private List<String> allowedOrigins;
 
-    /**
-     * Configures CORS mappings for all API endpoints.
-     *
-     * <p>This method is called by Spring MVC during application initialization
-     * to register CORS configuration. The configuration applies to all endpoints
-     * matching the {@code /api/**} pattern.</p>
-     *
-     * @param registry the CORS registry to configure
-     */
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                // Allowed origins (from application.yml)
-                .allowedOrigins(allowedOrigins.toArray(new String[0]))
+    @org.springframework.context.annotation.Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedHeaders(java.util.Arrays.asList(
+                "Content-Type",
+                "Authorization",
+                "X-Requested-With",
+                "X-Correlation-ID",
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers",
+                "X-XSRF-TOKEN"
+        ));
+        configuration.setExposedHeaders(java.util.Arrays.asList(
+                "X-Correlation-ID",
+                "Access-Control-Allow-Origin",
+                "Access-Control-Allow-Credentials",
+                "X-XSRF-TOKEN"
+        ));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
 
-                // Allowed HTTP methods
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-
-                // Allowed request headers
-                .allowedHeaders(
-                        "Content-Type",
-                        "Authorization",
-                        "X-Requested-With",
-                        "X-Correlation-ID",
-                        "Accept",
-                        "Origin",
-                        "Access-Control-Request-Method",
-                        "Access-Control-Request-Headers"
-                )
-
-                // Expose response headers to the client
-                .exposedHeaders(
-                        "X-Correlation-ID",
-                        "Access-Control-Allow-Origin",
-                        "Access-Control-Allow-Credentials"
-                )
-
-                // Allow credentials (cookies, authorization headers)
-                .allowCredentials(true)
-
-                // Cache preflight response for 1 hour (3600 seconds)
-                // This reduces the number of OPTIONS requests
-                .maxAge(3600);
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", configuration);
+        return source;
     }
 }

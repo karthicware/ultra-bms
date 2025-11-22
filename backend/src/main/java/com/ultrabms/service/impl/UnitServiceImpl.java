@@ -60,6 +60,11 @@ public class UnitServiceImpl implements UnitService {
     public UnitResponse createUnit(CreateUnitRequest request, UUID createdBy) {
         log.info("Creating new unit: {} for property: {}", request.getUnitNumber(), request.getPropertyId());
 
+        // Validate property ID is provided
+        if (request.getPropertyId() == null) {
+            throw new ValidationException("Property ID is required");
+        }
+
         Property property = findPropertyById(request.getPropertyId());
 
         if (unitRepository.findByPropertyIdAndUnitNumber(request.getPropertyId(), request.getUnitNumber()).isPresent()) {

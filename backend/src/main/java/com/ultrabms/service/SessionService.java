@@ -14,6 +14,9 @@ import com.ultrabms.util.TokenHashUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +53,9 @@ public class SessionService {
      * <p>Enforces concurrent session limit by deleting the oldest session if limit is exceeded.
      * Hashes tokens before storage for security.</p>
      *
+     * <p>Uses optimistic locking retry mechanism to handle concurrent session creation.
+     * Retries up to 3 times with exponential backoff (100ms, 200ms, 400ms) on OptimisticLockingFailureException.</p>
+     *
      * @param user         the authenticated user
      * @param accessToken  the generated access token (plain text)
      * @param refreshToken the generated refresh token (plain text)
@@ -57,6 +63,11 @@ public class SessionService {
      * @return the generated session ID
      */
     @Transactional
+    @Retryable(
+        value = {ObjectOptimisticLockingFailureException.class},
+        maxAttempts = 3,
+        backoff = @Backoff(delay = 100, multiplier = 2)
+    )
     public String createSession(User user, String accessToken, String refreshToken, HttpServletRequest request) {
         // Check concurrent session limit
         long activeSessionCount = userSessionRepository.countByUserIdAndIsActiveTrue(user.getId());
@@ -116,10 +127,18 @@ public class SessionService {
      * <p>Called by SessionActivityFilter on each authenticated request.
      * Invalidates session if idle or absolute timeout is exceeded.</p>
      *
+     * <p>Uses optimistic locking retry mechanism to handle concurrent session updates.
+     * Retries up to 3 times with exponential backoff (100ms, 200ms, 400ms) on OptimisticLockingFailureException.</p>
+     *
      * @param accessToken the access token from Authorization header
      * @throws IllegalStateException if session is expired or not found
      */
     @Transactional
+    @Retryable(
+        value = {ObjectOptimisticLockingFailureException.class},
+        maxAttempts = 3,
+        backoff = @Backoff(delay = 100, multiplier = 2)
+    )
     public void updateSessionActivity(String accessToken) {
         // Hash token to find session
         String tokenHash = TokenHashUtil.hashToken(accessToken);
@@ -156,10 +175,18 @@ public class SessionService {
      *
      * <p>Marks session inactive, adds access and refresh tokens to blacklist with reason.</p>
      *
+     * <p>Uses optimistic locking retry mechanism to handle concurrent session invalidation.
+     * Retries up to 3 times with exponential backoff (100ms, 200ms, 400ms) on OptimisticLockingFailureException.</p>
+     *
      * @param sessionId the session ID to invalidate
      * @param reason    the blacklist reason (LOGOUT, IDLE_TIMEOUT, etc.)
      */
-    @Transactional
+    @Transactional(noRollbackFor = org.springframework.dao.DataIntegrityViolationException.class)
+    @Retryable(
+        value = {ObjectOptimisticLockingFailureException.class},
+        maxAttempts = 3,
+        backoff = @Backoff(delay = 100, multiplier = 2)
+    )
     public void invalidateSession(String sessionId, BlacklistReason reason) {
         UserSession session = userSessionRepository.findBySessionId(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found: " + sessionId));
@@ -170,37 +197,51 @@ public class SessionService {
 
         // Blacklist access token
         if (session.getAccessTokenHash() != null) {
-            // Check if already blacklisted to avoid duplicate key violations
-            if (!tokenBlacklistRepository.existsByTokenHash(session.getAccessTokenHash())) {
-                LocalDateTime accessTokenExpiry = LocalDateTime.now()
-                        .plusSeconds(jwtTokenProvider.getAccessTokenExpirationSeconds());
-                TokenBlacklist accessBlacklist = new TokenBlacklist(
-                        session.getAccessTokenHash(),
-                        TokenType.ACCESS,
-                        accessTokenExpiry,
-                        reason
-                );
-                tokenBlacklistRepository.save(accessBlacklist);
-            } else {
-                log.debug("Access token already blacklisted, skipping: {}", session.getAccessTokenHash());
+            try {
+                // Check if already blacklisted to avoid duplicate key violations
+                if (!tokenBlacklistRepository.existsByTokenHash(session.getAccessTokenHash())) {
+                    LocalDateTime accessTokenExpiry = LocalDateTime.now()
+                            .plusSeconds(jwtTokenProvider.getAccessTokenExpirationSeconds());
+                    TokenBlacklist accessBlacklist = new TokenBlacklist(
+                            session.getAccessTokenHash(),
+                            TokenType.ACCESS,
+                            accessTokenExpiry,
+                            reason
+                    );
+                    tokenBlacklistRepository.save(accessBlacklist);
+                } else {
+                    log.debug("Access token already blacklisted, skipping: {}", session.getAccessTokenHash());
+                }
+            } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                // Race condition: another thread blacklisted this token between our check and insert
+                // This is acceptable - token is blacklisted either way
+                log.debug("Access token blacklist race condition (already blacklisted by another thread): {}",
+                        session.getAccessTokenHash());
             }
         }
 
         // Blacklist refresh token
         if (session.getRefreshTokenHash() != null) {
-            // Check if already blacklisted to avoid duplicate key violations
-            if (!tokenBlacklistRepository.existsByTokenHash(session.getRefreshTokenHash())) {
-                LocalDateTime refreshTokenExpiry = LocalDateTime.now()
-                        .plusSeconds(jwtTokenProvider.getRefreshTokenExpirationSeconds());
-                TokenBlacklist refreshBlacklist = new TokenBlacklist(
-                        session.getRefreshTokenHash(),
-                        TokenType.REFRESH,
-                        refreshTokenExpiry,
-                        reason
-                );
-                tokenBlacklistRepository.save(refreshBlacklist);
-            } else {
-                log.debug("Refresh token already blacklisted, skipping: {}", session.getRefreshTokenHash());
+            try {
+                // Check if already blacklisted to avoid duplicate key violations
+                if (!tokenBlacklistRepository.existsByTokenHash(session.getRefreshTokenHash())) {
+                    LocalDateTime refreshTokenExpiry = LocalDateTime.now()
+                            .plusSeconds(jwtTokenProvider.getRefreshTokenExpirationSeconds());
+                    TokenBlacklist refreshBlacklist = new TokenBlacklist(
+                            session.getRefreshTokenHash(),
+                            TokenType.REFRESH,
+                            refreshTokenExpiry,
+                            reason
+                    );
+                    tokenBlacklistRepository.save(refreshBlacklist);
+                } else {
+                    log.debug("Refresh token already blacklisted, skipping: {}", session.getRefreshTokenHash());
+                }
+            } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                // Race condition: another thread blacklisted this token between our check and insert
+                // This is acceptable - token is blacklisted either way
+                log.debug("Refresh token blacklist race condition (already blacklisted by another thread): {}",
+                        session.getRefreshTokenHash());
             }
         }
 

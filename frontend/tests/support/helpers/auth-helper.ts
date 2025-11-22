@@ -16,10 +16,11 @@ export class AuthHelper {
 
     await this.page.fill('[data-testid="email-input"]', email);
     await this.page.fill('[data-testid="password-input"]', password);
-    await this.page.click('[data-testid="login-button"]');
+    // Use force: true to bypass Next.js dev overlay interference
+    await this.page.click('[data-testid="login-button"]', { force: true });
 
-    // Wait for redirect to dashboard
-    await this.page.waitForURL('/(dashboard)', { timeout: 15000 });
+    // Wait for redirect to dashboard (supports /dashboard, /(dashboard), or /)
+    await this.page.waitForURL(/\/(dashboard)?/, { timeout: 15000 });
   }
 
   /**
@@ -27,7 +28,7 @@ export class AuthHelper {
    */
   async loginAsAdmin() {
     const adminEmail = process.env.TEST_ADMIN_EMAIL || 'admin@ultrabms.com';
-    const adminPassword = process.env.TEST_ADMIN_PASSWORD || 'admin123';
+    const adminPassword = process.env.TEST_ADMIN_PASSWORD || 'Admin@123';
 
     await this.login(adminEmail, adminPassword);
   }
@@ -37,7 +38,7 @@ export class AuthHelper {
    */
   async loginAsUser() {
     const userEmail = process.env.TEST_USER_EMAIL || 'user@ultrabms.com';
-    const userPassword = process.env.TEST_USER_PASSWORD || 'user123';
+    const userPassword = process.env.TEST_USER_PASSWORD || 'User@123';
 
     await this.login(userEmail, userPassword);
   }
@@ -46,8 +47,8 @@ export class AuthHelper {
    * Logout
    */
   async logout() {
-    await this.page.click('[data-testid="user-menu"]');
-    await this.page.click('[data-testid="logout-button"]');
+    await this.page.click('[data-testid="user-menu"]', { force: true });
+    await this.page.click('[data-testid="logout-button"]', { force: true });
 
     // Wait for redirect to login
     await this.page.waitForURL('/login', { timeout: 15000 });

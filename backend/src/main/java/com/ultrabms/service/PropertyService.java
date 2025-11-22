@@ -43,9 +43,12 @@ public interface PropertyService {
      * Search properties with filters
      */
     Page<PropertyResponse> searchProperties(
-            PropertyType type,
+            List<PropertyType> types,
             PropertyStatus status,
             String search,
+            UUID managerId,
+            Double occupancyMin,
+            Double occupancyMax,
             Pageable pageable
     );
 
