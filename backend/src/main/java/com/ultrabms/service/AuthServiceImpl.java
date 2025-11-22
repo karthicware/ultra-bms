@@ -36,9 +36,12 @@ import java.util.Map;
 /**
  * Implementation of AuthService for handling authentication operations.
  *
- * <p>Provides user registration, login with JWT token generation, token refresh,
- * and logout with token blacklisting. Includes rate limiting and account lockout
- * for security.</p>
+ * <p>
+ * Provides user registration, login with JWT token generation, token refresh,
+ * and logout with token blacklisting. Includes rate limiting and account
+ * lockout
+ * for security.
+ * </p>
  */
 @Service
 @RequiredArgsConstructor
@@ -188,8 +191,7 @@ public class AuthServiceImpl implements AuthService {
                 accessToken,
                 refreshToken,
                 3600L, // 1 hour in seconds
-                mapToUserDto(user)
-        );
+                mapToUserDto(user));
     }
 
     /**
@@ -238,6 +240,9 @@ public class AuthServiceImpl implements AuthService {
         // Generate new access token
         String newAccessToken = jwtTokenProvider.generateAccessToken(user);
 
+        // Update session with new access token hash
+        sessionService.updateSessionAccessToken(refreshToken, newAccessToken);
+
         // Log token refresh event for audit trail
         logAuditEvent(user.getId(), "TOKEN_REFRESH", ipAddress, userAgent,
                 Map.of("email", user.getEmail()));
@@ -260,8 +265,7 @@ public class AuthServiceImpl implements AuthService {
                         .ifPresent(userSession -> {
                             sessionService.invalidateSession(
                                     userSession.getSessionId(),
-                                    com.ultrabms.entity.enums.BlacklistReason.LOGOUT
-                            );
+                                    com.ultrabms.entity.enums.BlacklistReason.LOGOUT);
                             log.info("Session {} invalidated on logout", userSession.getSessionId());
                         });
             } else {
@@ -332,14 +336,14 @@ public class AuthServiceImpl implements AuthService {
     /**
      * Logs an authentication event to the audit log.
      *
-     * @param userId user ID (null for failed attempts where user not found)
-     * @param action action performed
+     * @param userId    user ID (null for failed attempts where user not found)
+     * @param action    action performed
      * @param ipAddress client IP address
      * @param userAgent client user agent
-     * @param details additional details
+     * @param details   additional details
      */
     private void logAuditEvent(java.util.UUID userId, String action, String ipAddress,
-                                String userAgent, Map<String, Object> details) {
+            String userAgent, Map<String, Object> details) {
         try {
             AuditLog auditLog = new AuditLog(userId, action, ipAddress, userAgent, details);
             auditLogRepository.save(auditLog);
@@ -364,7 +368,6 @@ public class AuthServiceImpl implements AuthService {
                 user.getActive(),
                 user.getMfaEnabled(),
                 user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
+                user.getUpdatedAt());
     }
 }

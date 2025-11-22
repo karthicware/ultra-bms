@@ -36,7 +36,7 @@ public interface QuotationRepository extends JpaRepository<Quotation, UUID> {
                         "(:status IS NULL OR q.status = :status) AND " +
                         "(:leadId IS NULL OR q.leadId = :leadId) AND " +
                         "(:search IS NULL OR " +
-                        "LOWER(q.quotationNumber) LIKE LOWER(:search))")
+                        "LOWER(q.quotationNumber) LIKE LOWER(CAST(:search AS string)))")
         Page<Quotation> searchQuotations(
                         @Param("status") Quotation.QuotationStatus status,
                         @Param("leadId") UUID leadId,

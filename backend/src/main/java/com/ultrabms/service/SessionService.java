@@ -26,15 +26,19 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Service for managing user sessions, including creation, activity tracking, and lifecycle management.
+ * Service for managing user sessions, including creation, activity tracking,
+ * and lifecycle management.
  *
- * <p>Key responsibilities:</p>
+ * <p>
+ * Key responsibilities:
+ * </p>
  * <ul>
- *   <li>Create sessions on login with concurrent session limit enforcement (max 3 per user)</li>
- *   <li>Track session activity and update last_activity_at timestamps</li>
- *   <li>Invalidate sessions on logout, timeout, or security events</li>
- *   <li>Blacklist tokens when sessions are terminated</li>
- *   <li>Provide session listing for Active Sessions Management UI</li>
+ * <li>Create sessions on login with concurrent session limit enforcement (max 3
+ * per user)</li>
+ * <li>Track session activity and update last_activity_at timestamps</li>
+ * <li>Invalidate sessions on logout, timeout, or security events</li>
+ * <li>Blacklist tokens when sessions are terminated</li>
+ * <li>Provide session listing for Active Sessions Management UI</li>
  * </ul>
  */
 @Service
@@ -50,11 +54,18 @@ public class SessionService {
     /**
      * Creates a new user session on login.
      *
-     * <p>Enforces concurrent session limit by deleting the oldest session if limit is exceeded.
-     * Hashes tokens before storage for security.</p>
+     * <p>
+     * Enforces concurrent session limit by deleting the oldest session if limit is
+     * exceeded.
+     * Hashes tokens before storage for security.
+     * </p>
      *
-     * <p>Uses optimistic locking retry mechanism to handle concurrent session creation.
-     * Retries up to 3 times with exponential backoff (100ms, 200ms, 400ms) on OptimisticLockingFailureException.</p>
+     * <p>
+     * Uses optimistic locking retry mechanism to handle concurrent session
+     * creation.
+     * Retries up to 3 times with exponential backoff (100ms, 200ms, 400ms) on
+     * OptimisticLockingFailureException.
+     * </p>
      *
      * @param user         the authenticated user
      * @param accessToken  the generated access token (plain text)
@@ -63,11 +74,8 @@ public class SessionService {
      * @return the generated session ID
      */
     @Transactional
-    @Retryable(
-        value = {ObjectOptimisticLockingFailureException.class},
-        maxAttempts = 3,
-        backoff = @Backoff(delay = 100, multiplier = 2)
-    )
+    @Retryable(value = {
+            ObjectOptimisticLockingFailureException.class }, maxAttempts = 3, backoff = @Backoff(delay = 100, multiplier = 2))
     public String createSession(User user, String accessToken, String refreshToken, HttpServletRequest request) {
         // Check concurrent session limit
         long activeSessionCount = userSessionRepository.countByUserIdAndIsActiveTrue(user.getId());
@@ -124,21 +132,23 @@ public class SessionService {
     /**
      * Updates session activity timestamp and checks for timeouts.
      *
-     * <p>Called by SessionActivityFilter on each authenticated request.
-     * Invalidates session if idle or absolute timeout is exceeded.</p>
+     * <p>
+     * Called by SessionActivityFilter on each authenticated request.
+     * Invalidates session if idle or absolute timeout is exceeded.
+     * </p>
      *
-     * <p>Uses optimistic locking retry mechanism to handle concurrent session updates.
-     * Retries up to 3 times with exponential backoff (100ms, 200ms, 400ms) on OptimisticLockingFailureException.</p>
+     * <p>
+     * Uses optimistic locking retry mechanism to handle concurrent session updates.
+     * Retries up to 3 times with exponential backoff (100ms, 200ms, 400ms) on
+     * OptimisticLockingFailureException.
+     * </p>
      *
      * @param accessToken the access token from Authorization header
      * @throws IllegalStateException if session is expired or not found
      */
     @Transactional
-    @Retryable(
-        value = {ObjectOptimisticLockingFailureException.class},
-        maxAttempts = 3,
-        backoff = @Backoff(delay = 100, multiplier = 2)
-    )
+    @Retryable(value = {
+            ObjectOptimisticLockingFailureException.class }, maxAttempts = 3, backoff = @Backoff(delay = 100, multiplier = 2))
     public void updateSessionActivity(String accessToken) {
         // Hash token to find session
         String tokenHash = TokenHashUtil.hashToken(accessToken);
@@ -171,22 +181,65 @@ public class SessionService {
     }
 
     /**
+     * Updates the access token hash for a session when the token is refreshed.
+     *
+     * <p>
+     * Called by AuthService when refreshing an access token to ensure the session
+     * tracks the new token hash.
+     * </p>
+     *
+     * <p>
+     * Uses optimistic locking retry mechanism to handle concurrent session updates.
+     * Retries up to 3 times with exponential backoff (100ms, 200ms, 400ms) on
+     * OptimisticLockingFailureException.
+     * </p>
+     *
+     * @param refreshToken   the refresh token used to find the session
+     * @param newAccessToken the new access token (plain text) to hash and store
+     * @throws IllegalStateException if session is not found
+     */
+    @Transactional
+    @Retryable(value = {
+            ObjectOptimisticLockingFailureException.class }, maxAttempts = 3, backoff = @Backoff(delay = 100, multiplier = 2))
+    public void updateSessionAccessToken(String refreshToken, String newAccessToken) {
+        // Hash refresh token to find session
+        String refreshTokenHash = TokenHashUtil.hashToken(refreshToken);
+        UserSession session = userSessionRepository.findByRefreshTokenHash(refreshTokenHash)
+                .orElseThrow(() -> new IllegalStateException("Session not found for refresh token"));
+
+        // Hash and update access token
+        String newAccessTokenHash = TokenHashUtil.hashToken(newAccessToken);
+        session.setAccessTokenHash(newAccessTokenHash);
+
+        // Also update activity timestamp
+        session.setLastActivityAt(LocalDateTime.now());
+
+        userSessionRepository.save(session);
+
+        log.debug("Updated session {} with new access token hash", session.getSessionId());
+    }
+
+    /**
      * Invalidates a session and blacklists its tokens.
      *
-     * <p>Marks session inactive, adds access and refresh tokens to blacklist with reason.</p>
+     * <p>
+     * Marks session inactive, adds access and refresh tokens to blacklist with
+     * reason.
+     * </p>
      *
-     * <p>Uses optimistic locking retry mechanism to handle concurrent session invalidation.
-     * Retries up to 3 times with exponential backoff (100ms, 200ms, 400ms) on OptimisticLockingFailureException.</p>
+     * <p>
+     * Uses optimistic locking retry mechanism to handle concurrent session
+     * invalidation.
+     * Retries up to 3 times with exponential backoff (100ms, 200ms, 400ms) on
+     * OptimisticLockingFailureException.
+     * </p>
      *
      * @param sessionId the session ID to invalidate
      * @param reason    the blacklist reason (LOGOUT, IDLE_TIMEOUT, etc.)
      */
     @Transactional(noRollbackFor = org.springframework.dao.DataIntegrityViolationException.class)
-    @Retryable(
-        value = {ObjectOptimisticLockingFailureException.class},
-        maxAttempts = 3,
-        backoff = @Backoff(delay = 100, multiplier = 2)
-    )
+    @Retryable(value = {
+            ObjectOptimisticLockingFailureException.class }, maxAttempts = 3, backoff = @Backoff(delay = 100, multiplier = 2))
     public void invalidateSession(String sessionId, BlacklistReason reason) {
         UserSession session = userSessionRepository.findBySessionId(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found: " + sessionId));
@@ -206,14 +259,14 @@ public class SessionService {
                             session.getAccessTokenHash(),
                             TokenType.ACCESS,
                             accessTokenExpiry,
-                            reason
-                    );
+                            reason);
                     tokenBlacklistRepository.save(accessBlacklist);
                 } else {
                     log.debug("Access token already blacklisted, skipping: {}", session.getAccessTokenHash());
                 }
             } catch (org.springframework.dao.DataIntegrityViolationException e) {
-                // Race condition: another thread blacklisted this token between our check and insert
+                // Race condition: another thread blacklisted this token between our check and
+                // insert
                 // This is acceptable - token is blacklisted either way
                 log.debug("Access token blacklist race condition (already blacklisted by another thread): {}",
                         session.getAccessTokenHash());
@@ -231,14 +284,14 @@ public class SessionService {
                             session.getRefreshTokenHash(),
                             TokenType.REFRESH,
                             refreshTokenExpiry,
-                            reason
-                    );
+                            reason);
                     tokenBlacklistRepository.save(refreshBlacklist);
                 } else {
                     log.debug("Refresh token already blacklisted, skipping: {}", session.getRefreshTokenHash());
                 }
             } catch (org.springframework.dao.DataIntegrityViolationException e) {
-                // Race condition: another thread blacklisted this token between our check and insert
+                // Race condition: another thread blacklisted this token between our check and
+                // insert
                 // This is acceptable - token is blacklisted either way
                 log.debug("Refresh token blacklist race condition (already blacklisted by another thread): {}",
                         session.getRefreshTokenHash());
@@ -251,9 +304,11 @@ public class SessionService {
     /**
      * Gets all active sessions for a user.
      *
-     * <p>Used by Active Sessions Management UI to display user's sessions.</p>
+     * <p>
+     * Used by Active Sessions Management UI to display user's sessions.
+     * </p>
      *
-     * @param userId         the user's UUID
+     * @param userId           the user's UUID
      * @param currentSessionId the current session ID to mark as "isCurrent"
      * @return list of SessionDto objects
      */
@@ -270,19 +325,21 @@ public class SessionService {
                         null, // Location not implemented yet
                         session.getLastActivityAt(),
                         session.getCreatedAt(),
-                        session.getSessionId().equals(currentSessionId)
-                ))
+                        session.getSessionId().equals(currentSessionId)))
                 .collect(Collectors.toList());
     }
 
     /**
      * Revokes a specific user session.
      *
-     * <p>Validates that the session belongs to the user before revoking.</p>
+     * <p>
+     * Validates that the session belongs to the user before revoking.
+     * </p>
      *
      * @param userId    the user's UUID (for security check)
      * @param sessionId the session ID to revoke
-     * @throws IllegalArgumentException if session not found or doesn't belong to user
+     * @throws IllegalArgumentException if session not found or doesn't belong to
+     *                                  user
      */
     @Transactional
     public void revokeSession(UUID userId, String sessionId) {
@@ -301,10 +358,12 @@ public class SessionService {
     /**
      * Revokes all active sessions for a user except the specified session.
      *
-     * <p>Used for "Logout All Other Devices" functionality.</p>
+     * <p>
+     * Used for "Logout All Other Devices" functionality.
+     * </p>
      *
-     * @param userId           the user's UUID
-     * @param exceptSessionId  the session ID to preserve (current session)
+     * @param userId          the user's UUID
+     * @param exceptSessionId the session ID to preserve (current session)
      * @return number of sessions revoked
      */
     @Transactional
@@ -326,7 +385,9 @@ public class SessionService {
     /**
      * Revokes all active sessions for a user.
      *
-     * <p>Used when user changes password or for complete logout.</p>
+     * <p>
+     * Used when user changes password or for complete logout.
+     * </p>
      *
      * @param userId the user's UUID
      * @return number of sessions revoked

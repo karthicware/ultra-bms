@@ -15,8 +15,11 @@ import java.util.UUID;
 /**
  * Repository interface for UserSession entity operations.
  *
- * <p>Provides methods for session lifecycle management including creation, activity tracking,
- * expiration checks, and cleanup of expired sessions.</p>
+ * <p>
+ * Provides methods for session lifecycle management including creation,
+ * activity tracking,
+ * expiration checks, and cleanup of expired sessions.
+ * </p>
  */
 @Repository
 public interface UserSessionRepository extends JpaRepository<UserSession, UUID> {
@@ -56,6 +59,16 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
      * @return Optional containing the session if found, empty otherwise
      */
     Optional<UserSession> findByAccessTokenHash(String tokenHash);
+
+    /**
+     * Finds a session by refresh token hash.
+     * Used when refreshing access tokens to update the session with the new access
+     * token hash.
+     *
+     * @param tokenHash SHA-256 hash of the refresh token
+     * @return Optional containing the session if found, empty otherwise
+     */
+    Optional<UserSession> findByRefreshTokenHash(String tokenHash);
 
     /**
      * Deletes all sessions that have expired before the given timestamp.
@@ -101,7 +114,8 @@ public interface UserSessionRepository extends JpaRepository<UserSession, UUID> 
     int deactivateAllUserSessions(@Param("userId") UUID userId);
 
     /**
-     * Marks all active sessions for a user as inactive except the specified session.
+     * Marks all active sessions for a user as inactive except the specified
+     * session.
      * Used for logout-all except current session functionality.
      *
      * @param userId    the user's UUID

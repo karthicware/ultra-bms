@@ -16,7 +16,8 @@ import java.util.UUID;
 
 /**
  * Repository interface for MaintenanceRequest entity.
- * Provides CRUD operations and custom queries for tenant maintenance request management.
+ * Provides CRUD operations and custom queries for tenant maintenance request
+ * management.
  *
  * Story 3.5: Tenant Portal - Maintenance Request Submission
  */
@@ -48,7 +49,8 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
     // =================================================================
 
     /**
-     * Find all maintenance requests for a specific tenant, ordered by submission date (newest first)
+     * Find all maintenance requests for a specific tenant, ordered by submission
+     * date (newest first)
      * Primary query for tenant portal "My Requests" list
      *
      * @param tenantId Tenant UUID
@@ -66,37 +68,38 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
      * @param pageable Pagination parameters
      * @return Page of matching maintenance requests
      */
-    Page<MaintenanceRequest> findByTenantIdAndStatusIn(UUID tenantId, List<MaintenanceStatus> statuses, Pageable pageable);
+    Page<MaintenanceRequest> findByTenantIdAndStatusIn(UUID tenantId, List<MaintenanceStatus> statuses,
+            Pageable pageable);
 
     /**
      * Find maintenance requests by tenant and category filter (multiple categories)
      * Used for filtering requests by category (e.g., PLUMBING, ELECTRICAL)
      *
-     * @param tenantId Tenant UUID
+     * @param tenantId   Tenant UUID
      * @param categories List of categories to filter by
-     * @param pageable Pagination parameters
+     * @param pageable   Pagination parameters
      * @return Page of matching maintenance requests
      */
-    Page<MaintenanceRequest> findByTenantIdAndCategoryIn(UUID tenantId, List<MaintenanceCategory> categories, Pageable pageable);
+    Page<MaintenanceRequest> findByTenantIdAndCategoryIn(UUID tenantId, List<MaintenanceCategory> categories,
+            Pageable pageable);
 
     /**
      * Search maintenance requests by title or description (case-insensitive)
      * Supports partial matching for tenant portal search
      *
-     * @param tenantId Tenant UUID
+     * @param tenantId   Tenant UUID
      * @param searchTerm Search term to match against title or description
-     * @param pageable Pagination parameters
+     * @param pageable   Pagination parameters
      * @return Page of matching maintenance requests
      */
     @Query("SELECT mr FROM MaintenanceRequest mr WHERE mr.tenantId = :tenantId AND " +
-           "(LOWER(mr.title) LIKE LOWER(:searchTerm) OR " +
-           "LOWER(mr.description) LIKE LOWER(:searchTerm) OR " +
-           "LOWER(mr.requestNumber) LIKE LOWER(:searchTerm))")
+            "(LOWER(mr.title) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
+            "LOWER(mr.description) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
+            "LOWER(mr.requestNumber) LIKE LOWER(CAST(:searchTerm AS string)))")
     Page<MaintenanceRequest> searchByTenantIdAndKeyword(
-        @Param("tenantId") UUID tenantId,
-        @Param("searchTerm") String searchTerm,
-        Pageable pageable
-    );
+            @Param("tenantId") UUID tenantId,
+            @Param("searchTerm") String searchTerm,
+            Pageable pageable);
 
     // =================================================================
     // COMBINED FILTERS
@@ -106,27 +109,26 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
      * Advanced search with multiple filters: status, category, and search term
      * Used for tenant portal advanced filtering
      *
-     * @param tenantId Tenant UUID
-     * @param statuses List of statuses (optional, can be empty)
+     * @param tenantId   Tenant UUID
+     * @param statuses   List of statuses (optional, can be empty)
      * @param categories List of categories (optional, can be empty)
      * @param searchTerm Search term for title/description/requestNumber
-     * @param pageable Pagination parameters
+     * @param pageable   Pagination parameters
      * @return Page of matching maintenance requests
      */
     @Query("SELECT mr FROM MaintenanceRequest mr WHERE mr.tenantId = :tenantId " +
-           "AND (:statuses IS NULL OR mr.status IN :statuses) " +
-           "AND (:categories IS NULL OR mr.category IN :categories) " +
-           "AND (:searchTerm IS NULL OR " +
-           "LOWER(mr.title) LIKE LOWER(:searchTerm) OR " +
-           "LOWER(mr.description) LIKE LOWER(:searchTerm) OR " +
-           "LOWER(mr.requestNumber) LIKE LOWER(:searchTerm))")
+            "AND (:statuses IS NULL OR mr.status IN :statuses) " +
+            "AND (:categories IS NULL OR mr.category IN :categories) " +
+            "AND (:searchTerm IS NULL OR " +
+            "LOWER(mr.title) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
+            "LOWER(mr.description) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
+            "LOWER(mr.requestNumber) LIKE LOWER(CAST(:searchTerm AS string)))")
     Page<MaintenanceRequest> searchWithFilters(
-        @Param("tenantId") UUID tenantId,
-        @Param("statuses") List<MaintenanceStatus> statuses,
-        @Param("categories") List<MaintenanceCategory> categories,
-        @Param("searchTerm") String searchTerm,
-        Pageable pageable
-    );
+            @Param("tenantId") UUID tenantId,
+            @Param("statuses") List<MaintenanceStatus> statuses,
+            @Param("categories") List<MaintenanceCategory> categories,
+            @Param("searchTerm") String searchTerm,
+            Pageable pageable);
 
     // =================================================================
     // PROPERTY MANAGER QUERIES
@@ -136,7 +138,7 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
      * Find all maintenance requests for a property (for property manager view)
      *
      * @param propertyId Property UUID
-     * @param pageable Pagination parameters
+     * @param pageable   Pagination parameters
      * @return Page of maintenance requests
      */
     Page<MaintenanceRequest> findByPropertyIdOrderBySubmittedAtDesc(UUID propertyId, Pageable pageable);
@@ -145,18 +147,19 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
      * Find maintenance requests by property and status
      *
      * @param propertyId Property UUID
-     * @param statuses List of statuses
-     * @param pageable Pagination parameters
+     * @param statuses   List of statuses
+     * @param pageable   Pagination parameters
      * @return Page of matching maintenance requests
      */
-    Page<MaintenanceRequest> findByPropertyIdAndStatusIn(UUID propertyId, List<MaintenanceStatus> statuses, Pageable pageable);
+    Page<MaintenanceRequest> findByPropertyIdAndStatusIn(UUID propertyId, List<MaintenanceStatus> statuses,
+            Pageable pageable);
 
     /**
      * Find all unassigned requests for a property (status = SUBMITTED)
      * Used by property manager to view pending assignments
      *
      * @param propertyId Property UUID
-     * @param status Status (SUBMITTED)
+     * @param status     Status (SUBMITTED)
      * @return List of unassigned maintenance requests
      */
     List<MaintenanceRequest> findByPropertyIdAndStatus(UUID propertyId, MaintenanceStatus status);
@@ -182,7 +185,8 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
      * @param pageable Pagination parameters
      * @return Page of matching maintenance requests
      */
-    Page<MaintenanceRequest> findByAssignedToAndStatusIn(UUID vendorId, List<MaintenanceStatus> statuses, Pageable pageable);
+    Page<MaintenanceRequest> findByAssignedToAndStatusIn(UUID vendorId, List<MaintenanceStatus> statuses,
+            Pageable pageable);
 
     // =================================================================
     // UNIT QUERIES
@@ -192,7 +196,7 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
      * Find all maintenance requests for a specific unit
      * Useful for unit history and analytics
      *
-     * @param unitId Unit UUID
+     * @param unitId   Unit UUID
      * @param pageable Pagination parameters
      * @return Page of maintenance requests
      */
@@ -215,7 +219,7 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
      * Used for dashboard statistics (e.g., "Open Requests" count)
      *
      * @param tenantId Tenant UUID
-     * @param status Status enum
+     * @param status   Status enum
      * @return Count of requests matching status
      */
     long countByTenantIdAndStatus(UUID tenantId, MaintenanceStatus status);
@@ -235,7 +239,7 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
      * Used by property managers to identify common issues
      *
      * @param propertyId Property UUID
-     * @param category Category enum
+     * @param category   Category enum
      * @return Count of requests in category
      */
     long countByPropertyIdAndCategory(UUID propertyId, MaintenanceCategory category);
@@ -257,7 +261,7 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
      * Check if tenant has any requests in SUBMITTED status
      *
      * @param tenantId Tenant UUID
-     * @param status Status (SUBMITTED)
+     * @param status   Status (SUBMITTED)
      * @return True if tenant has submitted requests awaiting assignment
      */
     boolean existsByTenantIdAndStatus(UUID tenantId, MaintenanceStatus status);

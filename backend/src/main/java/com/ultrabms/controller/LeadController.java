@@ -55,10 +55,8 @@ public class LeadController {
     @Operation(summary = "Create a new lead")
     public ResponseEntity<ApiResponse<LeadResponse>> createLead(
             @Valid @RequestBody CreateLeadRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID createdBy = getUserId(userDetails);
-        LeadResponse response = leadService.createLead(request, createdBy);
+            @AuthenticationPrincipal UUID userId) {
+        LeadResponse response = leadService.createLead(request, userId);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Lead created successfully"));
@@ -75,8 +73,7 @@ public class LeadController {
     @Operation(summary = "Update lead")
     public ResponseEntity<ApiResponse<LeadResponse>> updateLead(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateLeadRequest request
-    ) {
+            @Valid @RequestBody UpdateLeadRequest request) {
         LeadResponse response = leadService.updateLead(id, request);
         return ResponseEntity.ok(ApiResponse.success(response, "Lead updated successfully"));
     }
@@ -90,8 +87,7 @@ public class LeadController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") String sortDir
-    ) {
+            @RequestParam(defaultValue = "DESC") String sortDir) {
         Sort.Direction direction = sortDir.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
@@ -104,10 +100,8 @@ public class LeadController {
     public ResponseEntity<ApiResponse<LeadResponse>> updateLeadStatus(
             @PathVariable UUID id,
             @RequestParam Lead.LeadStatus status,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID updatedBy = getUserId(userDetails);
-        LeadResponse response = leadService.updateLeadStatus(id, status, updatedBy);
+            @AuthenticationPrincipal UUID userId) {
+        LeadResponse response = leadService.updateLeadStatus(id, status, userId);
         return ResponseEntity.ok(ApiResponse.success(response, "Lead status updated successfully"));
     }
 
@@ -117,10 +111,8 @@ public class LeadController {
             @PathVariable UUID id,
             @RequestParam("file") MultipartFile file,
             @RequestParam("documentType") LeadDocument.DocumentType documentType,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID uploadedBy = getUserId(userDetails);
-        LeadDocumentResponse response = leadService.uploadDocument(id, file, documentType, uploadedBy);
+            @AuthenticationPrincipal UUID userId) {
+        LeadDocumentResponse response = leadService.uploadDocument(id, file, documentType, userId);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Document uploaded successfully"));
@@ -155,8 +147,7 @@ public class LeadController {
     public ResponseEntity<ApiResponse<Page<LeadHistoryResponse>>> getLeadHistory(
             @PathVariable UUID id,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
+            @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<LeadHistoryResponse> response = leadService.getLeadHistory(id, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -169,11 +160,4 @@ public class LeadController {
         return ResponseEntity.ok(ApiResponse.success(null, "Lead deleted successfully"));
     }
 
-    /**
-     * Helper method to extract user ID from UserDetails
-     */
-    private UUID getUserId(UserDetails userDetails) {
-        // Assuming UserDetails username is the UUID
-        return UUID.fromString(userDetails.getUsername());
-    }
 }

@@ -51,8 +51,8 @@ public interface PropertyRepository extends JpaRepository<Property, UUID>, JpaSp
      * Search properties by name or address (case-insensitive)
      */
     @Query("SELECT p FROM Property p WHERE " +
-           "LOWER(p.name) LIKE LOWER(:searchTerm) OR " +
-           "LOWER(p.address) LIKE LOWER(:searchTerm)")
+            "LOWER(p.name) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
+            "LOWER(p.address) LIKE LOWER(CAST(:searchTerm AS string))")
     Page<Property> searchProperties(@Param("searchTerm") String searchTerm, Pageable pageable);
 
     /**

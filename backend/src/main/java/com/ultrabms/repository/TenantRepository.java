@@ -24,7 +24,7 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
     /**
      * Find tenant by ID and active status
      *
-     * @param id Tenant UUID
+     * @param id     Tenant UUID
      * @param active Active flag
      * @return Optional tenant
      */
@@ -66,7 +66,7 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
      * Find all tenants by property ID
      *
      * @param propertyId Property UUID
-     * @param active Active flag
+     * @param active     Active flag
      * @return List of tenants
      */
     List<Tenant> findByPropertyIdAndActive(UUID propertyId, Boolean active);
@@ -74,8 +74,8 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
     /**
      * Find all active tenants by status
      *
-     * @param status Tenant status
-     * @param active Active flag
+     * @param status   Tenant status
+     * @param active   Active flag
      * @param pageable Pagination
      * @return Page of tenants
      */
@@ -85,19 +85,18 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
      * Find tenants with expiring leases (within specified days)
      *
      * @param currentDate Current date
-     * @param expiryDate Date to check against
-     * @param status Tenant status (ACTIVE)
-     * @param active Active flag
+     * @param expiryDate  Date to check against
+     * @param status      Tenant status (ACTIVE)
+     * @param active      Active flag
      * @return List of tenants with expiring leases
      */
     @Query("SELECT t FROM Tenant t WHERE t.leaseEndDate BETWEEN :currentDate AND :expiryDate " +
-           "AND t.status = :status AND t.active = :active")
+            "AND t.status = :status AND t.active = :active")
     List<Tenant> findExpiringLeases(
-        @Param("currentDate") LocalDate currentDate,
-        @Param("expiryDate") LocalDate expiryDate,
-        @Param("status") TenantStatus status,
-        @Param("active") Boolean active
-    );
+            @Param("currentDate") LocalDate currentDate,
+            @Param("expiryDate") LocalDate expiryDate,
+            @Param("status") TenantStatus status,
+            @Param("active") Boolean active);
 
     /**
      * Check if email already exists
@@ -119,21 +118,20 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
      * Search tenants by name, email, or tenant number
      *
      * @param searchTerm Search term
-     * @param active Active flag
-     * @param pageable Pagination
+     * @param active     Active flag
+     * @param pageable   Pagination
      * @return Page of matching tenants
      */
     @Query("SELECT t FROM Tenant t WHERE " +
-           "(LOWER(t.firstName) LIKE LOWER(:searchTerm) OR " +
-           "LOWER(t.lastName) LIKE LOWER(:searchTerm) OR " +
-           "LOWER(t.email) LIKE LOWER(:searchTerm) OR " +
-           "LOWER(t.tenantNumber) LIKE LOWER(:searchTerm)) " +
-           "AND t.active = :active")
+            "(LOWER(t.firstName) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
+            "LOWER(t.lastName) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
+            "LOWER(t.email) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
+            "LOWER(t.tenantNumber) LIKE LOWER(CAST(:searchTerm AS string))) " +
+            "AND t.active = :active")
     Page<Tenant> searchTenants(
-        @Param("searchTerm") String searchTerm,
-        @Param("active") Boolean active,
-        Pageable pageable
-    );
+            @Param("searchTerm") String searchTerm,
+            @Param("active") Boolean active,
+            Pageable pageable);
 
     /**
      * Count all active tenants
