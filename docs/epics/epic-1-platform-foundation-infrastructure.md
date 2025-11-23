@@ -334,4 +334,76 @@ So that APIs follow consistent patterns and errors are handled gracefully.
 - Use DTOs to avoid exposing entity structure directly
 - Implement API versioning strategy (/v1, /v2) from the start
 
+## Story 1.6: AWS S3 File Storage Integration
+
+As a backend developer,
+I want file storage to use AWS S3 instead of the local filesystem,
+So that document uploads are scalable, reliable, and accessible across all application modules.
+
+**Acceptance Criteria:**
+
+**Given** Spring Boot application is configured
+**When** S3 integration is implemented
+**Then** the FileStorageService is refactored to use AWS S3 with:
+- AWS SDK for Java 2.x (software.amazon.awssdk:s3)
+- S3 bucket configured in UAE region (me-central-1)
+- S3 client with proper credentials management (IAM roles in production, LocalStack in dev)
+- Bucket naming convention: `ultrabms-{environment}-storage` (e.g., ultrabms-dev-storage)
+
+**And** file upload operations:
+- Files stored with UUID-based keys: `{module}/{entityId}/documents/{uuid}.{extension}`
+- Example: `leads/449b9bd0-.../documents/38bae96a-...jpg`
+- Content-Type metadata set correctly (application/pdf, image/jpeg, image/png)
+- File size validation (max 5MB) before upload
+- Multi-part upload support for larger files (future-ready)
+
+**And** file download operations:
+- Presigned URLs generated with 5-minute expiration
+- URLs returned to frontend for secure, direct download from S3
+- Content-Disposition header set for proper filename handling
+- Download history logged with user ID and timestamp
+
+**And** file deletion operations:
+- S3 objects deleted when database records are removed
+- Graceful handling if S3 object already deleted (idempotent)
+- Batch deletion support for entity cleanup (e.g., lead deletion)
+
+**And** LocalStack integration for local development:
+- LocalStack S3 service runs on localhost:4566
+- S3 client configured to use LocalStack endpoint in dev profile
+- No AWS credentials required for local development
+- Docker Compose updated with LocalStack service definition
+
+**And** module support for all document types:
+- Leads: Emirates ID, passport, visa, contracts
+- Properties: title deeds, floor plans, photos, compliance docs
+- Tenants: ID copies, contracts, payment receipts
+- Maintenance: work orders, invoices, photos
+- Vendors: licenses, contracts, insurance docs
+- Financial: invoices, receipts, bank statements, audit reports
+- Compliance: certificates, inspection reports, permits
+
+**And** configuration includes:
+- `application.yml` properties:
+  - `aws.s3.bucket-name`
+  - `aws.s3.region`
+  - `aws.s3.endpoint` (for LocalStack override)
+- Dev profile uses LocalStack endpoint: `http://localhost:4566`
+- Staging/Prod profiles use real AWS S3
+
+**Prerequisites:** Story 1.1, Story 1.2, Story 1.4, Story 1.5
+
+**Technical Notes:**
+- Use Spring Cloud AWS 3.x or AWS SDK for Java 2.x directly
+- Implement FileStorageService as interface with S3FileStorageServiceImpl
+- Keep database `file_path` column storing S3 keys (VARCHAR 500 is sufficient)
+- Use presigned URLs instead of streaming bytes through backend (reduces server load)
+- Set up S3 bucket lifecycle policies later (archive old docs to Glacier after 3 years)
+- Enable S3 versioning for audit compliance (future enhancement)
+- Consider S3 Transfer Acceleration for faster uploads from global locations
+- LocalStack Docker image: `localstack/localstack:3.0`
+- Use `@ConditionalOnProperty` to switch between local filesystem and S3 if needed
+- Document S3 IAM policy requirements for production deployment
+- Test with all file types (PDF, JPG, PNG) across all modules
+
 ---

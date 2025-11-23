@@ -1810,7 +1810,7 @@ ArgoCD (CD)
 
 #### Development
 - Local PostgreSQL
-- Local file storage
+- LocalStack (S3 emulation on localhost:4566)
 - Mock external services
 
 #### Staging
