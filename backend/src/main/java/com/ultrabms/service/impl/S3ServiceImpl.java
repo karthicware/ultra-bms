@@ -1,5 +1,6 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.exception.FileStorageException;
 import com.ultrabms.service.S3Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +11,10 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -22,6 +26,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * S3 Service Implementation
@@ -40,16 +45,18 @@ public class S3ServiceImpl implements S3Service {
             "application/pdf"
     );
 
-    // Maximum file size: 10MB (for lease agreements)
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    // Maximum file size: 5MB (standard document size limit)
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
     private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
 
     @Value("${aws.s3.bucket-name:ultrabms-s3-dev-bucket}")
     private String bucketName;
 
-    public S3ServiceImpl(S3Client s3Client) {
+    public S3ServiceImpl(S3Client s3Client, S3Presigner s3Presigner) {
         this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
     }
 
     @Override
@@ -118,10 +125,10 @@ public class S3ServiceImpl implements S3Service {
 
         } catch (IOException e) {
             LOGGER.error("Failed to upload file to S3: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to upload file to S3", e);
+            throw new FileStorageException("Failed to upload file to S3", e);
         } catch (S3Exception e) {
             LOGGER.error("S3 error while uploading file: {}", e.getMessage(), e);
-            throw new RuntimeException("S3 error while uploading file", e);
+            throw new FileStorageException("S3 error while uploading file", e);
         }
     }
 
@@ -137,41 +144,90 @@ public class S3ServiceImpl implements S3Service {
 
             LOGGER.info("File deleted successfully from S3: {}", filePath);
 
+        } catch (NoSuchKeyException e) {
+            // Idempotent operation - file already deleted
+            LOGGER.info("File already deleted from S3 (idempotent operation): {}", filePath);
         } catch (S3Exception e) {
             LOGGER.error("S3 error while deleting file: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to delete file from S3", e);
+            throw new FileStorageException("Failed to delete file from S3", e);
+        }
+    }
+
+    @Override
+    public void deleteFiles(List<String> filePaths) {
+        if (filePaths == null || filePaths.isEmpty()) {
+            LOGGER.warn("Attempted to delete empty list of files");
+            return;
+        }
+
+        try {
+            // Convert file paths to ObjectIdentifier list
+            List<ObjectIdentifier> objectsToDelete = filePaths.stream()
+                    .map(path -> ObjectIdentifier.builder().key(path).build())
+                    .collect(Collectors.toList());
+
+            // Use S3 native batch delete API (up to 1000 objects per request)
+            DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
+                    .bucket(bucketName)
+                    .delete(builder -> builder.objects(objectsToDelete).build())
+                    .build();
+
+            var response = s3Client.deleteObjects(deleteObjectsRequest);
+
+            int successCount = response.deleted().size();
+            int failureCount = response.errors().size();
+
+            if (!response.errors().isEmpty()) {
+                LOGGER.warn("Batch deletion had {} errors:", failureCount);
+                response.errors().forEach(error ->
+                        LOGGER.warn("Failed to delete {}: {} - {}",
+                                error.key(), error.code(), error.message())
+                );
+            }
+
+            LOGGER.info("Batch deletion completed: {} succeeded, {} failed out of {} total",
+                    successCount, failureCount, filePaths.size());
+
+        } catch (S3Exception e) {
+            LOGGER.error("S3 error during batch deletion: {}", e.getMessage(), e);
+            throw new FileStorageException("Failed to delete files from S3", e);
         }
     }
 
     @Override
     public String getPresignedUrl(String filePath) {
         try {
-            // Create S3 presigner
-            S3Presigner presigner = S3Presigner.create();
+            // Extract filename from S3 key for Content-Disposition header
+            String filename = filePath.substring(filePath.lastIndexOf('/') + 1);
 
+            // Sanitize filename to prevent HTTP header injection
+            // Remove quotes, newlines, and carriage returns that could break the header
+            String sanitizedFilename = filename.replaceAll("[\"\\r\\n]", "_");
+
+            // Build GET request with Content-Disposition header for proper filename download
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucketName)
                     .key(filePath)
+                    .responseContentDisposition("attachment; filename=\"" + sanitizedFilename + "\"")
                     .build();
 
+            // Create presign request with 5-minute expiration (per AC3)
             GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                    .signatureDuration(Duration.ofHours(1)) // URL valid for 1 hour
+                    .signatureDuration(Duration.ofMinutes(5)) // URL valid for 5 minutes
                     .getObjectRequest(getObjectRequest)
                     .build();
 
-            PresignedGetObjectRequest presignedRequest = presigner.presignGetObject(presignRequest);
+            PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
 
             String url = presignedRequest.url().toString();
 
-            LOGGER.info("Generated presigned URL for file: {}", filePath);
-
-            presigner.close();
+            LOGGER.info("Generated presigned URL for file: {} (expires in 5 minutes)", filePath);
 
             return url;
 
         } catch (S3Exception e) {
             LOGGER.error("S3 error while generating presigned URL: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to generate presigned URL", e);
+            throw new FileStorageException("Failed to generate presigned URL", e);
         }
     }
 }

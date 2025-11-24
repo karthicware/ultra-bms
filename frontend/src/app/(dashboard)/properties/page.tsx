@@ -125,7 +125,7 @@ export default function PropertiesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm, propertyTypeFilter, managerFilter, occupancyMin, occupancyMax, sortField, sortDirection, toast]);
+  }, [currentPage, pageSize, searchTerm, propertyTypeFilter, managerFilter, occupancyMin, occupancyMax, sortField, sortDirection]); // Removed toast from dependencies
 
   // Debounced search (300ms as per Story 3.1 pattern)
   const debouncedFetchProperties = useMemo(
@@ -333,140 +333,140 @@ export default function PropertiesPage() {
           ) : (
             <div className="overflow-x-auto">
               <Table data-testid="table-properties">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleSort('name')}
-                      className="h-8 p-0 hover:bg-transparent"
-                      data-testid="btn-sort-name"
-                    >
-                      Name
-                      {getSortIcon('name')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleSort('totalUnitsCount')}
-                      className="h-8 p-0 hover:bg-transparent"
-                      data-testid="sort-total-units"
-                    >
-                      Total Units
-                      {getSortIcon('totalUnitsCount')}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-center">Occupied</TableHead>
-                  <TableHead className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleSort('occupancyRate')}
-                      className="h-8 p-0 hover:bg-transparent"
-                      data-testid="btn-sort-occupancy"
-                    >
-                      Occupancy
-                      {getSortIcon('occupancyRate')}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {properties.map((property) => {
-                  const occupancyRate = property.occupancyRate || 0;
-                  const occupiedUnits = property.occupiedUnits || 0;
-                  const totalUnits = property.totalUnitsCount || 0;
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort('name')}
+                        className="h-8 p-0 hover:bg-transparent"
+                        data-testid="btn-sort-name"
+                      >
+                        Name
+                        {getSortIcon('name')}
+                      </Button>
+                    </TableHead>
+                    <TableHead>Address</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead className="text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort('totalUnitsCount')}
+                        className="h-8 p-0 hover:bg-transparent"
+                        data-testid="sort-total-units"
+                      >
+                        Total Units
+                        {getSortIcon('totalUnitsCount')}
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-center">Occupied</TableHead>
+                    <TableHead className="text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort('occupancyRate')}
+                        className="h-8 p-0 hover:bg-transparent"
+                        data-testid="btn-sort-occupancy"
+                      >
+                        Occupancy
+                        {getSortIcon('occupancyRate')}
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {properties.map((property) => {
+                    const occupancyRate = property.occupancyRate || 0;
+                    const occupiedUnits = property.occupiedUnits || 0;
+                    const totalUnits = property.totalUnitsCount || 0;
 
-                  return (
-                    <TableRow key={property.id} className="hover:bg-muted/50" data-testid="property-row">
-                      <TableCell className="font-medium">
-                        {property.name}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {property.address}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={PROPERTY_TYPE_COLORS[property.propertyType]}
-                        >
-                          {property.propertyType.replace('_', ' ')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {totalUnits}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {occupiedUnits}
-                      </TableCell>
-                      <TableCell>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex flex-col items-center gap-1 cursor-help">
-                                <Badge
-                                  variant="outline"
-                                  className={getOccupancyColor(occupancyRate)}
-                                  data-testid={`badge-occupancy-${property.id}`}
-                                >
-                                  {occupancyRate.toFixed(1)}%
-                                </Badge>
-                                <Progress
-                                  value={occupancyRate}
-                                  className="w-16 h-2"
-                                  data-testid={`progress-occupancy-${property.id}`}
-                                />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{occupiedUnits} of {totalUnits} units occupied</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewProperty(property.id)}
-                            data-testid={`btn-view-property-${property.id}`}
-                            title="View Details"
+                    return (
+                      <TableRow key={property.id} className="hover:bg-muted/50" data-testid="property-row">
+                        <TableCell className="font-medium">
+                          {property.name}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {property.address}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={PROPERTY_TYPE_COLORS[property.propertyType]}
                           >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditProperty(property.id)}
-                            data-testid={`btn-edit-property-${property.id}`}
-                            title="Edit Property"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteProperty(property.id, property.name)}
-                            data-testid={`btn-delete-property-${property.id}`}
-                            title="Delete Property"
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                            {property.propertyType.replace('_', ' ')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {totalUnits}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {occupiedUnits}
+                        </TableCell>
+                        <TableCell>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex flex-col items-center gap-1 cursor-help">
+                                  <Badge
+                                    variant="outline"
+                                    className={getOccupancyColor(occupancyRate)}
+                                    data-testid={`badge-occupancy-${property.id}`}
+                                  >
+                                    {occupancyRate.toFixed(1)}%
+                                  </Badge>
+                                  <Progress
+                                    value={occupancyRate}
+                                    className="w-16 h-2"
+                                    data-testid={`progress-occupancy-${property.id}`}
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{occupiedUnits} of {totalUnits} units occupied</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewProperty(property.id)}
+                              data-testid={`btn-view-property-${property.id}`}
+                              title="View Details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditProperty(property.id)}
+                              data-testid={`btn-edit-property-${property.id}`}
+                              title="Edit Property"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteProperty(property.id, property.name)}
+                              data-testid={`btn-delete-property-${property.id}`}
+                              title="Delete Property"
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>

@@ -101,7 +101,7 @@ export default function PropertyDetailPage() {
     if (propertyId) {
       fetchProperty();
     }
-  }, [propertyId, toast]);
+  }, [propertyId]); // Removed toast from dependencies
 
   // Handlers
   const handleEdit = () => {

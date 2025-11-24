@@ -1,5 +1,7 @@
 package com.ultrabms.service;
 
+import java.util.List;
+
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -18,17 +20,28 @@ public interface S3Service {
     String uploadFile(MultipartFile file, String directory);
 
     /**
-     * Delete file from S3 bucket
+     * Delete file from S3 bucket (idempotent operation)
      *
      * @param filePath S3 file path to delete
      */
     void deleteFile(String filePath);
 
     /**
-     * Get presigned URL for file download
+     * Delete multiple files from S3 bucket in batch.
+     * Handles partial failures gracefully - logs warnings but continues.
+     *
+     * @param filePaths List of S3 file paths to delete
+     */
+    void deleteFiles(List<String> filePaths);
+
+    /**
+     * Get presigned URL for file download.
+     *
+     * Presigned URLs provide secure, temporary access to S3 objects without
+     * requiring AWS credentials. URL expires after 5 minutes.
      *
      * @param filePath S3 file path
-     * @return Presigned URL (valid for 1 hour)
+     * @return Presigned URL (valid for 5 minutes)
      */
     String getPresignedUrl(String filePath);
 }

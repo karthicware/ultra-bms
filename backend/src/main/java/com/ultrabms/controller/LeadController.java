@@ -6,6 +6,7 @@ import com.ultrabms.dto.leads.LeadDocumentResponse;
 import com.ultrabms.dto.leads.LeadHistoryResponse;
 import com.ultrabms.dto.leads.LeadResponse;
 import com.ultrabms.dto.leads.UpdateLeadRequest;
+import com.ultrabms.dto.response.DownloadUrlResponse;
 import com.ultrabms.entity.Lead;
 import com.ultrabms.entity.LeadDocument;
 import com.ultrabms.service.LeadService;
@@ -18,12 +19,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -126,29 +124,15 @@ public class LeadController {
     }
 
     @GetMapping("/{id}/documents/{documentId}/download")
-    @Operation(summary = "Download document")
-    public ResponseEntity<byte[]> downloadDocument(
+    @Operation(summary = "Get presigned URL for document download",
+            description = "Returns a presigned S3 URL for secure, direct download. URL expires in 5 minutes.")
+    public ResponseEntity<ApiResponse<DownloadUrlResponse>> downloadDocument(
             @PathVariable UUID id,
             @PathVariable UUID documentId) {
-        // Get document metadata first
-        LeadDocument document = leadService.getDocumentById(documentId);
-        byte[] fileContent = leadService.downloadDocument(documentId);
+        // Get presigned download URL from service (Story 1.6: S3 migration)
+        DownloadUrlResponse response = leadService.getDownloadUrl(documentId);
 
-        // Determine content type from file extension or use the stored one
-        MediaType contentType = MediaType.APPLICATION_OCTET_STREAM;
-        String fileName = document.getFileName();
-        if (fileName.toLowerCase().endsWith(".pdf")) {
-            contentType = MediaType.APPLICATION_PDF;
-        } else if (fileName.toLowerCase().matches(".*\\.(jpg|jpeg)$")) {
-            contentType = MediaType.IMAGE_JPEG;
-        } else if (fileName.toLowerCase().endsWith(".png")) {
-            contentType = MediaType.IMAGE_PNG;
-        }
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                .contentType(contentType)
-                .body(fileContent);
+        return ResponseEntity.ok(ApiResponse.success(response, "Download URL generated successfully"));
     }
 
     @DeleteMapping("/{id}/documents/{documentId}")

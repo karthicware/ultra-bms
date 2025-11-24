@@ -175,6 +175,55 @@ Explore and manage the database using these tools:
 - Configuration: `spring.jpa.hibernate.ddl-auto=validate`
 - See `backend/src/main/resources/db/README.md` for migration strategy
 
+## File Storage Setup (AWS S3 / LocalStack)
+
+Ultra BMS uses AWS S3 for document storage. For local development, we use **LocalStack** - a local AWS cloud emulator.
+
+### Local Development with LocalStack
+
+LocalStack is automatically included in `docker-compose.yml` and provides S3-compatible storage on your local machine.
+
+**Prerequisites:**
+- Docker Desktop installed and running
+
+**Setup:**
+1. Start LocalStack with PostgreSQL:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. Verify LocalStack is running:
+   ```bash
+   docker ps
+   ```
+   You should see `ultra-bms-localstack` container with status "healthy".
+
+3. Check S3 bucket was created:
+   ```bash
+   docker logs ultra-bms-localstack | grep "ultrabms-dev-storage"
+   ```
+
+**LocalStack Details:**
+- **Endpoint:** http://localhost:4566
+- **Bucket Name:** ultrabms-dev-storage
+- **Region:** me-central-1
+- **Access Key:** test (dummy)
+- **Secret Key:** test (dummy)
+
+### Production AWS S3 Setup
+
+For staging/production environments, configure real AWS S3:
+
+1. Create S3 bucket in AWS Console (UAE region: me-central-1)
+2. Set environment variables:
+   ```bash
+   S3_BUCKET_NAME=ultrabms-prod-storage
+   AWS_REGION=me-central-1
+   ```
+3. Configure IAM role with permissions: `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject`
+
+**Note:** LocalStack endpoint is only configured in `application-dev.yml`. Production uses real AWS S3.
+
 ### Troubleshooting
 
 #### Connection Refused

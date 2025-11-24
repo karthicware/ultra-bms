@@ -94,7 +94,7 @@ export default function QuotationsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, statusFilter, toast]);
+  }, [currentPage, pageSize, statusFilter]); // Removed toast from dependencies
 
   const debouncedFetch = useMemo(() => debounce(fetchQuotations, 300), [fetchQuotations]);
 

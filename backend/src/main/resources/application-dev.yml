@@ -141,3 +141,12 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.cache: DEBUG # Cache operation logging for dev
     org.ehcache: INFO # Ehcache initialization logging
+
+# AWS S3 Configuration (LocalStack for Dev)
+# LocalStack provides S3-compatible API on localhost:4566
+# No AWS credentials required - uses test/test dummy credentials
+aws:
+  s3:
+    bucket-name: ultrabms-dev-storage
+    region: me-central-1
+    endpoint: http://localhost:4566  # LocalStack endpoint (remove in production)

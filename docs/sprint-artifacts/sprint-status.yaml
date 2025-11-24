@@ -40,7 +40,7 @@ development_status:
   1-3-ehcache-configuration-for-application-caching: done
   1-4-core-domain-models-and-jpa-entities: done
   1-5-basic-rest-api-structure-and-exception-handling: done
-  1-6-aws-s3-file-storage-integration: ready-for-dev  # Added 2025-11-22, Drafted 2025-11-22, Ready 2025-11-22 - Sprint change via *correct-course: Accelerate planned S3 migration for all document uploads. LocalStack for dev, presigned URLs, supports all modules. Story Context: docs/sprint-artifacts/1-6-aws-s3-file-storage-integration.context.xml
+  1-6-aws-s3-file-storage-integration: done  # Completed 2025-11-23 - Code review APPROVED. All 7 ACs met, build SUCCESS, Checkstyle 0 violations. Sprint change via *correct-course: Accelerated S3 migration for all document uploads. LocalStack for dev, presigned URLs, supports all modules. Story Context: docs/sprint-artifacts/1-6-aws-s3-file-storage-integration.context.xml. Implementation: 15 files modified, 2 created. Review findings: 2 LOW priority improvements (FileStorageException usage, batch delete optimization) - non-blocking, defer to next sprint.
   epic-1-retrospective: optional
 
   # Epic 2: Authentication & User Management (5 stories)

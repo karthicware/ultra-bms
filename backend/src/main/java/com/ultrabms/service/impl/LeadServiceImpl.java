@@ -5,6 +5,7 @@ import com.ultrabms.dto.leads.LeadDocumentResponse;
 import com.ultrabms.dto.leads.LeadHistoryResponse;
 import com.ultrabms.dto.leads.LeadResponse;
 import com.ultrabms.dto.leads.UpdateLeadRequest;
+import com.ultrabms.dto.response.DownloadUrlResponse;
 import com.ultrabms.entity.Lead;
 import com.ultrabms.entity.LeadDocument;
 import com.ultrabms.entity.LeadHistory;
@@ -271,7 +272,9 @@ public class LeadServiceImpl implements LeadService {
 
     @Override
     @Transactional(readOnly = true)
+    @Deprecated
     public byte[] downloadDocument(UUID documentId) {
+        log.warn("downloadDocument() is deprecated - use getDownloadUrl() instead");
         log.info("Downloading document: {}", documentId);
         LeadDocument document = leadDocumentRepository.findById(documentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
@@ -285,6 +288,40 @@ public class LeadServiceImpl implements LeadService {
                 "Please delete this document entry and upload a new one."
             );
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DownloadUrlResponse getDownloadUrl(UUID documentId) {
+        log.info("Generating download URL for document: {}", documentId);
+
+        LeadDocument document = leadDocumentRepository.findById(documentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
+
+        // Generate presigned URL for S3 download (Story 1.6: S3 migration)
+        String presignedUrl = fileStorageService.getDownloadUrl(document.getFilePath());
+
+        // Determine content type from filename
+        String contentType = "application/octet-stream";
+        String fileName = document.getFileName();
+        if (fileName != null) {
+            if (fileName.toLowerCase().endsWith(".pdf")) {
+                contentType = "application/pdf";
+            } else if (fileName.toLowerCase().matches(".*\\.(jpg|jpeg)$")) {
+                contentType = "image/jpeg";
+            } else if (fileName.toLowerCase().endsWith(".png")) {
+                contentType = "image/png";
+            }
+        }
+
+        log.info("Download URL generated successfully for document: {} (expires in 5 minutes)", documentId);
+
+        return new DownloadUrlResponse(
+                presignedUrl,
+                document.getFileName(),
+                document.getFileSize(),
+                contentType
+        );
     }
 
     @Override

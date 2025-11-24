@@ -1,155 +1,82 @@
 package com.ultrabms.service.impl;
 
 import com.ultrabms.service.FileStorageService;
+import com.ultrabms.service.S3Service;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * File Storage Service Implementation
- * Handles file storage operations for documents and images
- * Supports PDF, JPG, and PNG files with type and size validation (max 5MB)
+ *
+ * Migrated to AWS S3 storage (Story 1.6):
+ * - Delegates all file operations to S3Service
+ * - Supports PDF, JPG, and PNG files with type and size validation (max 5MB)
+ * - Files stored in S3 with UUID-based keys
+ * - Downloads use presigned URLs (5-minute expiration)
+ * - LocalStack for development, real S3 for production
  */
 @Service
+@RequiredArgsConstructor
 public class FileStorageServiceImpl implements FileStorageService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileStorageServiceImpl.class);
 
-    // Allowed MIME types for documents (images and PDFs)
-    private static final List<String> ALLOWED_MIME_TYPES = Arrays.asList(
-            "image/jpeg",
-            "image/jpg",
-            "image/png",
-            "application/pdf"
-    );
-
-    // Maximum file size: 5MB
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
-
-    @Value("${file.upload-dir:uploads}")
-    private String uploadDir;
+    private final S3Service s3Service;
 
     @Override
     public String storeFile(MultipartFile file, String directory) {
-        // Validate file is not empty
-        if (file.isEmpty()) {
-            throw new IllegalArgumentException("Cannot store empty file");
-        }
+        LOGGER.debug("Storing file to S3: directory={}, filename={}", directory, file.getOriginalFilename());
 
-        // Validate file size
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException(
-                    String.format("File size exceeds maximum allowed size of %d MB",
-                            MAX_FILE_SIZE / (1024 * 1024))
-            );
-        }
+        // Delegate to S3Service (which handles all validation)
+        String s3Key = s3Service.uploadFile(file, directory);
 
-        // Validate file type
-        String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_MIME_TYPES.contains(contentType.toLowerCase())) {
-            throw new IllegalArgumentException(
-                    "Invalid file type. Only PDF, JPG, and PNG files are allowed. Received: " + contentType
-            );
-        }
-
-        try {
-            // Get original filename and clean it
-            String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
-
-            // Check for invalid characters in filename
-            if (originalFilename.contains("..")) {
-                throw new IllegalArgumentException(
-                        "Filename contains invalid path sequence: " + originalFilename
-                );
-            }
-
-            // Extract file extension
-            String fileExtension = "";
-            int lastDotIndex = originalFilename.lastIndexOf('.');
-            if (lastDotIndex > 0) {
-                fileExtension = originalFilename.substring(lastDotIndex);
-            }
-
-            // Generate unique filename using UUID
-            String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
-
-            // Create directory path: uploadDir/directory
-            Path directoryPath = Paths.get(uploadDir, directory);
-            Files.createDirectories(directoryPath);
-
-            // Create full file path
-            Path targetLocation = directoryPath.resolve(uniqueFilename);
-
-            // Copy file to target location
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
-            // Return relative path: directory/filename
-            String relativePath = Paths.get(directory, uniqueFilename).toString();
-
-            LOGGER.info("File stored successfully: {} (original: {})", relativePath, originalFilename);
-
-            return relativePath;
-
-        } catch (IOException ex) {
-            LOGGER.error("Failed to store file: {}", ex.getMessage(), ex);
-            throw new RuntimeException("Failed to store file: " + ex.getMessage(), ex);
-        }
+        LOGGER.info("File stored successfully to S3: {}", s3Key);
+        return s3Key;
     }
 
     @Override
     public void deleteFile(String filePath) {
-        try {
-            Path fileToDelete = Paths.get(uploadDir, filePath);
+        LOGGER.debug("Deleting file from S3: {}", filePath);
 
-            if (!Files.exists(fileToDelete)) {
-                LOGGER.warn("File not found for deletion: {}", filePath);
-                throw new RuntimeException("File not found: " + filePath);
-            }
+        // Delegate to S3Service (idempotent operation)
+        s3Service.deleteFile(filePath);
 
-            Files.delete(fileToDelete);
-            LOGGER.info("File deleted successfully: {}", filePath);
-
-        } catch (IOException ex) {
-            LOGGER.error("Failed to delete file: {} - {}", filePath, ex.getMessage(), ex);
-            throw new RuntimeException("Failed to delete file: " + ex.getMessage(), ex);
-        }
+        LOGGER.info("File deleted successfully from S3: {}", filePath);
     }
 
     @Override
+    public String getDownloadUrl(String filePath) {
+        LOGGER.debug("Generating presigned URL for file: {}", filePath);
+
+        // Delegate to S3Service for presigned URL generation
+        String presignedUrl = s3Service.getPresignedUrl(filePath);
+
+        LOGGER.info("Generated presigned URL for file: {} (expires in 5 minutes)", filePath);
+        return presignedUrl;
+    }
+
+    @Override
+    @Deprecated
     public String getAbsolutePath(String filePath) {
-        return Paths.get(uploadDir, filePath).toAbsolutePath().toString();
+        LOGGER.warn("getAbsolutePath() is deprecated for S3 storage - returning S3 key as-is: {}", filePath);
+
+        // For S3, there's no absolute path concept - return S3 key
+        return filePath;
     }
 
     @Override
+    @Deprecated
     public byte[] loadFile(String filePath) {
-        try {
-            Path fileToLoad = Paths.get(uploadDir, filePath);
+        LOGGER.warn("loadFile() is deprecated - use getDownloadUrl() for downloads instead: {}", filePath);
 
-            if (!Files.exists(fileToLoad)) {
-                LOGGER.warn("File not found for loading: {}", filePath);
-                throw new RuntimeException("File not found: " + filePath);
-            }
-
-            byte[] fileContent = Files.readAllBytes(fileToLoad);
-            LOGGER.info("File loaded successfully: {} ({} bytes)", filePath, fileContent.length);
-
-            return fileContent;
-
-        } catch (IOException ex) {
-            LOGGER.error("Failed to load file: {} - {}", filePath, ex.getMessage(), ex);
-            throw new RuntimeException("Failed to load file: " + ex.getMessage(), ex);
-        }
+        // This method is deprecated but kept for backward compatibility
+        // Not recommended as it loads entire file into memory
+        throw new UnsupportedOperationException(
+                "loadFile() is deprecated for S3 storage. " +
+                "Use getDownloadUrl() to generate presigned URL for direct S3 download."
+        );
     }
 }

@@ -118,7 +118,7 @@ export default function UnitDetailPage() {
     if (unitId) {
       fetchUnit();
     }
-  }, [unitId, toast]);
+  }, [unitId]); // Removed toast from dependencies
 
   // Handlers
   const handleEdit = () => {

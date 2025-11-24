@@ -5,6 +5,7 @@ import com.ultrabms.dto.leads.LeadDocumentResponse;
 import com.ultrabms.dto.leads.LeadHistoryResponse;
 import com.ultrabms.dto.leads.LeadResponse;
 import com.ultrabms.dto.leads.UpdateLeadRequest;
+import com.ultrabms.dto.response.DownloadUrlResponse;
 import com.ultrabms.entity.Lead;
 import com.ultrabms.entity.LeadDocument;
 import org.springframework.data.domain.Page;
@@ -71,8 +72,20 @@ public interface LeadService {
 
     /**
      * Download document
+     * @deprecated Use {@link #getDownloadUrl(UUID)} instead for S3 presigned URLs
      */
+    @Deprecated
     byte[] downloadDocument(UUID documentId);
+
+    /**
+     * Get presigned URL for document download (Story 1.6: S3 migration).
+     *
+     * Returns secure, temporary S3 URL for direct download. URL expires in 5 minutes.
+     *
+     * @param documentId Document UUID
+     * @return DownloadUrlResponse with presigned URL and metadata
+     */
+    DownloadUrlResponse getDownloadUrl(UUID documentId);
 
     /**
      * Delete document

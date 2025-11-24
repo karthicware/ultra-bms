@@ -110,3 +110,12 @@ logging:
     name: /var/log/ultra-bms/application.log
     max-size: 10MB
     max-history: 30
+
+# AWS S3 Configuration (Production)
+# CRITICAL: Ensure IAM role or credentials are configured for S3 access
+# Required IAM permissions: s3:PutObject, s3:GetObject, s3:DeleteObject
+aws:
+  s3:
+    bucket-name: ${S3_BUCKET_NAME:ultrabms-prod-storage}
+    region: ${AWS_REGION:me-central-1}
+    # No endpoint property - uses real AWS S3
