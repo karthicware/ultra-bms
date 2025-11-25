@@ -1,0 +1,1570 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story-context story-id="1-1-project-initialization-and-repository-structure" epic-id="1" version="1.0" generated="2025-11-13">
+
+  <!-- ================================================================ -->
+  <!-- STORY METADATA -->
+  <!-- ================================================================ -->
+  <story-metadata>
+    <title>Project Initialization and Repository Structure</title>
+    <epic-title>Platform Foundation & Infrastructure</epic-title>
+    <current-status>drafted</current-status>
+    <story-file-path>docs/sprint-artifacts/epic-1/1-1-project-initialization-and-repository-structure.md</story-file-path>
+
+    <user-story>
+      <as-a>developer</as-a>
+      <i-want>a standardized monolithic project structure with build tooling configured</i-want>
+      <so-that>I can develop features with consistent patterns and automated quality checks</so-that>
+    </user-story>
+
+    <acceptance-criteria>
+      <criterion id="AC1">
+        <description>Monorepo initialized with backend/ (Spring Boot 3 + Java 17 + Maven) and frontend/ (Next.js 15 + TypeScript + shadcn/ui) directories, with shared .editorconfig and .gitignore files, plus README.md documenting local setup.</description>
+        <validation>Verify directory structure exists: backend/, frontend/, .editorconfig, .gitignore, README.md. Verify README contains setup instructions.</validation>
+      </criterion>
+      <criterion id="AC2">
+        <description>Frontend includes Next.js 14+ with App Router, TypeScript 5+, shadcn/ui component library, Tailwind CSS 4+ (dark theme default), React Hook Form + Zod, Recharts, Lucide React, and Axios.</description>
+        <validation>Check package.json for all dependencies with correct versions. Verify shadcn/ui initialized with components.json.</validation>
+      </criterion>
+      <criterion id="AC3">
+        <description>Backend includes Spring Boot 3.x (Web, Data JPA, Security, Validation, Cache), PostgreSQL driver, Ehcache 3.x, Lombok, MapStruct, SpringDoc OpenAPI, and BCrypt support.</description>
+        <validation>Check pom.xml for all dependencies. Verify Spring Boot version = 3.4.7, Java version = 17.</validation>
+      </criterion>
+      <criterion id="AC4">
+        <description>ESLint + Prettier configured for frontend, Checkstyle for backend, pre-commit hooks via Husky for format checking.</description>
+        <validation>Verify .eslintrc.json, .prettierrc exist. Verify checkstyle.xml exists. Verify Husky installed and .husky/pre-commit hook exists.</validation>
+      </criterion>
+      <criterion id="AC5">
+        <description>Frontend dev server runs on port 3000, backend on port 8080, CORS enabled for localhost:3000, hot reload enabled for both, Next.js configured as frontend-only (no API routes).</description>
+        <validation>Start both servers. Verify frontend accessible at localhost:3000. Verify backend accessible at localhost:8080. Test CORS by making request from frontend to backend. Verify hot reload by changing code and observing auto-refresh.</validation>
+      </criterion>
+      <criterion id="AC6">
+        <description>Both frontend (`npm run build`) and backend (`./mvnw clean install`) build successfully without errors.</description>
+        <validation>Run `cd frontend && npm run build` - verify exit code 0. Run `cd backend && ./mvnw clean install` - verify exit code 0 and BUILD SUCCESS message.</validation>
+      </criterion>
+    </acceptance-criteria>
+  </story-metadata>
+
+  <!-- ================================================================ -->
+  <!-- ARCHITECTURE CONTEXT -->
+  <!-- ================================================================ -->
+  <architecture-context>
+    <architectural-decisions>
+      <decision area="Backend Framework">
+        <choice>Spring Boot 3.4.7 with Java 17 LTS</choice>
+        <rationale>Enterprise-grade framework with robust ecosystem, excellent Spring Data JPA integration, built-in security, and strong community support. Java 17 LTS provides long-term stability.</rationale>
+        <source>Architecture Document: Decision Summary Table</source>
+      </decision>
+
+      <decision area="Build Tool (Backend)">
+        <choice>Maven 3.9+</choice>
+        <rationale>Industry standard for Java projects, excellent dependency management, strong plugin ecosystem, better suited for enterprise projects than Gradle.</rationale>
+        <source>Architecture Document: Decision Summary Table</source>
+      </decision>
+
+      <decision area="Frontend Framework">
+        <choice>Next.js 15.5 with App Router and React 19.2.0</choice>
+        <rationale>Modern React framework with SSR/SSG capabilities, excellent developer experience, App Router provides improved routing and layouts, strong TypeScript support.</rationale>
+        <source>Architecture Document: Decision Summary Table</source>
+      </decision>
+
+      <decision area="Language (Frontend)">
+        <choice>TypeScript 5.8 with strict mode</choice>
+        <rationale>Type safety prevents runtime errors, excellent IDE support, better refactoring capabilities, industry best practice for large applications.</rationale>
+        <source>Architecture Document: Decision Summary Table</source>
+      </decision>
+
+      <decision area="UI Components">
+        <choice>shadcn/ui component library</choice>
+        <rationale>Built on Radix UI primitives for accessibility, full styling control with Tailwind CSS, copy-to-codebase approach (no runtime overhead), TypeScript-first, modern professional design.</rationale>
+        <source>Architecture Document: Decision Summary Table + UX Design Specification</source>
+      </decision>
+
+      <decision area="Styling">
+        <choice>Tailwind CSS 4.0 with dark theme as default</choice>
+        <rationale>Utility-first CSS for rapid development, excellent design system integration, small bundle size, dark theme aligns with modern enterprise UX preferences.</rationale>
+        <source>Architecture Document: Decision Summary Table + UX Design Specification</source>
+      </decision>
+
+      <decision area="Project Structure">
+        <choice>Monorepo with backend/ and frontend/ directories</choice>
+        <rationale>Simplifies development workflow, easier to maintain shared configurations, atomic commits across stack, simpler deployment coordination.</rationale>
+        <source>Architecture Document: Project Structure section</source>
+      </decision>
+    </architectural-decisions>
+
+    <project-structure>
+      <description>
+        This story establishes the monorepo structure as defined in Architecture Document Section "Project Structure":
+      </description>
+      <structure>
+        <![CDATA[
+ultra-bms/
+├── backend/                    # Spring Boot application
+│   ├── src/main/java/com/ultrabms/
+│   │   ├── config/             # Configuration classes
+│   │   ├── controller/         # REST controllers
+│   │   ├── service/            # Business logic
+│   │   ├── repository/         # Data access layer
+│   │   ├── entity/             # JPA entities
+│   │   ├── dto/                # Data transfer objects
+│   │   ├── mapper/             # Entity-DTO mappers (MapStruct)
+│   │   ├── exception/          # Custom exceptions
+│   │   ├── security/           # Security configuration
+│   │   ├── util/               # Utility classes
+│   │   └── UltraBMSApplication.java  # Main class
+│   ├── src/main/resources/
+│   │   ├── application.yml     # Default configuration
+│   │   ├── application-dev.yml # Development profile
+│   │   └── checkstyle.xml      # Code style rules
+│   ├── pom.xml                 # Maven dependencies
+│   ├── .mvn/                   # Maven wrapper files
+│   └── README.md               # Backend setup guide
+├── frontend/                   # Next.js application
+│   ├── src/app/                # App Router pages
+│   │   ├── (auth)/             # Authentication routes group
+│   │   ├── (dashboard)/        # Main application routes
+│   │   ├── layout.tsx          # Root layout
+│   │   └── page.tsx            # Homepage
+│   ├── src/components/         # Reusable components
+│   │   ├── ui/                 # shadcn components (initially empty)
+│   │   ├── forms/              # Form components (placeholder)
+│   │   └── layout/             # Layout components (placeholder)
+│   ├── src/lib/                # Utilities and API client
+│   │   ├── api.ts              # Axios API client setup
+│   │   ├── utils.ts            # Utility functions
+│   │   └── constants.ts        # App constants
+│   ├── src/hooks/              # Custom React hooks (placeholder)
+│   ├── src/types/              # TypeScript type definitions (placeholder)
+│   ├── package.json            # npm dependencies
+│   ├── next.config.js          # Next.js configuration
+│   ├── tailwind.config.ts      # Tailwind configuration
+│   ├── tsconfig.json           # TypeScript configuration
+│   ├── .eslintrc.json          # ESLint rules
+│   ├── .prettierrc             # Prettier formatting rules
+│   ├── components.json         # shadcn/ui configuration
+│   └── README.md               # Frontend setup guide
+├── docs/                       # Project documentation
+├── .editorconfig               # Editor configuration for consistency
+├── .gitignore                  # Git ignore patterns
+├── .husky/                     # Git hooks
+│   └── pre-commit              # Pre-commit format checking
+└── README.md                   # Root project documentation
+        ]]>
+      </structure>
+    </project-structure>
+
+    <implementation-patterns>
+      <pattern area="Dependency Injection (Backend)">
+        <description>Use constructor injection exclusively. Never use field injection (@Autowired on fields).</description>
+        <example>
+          <![CDATA[
+// Good: Constructor injection
+@Service
+public class TenantService {
+    private final TenantRepository tenantRepository;
+
+    public TenantService(TenantRepository tenantRepository) {
+        this.tenantRepository = tenantRepository;
+    }
+}
+
+// Bad: Field injection
+@Service
+public class TenantService {
+    @Autowired
+    private TenantRepository tenantRepository;  // Avoid this
+}
+          ]]>
+        </example>
+      </pattern>
+
+      <pattern area="Package Structure (Backend)">
+        <description>Follow layered architecture: com.ultrabms.{module}.{layer}</description>
+        <example>
+          <![CDATA[
+com.ultrabms.tenant.controller.TenantController
+com.ultrabms.tenant.service.TenantService
+com.ultrabms.tenant.repository.TenantRepository
+com.ultrabms.tenant.entity.Tenant
+com.ultrabms.tenant.dto.TenantDTO
+          ]]>
+        </example>
+      </pattern>
+
+      <pattern area="Component Organization (Frontend)">
+        <description>Separate components by concern: ui/ for primitives, feature-specific folders for business logic components</description>
+        <example>
+          <![CDATA[
+src/components/ui/button.tsx        # shadcn primitive
+src/components/ui/card.tsx          # shadcn primitive
+src/components/forms/tenant-form.tsx  # Business component
+src/components/layout/sidebar.tsx    # Layout component
+          ]]>
+        </example>
+      </pattern>
+
+      <pattern area="API Integration (Frontend)">
+        <description>Centralize API client in src/lib/api.ts using Axios with interceptors</description>
+        <example>
+          <![CDATA[
+// src/lib/api.ts
+import axios from 'axios';
+
+export const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add request/response interceptors for auth, error handling
+apiClient.interceptors.request.use(/* ... */);
+apiClient.interceptors.response.use(/* ... */);
+          ]]>
+        </example>
+      </pattern>
+    </implementation-patterns>
+
+    <integration-points>
+      <integration>
+        <name>Frontend to Backend Communication</name>
+        <protocol>HTTP/REST over localhost</protocol>
+        <details>
+          Frontend (port 3000) makes HTTP requests to Backend (port 8080) using Axios.
+          Backend must configure CORS to allow requests from http://localhost:3000 with credentials.
+          Next.js configured with API proxy: requests to /api/* route to http://localhost:8080/api/*
+        </details>
+      </integration>
+
+      <integration>
+        <name>CORS Configuration</name>
+        <location>backend/src/main/java/com/ultrabms/config/CorsConfig.java</location>
+        <details>
+          <![CDATA[
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+            .allowedOrigins("http://localhost:3000")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+            .allowCredentials(true)
+            .allowedHeaders("*");
+    }
+}
+          ]]>
+        </details>
+      </integration>
+    </integration-points>
+  </architecture-context>
+
+  <!-- ================================================================ -->
+  <!-- REQUIREMENTS CONTEXT -->
+  <!-- ================================================================ -->
+  <requirements-context>
+    <prd-references>
+      <reference section="5.1" subsection="System Architecture">
+        <summary>Specifies Spring Boot + Next.js + PostgreSQL stack with local development environment</summary>
+        <relevance>Defines the core technology stack this story must implement</relevance>
+      </reference>
+
+      <reference section="4.2" subsection="UI Components">
+        <summary>Mandates shadcn/ui component library and Tailwind CSS for frontend</summary>
+        <relevance>Defines UI framework and styling approach for frontend initialization</relevance>
+      </reference>
+
+      <reference section="5.3" subsection="Infrastructure">
+        <summary>Establishes local-first development with cloud migration path</summary>
+        <relevance>Confirms local development focus for this story, AWS deferred to later phase</relevance>
+      </reference>
+    </prd-references>
+
+    <epic-context>
+      <epic-id>1</epic-id>
+      <epic-title>Platform Foundation & Infrastructure</epic-title>
+      <epic-goal>Establish the foundational infrastructure for the Ultra BMS application by initializing a monolithic architecture with Spring Boot backend and Next.js frontend. Create local development environment, database configuration, in-memory caching layer, core domain models, and standardized REST API patterns.</epic-goal>
+
+      <epic-scope>
+        <in-scope>
+          - Monorepo initialization with backend (Spring Boot 3 + Java 17) and frontend (Next.js 15 + TypeScript)
+          - Local PostgreSQL database setup with Hibernate auto-schema generation
+          - Ehcache configuration for application-level caching (no distributed cache)
+          - Core JPA entities: User, Property, Unit with relationships and auditing
+          - REST API foundation with global exception handling and CORS configuration
+          - Code quality tooling: ESLint, Prettier, Checkstyle, pre-commit hooks
+          - API documentation with SpringDoc OpenAPI (Swagger UI)
+          - Docker Compose configuration for local PostgreSQL
+          - Developer documentation for local setup
+        </in-scope>
+
+        <out-of-scope>
+          - AWS infrastructure deployment (planned for later phase)
+          - CI/CD pipelines (planned for later phase)
+          - Redis or distributed caching (using Ehcache only)
+          - Authentication and authorization (covered in Epic 2)
+          - Frontend UI components beyond basic structure (implemented per-module)
+          - Message queues or async processing infrastructure (added as needed)
+          - Monitoring and logging infrastructure (added in later phase)
+        </out-of-scope>
+      </epic-scope>
+
+      <story-sequence>
+        <current-story>1.1</current-story>
+        <description>Story 1.1 is the FIRST story in Epic 1. It establishes the foundation that all subsequent stories build upon.</description>
+        <dependencies>
+          <dependency type="blocks">Story 1.2 (Database Setup) - requires project structure from 1.1</dependency>
+          <dependency type="blocks">Story 1.3 (Caching) - requires project structure from 1.1</dependency>
+          <dependency type="blocks">Story 1.4 (Entities) - requires project structure and dependencies from 1.1</dependency>
+          <dependency type="blocks">Story 1.5 (API Foundation) - requires project structure and dependencies from 1.1</dependency>
+        </dependencies>
+      </story-sequence>
+    </epic-context>
+  </requirements-context>
+
+  <!-- ================================================================ -->
+  <!-- UX DESIGN CONTEXT -->
+  <!-- ================================================================ -->
+  <ux-design-context>
+    <design-system>
+      <framework>shadcn/ui with Tailwind CSS</framework>
+      <rationale>
+        Modern, professional, accessible components built on Radix UI. Full control over styling, TypeScript-first, no runtime overhead (components copy into codebase). Aligns with enterprise requirements and WCAG 2.1 Level AA accessibility.
+      </rationale>
+      <installation-strategy>
+        <phase number="1" name="Foundation Setup">
+          <tasks>
+            - Install core dependencies: tailwindcss-animate, class-variance-authority, clsx, tailwind-merge, lucide-react
+            - Install Radix UI primitives: @radix-ui/react-slot, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu
+            - Install core shadcn components: button, input, label, card, dialog, sheet, toast, alert
+            - Configure Tailwind theme with color variables from UX Design Specification
+            - Set up custom font (Inter) in CSS
+            - Configure spacing scale
+            - Test dark mode toggle
+          </tasks>
+        </phase>
+      </installation-strategy>
+    </design-system>
+
+    <visual-foundation>
+      <color-palette>
+        <primary>#0A2342</primary>
+        <primary-hover>#081B34</primary-hover>
+        <primary-foreground>#FFFFFF</primary-foreground>
+        <secondary>#1152D4</secondary>
+        <accent>#D4AF37</accent>
+        <success>#22C55E</success>
+        <warning>#F59E0B</warning>
+        <destructive>#EF4444</destructive>
+        <info>#3B82F6</info>
+        <background-light>#FFFFFF</background-light>
+        <foreground-light>#333333</foreground-light>
+        <background-dark>#0B0F19</background-dark>
+        <foreground-dark>#F9FAFB</foreground-dark>
+      </color-palette>
+
+      <typography>
+        <font-family>Inter (Google Fonts)</font-family>
+        <scale>
+          <display-3xl>48px/56px - font-weight: 800</display-3xl>
+          <h1>24px/32px - font-weight: 700</h1>
+          <body>14px/20px - font-weight: 400</body>
+          <small>12px/16px - font-weight: 400</small>
+        </scale>
+      </typography>
+
+      <spacing>
+        <base-unit>4px (0.25rem)</base-unit>
+        <card-padding>24px (1.5rem)</card-padding>
+        <form-field-spacing>16px (1rem) vertical gap</form-field-spacing>
+        <section-spacing>32px (2rem) between major sections</section-spacing>
+      </spacing>
+    </visual-foundation>
+
+    <responsive-strategy>
+      <breakpoints>
+        <mobile>max-width: 640px</mobile>
+        <tablet>641px to 1024px</tablet>
+        <desktop>min-width: 1025px</desktop>
+      </breakpoints>
+      <target-devices>
+        <device type="desktop" priority="primary">90% of users - 1920x1080, 1440x900, 1366x768</device>
+        <device type="tablet" priority="secondary">8% of users - iPad, Android tablets</device>
+        <device type="mobile" priority="limited">2% of users - Read-only access, simplified views</device>
+      </target-devices>
+    </responsive-strategy>
+
+    <accessibility-requirements>
+      <compliance-target>WCAG 2.1 Level AA</compliance-target>
+      <key-requirements>
+        - Text contrast: Minimum 4.5:1 for normal text, 3:1 for large text
+        - Keyboard navigation: All interactive elements accessible via Tab key, logical tab order
+        - Screen reader support: Meaningful ARIA labels, landmark roles, dynamic content announcements
+        - Touch target size: Minimum 44x44 pixels for all interactive elements
+        - Alternative text: Descriptive alt text for images, aria-label for icon buttons
+      </key-requirements>
+    </accessibility-requirements>
+  </ux-design-context>
+
+  <!-- ================================================================ -->
+  <!-- EXISTING CODE & INTERFACES -->
+  <!-- ================================================================ -->
+  <existing-code-interfaces>
+    <current-state>
+      <status>Greenfield - No existing backend or frontend code</status>
+      <description>
+        The repository currently contains only:
+        - Documentation (BMad Method files in .bmad/, project docs in docs/)
+        - Minimal package.json with shadcn as dev dependency
+        - No backend/ directory
+        - No frontend/ directory
+        - No existing code to integrate with
+      </description>
+    </current-state>
+
+    <existing-configurations>
+      <file path="package.json">
+        <content>
+          <![CDATA[
+{
+  "devDependencies": {
+    "shadcn": "^3.5.0"
+  }
+}
+          ]]>
+        </content>
+        <note>Root package.json only contains shadcn CLI tool. Frontend will have its own package.json.</note>
+      </file>
+    </existing-configurations>
+
+    <interfaces-to-create>
+      <interface name="Backend API Endpoints">
+        <description>No endpoints required for Story 1.1. Story 1.5 will create /api/health endpoint.</description>
+      </interface>
+
+      <interface name="Frontend Pages">
+        <description>Create minimal structure: root layout.tsx and page.tsx with placeholder content.</description>
+      </interface>
+    </interfaces-to-create>
+
+    <constraints>
+      <constraint type="compatibility">
+        <description>Java 17 LTS required - do not use Java 11 or Java 21</description>
+        <rationale>Architecture Decision: Java 17 provides long-term stability and modern language features</rationale>
+      </constraint>
+
+      <constraint type="compatibility">
+        <description>Spring Boot version must be 3.4.7 (not 2.x, not 3.3.x)</description>
+        <rationale>Version locked in Tech Spec for consistency and tested compatibility</rationale>
+      </constraint>
+
+      <constraint type="compatibility">
+        <description>Next.js version must be 15.5.0+ with App Router (not Pages Router)</description>
+        <rationale>Architecture Decision: App Router provides improved routing and layouts</rationale>
+      </constraint>
+
+      <constraint type="tooling">
+        <description>Use Maven (not Gradle) for backend build</description>
+        <rationale>Architecture Decision: Maven is industry standard for enterprise Java projects</rationale>
+      </constraint>
+
+      <constraint type="directory-structure">
+        <description>Backend package structure must follow: com.ultrabms.{module}.{layer}</description>
+        <rationale>Architecture Implementation Pattern: Layered architecture for maintainability</rationale>
+      </constraint>
+    </constraints>
+  </existing-code-interfaces>
+
+  <!-- ================================================================ -->
+  <!-- DEPENDENCIES & FRAMEWORKS -->
+  <!-- ================================================================ -->
+  <dependencies-frameworks>
+    <backend-dependencies>
+      <dependency-manager>Maven 3.9+</dependency-manager>
+
+      <core-framework>
+        <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-web</artifactId>
+          <version>3.4.7</version>
+          <purpose>REST API foundation, embedded Tomcat server</purpose>
+        </dependency>
+
+        <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-data-jpa</artifactId>
+          <version>3.4.7</version>
+          <purpose>ORM with Hibernate, Spring Data JPA repositories</purpose>
+        </dependency>
+
+        <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-validation</artifactId>
+          <version>3.4.7</version>
+          <purpose>Bean validation with Hibernate Validator</purpose>
+        </dependency>
+
+        <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-security</artifactId>
+          <version>3.4.7</version>
+          <purpose>Security framework (configured in Epic 2)</purpose>
+        </dependency>
+
+        <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-cache</artifactId>
+          <version>3.4.7</version>
+          <purpose>Caching abstraction (Ehcache configured in Story 1.3)</purpose>
+        </dependency>
+
+        <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-actuator</artifactId>
+          <version>3.4.7</version>
+          <purpose>Production-ready monitoring endpoints (/actuator/health, /actuator/info)</purpose>
+        </dependency>
+      </core-framework>
+
+      <database>
+        <dependency>
+          <groupId>org.postgresql</groupId>
+          <artifactId>postgresql</artifactId>
+          <version>42.7.4</version>
+          <purpose>PostgreSQL JDBC driver for database connectivity</purpose>
+        </dependency>
+
+        <dependency>
+          <groupId>com.zaxxer</groupId>
+          <artifactId>HikariCP</artifactId>
+          <version>5.1.0</version>
+          <purpose>High-performance JDBC connection pooling (included in Spring Boot)</purpose>
+        </dependency>
+      </database>
+
+      <caching>
+        <dependency>
+          <groupId>org.ehcache</groupId>
+          <artifactId>ehcache</artifactId>
+          <version>3.10.8</version>
+          <purpose>In-memory caching provider (configured in Story 1.3)</purpose>
+        </dependency>
+
+        <dependency>
+          <groupId>javax.cache</groupId>
+          <artifactId>cache-api</artifactId>
+          <version>1.1.1</version>
+          <purpose>JSR-107 JCache API for caching abstraction</purpose>
+        </dependency>
+      </caching>
+
+      <utilities>
+        <dependency>
+          <groupId>org.projectlombok</groupId>
+          <artifactId>lombok</artifactId>
+          <version>1.18.36</version>
+          <purpose>Boilerplate reduction (@Data, @Getter, @Setter, @NoArgsConstructor, etc.)</purpose>
+        </dependency>
+
+        <dependency>
+          <groupId>org.mapstruct</groupId>
+          <artifactId>mapstruct</artifactId>
+          <version>1.6.3</version>
+          <purpose>DTO-Entity mapping (used in later stories)</purpose>
+        </dependency>
+      </utilities>
+
+      <api-documentation>
+        <dependency>
+          <groupId>org.springdoc</groupId>
+          <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+          <version>2.8.4</version>
+          <purpose>Swagger UI for API documentation (configured in Story 1.5)</purpose>
+        </dependency>
+      </api-documentation>
+
+      <testing>
+        <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-test</artifactId>
+          <version>3.4.7</version>
+          <scope>test</scope>
+          <purpose>JUnit 5, Mockito, AssertJ, Spring Test support</purpose>
+        </dependency>
+
+        <dependency>
+          <groupId>com.h2database</groupId>
+          <artifactId>h2</artifactId>
+          <version>2.2.224</version>
+          <scope>test</scope>
+          <purpose>In-memory database for unit tests</purpose>
+        </dependency>
+      </testing>
+    </backend-dependencies>
+
+    <frontend-dependencies>
+      <dependency-manager>npm (Node.js 20+ LTS)</dependency-manager>
+
+      <core-framework>
+        <dependency>
+          <package>next</package>
+          <version>15.5.0</version>
+          <purpose>React framework with SSR, App Router, routing</purpose>
+        </dependency>
+
+        <dependency>
+          <package>react</package>
+          <version>19.2.0</version>
+          <purpose>UI library for building components</purpose>
+        </dependency>
+
+        <dependency>
+          <package>react-dom</package>
+          <version>19.2.0</version>
+          <purpose>React DOM rendering</purpose>
+        </dependency>
+
+        <dependency>
+          <package>typescript</package>
+          <version>5.8.0</version>
+          <purpose>Type safety and improved developer experience</purpose>
+        </dependency>
+      </core-framework>
+
+      <ui-components>
+        <dependency>
+          <package>@radix-ui/react-slot</package>
+          <version>latest</version>
+          <purpose>Radix UI primitive for composition patterns</purpose>
+        </dependency>
+
+        <dependency>
+          <package>@radix-ui/react-dialog</package>
+          <version>latest</version>
+          <purpose>Accessible dialog/modal primitives</purpose>
+        </dependency>
+
+        <dependency>
+          <package>@radix-ui/react-dropdown-menu</package>
+          <version>latest</version>
+          <purpose>Accessible dropdown menu primitives</purpose>
+        </dependency>
+
+        <dependency>
+          <package>tailwindcss</package>
+          <version>4.0.0</version>
+          <purpose>Utility-first CSS framework</purpose>
+        </dependency>
+
+        <dependency>
+          <package>tailwindcss-animate</package>
+          <version>latest</version>
+          <purpose>Animation utilities for Tailwind CSS</purpose>
+        </dependency>
+
+        <dependency>
+          <package>class-variance-authority</package>
+          <version>latest</version>
+          <purpose>Component variants management for shadcn/ui</purpose>
+        </dependency>
+
+        <dependency>
+          <package>clsx</package>
+          <version>latest</version>
+          <purpose>Conditional className composition</purpose>
+        </dependency>
+
+        <dependency>
+          <package>tailwind-merge</package>
+          <version>latest</version>
+          <purpose>Merge Tailwind CSS classes without conflicts</purpose>
+        </dependency>
+
+        <dependency>
+          <package>lucide-react</package>
+          <version>latest</version>
+          <purpose>Icon library for UI components</purpose>
+        </dependency>
+      </ui-components>
+
+      <forms-validation>
+        <dependency>
+          <package>react-hook-form</package>
+          <version>7.54.2</version>
+          <purpose>Form state management with performance optimization</purpose>
+        </dependency>
+
+        <dependency>
+          <package>zod</package>
+          <version>3.24.1</version>
+          <purpose>Schema validation for forms and API data</purpose>
+        </dependency>
+
+        <dependency>
+          <package>@hookform/resolvers</package>
+          <version>3.10.0</version>
+          <purpose>Integration between react-hook-form and Zod</purpose>
+        </dependency>
+      </forms-validation>
+
+      <data-visualization>
+        <dependency>
+          <package>recharts</package>
+          <version>2.15.0</version>
+          <purpose>Charting library for dashboards and analytics</purpose>
+        </dependency>
+      </data-visualization>
+
+      <http-client>
+        <dependency>
+          <package>axios</package>
+          <version>1.7.9</version>
+          <purpose>HTTP client for API communication with interceptors</purpose>
+        </dependency>
+      </http-client>
+
+      <development-tools>
+        <dependency>
+          <package>eslint</package>
+          <version>9.20.0</version>
+          <purpose>JavaScript/TypeScript linting</purpose>
+        </dependency>
+
+        <dependency>
+          <package>prettier</package>
+          <version>3.5.1</version>
+          <purpose>Code formatting</purpose>
+        </dependency>
+
+        <dependency>
+          <package>husky</package>
+          <version>9.1.7</version>
+          <purpose>Git hooks for pre-commit checks</purpose>
+        </dependency>
+
+        <dependency>
+          <package>lint-staged</package>
+          <version>15.3.0</version>
+          <purpose>Run linters on staged files only</purpose>
+        </dependency>
+      </development-tools>
+    </frontend-dependencies>
+
+    <infrastructure-dependencies>
+      <docker-compose>
+        <service name="postgres">
+          <image>postgres:15-alpine</image>
+          <purpose>PostgreSQL database for local development</purpose>
+          <configuration>
+            POSTGRES_DB: ultra_bms_dev
+            POSTGRES_USER: ultra_bms_user
+            POSTGRES_PASSWORD: (set via .env file)
+            Port: 5432
+          </configuration>
+        </service>
+      </docker-compose>
+    </infrastructure-dependencies>
+
+    <version-compatibility-matrix>
+      <compatibility-note>
+        All versions are tested and verified compatible. Do not upgrade major versions without consulting Architecture team.
+      </compatibility-note>
+      <matrix>
+        Java 17 + Spring Boot 3.4.7 + PostgreSQL 15 + Ehcache 3.10.8 ✅
+        Node.js 20+ + Next.js 15.5 + React 19.2 + TypeScript 5.8 ✅
+        Tailwind CSS 4.0 + shadcn/ui (Radix UI latest) ✅
+      </matrix>
+    </version-compatibility-matrix>
+  </dependencies-frameworks>
+
+  <!-- ================================================================ -->
+  <!-- TESTING CONTEXT -->
+  <!-- ================================================================ -->
+  <testing-context>
+    <test-strategy>
+      <level name="L1 - Unit Testing">
+        <backend>
+          <framework>JUnit 5 + Mockito + AssertJ</framework>
+          <scope>Individual methods in services and repositories</scope>
+          <coverage-target>70% line coverage for Epic 1</coverage-target>
+          <examples>
+            - UserServiceTest: Mock UserRepository to test business logic
+            - UserRepositoryTest: Use H2 in-memory DB to verify CRUD operations
+          </examples>
+          <note>Defer extensive unit tests to Story 1.5 when service layer exists</note>
+        </backend>
+
+        <frontend>
+          <framework>Vitest + React Testing Library</framework>
+          <scope>Component unit tests</scope>
+          <examples>
+            - Test shadcn Button component renders correctly
+            - Test form validation logic with Zod schemas
+          </examples>
+          <note>Defer to Epic 2 when UI components beyond structure exist</note>
+        </frontend>
+      </level>
+
+      <level name="L2 - Integration Testing">
+        <backend>
+          <framework>TestContainers with PostgreSQL (optional in Epic 1)</framework>
+          <scope>Repository integration tests with real PostgreSQL</scope>
+          <examples>
+            - Verify User entity persists to PostgreSQL container
+            - Test foreign key relationships between Property and Unit
+          </examples>
+          <note>Optional in Story 1.1, recommended in Story 1.4 (Entities)</note>
+        </backend>
+
+        <frontend>
+          <framework>Not applicable in Epic 1</framework>
+          <note>Frontend integration tests deferred until authentication flow exists (Epic 2)</note>
+        </frontend>
+      </level>
+
+      <level name="L3 - System Testing">
+        <scope>End-to-end flow testing</scope>
+        <note>Deferred to Epic 2 when authentication enables full user flows</note>
+      </level>
+
+      <level name="Manual Testing">
+        <api-testing>
+          <tool>Swagger UI at /swagger-ui.html</tool>
+          <scope>Test health endpoint in Story 1.5</scope>
+        </api-testing>
+
+        <database-testing>
+          <tool>psql or DBeaver</tool>
+          <scope>Verify schema generation in Story 1.4</scope>
+        </database-testing>
+
+        <cache-testing>
+          <tool>Spring Boot Actuator /actuator/caches</tool>
+          <scope>Monitor cache statistics in Story 1.3</scope>
+        </cache-testing>
+
+        <build-testing>
+          <backend>Run `cd backend && ./mvnw clean install` - verify BUILD SUCCESS</backend>
+          <frontend>Run `cd frontend && npm run build` - verify exit code 0</frontend>
+        </build-testing>
+      </level>
+    </test-strategy>
+
+    <test-ideas-for-story-1-1>
+      <test-idea>
+        <description>Verify monorepo directory structure exists</description>
+        <type>Structural</type>
+        <command>ls -la | grep -E "backend|frontend|.editorconfig|.gitignore|README.md"</command>
+        <expected-result>All directories and files present</expected-result>
+      </test-idea>
+
+      <test-idea>
+        <description>Verify backend dependencies in pom.xml</description>
+        <type>Configuration</type>
+        <command>cd backend && grep -E "spring-boot-starter-web|spring-boot-starter-data-jpa|postgresql|ehcache" pom.xml</command>
+        <expected-result>All required dependencies present with correct versions</expected-result>
+      </test-idea>
+
+      <test-idea>
+        <description>Verify frontend dependencies in package.json</description>
+        <type>Configuration</type>
+        <command>cd frontend && cat package.json | jq '.dependencies | keys'</command>
+        <expected-result>next, react, react-dom, typescript, tailwindcss, axios present</expected-result>
+      </test-idea>
+
+      <test-idea>
+        <description>Verify shadcn/ui initialized</description>
+        <type>Configuration</type>
+        <command>cd frontend && test -f components.json && echo "shadcn configured"</command>
+        <expected-result>components.json exists</expected-result>
+      </test-idea>
+
+      <test-idea>
+        <description>Verify backend builds successfully</description>
+        <type>Build</type>
+        <command>cd backend && ./mvnw clean install</command>
+        <expected-result>Exit code 0, "BUILD SUCCESS" message displayed</expected-result>
+      </test-idea>
+
+      <test-idea>
+        <description>Verify frontend builds successfully</description>
+        <type>Build</type>
+        <command>cd frontend && npm run build</command>
+        <expected-result>Exit code 0, ".next" directory created</expected-result>
+      </test-idea>
+
+      <test-idea>
+        <description>Verify Husky pre-commit hook exists</description>
+        <type>Code Quality</type>
+        <command>test -f .husky/pre-commit && echo "Husky configured"</command>
+        <expected-result>Pre-commit hook file exists</expected-result>
+      </test-idea>
+
+      <test-idea>
+        <description>Verify ESLint and Prettier configuration</description>
+        <type>Code Quality</type>
+        <command>cd frontend && test -f .eslintrc.json && test -f .prettierrc && echo "Linters configured"</command>
+        <expected-result>Both configuration files exist</expected-result>
+      </test-idea>
+
+      <test-idea>
+        <description>Verify backend starts without errors</description>
+        <type>Runtime</type>
+        <command>cd backend && timeout 30s ./mvnw spring-boot:run | grep "Started UltraBMSApplication"</command>
+        <expected-result>Application starts successfully (note: may fail due to missing DB config, expected in Story 1.2)</expected-result>
+      </test-idea>
+
+      <test-idea>
+        <description>Verify frontend dev server starts</description>
+        <type>Runtime</type>
+        <command>cd frontend && timeout 10s npm run dev | grep "Ready on"</command>
+        <expected-result>Next.js dev server starts on port 3000</expected-result>
+      </test-idea>
+
+      <test-idea>
+        <description>Verify CORS configuration class exists</description>
+        <type>Configuration</type>
+        <command>find backend/src -name "CorsConfig.java" -type f</command>
+        <expected-result>CorsConfig.java file found in backend/src/main/java/com/ultrabms/config/</expected-result>
+      </test-idea>
+
+      <test-idea>
+        <description>Verify backend package structure created</description>
+        <type>Structural</type>
+        <command>cd backend/src/main/java/com/ultrabms && ls | grep -E "config|controller|service|repository|entity"</command>
+        <expected-result>All package directories exist</expected-result>
+      </test-idea>
+
+      <test-idea>
+        <description>Verify frontend directory structure created</description>
+        <type>Structural</type>
+        <command>cd frontend/src && ls | grep -E "app|components|lib|hooks|types"</command>
+        <expected-result>All directories exist</expected-result>
+      </test-idea>
+    </test-ideas-for-story-1-1>
+
+    <edge-cases>
+      <edge-case>
+        <scenario>Developer does not have Java 17 installed</scenario>
+        <expected-behavior>README provides installation instructions for SDKMAN, Homebrew, or manual download</expected-behavior>
+      </edge-case>
+
+      <edge-case>
+        <scenario>Developer does not have Node.js 20+ installed</scenario>
+        <expected-behavior>README provides installation instructions for nvm or direct download</expected-behavior>
+      </edge-case>
+
+      <edge-case>
+        <scenario>Port 3000 or 8080 already in use</scenario>
+        <expected-behavior>README documents how to change ports in next.config.js and application.yml</expected-behavior>
+      </edge-case>
+
+      <edge-case>
+        <scenario>Maven build fails due to network issues (dependency download)</scenario>
+        <expected-behavior>Clear error message, suggest checking internet connection or Maven repository mirrors</expected-behavior>
+      </edge-case>
+
+      <edge-case>
+        <scenario>npm install fails due to network issues</scenario>
+        <expected-behavior>Clear error message, suggest checking internet connection or npm registry configuration</expected-behavior>
+      </edge-case>
+    </edge-cases>
+  </testing-context>
+
+  <!-- ================================================================ -->
+  <!-- IMPLEMENTATION NOTES -->
+  <!-- ================================================================ -->
+  <implementation-notes>
+    <initialization-commands>
+      <backend>
+        <command name="Spring Initializr">
+          <description>Generate Spring Boot project with required dependencies</description>
+          <code>
+            <![CDATA[
+spring init \
+  --java-version=17 \
+  --build=maven \
+  --type=maven-project \
+  --packaging=jar \
+  --group-id=com.ultrabms \
+  --artifact-id=ultra-bms-backend \
+  --name=UltraBMS \
+  --description="Ultra Building Maintenance System" \
+  --package-name=com.ultrabms \
+  --dependencies=web,data-jpa,postgresql,validation,security,cache,actuator \
+  --extract \
+  backend
+            ]]>
+          </code>
+          <note>This creates backend/ directory with Maven project structure</note>
+        </command>
+
+        <command name="Add Additional Dependencies">
+          <description>Manually add Ehcache, Lombok, MapStruct, SpringDoc to pom.xml</description>
+          <dependencies>
+            <![CDATA[
+<!-- Add to pom.xml <dependencies> section -->
+<dependency>
+    <groupId>org.ehcache</groupId>
+    <artifactId>ehcache</artifactId>
+    <version>3.10.8</version>
+</dependency>
+<dependency>
+    <groupId>javax.cache</groupId>
+    <artifactId>cache-api</artifactId>
+    <version>1.1.1</version>
+</dependency>
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>1.18.36</version>
+    <scope>provided</scope>
+</dependency>
+<dependency>
+    <groupId>org.mapstruct</groupId>
+    <artifactId>mapstruct</artifactId>
+    <version>1.6.3</version>
+</dependency>
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.8.4</version>
+</dependency>
+<dependency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+    <version>2.2.224</version>
+    <scope>test</scope>
+</dependency>
+            ]]>
+          </dependencies>
+        </command>
+
+        <command name="Create Package Structure">
+          <description>Create package directories for layered architecture</description>
+          <code>
+            <![CDATA[
+cd backend/src/main/java/com/ultrabms
+mkdir -p config controller service repository entity dto mapper exception security util
+            ]]>
+          </code>
+        </command>
+
+        <command name="Create Configuration Files">
+          <description>Create application.yml and application-dev.yml</description>
+          <code>
+            <![CDATA[
+cd backend/src/main/resources
+# Create application.yml (default profile)
+# Create application-dev.yml (development profile with detailed logging)
+            ]]>
+          </code>
+        </command>
+
+        <command name="Create CORS Configuration">
+          <description>Create CorsConfig.java for enabling cross-origin requests</description>
+          <code>
+            <![CDATA[
+# Create backend/src/main/java/com/ultrabms/config/CorsConfig.java
+# Implement WebMvcConfigurer interface
+# Configure CORS to allow localhost:3000 with credentials
+            ]]>
+          </code>
+        </command>
+      </backend>
+
+      <frontend>
+        <command name="Create Next.js App">
+          <description>Generate Next.js 15 project with TypeScript and App Router</description>
+          <code>
+            <![CDATA[
+npx create-next-app@latest frontend \
+  --typescript \
+  --tailwind \
+  --eslint \
+  --app \
+  --src-dir \
+  --import-alias "@/*"
+            ]]>
+          </code>
+          <note>This creates frontend/ directory with Next.js project structure</note>
+        </command>
+
+        <command name="Initialize shadcn/ui">
+          <description>Set up shadcn/ui component library</description>
+          <code>
+            <![CDATA[
+cd frontend
+npx shadcn@latest init
+# Select: New York style, Zinc color, Dark mode default
+# This creates components.json configuration file
+            ]]>
+          </code>
+        </command>
+
+        <command name="Install Additional Dependencies">
+          <description>Install form libraries, charts, and HTTP client</description>
+          <code>
+            <![CDATA[
+cd frontend
+npm install react-hook-form zod @hookform/resolvers recharts axios
+npm install -D @types/node
+            ]]>
+          </code>
+        </command>
+
+        <command name="Configure TypeScript">
+          <description>Update tsconfig.json with strict mode and path aliases</description>
+          <code>
+            <![CDATA[
+# Edit frontend/tsconfig.json
+# Set "strict": true
+# Add path aliases: @/components, @/lib, @/hooks, @/types
+            ]]>
+          </code>
+        </command>
+
+        <command name="Configure Tailwind Dark Theme">
+          <description>Ensure dark theme is default in Tailwind config</description>
+          <code>
+            <![CDATA[
+# Edit frontend/tailwind.config.ts
+# Verify darkMode: 'class' is set
+# Add custom color variables from UX Design Specification
+            ]]>
+          </code>
+        </command>
+
+        <command name="Create Directory Structure">
+          <description>Create organized directory structure for components, lib, hooks, types</description>
+          <code>
+            <![CDATA[
+cd frontend/src
+mkdir -p components/ui components/forms components/layout lib hooks types
+mkdir -p app/\(auth\) app/\(dashboard\)
+            ]]>
+          </code>
+        </command>
+
+        <command name="Configure Next.js API Proxy">
+          <description>Set up API proxy to backend in next.config.js</description>
+          <code>
+            <![CDATA[
+# Edit frontend/next.config.js
+# Add rewrites() function to proxy /api/* to http://localhost:8080/api/*
+            ]]>
+          </code>
+        </command>
+
+        <command name="Create API Client">
+          <description>Create Axios API client with interceptors</description>
+          <code>
+            <![CDATA[
+# Create frontend/src/lib/api.ts
+# Configure Axios instance with baseURL, timeout, headers
+# Add request/response interceptors for error handling
+            ]]>
+          </code>
+        </command>
+      </frontend>
+
+      <code-quality>
+        <command name="Configure ESLint">
+          <description>Extend .eslintrc.json with recommended rules</description>
+          <code>
+            <![CDATA[
+# Edit frontend/.eslintrc.json
+# Add recommended rules, TypeScript rules, React rules
+            ]]>
+          </code>
+        </command>
+
+        <command name="Configure Prettier">
+          <description>Create .prettierrc with formatting rules</description>
+          <code>
+            <![CDATA[
+# Create frontend/.prettierrc
+{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 100
+}
+            ]]>
+          </code>
+        </command>
+
+        <command name="Configure Checkstyle">
+          <description>Add checkstyle.xml for backend code style</description>
+          <code>
+            <![CDATA[
+# Create backend/checkstyle.xml with Google Java Style configuration
+# Add Maven Checkstyle plugin to pom.xml
+            ]]>
+          </code>
+        </command>
+
+        <command name="Install Husky">
+          <description>Set up Git hooks for pre-commit checks</description>
+          <code>
+            <![CDATA[
+# In project root (not frontend/)
+cd ..
+npm install -D husky lint-staged
+npx husky install
+npx husky add .husky/pre-commit "cd frontend && npx lint-staged"
+            ]]>
+          </code>
+        </command>
+
+        <command name="Configure lint-staged">
+          <description>Add lint-staged configuration to frontend/package.json</description>
+          <code>
+            <![CDATA[
+# Add to frontend/package.json
+"lint-staged": {
+  "*.{ts,tsx}": [
+    "eslint --fix",
+    "prettier --write"
+  ]
+}
+            ]]>
+          </code>
+        </command>
+      </code-quality>
+
+      <documentation>
+        <command name="Create Root README">
+          <description>Create comprehensive README.md at project root</description>
+          <sections>
+            - Project overview and tech stack summary
+            - Prerequisites (Java 17, Node.js 20+, Docker optional)
+            - Setup instructions (clone, install dependencies, start servers)
+            - Development workflow guide
+            - Project structure explanation
+            - Common commands (build, test, lint)
+            - Troubleshooting section (port conflicts, dependency issues)
+          </sections>
+        </command>
+
+        <command name="Create .editorconfig">
+          <description>Create .editorconfig for consistent formatting across editors</description>
+          <code>
+            <![CDATA[
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.java]
+indent_size = 4
+
+[*.md]
+trim_trailing_whitespace = false
+            ]]>
+          </code>
+        </command>
+
+        <command name="Create .gitignore">
+          <description>Create comprehensive .gitignore for Node.js, Java/Maven, IDE files, OS files</description>
+          <categories>
+            - Node.js (node_modules/, .next/, .env.local)
+            - Java/Maven (target/, *.class, .mvn/)
+            - IDE (IntelliJ, VSCode, Eclipse)
+            - OS (macOS .DS_Store, Windows Thumbs.db)
+            - Logs (*.log)
+            - Environment variables (.env)
+          </categories>
+        </command>
+      </documentation>
+
+      <optional-docker>
+        <command name="Create docker-compose.yml">
+          <description>Optional: Create Docker Compose for local PostgreSQL</description>
+          <code>
+            <![CDATA[
+# Create docker-compose.yml at project root
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ultra-bms-postgres
+    environment:
+      POSTGRES_DB: ultra_bms_dev
+      POSTGRES_USER: ultra_bms_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+volumes:
+  postgres-data:
+            ]]>
+          </code>
+          <note>Document in README: `docker-compose up -d` to start PostgreSQL</note>
+        </command>
+      </optional-docker>
+    </initialization-commands>
+
+    <configuration-examples>
+      <example name="application.yml (Backend Default Profile)">
+        <![CDATA[
+spring:
+  application:
+    name: ultra-bms
+  profiles:
+    active: dev
+
+server:
+  port: 8080
+        ]]>
+      </example>
+
+      <example name="application-dev.yml (Backend Development Profile)">
+        <![CDATA[
+spring:
+  datasource:
+    # Placeholder - configured in Story 1.2
+    url: jdbc:postgresql://localhost:5432/ultra_bms_dev
+    username: ultra_bms_user
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+logging:
+  level:
+    com.ultrabms: DEBUG
+    org.springframework.web: DEBUG
+        ]]>
+      </example>
+
+      <example name="CorsConfig.java (Backend CORS Configuration)">
+        <![CDATA[
+package com.ultrabms.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+            .allowedOrigins("http://localhost:3000")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+            .allowCredentials(true)
+            .allowedHeaders("*");
+    }
+}
+        ]]>
+      </example>
+
+      <example name="next.config.js (Frontend Configuration)">
+        <![CDATA[
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8080/api/:path*'
+      }
+    ];
+  }
+};
+
+export default nextConfig;
+        ]]>
+      </example>
+
+      <example name="src/lib/api.ts (Frontend API Client)">
+        <![CDATA[
+import axios from 'axios';
+
+export const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor
+apiClient.interceptors.request.use(
+  (config) => {
+    // Add auth token if available (Epic 2)
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Global error handling
+    console.error('API Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
+        ]]>
+      </example>
+    </configuration-examples>
+
+    <risks-and-mitigations>
+      <risk id="R1">
+        <description>Developers may not have Java 17 or Node.js 20+ installed</description>
+        <impact>High - blocks development entirely</impact>
+        <mitigation>Document installation instructions for multiple platforms (Windows/Mac/Linux) in README with links to SDKMAN, nvm, Homebrew</mitigation>
+      </risk>
+
+      <risk id="R2">
+        <description>CORS misconfiguration could block API requests</description>
+        <impact>Medium - breaks frontend-backend integration</impact>
+        <mitigation>Test CORS immediately after configuration by making test request from frontend to backend /api/health. Provide clear error messages in console.</mitigation>
+      </risk>
+
+      <risk id="R3">
+        <description>Pre-commit hooks may slow down commits</description>
+        <impact>Low - developer productivity impact</impact>
+        <mitigation>Optimize lint-staged to only check staged files, not entire codebase. Document how to bypass hooks if needed (--no-verify flag)</mitigation>
+      </risk>
+
+      <risk id="R4">
+        <description>Version conflicts between dependencies</description>
+        <impact>Medium - build failures or runtime errors</impact>
+        <mitigation>Use exact versions specified in Tech Spec. Test build immediately after dependency installation.</mitigation>
+      </risk>
+
+      <risk id="R5">
+        <description>Port 3000 or 8080 already in use on developer machine</description>
+        <impact>Low - prevents servers from starting</impact>
+        <mitigation>Document how to change ports in README. Provide clear error messages when ports are in use.</mitigation>
+      </risk>
+    </risks-and-mitigations>
+
+    <implementation-sequence>
+      <step number="1">
+        <title>Initialize Backend Project</title>
+        <tasks>
+          - Run Spring Initializr command to generate backend/ directory
+          - Extract generated files
+          - Add additional dependencies to pom.xml (Ehcache, Lombok, MapStruct, SpringDoc)
+          - Configure Maven wrapper (./mvnw)
+          - Create application.yml and application-dev.yml
+          - Verify build: ./mvnw clean install
+        </tasks>
+      </step>
+
+      <step number="2">
+        <title>Initialize Frontend Project</title>
+        <tasks>
+          - Run create-next-app command to generate frontend/ directory
+          - Initialize shadcn/ui with npx shadcn@latest init
+          - Install additional dependencies (react-hook-form, zod, recharts, axios)
+          - Configure tsconfig.json with strict mode and path aliases
+          - Update tailwind.config.ts to ensure dark theme default
+          - Verify build: npm run build
+        </tasks>
+      </step>
+
+      <step number="3">
+        <title>Configure Code Quality Tools</title>
+        <tasks>
+          - Frontend: Extend .eslintrc.json with recommended rules
+          - Frontend: Create .prettierrc with formatting rules
+          - Backend: Add checkstyle.xml with Google Java Style
+          - Backend: Add Maven Checkstyle plugin to pom.xml
+          - Root: Install Husky and create pre-commit hook script
+          - Frontend: Configure lint-staged in package.json
+          - Test: Make intentional formatting error, verify pre-commit hook rejects it
+        </tasks>
+      </step>
+
+      <step number="4">
+        <title>Configure Development Servers</title>
+        <tasks>
+          - Backend: Set server.port=8080 in application-dev.yml
+          - Backend: Create CorsConfig.java to allow http://localhost:3000 with credentials
+          - Frontend: Update next.config.js to proxy /api/* requests to http://localhost:8080
+          - Frontend: Create .env.example template
+          - Test: Start both servers, verify frontend can reach backend (will need health endpoint from Story 1.5)
+        </tasks>
+      </step>
+
+      <step number="5">
+        <title>Setup Project Documentation</title>
+        <tasks>
+          - Create comprehensive README.md at project root
+          - Add project overview and tech stack summary
+          - Document prerequisites (Java 17, Node.js 20+, Docker optional)
+          - Provide setup instructions (clone, install, start)
+          - Explain project structure
+          - List common commands (build, test, lint)
+          - Add troubleshooting section
+          - Create .editorconfig with consistent formatting rules
+          - Create comprehensive .gitignore (Node.js, Java, IDE, OS files)
+        </tasks>
+      </step>
+
+      <step number="6">
+        <title>Setup Docker Compose (Optional)</title>
+        <tasks>
+          - Create docker-compose.yml at project root with PostgreSQL 15-alpine service
+          - Configure: database ultra_bms_dev, user ultra_bms_user, port 5432, persistent volume
+          - Document in README.md: `docker-compose up -d` to start PostgreSQL
+          - Add docker-compose.override.yml to .gitignore
+        </tasks>
+      </step>
+
+      <step number="7">
+        <title>Create Initial Backend Package Structure</title>
+        <tasks>
+          - Create package directories: config, controller, service, repository, entity, dto, mapper, exception, security, util
+          - Create placeholder classes with JavaDoc in each package
+          - Document package purpose in README
+        </tasks>
+      </step>
+
+      <step number="8">
+        <title>Create Initial Frontend Directory Structure</title>
+        <tasks>
+          - Organize src/app/ with route groups: (auth)/, (dashboard)/, layout.tsx, page.tsx
+          - Create src/components/: ui/ (empty), forms/ (placeholder), layout/ (placeholder)
+          - Create src/lib/: api.ts (Axios setup), utils.ts, constants.ts
+          - Create src/hooks/ (placeholder)
+          - Create src/types/ (placeholder)
+        </tasks>
+      </step>
+
+      <step number="9">
+        <title>Verify End-to-End Setup</title>
+        <tasks>
+          - Start backend: cd backend && ./mvnw spring-boot:run
+          - Verify backend accessible at http://localhost:8080
+          - Start frontend: cd frontend && npm run dev
+          - Verify frontend accessible at http://localhost:3000
+          - Verify hot reload: Make change to frontend component, confirm auto-reload
+          - Verify hot reload: Make change to backend controller, confirm auto-restart (Spring DevTools)
+          - Run backend build: ./mvnw clean install - verify success
+          - Run frontend build: npm run build - verify success
+          - Commit initial project structure to Git
+        </tasks>
+      </step>
+    </implementation-sequence>
+  </implementation-notes>
+
+</story-context>

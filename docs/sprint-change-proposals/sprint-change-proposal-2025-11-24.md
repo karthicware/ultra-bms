@@ -330,7 +330,7 @@ The Sidebar component requires the `scroll-area` component for the scrollable na
 
 ### Change #4: Update Story 2.5 Status
 
-**Artifact:** `docs/sprint-artifacts/2-5-frontend-authentication-components-and-protected-routes.md`
+**Artifact:** `docs/sprint-artifacts/epic-2/2-5-frontend-authentication-components-and-protected-routes.md`
 
 **Type:** DOCUMENTATION UPDATE
 
@@ -487,7 +487,7 @@ Minor - Direct implementation of deferred component
 ### Artifacts Modified
 - **New:** `frontend/src/components/layout/Sidebar.tsx`
 - **Modified:** `frontend/src/app/(dashboard)/layout.tsx`
-- **Updated:** `docs/sprint-artifacts/2-5-frontend-authentication-components-and-protected-routes.md`
+- **Updated:** `docs/sprint-artifacts/epic-2/2-5-frontend-authentication-components-and-protected-routes.md`
 
 ### Routed To
 Development Team for direct implementation

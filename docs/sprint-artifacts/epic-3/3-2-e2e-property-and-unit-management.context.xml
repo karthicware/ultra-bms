@@ -1,0 +1,545 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>2.e2e</storyId>
+    <title>E2E Tests for Property and Unit Management</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-16</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-3/3-2-e2e-property-and-unit-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>QA engineer / developer</asA>
+    <iWant>comprehensive end-to-end tests for property and unit management</iWant>
+    <soThat>I can ensure property managers can effectively manage properties and units</soThat>
+    <tasks>
+- Task 1: Test Environment Setup and Configuration (AC: All)
+  - Verify Playwright and TypeScript dependencies installed (from Story 3.1.e2e)
+  - Create test data fixtures for properties, units, property managers
+  - Implement test data seeding utilities for properties and units
+  - Configure cleanup utilities for property/unit test data
+  - Verify scripts/check-services.sh exists and works (from Story 3.1.e2e)
+  - Add property/unit test fixtures to frontend/tests/fixtures/
+
+- Task 2: Property Management Flow Tests (AC: 1)
+  - Test: Create property with all required fields (name, address, type, total units)
+  - Test: Upload property images (max 5, verify gallery display)
+  - Test: Search properties by name and address
+  - Test: Filter properties by type (RESIDENTIAL, COMMERCIAL, MIXED_USE)
+  - Test: Filter properties by assigned property manager
+  - Test: Filter properties by occupancy range (0-25%, 26-50%, 51-75%, 76-100%)
+  - Test: Sort properties by name (ascending/descending)
+  - Test: Sort properties by occupancy % (ascending/descending)
+  - Test: Edit property details (name, address, amenities)
+  - Test: Soft delete property with no occupied units
+  - Test: Attempt delete property with occupied units → verify validation error
+  - Verify all data-testid attributes exist per conventions
+
+- Task 3: Unit Management Flow Tests (AC: 2)
+  - Test: Add single unit to property (unit number, floor, bedrooms, bathrooms, rent)
+  - Test: Bulk create 10 units with sequential numbers (e.g., 101-110)
+  - Test: View units in grid view → verify color-coded status badges (AVAILABLE=green, OCCUPIED=red, UNDER_MAINTENANCE=yellow, RESERVED=blue)
+  - Test: View units in list view → verify table displays all unit details
+  - Test: Toggle between grid and list view
+  - Test: Filter units by status (AVAILABLE, OCCUPIED, UNDER_MAINTENANCE, RESERVED)
+  - Test: Filter units by floor number
+  - Test: Filter units by bedroom count (0, 1, 2, 3+)
+  - Test: Filter units by rent range (min-max)
+  - Test: Update unit details (unit number, rent, features)
+  - Test: Change unit status AVAILABLE → RESERVED → OCCUPIED → verify status transitions
+  - Test: Soft delete unit (not occupied)
+  - Test: Attempt delete occupied unit → verify validation error
+
+- Task 4: Occupancy Calculations Tests (AC: 3)
+  - Test: Create property with totalUnits = 10
+  - Test: Create 7 occupied units, 3 available units
+  - Test: Verify occupancy rate displays 70% on property card
+  - Test: Verify color coding on property card: yellow (70-90% range)
+  - Test: Change unit status from OCCUPIED to AVAILABLE → verify occupancy recalculates to 60%
+  - Test: Change unit status from AVAILABLE to OCCUPIED → verify occupancy recalculates to 80%
+  - Test: Verify occupancy calculation accuracy across multiple properties
+
+- Task 5: Property Manager Assignment Tests (AC: 4)
+  - Test: Assign property to property manager → verify manager dropdown populated with PROPERTY_MANAGER role users
+  - Test: Filter properties by assigned manager → verify only properties assigned to that manager shown
+  - Test: Reassign property to different manager → verify update reflected in list
+  - Test: Verify only users with PROPERTY_MANAGER role appear in dropdown
+
+- Task 6: Quick Actions Tests (AC: 5)
+  - Test: Quick assign tenant to available unit → verify assignment dialog opens
+  - Test: Bulk select multiple units (checkbox selection)
+  - Test: Bulk status update (select 5 units, change all to UNDER_MAINTENANCE) → verify all updated
+  - Test: Verify bulk action only applies to selected units
+
+- Task 7: Validation and Error Handling Tests (AC: 6)
+  - Test: Create property with totalUnits = 0 → verify error "Total units must be at least 1"
+  - Test: Create unit with duplicate unitNumber within same property → verify error "Unit number already exists"
+  - Test: Upload property image > 5MB → verify size error
+  - Test: Upload non-image file (e.g., PDF) → verify type error "Only image files allowed"
+  - Test: Create unit with negative floor number → verify allowed (basement floors)
+  - Test: Create unit with invalid rent amount (negative) → verify error
+
+- Task 8: Test Documentation and Reporting
+  - Write test documentation in story file completion notes
+  - Generate HTML test report with Playwright reporter
+  - Capture screenshots on test failures
+  - Document test data fixtures (properties, units, managers)
+  - Add test coverage metrics to completion notes
+  - Document any edge cases discovered during testing
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Property Management Flow Tests
+   - Create property with all fields → verify property appears in list
+   - Upload property images (max 5) → verify images displayed in gallery
+   - Search properties by name, address → verify search results
+   - Filter properties by type, manager, occupancy range → verify filters work
+   - Sort properties by name, occupancy % → verify sorting
+   - Edit property details → verify updates saved
+   - Delete property (no occupied units) → verify soft delete
+   - Attempt delete with occupied units → verify validation error
+
+2. Unit Management Flow Tests
+   - Add single unit to property → verify unit appears in unit list
+   - Bulk create units (e.g., 10 units) → verify all units created with sequential numbers
+   - View unit in grid view → verify color-coded status badges (green/red/yellow)
+   - View unit in list view → verify table displays correctly
+   - Filter units by status, floor, bedrooms, rent range → verify filters
+   - Update unit details → verify changes saved
+   - Change unit status AVAILABLE → RESERVED → OCCUPIED → verify status transitions
+   - Delete unit (not occupied) → verify soft delete
+   - Attempt delete occupied unit → verify validation error
+
+3. Occupancy Calculations Tests
+   - Create property with 10 total units → create 7 occupied units
+   - Verify occupancy rate displays: 70%
+   - Verify color coding: yellow (70-90% range)
+   - Change unit status → verify occupancy recalculates
+
+4. Property Manager Assignment Tests
+   - Assign property to manager → verify manager dropdown populated
+   - Filter properties by assigned manager → verify only assigned properties shown
+   - Reassign property to different manager → verify update
+
+5. Quick Actions Tests
+   - Quick assign tenant to available unit → verify assignment dialog
+   - Bulk status update (select multiple units) → verify all updated
+
+6. Validation and Error Handling Tests
+   - Create property with totalUnits = 0 → verify error
+   - Create unit with duplicate unitNumber in same property → verify error
+   - Upload image > 5MB → verify size error
+   - Upload non-image file → verify type error
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- PRD: Testing Architecture and Requirements -->
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Testing Requirements (Section 5.4-5.5)</section>
+        <snippet>Performance requirements include &lt;200ms API response time, 10,000+ concurrent users, 99.9% uptime. Data retention 7 years for financial data. Authentication via OAuth 2.0 with JWT tokens.</snippet>
+      </doc>
+
+      <!-- Architecture: Testing Patterns and Backend/Frontend Structure -->
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Testing Architecture (Backend/Frontend)</section>
+        <snippet>Frontend testing with Playwright + TypeScript. Backend JUnit 5 + Mockito. Test database isolation pattern. API endpoints follow /api/v1 REST conventions. Consistent error responses with success/error structure.</snippet>
+      </doc>
+
+      <!-- Epic 3: Story 3.2 Property and Unit Management Spec -->
+      <doc>
+        <path>docs/epics/epic-3-tenant-management-portal.md</path>
+        <title>Epic 3: Tenant Management Portal</title>
+        <section>Story 3.2: Property and Unit Management</section>
+        <snippet>Property creation with name, address, type (RESIDENTIAL/COMMERCIAL/MIXED_USE), total units, manager assignment, amenities. Unit management with status (AVAILABLE, OCCUPIED, UNDER_MAINTENANCE, RESERVED). Bulk unit creation. Occupancy rate calculation: (occupied units / total units) * 100. API: POST /api/v1/properties, GET /api/v1/properties/{id}/units.</snippet>
+      </doc>
+
+      <!-- Epic 3: Story 3.2.e2e E2E Test Requirements -->
+      <doc>
+        <path>docs/epics/epic-3-tenant-management-portal.md</path>
+        <title>Epic 3: Tenant Management Portal</title>
+        <section>Story 3.2.e2e: E2E Tests for Property and Unit Management</section>
+        <snippet>E2E tests cover property CRUD, image upload (max 5), search/filter by type/manager/occupancy, unit bulk creation, status transitions, occupancy calculations, validation errors. Prerequisite: Story 3.2 status must be 'done'. Use Playwright, verify data-testid conventions, run scripts/check-services.sh before tests.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <!-- Backend: Property Controller -->
+      <code-artifact>
+        <path>backend/src/main/java/com/ultrabms/controller/PropertyController.java</path>
+        <kind>controller</kind>
+        <symbol>PropertyController</symbol>
+        <lines>1-210</lines>
+        <reason>REST API endpoints for property management - POST /api/v1/properties (create), GET (list with filters), PUT (update), DELETE (soft delete), image upload. Required for E2E test API integration.</reason>
+      </code-artifact>
+
+      <!-- Backend: Unit Controller -->
+      <code-artifact>
+        <path>backend/src/main/java/com/ultrabms/controller/UnitController.java</path>
+        <kind>controller</kind>
+        <symbol>UnitController</symbol>
+        <lines>1-end</lines>
+        <reason>REST API endpoints for unit management - POST /api/v1/properties/{id}/units (create), bulk create, GET (list), PUT (update), PATCH (status change). Critical for unit flow E2E tests.</reason>
+      </code-artifact>
+
+      <!-- Frontend: Properties Service -->
+      <code-artifact>
+        <path>frontend/src/services/properties.service.ts</path>
+        <kind>service</kind>
+        <symbol>properties.service</symbol>
+        <lines>1-325</lines>
+        <reason>Frontend API client for property operations. Functions: createProperty, getProperties (with filters), uploadPropertyImage, assignPropertyManager, getPropertyOccupancy. Shows request/response patterns for E2E tests.</reason>
+      </code-artifact>
+
+      <!-- Frontend: Units Service -->
+      <code-artifact>
+        <path>frontend/src/services/units.service.ts</path>
+        <kind>service</kind>
+        <symbol>units.service</symbol>
+        <lines>1-end</lines>
+        <reason>Frontend API client for unit operations. Includes bulk creation, status updates, filtering. Essential for understanding unit management API patterns in E2E tests.</reason>
+      </code-artifact>
+
+      <!-- E2E Test Pattern Example: Leads -->
+      <code-artifact>
+        <path>frontend/e2e/leads.spec.ts</path>
+        <kind>test</kind>
+        <symbol>Lead Management E2E Tests</symbol>
+        <lines>1-100</lines>
+        <reason>Example E2E test from Story 3.1 showing data-testid conventions (btn-add-lead, input-*, select-*), login flow, form validation patterns, success message assertions. Template for property/unit E2E tests.</reason>
+      </code-artifact>
+
+      <!-- Playwright Configuration -->
+      <code-artifact>
+        <path>frontend/playwright.config.ts</path>
+        <kind>config</kind>
+        <symbol>Playwright Config</symbol>
+        <lines>1-61</lines>
+        <reason>E2E test configuration: testDir './e2e', baseURL localhost:3000, timeout 60s, screenshot on failure, HTML reporter. Defines test execution environment and reporting.</reason>
+      </code-artifact>
+    </code>
+
+    <dependencies>
+      <!-- Frontend Testing Dependencies -->
+      <frontend>
+        <dependency name="@playwright/test" version="^1.49.1" type="devDependency" purpose="E2E testing framework - browser automation" />
+        <dependency name="@faker-js/faker" version="^9.4.0" type="devDependency" purpose="Generate test data fixtures (property names, addresses)" />
+        <dependency name="@testing-library/react" version="^16.3.0" type="devDependency" purpose="Component testing utilities" />
+        <dependency name="axios" version="^1.13.2" type="runtime" purpose="HTTP client for API calls in services" />
+        <dependency name="react-hook-form" version="^7.66.0" type="runtime" purpose="Form management (property/unit forms)" />
+        <dependency name="zod" version="^4.1.12" type="runtime" purpose="Schema validation for forms" />
+        <dependency name="next" version="16.0.2" type="runtime" purpose="Next.js framework" />
+        <dependency name="typescript" version="^5" type="devDependency" purpose="TypeScript language support" />
+      </frontend>
+
+      <!-- Backend Testing Dependencies -->
+      <backend>
+        <dependency name="spring-boot-starter-test" version="3.4.7" purpose="JUnit 5, Mockito for unit tests" />
+        <dependency name="spring-boot-starter-web" version="3.4.7" purpose="Spring MVC REST controllers" />
+        <dependency name="spring-boot-starter-data-jpa" version="3.4.7" purpose="JPA/Hibernate for data access" />
+        <dependency name="postgresql" version="17.6" purpose="PostgreSQL database driver" />
+        <dependency name="spring-boot-starter-validation" version="3.4.7" purpose="Bean validation (JSR-380)" />
+      </backend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <development>
+      <!-- Testing Standards from Dev Notes and Epic 2 Retrospective -->
+      <constraint>Use Playwright with TypeScript for all E2E tests (established in Story 3.1.e2e)</constraint>
+      <constraint>Test files location: frontend/e2e/property-unit/ (follow same pattern as leads/quotations)</constraint>
+      <constraint>Fixtures location: frontend/tests/fixtures/ (create properties.json, units.json, property-managers.json)</constraint>
+      <constraint>Test database: ultra_bms_test (isolated from dev data, seed before tests, cleanup after)</constraint>
+      <constraint>Service validation: Run scripts/check-services.sh before E2E tests (AI-2-2 from Epic 2)</constraint>
+      <constraint>Backend must be running: http://localhost:8080/actuator/health</constraint>
+      <constraint>Frontend must be running: http://localhost:3000</constraint>
+    </development>
+
+    <naming-conventions>
+      <!-- data-testid Conventions from Epic 2 Retrospective AI-2-1, AI-2-8 -->
+      <constraint>Follow data-testid naming: {component}-{element}-{action} (e.g., btn-create-property, input-property-name, select-property-type)</constraint>
+      <constraint>Verify ALL interactive elements have data-testid attributes per Epic 2 AI-2-1</constraint>
+      <constraint>Property examples: btn-create-property, input-property-name, select-property-type, btn-upload-image</constraint>
+      <constraint>Unit examples: btn-add-unit, btn-bulk-create, input-unit-number, select-unit-status, btn-status-update</constraint>
+    </naming-conventions>
+
+    <architectural>
+      <!-- API and Response Patterns -->
+      <constraint>API base path: /api/v1 (all endpoints follow REST conventions)</constraint>
+      <constraint>Consistent response format: {success: boolean, data: object, message: string, timestamp: string}</constraint>
+      <constraint>Error response format: {success: false, error: {code, message, field}, timestamp}</constraint>
+      <constraint>Soft delete pattern: Use 'active' flag, not hard delete (test both scenarios)</constraint>
+      <constraint>Occupancy calculation: (occupied units / total units) * 100 (verify accuracy)</constraint>
+      <constraint>Unit status transitions: AVAILABLE → RESERVED → OCCUPIED (test all transitions)</constraint>
+      <constraint>Image upload: Max 5 images per property, 5MB each, JPG/PNG/WebP formats</constraint>
+    </architectural>
+  </constraints>
+
+  <interfaces>
+    <!-- Property Management API Endpoints -->
+    <api>
+      <name>Create Property</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/properties</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/PropertyController.java:40-52</path>
+      <request-body>CreatePropertyRequest: {name, address, propertyType, totalUnitsCount, managerId?, yearBuilt?, totalSquareFootage?, amenities[]}</request-body>
+      <response>PropertyResponse: {id, name, address, propertyType, totalUnitsCount, manager, images[], createdAt, updatedAt}</response>
+    </api>
+
+    <api>
+      <name>Get All Properties (with filters)</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/properties</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/PropertyController.java:79-95</path>
+      <query-params>type?, status?, search?, page=0, size=20, sortBy=createdAt, sortDir=DESC</query-params>
+      <response>Page&lt;PropertyResponse&gt;: {content[], totalElements, totalPages, number, size}</response>
+    </api>
+
+    <api>
+      <name>Get Property with Occupancy</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/properties/{id}/with-occupancy</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/PropertyController.java:61-66</path>
+      <response>PropertyResponse with OccupancyResponse: {total, available, occupied, underMaintenance, reserved, occupancyPercentage}</response>
+    </api>
+
+    <api>
+      <name>Upload Property Image</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/properties/{id}/images</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/PropertyController.java:138-152</path>
+      <request-body>MultipartFile (file), displayOrder (optional integer)</request-body>
+      <response>PropertyImageResponse: {id, propertyId, filePath, displayOrder, uploadedBy, uploadedAt}</response>
+    </api>
+
+    <api>
+      <name>Create Unit (Single)</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/properties/{id}/units</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/UnitController.java</path>
+      <request-body>CreateUnitRequest: {unitNumber, floor, bedroomCount, bathroomCount, squareFootage, monthlyRent, status, features}</request-body>
+      <response>UnitResponse: {id, propertyId, unitNumber, floor, bedrooms, bathrooms, rent, status, createdAt}</response>
+    </api>
+
+    <api>
+      <name>Bulk Create Units</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/units/bulk</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/UnitController.java</path>
+      <request-body>BulkCreateUnitsRequest: {propertyId, startUnitNumber, count, floor, bedrooms, bathrooms, rent, status}</request-body>
+      <response>BulkCreateResult: {created: number, failed: number, units[]}</response>
+    </api>
+
+    <api>
+      <name>Update Unit Status</name>
+      <kind>REST endpoint</kind>
+      <signature>PATCH /api/v1/units/{id}/status</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/UnitController.java</path>
+      <request-body>UpdateUnitStatusRequest: {status: AVAILABLE|OCCUPIED|UNDER_MAINTENANCE|RESERVED}</request-body>
+      <response>UnitResponse with updated status</response>
+    </api>
+
+    <api>
+      <name>Bulk Update Unit Status</name>
+      <kind>REST endpoint</kind>
+      <signature>PATCH /api/v1/units/bulk-status</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/UnitController.java</path>
+      <request-body>BulkUpdateStatusRequest: {unitIds[], status}</request-body>
+      <response>BulkUpdateResult: {updated: number, failed: number}</response>
+    </api>
+
+    <!-- Frontend Service Interface -->
+    <service>
+      <name>Property Service (Frontend)</name>
+      <kind>TypeScript service</kind>
+      <signature>properties.service.ts exports</signature>
+      <path>frontend/src/services/properties.service.ts:1-325</path>
+      <functions>createProperty, getProperties, getPropertyById, updateProperty, deleteProperty, uploadPropertyImage, assignPropertyManager, getPropertyOccupancy</functions>
+    </service>
+
+    <service>
+      <name>Units Service (Frontend)</name>
+      <kind>TypeScript service</kind>
+      <signature>units.service.ts exports</signature>
+      <path>frontend/src/services/units.service.ts</path>
+      <functions>createUnit, bulkCreateUnits, getUnits, updateUnit, deleteUnit, updateUnitStatus, bulkUpdateStatus</functions>
+    </service>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Use Playwright with TypeScript for all E2E tests (configured in playwright.config.ts). Tests organized by user flow in frontend/e2e/property-unit/ directory. Follow data-testid conventions: {component}-{element}-{action}. All tests must verify backend (http://localhost:8080) and frontend (http://localhost:3000) are running via scripts/check-services.sh. Test database 'ultra_bms_test' for isolation. Capture screenshots on failures, generate HTML reports with Playwright reporter. Use page object model for reusable selectors. Timeout: 60s per test, 15s per assertion. Test files: property-management.spec.ts, unit-management.spec.ts, occupancy-calculations.spec.ts, bulk-operations.spec.ts, validation-errors.spec.ts. Fixtures: properties.json, units.json, property-managers.json in frontend/tests/fixtures/.
+    </standards>
+
+    <locations>
+      <!-- Test File Structure -->
+      <location>frontend/e2e/property-unit/property-management.spec.ts</location>
+      <location>frontend/e2e/property-unit/unit-management.spec.ts</location>
+      <location>frontend/e2e/property-unit/occupancy-calculations.spec.ts</location>
+      <location>frontend/e2e/property-unit/bulk-operations.spec.ts</location>
+      <location>frontend/e2e/property-unit/validation-errors.spec.ts</location>
+      <location>frontend/tests/fixtures/properties.json</location>
+      <location>frontend/tests/fixtures/units.json</location>
+      <location>frontend/tests/fixtures/property-managers.json</location>
+      <location>frontend/e2e/utils/test-helpers.ts (reuse from 3.1.e2e)</location>
+      <location>frontend/e2e/utils/page-objects.ts (extend with property/unit pages)</location>
+      <location>frontend/playwright.config.ts (shared configuration)</location>
+    </locations>
+
+    <ideas>
+      <!-- Test Ideas Mapped to Acceptance Criteria -->
+
+      <!-- AC 1: Property Management Flow Tests -->
+      <test-idea ac="1" priority="high">
+        <description>Create property with all required fields (name, address, type, total units) → verify property appears in list with correct data</description>
+        <approach>Use createProperty service, fill form with data-testid selectors, submit, verify success toast, check list page for new property card</approach>
+      </test-idea>
+
+      <test-idea ac="1" priority="high">
+        <description>Upload property images (max 5) → verify images displayed in gallery with correct order</description>
+        <approach>Create property, navigate to images tab, upload 5 images via uploadPropertyImage, verify gallery shows all 5 in correct displayOrder</approach>
+      </test-idea>
+
+      <test-idea ac="1" priority="medium">
+        <description>Search properties by name and address → verify search results filter correctly</description>
+        <approach>Create 3 properties with distinct names, use search input with data-testid, verify only matching properties shown</approach>
+      </test-idea>
+
+      <test-idea ac="1" priority="medium">
+        <description>Filter properties by type (RESIDENTIAL, COMMERCIAL, MIXED_USE) → verify filter dropdown works</description>
+        <approach>Create properties of each type, select filter via data-testid select-property-type, verify filtered results</approach>
+      </test-idea>
+
+      <test-idea ac="1" priority="medium">
+        <description>Filter properties by assigned property manager → verify only assigned properties shown</description>
+        <approach>Assign properties to different managers, filter by managerId, verify results match assignment</approach>
+      </test-idea>
+
+      <test-idea ac="1" priority="high">
+        <description>Sort properties by name and occupancy % (asc/desc) → verify sorting works correctly</description>
+        <approach>Create 5 properties with varying occupancy, click sort headers, verify order changes correctly</approach>
+      </test-idea>
+
+      <test-idea ac="1" priority="high">
+        <description>Soft delete property with no occupied units → verify property removed from default list</description>
+        <approach>Create property with only AVAILABLE units, delete via API, verify not in active list but restorable</approach>
+      </test-idea>
+
+      <test-idea ac="1" priority="high">
+        <description>Attempt delete property with occupied units → verify validation error prevents deletion</description>
+        <approach>Create property with OCCUPIED units, attempt delete, verify error message "Cannot delete property with occupied units"</approach>
+      </test-idea>
+
+      <!-- AC 2: Unit Management Flow Tests -->
+      <test-idea ac="2" priority="high">
+        <description>Add single unit to property → verify unit appears in unit list with correct details</description>
+        <approach>Navigate to property detail, click btn-add-unit, fill form (unitNumber, floor, bedrooms, rent), submit, verify in unit grid</approach>
+      </test-idea>
+
+      <test-idea ac="2" priority="critical">
+        <description>Bulk create 10 units with sequential numbers (101-110) → verify all created correctly</description>
+        <approach>Use btn-bulk-create, specify startUnitNumber=101, count=10, submit, verify all 10 units in list with correct numbers</approach>
+      </test-idea>
+
+      <test-idea ac="2" priority="high">
+        <description>View units in grid view → verify color-coded status badges (green=AVAILABLE, red=OCCUPIED, yellow=UNDER_MAINTENANCE, blue=RESERVED)</description>
+        <approach>Create units with all 4 statuses, switch to grid view, verify badge colors match status</approach>
+      </test-idea>
+
+      <test-idea ac="2" priority="medium">
+        <description>Toggle between grid and list view → verify both views display correctly</description>
+        <approach>Click view toggle button, verify grid shows cards, list shows table with all columns</approach>
+      </test-idea>
+
+      <test-idea ac="2" priority="medium">
+        <description>Filter units by status, floor, bedroom count, rent range → verify all filters work independently and combined</description>
+        <approach>Create diverse units, apply each filter separately, then combine filters, verify results</approach>
+      </test-idea>
+
+      <test-idea ac="2" priority="high">
+        <description>Change unit status AVAILABLE → RESERVED → OCCUPIED → verify status transitions and occupancy recalculation</description>
+        <approach>Create AVAILABLE unit, use status dropdown to RESERVED, verify badge change, then OCCUPIED, verify occupancy % updated</approach>
+      </test-idea>
+
+      <test-idea ac="2" priority="high">
+        <description>Soft delete unit (not occupied) → verify unit removed from active list</description>
+        <approach>Create AVAILABLE unit, delete, verify removed but can be restored (soft delete)</approach>
+      </test-idea>
+
+      <test-idea ac="2" priority="high">
+        <description>Attempt delete occupied unit → verify validation error prevents deletion</description>
+        <approach>Create OCCUPIED unit, attempt delete, verify error "Cannot delete occupied unit"</approach>
+      </test-idea>
+
+      <!-- AC 3: Occupancy Calculations Tests -->
+      <test-idea ac="3" priority="critical">
+        <description>Create property with totalUnits=10, create 7 OCCUPIED units → verify occupancy displays 70%</description>
+        <approach>Create property, bulk create 10 units (7 OCCUPIED, 3 AVAILABLE), verify property card shows 70% occupancy</approach>
+      </test-idea>
+
+      <test-idea ac="3" priority="high">
+        <description>Verify occupancy color coding: yellow for 70-90% range</description>
+        <approach>Create property with 75% occupancy, verify badge or progress bar is yellow color</approach>
+      </test-idea>
+
+      <test-idea ac="3" priority="critical">
+        <description>Change unit status OCCUPIED→AVAILABLE → verify occupancy recalculates from 70% to 60%</description>
+        <approach>With 7/10 occupied (70%), change 1 OCCUPIED to AVAILABLE, verify occupancy updates to 60%</approach>
+      </test-idea>
+
+      <test-idea ac="3" priority="high">
+        <description>Verify occupancy calculation accuracy across multiple properties with varying unit counts</description>
+        <approach>Create 3 properties with different totalUnits (5, 20, 100), set different occupancy levels, verify math is correct</approach>
+      </test-idea>
+
+      <!-- AC 4: Property Manager Assignment Tests -->
+      <test-idea ac="4" priority="medium">
+        <description>Assign property to manager → verify manager dropdown populated with PROPERTY_MANAGER role users</description>
+        <approach>Create property, open assign manager dialog, verify dropdown shows only users with PROPERTY_MANAGER role</approach>
+      </test-idea>
+
+      <test-idea ac="4" priority="medium">
+        <description>Filter properties by assigned manager → verify only properties assigned to that manager shown</description>
+        <approach>Assign properties to 2 different managers, filter by managerId, verify results</approach>
+      </test-idea>
+
+      <!-- AC 5: Quick Actions Tests -->
+      <test-idea ac="5" priority="medium">
+        <description>Quick assign tenant to available unit → verify assignment dialog opens</description>
+        <approach>Right-click AVAILABLE unit, select "Assign Tenant", verify dialog opens with unit pre-selected</approach>
+      </test-idea>
+
+      <test-idea ac="5" priority="high">
+        <description>Bulk select 5 units, change status to UNDER_MAINTENANCE → verify all 5 updated</description>
+        <approach>Use checkboxes to select 5 units, click bulk-status-update, select UNDER_MAINTENANCE, verify all badges update</approach>
+      </test-idea>
+
+      <!-- AC 6: Validation and Error Handling Tests -->
+      <test-idea ac="6" priority="high">
+        <description>Create property with totalUnits=0 → verify error "Total units must be at least 1"</description>
+        <approach>Fill property form with totalUnitsCount=0, submit, verify validation error message</approach>
+      </test-idea>
+
+      <test-idea ac="6" priority="high">
+        <description>Create unit with duplicate unitNumber in same property → verify error "Unit number already exists"</description>
+        <approach>Create unit with number "101", attempt create another with same number, verify error</approach>
+      </test-idea>
+
+      <test-idea ac="6" priority="medium">
+        <description>Upload property image > 5MB → verify size error</description>
+        <approach>Attempt upload 6MB file, verify error "File size exceeds 5MB limit"</approach>
+      </test-idea>
+
+      <test-idea ac="6" priority="medium">
+        <description>Upload non-image file (PDF) → verify type error "Only image files allowed"</description>
+        <approach>Attempt upload PDF, verify error message and file rejected</approach>
+      </test-idea>
+    </ideas>
+  </tests>
+</story-context>

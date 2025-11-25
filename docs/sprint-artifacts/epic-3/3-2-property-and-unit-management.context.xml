@@ -1,0 +1,429 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>2</storyId>
+    <title>Property and Unit Management</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-3/3-2-property-and-unit-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a property manager</asA>
+    <iWant>to manage properties and their units</iWant>
+    <soThat>I can track available units and assign tenants to them</soThat>
+    <tasks>
+- Task 1: Define TypeScript Types and Enums (AC: #14)
+- Task 2: Create Zod Validation Schemas (AC: #14, #17)
+- Task 3: Implement Property Service Layer (AC: #14)
+- Task 4: Implement Unit Service Layer (AC: #14)
+- Task 5: Create Property List Page (AC: #1, #10)
+- Task 6: Create Property Detail Page (AC: #1, #12)
+- Task 7: Create Property Form (Create/Edit) (AC: #1, #17)
+- Task 8: Create Unit Form (Single Create) (AC: #3, #17)
+- Task 9: Create Bulk Unit Creation Modal (AC: #4)
+- Task 10: Create Unit Grid View (AC: #5)
+- Task 11: Create Unit List View (AC: #5)
+- Task 12: Implement Unit Status Management (AC: #6)
+- Task 13: Implement Bulk Status Update (AC: #7)
+- Task 14: Implement Occupancy Calculation Display (AC: #8)
+- Task 15: Implement Property Manager Assignment (AC: #9)
+- Task 16: Create Unit Detail Page (AC: #13)
+- Task 17: Implement Soft Delete (AC: #11)
+- Task 18: Backend - Property Entity and Repository (AC: #1, #15)
+- Task 19: Backend - PropertyImage Entity and Repository (AC: #2)
+- Task 20: Backend - Unit Entity and Repository (AC: #3)
+- Task 21: Backend - UnitHistory Entity and Repository (AC: #6)
+- Task 22: Backend - Property Service Layer (AC: #1, #2, #8, #9, #11, #15)
+- Task 23: Backend - Unit Service Layer (AC: #3, #4, #6, #7, #11)
+- Task 24: Backend - Property Controller (AC: #1, #2, #8, #9, #10, #11)
+- Task 25: Backend - Unit Controller (AC: #3, #4, #6, #7, #11)
+- Task 26: Backend - Ehcache Configuration (AC: #15)
+- Task 27: Backend - File Upload Service (AC: #2)
+- Task 28: Responsive Design and Accessibility (AC: #16)
+- Task 29: Testing - E2E Tests (AC: #18)
+- Task 30: Testing - Unit Tests (AC: #18)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+**AC1 - Property Creation and Management:** Property manager can create new properties via POST /api/v1/properties with form capturing: property name (required, max 200 chars), full address (required, max 500 chars), property type (enum: RESIDENTIAL, COMMERCIAL, MIXED_USE), total units count (integer, min 1), assigned property manager (dropdown of PROPERTY_MANAGER users from User table), year built (optional, 4-digit year 1900-current year), total square footage (optional, decimal > 0), amenities list (array of strings: pool, gym, parking, security, etc.), property images (max 5 files, each max 5MB, JPG/PNG). Backend creates Property entity with id (UUID), status (enum: ACTIVE, INACTIVE, default ACTIVE), createdAt/updatedAt timestamps, createdBy (userId). Frontend displays properties list at /properties with search (by name, address), filters (type, manager, occupancy range), sortable columns (name, total units, occupied units, occupancy %), pagination (20 per page). Property detail page shows all information, unit grid/list view, occupancy metrics, quick actions (Add Unit, View Tenants). Use shadcn Table, Card, Select components.
+
+**AC2 - Property Image Upload:** Properties can have multiple images attached (max 5 images total) via POST /api/v1/properties/{id}/images with validation: file type (JPG/PNG only), max size 5MB per file, total max 5 images per property. Backend stores images in /uploads/properties/{propertyId}/images/ with original filename preserved, creates PropertyImage entity with id, propertyId, fileName, filePath, fileSize, uploadedBy, uploadedAt, displayOrder (integer for sorting). Frontend shows image gallery in property detail page with thumbnails, drag-and-drop upload zone, preview before upload, delete option per image, reorder images via drag-and-drop to set displayOrder. Use shadcn Dialog for image lightbox, React DnD for drag-and-drop ordering.
+
+**AC3 - Unit Creation and Management:** From property detail page, property manager can add single unit via "Add Unit" button opening unit form with: unit number (required, max 50 chars, unique within property), floor (integer, can be negative for basement, e.g., -1, 0, 1, 2), bedroom count (decimal, e.g., 1, 2, 2.5 for studio with den), bathroom count (decimal, e.g., 1, 1.5, 2), square footage (decimal > 0), monthly rent (decimal > 0, base rent amount), status (enum: AVAILABLE, OCCUPIED, UNDER_MAINTENANCE, RESERVED, default AVAILABLE), features (JSON object for flexible attributes like balcony: true, view: "sea", floorPlanType: "A", parkingSpotsIncluded: 1). Backend creates Unit entity via POST /api/v1/properties/{id}/units with unitId (UUID), propertyId (foreign key to Property), createdAt/updatedAt timestamps. Frontend validates unit number uniqueness within property, shows success toast "Unit {unitNumber} created", refreshes unit list. Use React Hook Form + Zod validation, shadcn Form components.
+
+**AC4 - Bulk Unit Creation:** Property detail page has "Bulk Add Units" button opening bulk creation modal with fields: starting unit number (required, e.g., "101"), count (required, integer 1-100, number of units to create), floor (required, integer, all units on same floor), increment pattern (dropdown: Sequential [101, 102, 103], Floor-Based [101, 102, 201, 202], Custom), bedroom count (required, decimal, applies to all units), bathroom count (required, decimal), square footage (optional, decimal, applies to all), monthly rent (required, decimal, applies to all), features (optional, JSON template applied to all). Backend creates multiple Unit entities in single transaction via POST /api/v1/properties/{id}/units/bulk with request body containing array of unit data, validates total units count doesn't exceed property.totalUnitsCount, ensures all unit numbers unique within property. Frontend shows progress bar during creation, displays summary "Created X units successfully", handles partial failures (show which units failed with reasons). Use shadcn Progress component, AlertDialog for confirmation.
+
+**AC5 - Unit Grid and List Views:** Property detail page shows units in two view modes (toggle button: Grid | List). Grid view displays units as cards (3-4 columns on desktop, 1 column mobile) with color-coded status: AVAILABLE (green background, "Available" text), OCCUPIED (red background, "Occupied" with tenant name), UNDER_MAINTENANCE (yellow background, "Maintenance"), RESERVED (blue background, "Reserved"). Each card shows: unit number (large text), floor, bedrooms/bathrooms (icon + number), square footage, monthly rent (formatted AED), quick action buttons (View Details, Edit, Change Status). List view shows units in shadcn Table with columns: unit number, floor, type (bedroom count), bathrooms, sqft, rent, status badge, actions (View, Edit, Delete). Both views support filtering by: status (multi-select checkboxes), floor (range slider or input), bedroom count (dropdown: Studio, 1BR, 2BR, 3BR+), rent range (min/max inputs). Use shadcn Tabs for view toggle, Badge for status, Card for grid items.
+
+**AC6 - Unit Status Management:** Unit list/grid has status dropdown per unit allowing quick status changes via PATCH /api/v1/units/{id}/status with new status value. Status transitions validated: AVAILABLE → RESERVED (when quotation accepted), RESERVED → OCCUPIED (when tenant onboarding complete), OCCUPIED → AVAILABLE (when tenant exits), any status → UNDER_MAINTENANCE, UNDER_MAINTENANCE → previous status. Backend validates: cannot set OCCUPIED without active tenant, cannot set AVAILABLE if tenant exists, logs status change in UnitHistory entity with id, unitId, oldStatus, newStatus, reason (optional text), changedBy (userId), changedAt timestamp. Frontend shows confirmation dialog for status changes, displays status badge with color coding, updates immediately with optimistic UI (show new status instantly, revert on error). Use shadcn Select dropdown for status, AlertDialog for confirmation.
+
+**AC7 - Bulk Unit Status Update:** Unit list view has checkbox column allowing multi-select units. When units selected, toolbar appears with "Change Status" button opening dialog with: target status dropdown (AVAILABLE, OCCUPIED, UNDER_MAINTENANCE, RESERVED), reason (optional text field), confirmation message "Update X units to {status}?". Backend endpoint PATCH /api/v1/units/bulk-status with request body { unitIds: string[], newStatus: UnitStatus, reason?: string }, validates all units exist and transitions are valid, performs update in transaction (rollback if any fail), returns success count and failure details. Frontend shows progress during update, displays summary "Updated X of Y units", lists any failures with reasons. Use shadcn Checkbox for selection, AlertDialog for confirmation.
+
+**AC8 - Property Occupancy Calculation:** Property list shows occupancy rate calculated as: (count of units with status OCCUPIED) / (property.totalUnitsCount) * 100. Backend endpoint GET /api/v1/properties includes occupancyRate field in response DTO, calculated via SQL query counting occupied units. Frontend displays occupancy as: percentage badge color-coded (green ≥90%, yellow 70-89%, red <70%), progress bar showing visual representation, tooltip showing "X of Y units occupied". Property detail page shows detailed occupancy metrics: total units, available units count, occupied units count, under maintenance count, reserved count, occupancy percentage with trend (compare to last month). Use shadcn Badge for percentage, Progress for visual bar.
+
+**AC9 - Property Manager Assignment:** Property form includes "Assigned Manager" dropdown populated via GET /api/v1/users?role=PROPERTY_MANAGER returning users with PROPERTY_MANAGER role. Assignment stored in property.managerId field (foreign key to User). Backend validates assigned user has PROPERTY_MANAGER role, allows null (unassigned property). Frontend property list supports filter by manager (dropdown of all property managers, option "Unassigned"). Property detail page shows manager card with: manager name, email, phone, avatar, "Reassign" button to change manager. Reassignment via PATCH /api/v1/properties/{id}/manager with new managerId. Use shadcn Avatar for manager display, Select for dropdown.
+
+**AC10 - Property Search and Filtering:** Property list page supports: text search (searches name and address using LIKE query, debounced 300ms), filter by property type (multi-select: RESIDENTIAL, COMMERCIAL, MIXED_USE), filter by assigned manager (dropdown: all managers + "Unassigned"), filter by occupancy range (slider 0-100% or inputs min/max), sort by columns (name A-Z, occupancy % high-to-low, total units high-to-low). Backend endpoint GET /api/v1/properties with query params: page, size, sort, direction, search, types[], managerId, occupancyMin, occupancyMax. Results paginated (default 20 per page, options 10/20/50). Frontend uses shadcn Input for search (with search icon), Select for filters, Slider for occupancy range. Use lodash debounce (300ms) for search input.
+
+**AC11 - Soft Delete for Properties and Units:** DELETE /api/v1/properties/{id} performs soft delete by setting property.active=false instead of removing record, only allowed if property has zero OCCUPIED units (validation error if occupied units exist). DELETE /api/v1/units/{id} performs soft delete by setting unit.active=false, only allowed if unit status is not OCCUPIED (validation error if occupied). Backend adds deleted flag check to all GET queries (WHERE active = true by default). Frontend shows "Delete" button with confirmation dialog warning "This action cannot be undone. Property will be archived." for properties, "Unit will be archived. This cannot be undone." for units. Displays inline error if delete blocked due to occupied units. Use shadcn AlertDialog for delete confirmation, Alert for error messages.
+
+**AC12 - Property Detail Page:** Property detail page at /properties/{id} shows: header with property name, address, type badge, status badge, edit button; image gallery (carousel if multiple images, placeholder if none); info cards (total units, occupied units, occupancy %, assigned manager); tabs for Units (grid/list view), Tenants (list of all tenants in this property with links to tenant profiles), Documents (future), History (property changes log). Units tab is default, shows unit grid/list with filters and add unit button. Backend endpoint GET /api/v1/properties/{id} returns full property details with manager details, unit counts, images. Use shadcn Tabs for sections, Carousel for image gallery, Card for info metrics.
+
+**AC13 - Unit Detail Page:** Unit detail page at /units/{id} shows: breadcrumb (Property Name → Units → Unit Number), header with unit number, floor, type (2 BED / 2 BATH), status badge, edit/delete buttons; rent information card (monthly rent, square footage, rent per sqft calculated); features section (displays all JSON features as key-value pairs or badges); tenant information (if OCCUPIED, shows tenant name, lease dates, contact, link to tenant profile, "View Tenant" button); history section (shows status changes from UnitHistory table as timeline). Backend endpoint GET /api/v1/units/{id} returns unit with property details, current tenant (if occupied), history records. Frontend uses shadcn Breadcrumb for navigation, Timeline component for history. Use data-testid attributes: unit-detail-page, unit-info-card, unit-features-section.
+
+**AC14 - TypeScript Types and API Integration:** Define TypeScript interfaces in types/properties.ts: Property, PropertyImage, PropertySearchParams, PropertyResponse. Define in types/units.ts: Unit, UnitFeatures, UnitHistory, UnitSearchParams, UnitStatusUpdate. Define enums: PropertyType (RESIDENTIAL, COMMERCIAL, MIXED_USE), PropertyStatus (ACTIVE, INACTIVE), UnitStatus (AVAILABLE, OCCUPIED, UNDER_MAINTENANCE, RESERVED). Create Zod schemas in lib/validations/properties.ts: createPropertySchema (validates name, address, totalUnitsCount ≥ 1, yearBuilt 1900-current), uploadPropertyImageSchema (validates file type JPG/PNG, size ≤ 5MB). Create lib/validations/units.ts: createUnitSchema (validates unitNumber required, floor integer, bedroomCount ≥ 0, bathroomCount ≥ 0, monthlyRent > 0, squareFootage > 0), bulkCreateUnitsSchema (validates count 1-100, starting unit number). Create services/properties.service.ts with methods: createProperty, getProperties, getPropertyById, updateProperty, deleteProperty, uploadImage, deleteImage. Create services/units.service.ts with methods: createUnit, getUnits, getUnitById, updateUnit, updateUnitStatus, bulkUpdateStatus, deleteUnit, bulkCreateUnits. Follow API integration patterns from services/leads.service.ts (Story 3.1).
+
+**AC15 - Caching with Ehcache:** Backend implements Ehcache for property list with TTL 2 hours (7200 seconds). Properties are frequently viewed but change infrequently. Add @Cacheable annotation to PropertyService.findAll() method with cache name "properties", cache key includes search and filter params. Add @CacheEvict to create, update, delete methods to invalidate cache. Configure in application.properties: spring.cache.type=ehcache, ehcache.xml defines cache "properties" with maxEntriesLocalHeap=1000, timeToLiveSeconds=7200. Unit list not cached (changes frequently with tenant assignments). Frontend doesn't need to implement cache logic (relies on backend caching for performance).
+
+**AC16 - Responsive Design and Accessibility:** All pages responsive: single column on mobile (<640px), grid on tablet (2 columns), multi-column on desktop (3-4 columns for unit grid). Unit grid cards min 280px width. Touch targets min 44×44px. All forms keyboard navigable with proper tab order. ARIA labels on all interactive elements: aria-label="Search properties", aria-label="Filter by type". Loading states with Skeleton components for property list, unit grid. Success/error feedback with toast notifications (green for success, red for error). Color-coded status badges include text labels for accessibility (not color-only). Use shadcn dark theme classes. All interactive elements have data-testid attributes per docs/development/data-testid-conventions.md: form-property-create, input-property-name, btn-add-unit, table-units, select-unit-status, btn-bulk-create, grid-units, card-unit-{unitNumber}.
+
+**AC17 - Form Validation and Error Handling:** Property form validates: name required and ≤ 200 chars, address required and ≤ 500 chars, totalUnitsCount ≥ 1, yearBuilt between 1900 and current year (if provided), property type selected from enum, assigned manager exists and has PROPERTY_MANAGER role. Unit form validates: unitNumber required and unique within property, floor is integer (can be negative), bedroomCount ≥ 0 and ≤ 10, bathroomCount ≥ 0 and ≤ 10, squareFootage > 0, monthlyRent > 0. Image upload validates: file type is JPG or PNG (use MIME type check), file size ≤ 5MB, total images ≤ 5 per property. Frontend uses Zod schemas with React Hook Form, displays inline errors below fields in red text, focuses first error field on submit. Backend validates with @Valid annotation, returns 400 with field-specific errors: { success: false, error: { code: "VALIDATION_ERROR", fields: { "unitNumber": "Unit number already exists" } } }. Use shadcn Alert for general errors, inline text for field errors.
+
+**AC18 - Testing and Documentation:** Write E2E tests with Playwright: create property flow with image upload, add single unit, bulk create units (10 units), unit grid/list view toggle, filter units by status and floor, change unit status, bulk status update, calculate occupancy rate, search/filter properties, soft delete property (verify occupied units block delete). Write unit tests for: Zod validation schemas, property/unit service methods, occupancy calculation, bulk creation logic. Verify all data-testid attributes exist per Epic 2 retrospective (AI-2-1). Run scripts/check-services.sh before tests per Epic 2 (AI-2-2). Document API endpoints in API.md. Add JSDoc comments to all service methods. Create component usage guide for shadcn Table, Card, Grid layouts. Test responsive breakpoints (375px mobile, 768px tablet, 1920px desktop).
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document - Tenant Management Module</title>
+        <section>3.3 Tenant Management Module</section>
+        <snippet>Properties and units are core entities for tenant management. System tracks tenant assignment to units, lease terms, rent breakdown, and parking allocation. Multi-tenant support with unit-level granularity.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document - Technical Architecture</title>
+        <section>5.1 System Architecture</section>
+        <snippet>Backend: Java 17 with Spring Boot framework, Database: PostgreSQL with Redis caching, File Storage: AWS S3, Frontend: React.js with TypeScript, UI Components: shadcn/ui component library</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Database Schema</title>
+        <section>Properties & Units Schema</section>
+        <snippet>Properties table: id, name, address, total_units, property_manager_id. Units table: id, property_id, unit_number (unique constraint), floor, bedrooms, bathrooms, area_sqft, unit_type, status (VACANT, OCCUPIED, MAINTENANCE). Soft delete pattern with active flag instead of removing records.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - API Response Format</title>
+        <section>Consistency Rules - Backend</section>
+        <snippet>All APIs must return consistent response structure: { success: true, data: {}, message: "...", timestamp: "..." }. Error response: { success: false, error: { code: "...", message: "...", field: "..." }, timestamp: "..." }. Status codes: 200 OK, 201 Created, 204 No Content, 400 Bad Request, 404 Not Found.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Caching Strategy</title>
+        <section>Performance Considerations - Application-Level Caching (Caffeine)</section>
+        <snippet>Use @Cacheable annotation for frequently accessed, rarely changed data. Configure CaffeineCacheManager with maximumSize=1000, expireAfterWrite=10 minutes. Use @CacheEvict on create, update, delete methods to invalidate cache. Example cache names: "users", "properties", "tenants", "vendors".</snippet>
+      </doc>
+      <doc>
+        <path>docs/development/ux-design-specification.md</path>
+        <title>UX Design - shadcn/ui Component Library</title>
+        <section>6.1 Component Mapping</section>
+        <snippet>Core UI components: button, input, card, table, dialog, sheet, toast, alert, tabs, badge, avatar for consistent design. Forms use React Hook Form + Zod validation. Tables use shadcn data-table with sorting, filtering, pagination. Cards for KPI metrics, info displays. Install via: npx shadcn@latest add [component-name]</snippet>
+      </doc>
+      <doc>
+        <path>docs/development/ux-design-specification.md</path>
+        <title>UX Design - Form Validation Patterns</title>
+        <section>7.1.3 Form Patterns</section>
+        <snippet>Label position above input (vertical stacking). Required field indicator: asterisk (*) in red. Validation timing: on blur for individual fields, on submit for entire form, real-time for password strength/username availability. Error display: inline message below field + red border. Help text: small gray text below input.</snippet>
+      </doc>
+      <doc>
+        <path>docs/development/ux-design-specification.md</path>
+        <title>UX Design - Responsive Design Strategy</title>
+        <section>8.1 Responsive Strategy</section>
+        <snippet>Breakpoints: mobile (<640px) single column, tablet (641px-1024px) 2-column layout, desktop (1025px+) multi-column. Navigation: persistent sidebar on desktop, collapsible on tablet, hamburger menu on mobile. Tables: all columns on desktop, hide less important on tablet, card view on mobile.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-3-tenant-management-portal.md</path>
+        <title>Epic 3 - Story 3.2 Property and Unit Management</title>
+        <section>Story 3.2</section>
+        <snippet>As a property manager, I want to manage properties and their units, so that I can track available units and assign tenants to them. Includes property creation with images, unit management with bulk creation, occupancy calculation, status management, soft delete pattern.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>backend/src/main/java/com/ultrabms/entity/Property.java</path>
+        <kind>entity</kind>
+        <symbol>Property</symbol>
+        <lines>1-61</lines>
+        <reason>Existing Property entity with name, address, type, totalUnits, manager fields. Provides baseline structure for AC1, AC8, AC9. Missing: yearBuilt, totalSquareFootage, amenities fields to be added.</reason>
+      </file>
+      <file>
+        <path>backend/src/main/java/com/ultrabms/entity/Unit.java</path>
+        <kind>entity</kind>
+        <symbol>Unit</symbol>
+        <lines>1-86</lines>
+        <reason>Existing Unit entity with property, unitNumber, floor, bedroomCount, bathroomCount, squareFootage, status fields. Provides baseline for AC3, AC5, AC6. Missing: monthlyRent, features (JSON) fields to be added.</reason>
+      </file>
+      <file>
+        <path>backend/src/main/java/com/ultrabms/repository/PropertyRepository.java</path>
+        <kind>repository</kind>
+        <symbol>PropertyRepository</symbol>
+        <lines>N/A</lines>
+        <reason>Existing repository extending JpaRepository. Will need custom query methods for search, filtering by type/manager, occupancy calculation (AC10).</reason>
+      </file>
+      <file>
+        <path>backend/src/main/java/com/ultrabms/repository/UnitRepository.java</path>
+        <kind>repository</kind>
+        <symbol>UnitRepository</symbol>
+        <lines>N/A</lines>
+        <reason>Existing repository extending JpaRepository. Will need custom methods: findByPropertyId, existsByPropertyIdAndUnitNumber (AC3 uniqueness), countByPropertyIdAndStatus (AC8 occupancy).</reason>
+      </file>
+      <file>
+        <path>frontend/src/types/leads.ts</path>
+        <kind>types</kind>
+        <symbol>Lead types</symbol>
+        <lines>1-234</lines>
+        <reason>Example TypeScript types pattern from Story 3.1. Shows comprehensive interface definitions, enums (LeadStatus, LeadSource), request/response types, form data types, search params. Follow this pattern for AC14 (Property and Unit types).</reason>
+      </file>
+      <file>
+        <path>frontend/src/lib/validations/leads.ts</path>
+        <kind>validation</kind>
+        <symbol>Lead validation schemas</symbol>
+        <lines>1-233</lines>
+        <reason>Example Zod validation schemas from Story 3.1. Shows comprehensive validation: regex patterns (Emirates ID, phone), custom refinements (future date), error messages, helper functions. Follow this pattern for AC14, AC17 (Property/Unit validation schemas).</reason>
+      </file>
+      <file>
+        <path>frontend/src/services/leads.service.ts</path>
+        <kind>service</kind>
+        <symbol>Lead API service</symbol>
+        <lines>1-397</lines>
+        <reason>Example API service pattern from Story 3.1. Shows comprehensive JSDoc documentation, error handling, pagination, search params, file upload (FormData), blob download. Follow this pattern for AC14 (Property and Unit services).</reason>
+      </file>
+      <file>
+        <path>frontend/src/app/(dashboard)/leads/page.tsx</path>
+        <kind>page</kind>
+        <symbol>Leads list page</symbol>
+        <lines>N/A</lines>
+        <reason>Example list page pattern from Story 3.1. Shows table/grid view, search, filters, pagination, quick actions. Reference for AC5 (Property List Page).</reason>
+      </file>
+      <file>
+        <path>frontend/src/app/(dashboard)/leads/create/page.tsx</path>
+        <kind>page</kind>
+        <symbol>Lead creation form</symbol>
+        <lines>N/A</lines>
+        <reason>Example form page from Story 3.1. Shows React Hook Form + Zod integration, file upload, validation, error handling, success/error toasts. Reference for AC7 (Property Form).</reason>
+      </file>
+    </code>
+    <dependencies>
+      <backend>
+        <java>
+          <version>17 LTS</version>
+          <framework>Spring Boot 3.4.7</framework>
+          <dependencies>
+            <dependency name="spring-boot-starter-web">REST API controllers</dependency>
+            <dependency name="spring-boot-starter-data-jpa">ORM and repositories</dependency>
+            <dependency name="postgresql">Database driver</dependency>
+            <dependency name="spring-boot-starter-validation">Bean validation</dependency>
+            <dependency name="spring-boot-starter-cache">Caching with Ehcache</dependency>
+            <dependency name="ehcache">In-memory cache (AC15)</dependency>
+            <dependency name="lombok">Boilerplate reduction</dependency>
+            <dependency name="springdoc-openapi">API documentation</dependency>
+          </dependencies>
+        </java>
+      </backend>
+      <frontend>
+        <node>
+          <version>18.x or higher</version>
+          <framework>Next.js 15.5 (App Router)</framework>
+          <dependencies>
+            <dependency name="react">19.2.0</dependency>
+            <dependency name="react-hook-form">Form management</dependency>
+            <dependency name="zod">Schema validation</dependency>
+            <dependency name="@hookform/resolvers">Zod + RHF integration</dependency>
+            <dependency name="axios">HTTP client (via lib/api.ts)</dependency>
+            <dependency name="lodash">Utility functions (debounce for AC10 search)</dependency>
+            <dependency name="lucide-react">Icons</dependency>
+            <dependency name="tailwindcss">4.0 Utility-first CSS</dependency>
+            <dependency name="@radix-ui/*">shadcn/ui primitives</dependency>
+            <dependency name="class-variance-authority">Component variants</dependency>
+            <dependency name="clsx">Conditional classes</dependency>
+            <dependency name="tailwind-merge">Merge Tailwind classes</dependency>
+          </dependencies>
+        </node>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+**Architectural Constraints:**
+- Backend uses monolithic architecture with clear separation: Controller → Service → Repository layers
+- All API responses must use standard format: { success, data, timestamp } or { success, error, timestamp }
+- Use soft delete pattern (active flag) instead of hard delete for properties and units (AC11)
+- Database entities extend BaseEntity (provides id, createdAt, updatedAt, active fields)
+- Use @PreAuthorize("hasRole('PROPERTY_MANAGER')") for all create, update, delete endpoints
+
+**Database Constraints:**
+- Property and Unit tables already exist (Story 1.4) - modify existing entities, don't recreate
+- Unit.unitNumber must be unique within property (unique constraint: property_id + unit_number)
+- Property.managerId foreign key to User table (must have PROPERTY_MANAGER role)
+- Indexing: property_id on units table, manager_id on properties table, status on units table
+- Use PostgreSQL JSONB type for Unit.features field (flexible key-value storage)
+
+**Frontend Constraints:**
+- Use Next.js 15 App Router pattern: app/(dashboard)/properties/page.tsx structure
+- Server components by default, use 'use client' only when needed (forms, event handlers)
+- Follow existing patterns from Story 3.1 (leads management) for consistency
+- All types in frontend/src/types/, validations in lib/validations/, services in services/
+- Use shadcn/ui components exclusively - do not create custom UI primitives
+- Follow data-testid convention: {component}-{element}-{action} (e.g., form-property-create)
+
+**Validation Constraints:**
+- Property name: 1-200 chars, required
+- Address: 1-500 chars, required
+- Total units count: ≥ 1 (cannot be 0 or negative)
+- Year built: 1900 to current year (if provided)
+- Unit number: required, max 50 chars, unique within property
+- Floor: integer (can be negative for basement)
+- Monthly rent, square footage: > 0 (must be positive decimals)
+- Image uploads: JPG/PNG only, max 5MB per file, max 5 images per property
+- File storage: /uploads/properties/{propertyId}/images/
+
+**Caching Constraints (AC15):**
+- Only cache property list (GET /api/v1/properties) - not unit list
+- Cache name: "properties", TTL: 2 hours (7200 seconds), max entries: 1000
+- Cache key must include search and filter params to avoid stale data
+- Use @Cacheable on PropertyService.findAll(), @CacheEvict on create/update/delete
+- Configure in application.properties and ehcache.xml
+
+**Testing Constraints:**
+- Run scripts/check-services.sh before E2E tests (verify backend on :8080, frontend on :3000)
+- All interactive elements must have data-testid attributes (Epic 2 retrospective AI-2-1)
+- E2E tests: Playwright with TypeScript
+- Unit tests: JUnit 5 (backend), Vitest (frontend)
+- Test coverage targets: Backend 80% line / 70% branch, Frontend 70% line / 60% branch
+
+**Code Style Constraints:**
+- Backend: Java 17 features (records for DTOs, switch expressions), Lombok annotations (@Data, @Builder)
+- Frontend: TypeScript strict mode, functional components, hooks pattern
+- Naming: PascalCase (classes/components), camelCase (methods/variables), kebab-case (REST endpoints)
+- API endpoints: /api/v1/properties (plural nouns), /api/v1/properties/{id}/units
+- Currency: AED only, format with 2 decimal places
+- Dates: ISO 8601 format, store UTC in database, display in UAE timezone (GST)
+  </constraints>
+
+  <interfaces>
+**Property Management APIs:**
+- POST /api/v1/properties: Create property (AC1)
+  Request: { name, address, type, totalUnits, managerId?, yearBuilt?, totalSquareFootage?, amenities[] }
+  Response: { success: true, data: Property, timestamp }
+
+- GET /api/v1/properties: List properties with filters (AC10)
+  Query params: page, size, sort, direction, search, types[], managerId, occupancyMin, occupancyMax
+  Response: { success: true, data: { content: Property[], totalElements, totalPages, currentPage, pageSize }, timestamp }
+
+- GET /api/v1/properties/{id}: Get property details (AC12)
+  Response: { success: true, data: { property: Property, manager: User, unitCounts: { total, available, occupied, maintenance, reserved }, occupancyRate: number, images: PropertyImage[] }, timestamp }
+
+- PUT /api/v1/properties/{id}: Update property (AC1)
+  Request: { name?, address?, type?, totalUnits?, managerId?, yearBuilt?, totalSquareFootage?, amenities[]? }
+  Response: { success: true, data: Property, timestamp }
+
+- DELETE /api/v1/properties/{id}: Soft delete property (AC11)
+  Validation: Cannot delete if property has occupied units (status 400)
+  Response: { success: true, timestamp }
+
+- POST /api/v1/properties/{id}/images: Upload property image (AC2)
+  Request: multipart/form-data with file (JPG/PNG, max 5MB)
+  Response: { success: true, data: PropertyImage, timestamp }
+
+- DELETE /api/v1/properties/{id}/images/{imageId}: Delete property image (AC2)
+  Response: { success: true, timestamp }
+
+- PATCH /api/v1/properties/{id}/manager: Reassign property manager (AC9)
+  Request: { managerId: string }
+  Response: { success: true, data: Property, timestamp }
+
+**Unit Management APIs:**
+- POST /api/v1/properties/{id}/units: Create single unit (AC3)
+  Request: { unitNumber, floor?, bedroomCount, bathroomCount, squareFootage?, monthlyRent, status?, features? }
+  Response: { success: true, data: Unit, timestamp }
+
+- POST /api/v1/properties/{id}/units/bulk: Bulk create units (AC4)
+  Request: { startingUnitNumber, count, floor, incrementPattern, bedroomCount, bathroomCount, squareFootage?, monthlyRent, features? }
+  Response: { success: true, data: { successCount, failureCount, failures: [{ unitNumber, reason }] }, timestamp }
+
+- GET /api/v1/properties/{id}/units: List units for property (AC5)
+  Query params: status[], floorMin?, floorMax?, bedroomCount[], rentMin?, rentMax?
+  Response: { success: true, data: { units: Unit[] }, timestamp }
+
+- GET /api/v1/units/{id}: Get unit details (AC13)
+  Response: { success: true, data: { unit: Unit, property: Property, tenant?: Tenant, history: UnitHistory[] }, timestamp }
+
+- PUT /api/v1/units/{id}: Update unit (AC3)
+  Request: { unitNumber?, floor?, bedroomCount?, bathroomCount?, squareFootage?, monthlyRent?, features? }
+  Response: { success: true, data: Unit, timestamp }
+
+- PATCH /api/v1/units/{id}/status: Update unit status (AC6)
+  Request: { status: UnitStatus, reason?: string }
+  Validation: Check valid status transitions, cannot set OCCUPIED without tenant, logs to UnitHistory
+  Response: { success: true, data: Unit, timestamp }
+
+- PATCH /api/v1/units/bulk-status: Bulk status update (AC7)
+  Request: { unitIds: string[], newStatus: UnitStatus, reason?: string }
+  Response: { success: true, data: { successCount, failureCount, failures: [{ unitId, reason }] }, timestamp }
+
+- DELETE /api/v1/units/{id}: Soft delete unit (AC11)
+  Validation: Cannot delete if unit is OCCUPIED (status 400)
+  Response: { success: true, timestamp }
+
+**Support APIs:**
+- GET /api/v1/users?role=PROPERTY_MANAGER: Get property managers for assignment dropdown (AC9)
+  Response: { success: true, data: { users: User[] }, timestamp }
+  </interfaces>
+
+  <tests>
+    <standards>
+E2E Testing with Playwright: All user flows tested end-to-end covering property creation, unit management, occupancy calculation, status changes, soft delete validation. Backend: JUnit 5 + Mockito for service layer tests, TestContainers for repository integration tests. Frontend: Vitest + React Testing Library for component tests. Test data fixtures for properties, units, users. Clean up test data after each test suite. Generate HTML test report with screenshots on failure.
+    </standards>
+    <locations>
+- Frontend E2E tests: tests/e2e/properties.spec.ts
+- Frontend unit tests: frontend/src/**/__tests__/*.test.ts
+- Backend unit tests: backend/src/test/java/com/ultrabms/**/*Test.java
+- Backend integration tests: backend/src/test/java/com/ultrabms/**/*IntegrationTest.java
+- Test fixtures: tests/fixtures/properties.json, tests/fixtures/units.json
+    </locations>
+    <ideas>
+**E2E Test Ideas (AC18):**
+- TC1: Create property with all fields + upload 3 images → verify property appears in list with images
+- TC2: Search properties by name "Tower" → verify only matching properties shown
+- TC3: Filter properties by type RESIDENTIAL, manager "John Doe", occupancy 70-90% → verify filtered results
+- TC4: Sort properties by occupancy % descending → verify order correct
+- TC5: Add single unit to property → verify unit shows in grid view with correct status color
+- TC6: Bulk create 10 units (starting 101, sequential) → verify all 10 units created with numbers 101-110
+- TC7: Toggle unit view Grid ↔ List → verify both views display correctly
+- TC8: Filter units by status AVAILABLE, floor 2-5, bedrooms 2BR → verify filtered results
+- TC9: Change unit status AVAILABLE → RESERVED → verify status badge color changes, confirmation dialog shown
+- TC10: Select 5 units, bulk update status to UNDER_MAINTENANCE → verify toolbar appears, all 5 updated
+- TC11: Create property with 10 total units, create 7 units with status OCCUPIED → verify occupancy = 70%, badge color yellow
+- TC12: Attempt to delete property with occupied units → verify validation error "Cannot delete property with occupied units"
+- TC13: Delete unit with status AVAILABLE → verify soft delete (active=false), unit not in default list
+- TC14: Property form validation: submit empty name → verify inline error "Property name is required"
+- TC15: Unit form validation: submit duplicate unit number → verify error "Unit number already exists"
+- TC16: Image upload validation: upload 6MB file → verify error "File size must be less than 5MB"
+- TC17: Reassign property manager → verify manager dropdown populated, manager updated, displayed on property detail
+- TC18: Responsive design: test on mobile (375px), tablet (768px), desktop (1920px) → verify layouts adapt
+
+**Unit Test Ideas (AC18):**
+- Zod schema: createPropertySchema - test valid input, missing required fields, totalUnits = 0, yearBuilt out of range
+- Zod schema: createUnitSchema - test valid input, negative square footage, monthlyRent = 0, floor validation
+- Property service: calculateOccupancyRate - test 0 units, all occupied, half occupied, no occupied units
+- Unit service: bulkCreateUnits - test sequential pattern, floor-based pattern, count validation, duplicate unit numbers
+- Unit service: validateStatusTransition - test valid transitions (AVAILABLE→RESERVED), invalid transitions (OCCUPIED→AVAILABLE with tenant)
+- API integration: getProperties with filters - mock API response, verify pagination, search, filter params
+- Component: PropertyList - test search debounce (300ms), filter application, sort column click
+- Component: UnitGrid - test status color coding, card layout, quick actions
+- Component: UnitStatusDialog - test confirmation dialog, optimistic UI update, error rollback
+
+**Integration Test Ideas:**
+- Repository: PropertyRepository.findByActiveTrue - test soft delete filtering
+- Repository: UnitRepository.existsByPropertyIdAndUnitNumber - test uniqueness constraint
+- Repository: UnitRepository.countByPropertyIdAndStatus - test occupancy calculation query
+- Service + Repository: PropertyService.deleteProperty - test validation (occupied units prevent delete)
+- Service + Repository: UnitService.bulkCreateUnits - test transaction rollback on partial failure
+- Cache: PropertyService.findAll - test @Cacheable, cache hit/miss, @CacheEvict on create/update
+    </ideas>
+  </tests>
+</story-context>

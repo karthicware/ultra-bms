@@ -1,0 +1,603 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>4</storyId>
+    <title>Tenant Portal - Dashboard and Profile Management</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-3/3-4-tenant-portal-dashboard-and-profile-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>tenant</asA>
+    <iWant>to access my portal dashboard and manage my profile</iWant>
+    <soThat>I can view my lease details and update my information</soThat>
+    <tasks>
+      - Task 1: Define TypeScript Types and API Service
+      - Task 2: Implement Backend Dashboard API
+      - Task 3: Implement Backend Profile Management APIs
+      - Task 4: Create Dashboard Page Structure
+      - Task 5: Implement Dashboard Unit Info and Stats
+      - Task 6: Implement Quick Actions Section
+      - Task 7: Create Profile Page Structure
+      - Task 8: Implement Personal and Lease Info Sections
+      - Task 9: Implement Parking and Document Sections
+      - Task 10: Implement Account Settings and Password Change
+      - Task 11: Implement Responsive Design and Mobile Navigation
+      - Task 12: Setup Data Fetching and Caching
+      - Task 13: Add Accessibility and Testing Attributes
+      - Task 14: Write Unit and Integration Tests
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    AC1: Dashboard Route and Layout - /tenant/dashboard with authentication middleware
+    AC2: Dashboard Welcome Section - welcome message, unit information card with lease details
+    AC3: Quick Stats Cards - outstanding balance, next payment, open requests, upcoming bookings
+    AC4: Quick Actions Section - submit maintenance, make payment, book amenity, view lease
+    AC5: Profile Route and Layout - /tenant/profile with tabs/accordion navigation
+    AC6: Personal Information Section (Read-Only) - display all personal details
+    AC7: Lease Information Section (Read-Only) - property, unit, rent breakdown, payment schedule
+    AC8: Parking Information Section (Read-Only) - allocated spots, fees, Mulkiya download
+    AC9: Account Settings Section (Editable) - change password with validation
+    AC10: Document Repository Section - list, upload, download documents
+    AC11: API Endpoints (Backend) - dashboard, profile, lease, parking, document APIs
+    AC12: Responsive Design and Mobile Optimization - mobile/tablet/desktop breakpoints
+    AC13: Data Fetching and Caching - React Query with stale times and cache management
+    AC14: TypeScript Types and Schemas - types/tenant-portal.ts, validations, services
+    AC15: Testing and Accessibility - data-testid attributes, ARIA labels, keyboard navigation
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>3.3 Tenant Management Module - Tenant Portal</section>
+        <snippet>
+          Self-service tenant portal with maintenance requests, online payment gateway, document access,
+          announcement board, and community amenity booking. Multi-factor authentication and role-based
+          access control with TENANT role.
+        </snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>4.2 UI Components</section>
+        <snippet>
+          Component Library: shadcn/ui for consistent, accessible components. Dark theme with blue/teal accents.
+          Typography: Inter font family. Data Visualization: Interactive charts using Recharts. Forms: Progressive
+          disclosure with validation using React Hook Form. Styling: Tailwind CSS.
+        </snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Frontend Implementation Patterns - Component Pattern</section>
+        <snippet>
+          Use TypeScript interfaces for all props. Implement server components for data fetching where possible.
+          Client components use 'use client' directive. Form Pattern: React Hook Form + Zod for validation.
+          API Client Pattern: Centralized apiClient with axios and JWT token handling.
+        </snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>REST API Conventions</section>
+        <snippet>
+          Base URL: /api/v1. Endpoints: Plural nouns, kebab-case. Status Codes: 200 OK (GET/PUT/PATCH),
+          201 Created (POST), 204 No Content (DELETE), 400 Bad Request, 401 Unauthorized, 403 Forbidden,
+          404 Not Found. API Response Format: {success, data, message, timestamp}
+        </snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Date and Time Handling</section>
+        <snippet>
+          Storage: UTC timezone in database. API: ISO 8601 format. Display: Convert to user's timezone in frontend.
+          Date Library: Java 17 java.time (LocalDateTime, ZonedDateTime) for backend, date-fns for frontend.
+        </snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Currency Formatting</section>
+        <snippet>
+          ALWAYS use AED. formatCurrency helper: new Intl.NumberFormat('en-AE', {style: 'currency', currency: 'AED',
+          minimumFractionDigits: 2}).format(amount)
+        </snippet>
+      </doc>
+      <doc>
+        <path>docs/development/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>8.2 Accessibility - WCAG Compliance</section>
+        <snippet>
+          Compliance Target: WCAG 2.1 Level AA. Color Contrast: Normal text minimum 4.5:1 ratio. Keyboard Navigation:
+          All interactive elements accessible via Tab. Screen Reader Support: ARIA labels for all form inputs,
+          meaningful button labels, icon buttons have aria-label. Touch Target Size: Minimum 44x44 pixels.
+        </snippet>
+      </doc>
+      <doc>
+        <path>docs/development/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>7.1.3 Form Patterns</section>
+        <snippet>
+          Label Position: Above input field. Required Field Indicator: Asterisk (*) in red. Validation Timing:
+          On Blur for fields, On Submit for form. Error Display: Inline error message below field + red border.
+          Help Text: Small gray text below input or tooltip icon for detailed help.
+        </snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-3-tenant-management-portal.md</path>
+        <title>Epic 3: Tenant Management & Portal</title>
+        <section>Story 3.3: Tenant Onboarding and Registration</section>
+        <snippet>
+          Tenant entity includes: id, userId (FK to User), unitId (FK to Unit), personal information, lease details,
+          parking details (parkingSpots count, parkingFee, spotNumbers, mulkiyaDocumentPath), payment schedule,
+          status (PENDING, ACTIVE, EXPIRED, TERMINATED), leaseDocumentPath. Status 3.3: ready-for-dev (completed).
+        </snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic-3/3-3-tenant-onboarding-and-registration.md</path>
+        <title>Story 3.3: Tenant Onboarding</title>
+        <section>Learnings and Patterns</section>
+        <snippet>
+          Types from types/tenant.ts (Tenant interface, LeaseType, PaymentMethod enums). Validation schemas pattern
+          from lib/validations/tenant.ts. API service pattern from services/tenant.service.ts. formatCurrency helper
+          for AED amounts. Multi-step forms use React Hook Form + Zod. shadcn components: form, input, select,
+          calendar, card, tabs, accordion. Date formatting: "dd MMM yyyy" using date-fns.
+        </snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic-2/2-5-frontend-authentication-components-and-protected-routes.md</path>
+        <title>Story 2.5: Frontend Authentication</title>
+        <section>Established Patterns</section>
+        <snippet>
+          AuthContext Pattern at contexts/AuthContext.tsx provides useAuth() hook. Axios API Client at lib/api.ts
+          with interceptors for JWT token attachment, error handling, and token refresh. File Structure:
+          components/{feature}/, hooks/use{FeatureName}.ts, types/{feature}.ts, lib/validations/{feature}.ts,
+          services/{feature}.service.ts. Form Validation: React Hook Form + Zod schemas with inline errors.
+          PasswordStrengthMeter component available for reuse.
+        </snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic-2/2-5-frontend-authentication-components-and-protected-routes.md</path>
+        <title>Story 2.5: Frontend Authentication - Dependencies</title>
+        <section>Dependencies Available</section>
+        <snippet>
+          Already available: axios, react-hook-form, @hookform/resolvers, zod, jwt-decode, date-fns, lucide-react,
+          recharts, sonner (toasts), shadcn components (form, input, button, card, dialog, badge, skeleton, toast,
+          alert-dialog). Need to add for this story: @tanstack/react-query, tabs, accordion, table, avatar, progress,
+          separator.
+        </snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>frontend/src/lib/api.ts</path>
+        <kind>api-client</kind>
+        <symbol>apiClient</symbol>
+        <lines>1-156</lines>
+        <reason>
+          Centralized axios API client with JWT token interceptors, automatic token refresh on 401,
+          and CSRF token handling. This is the base client that all service files use.
+        </reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/properties.service.ts</path>
+        <kind>service</kind>
+        <symbol>createProperty, getProperties, getPropertyById, updateProperty, etc.</symbol>
+        <lines>1-325</lines>
+        <reason>
+          Example service file showing established pattern: import apiClient, define types, implement
+          CRUD functions with JSDoc, proper error handling. Use this pattern for tenant-portal.service.ts.
+        </reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/index.ts</path>
+        <kind>types</kind>
+        <symbol>ApiResponse, ApiError, PaginatedResponse</symbol>
+        <lines>1-34</lines>
+        <reason>
+          Common API response types used across all services. Tenant portal APIs should return
+          ApiResponse&lt;T&gt; wrapped data.
+        </reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/auth.ts</path>
+        <kind>types</kind>
+        <symbol>User, LoginCredentials, AuthResponse</symbol>
+        <lines>all</lines>
+        <reason>
+          Example of type definitions for a module. Follow this pattern for types/tenant-portal.ts
+          with DashboardData, TenantProfile interfaces.
+        </reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/properties.ts</path>
+        <kind>types</kind>
+        <symbol>Property, PropertyResponse, CreatePropertyRequest</symbol>
+        <lines>all</lines>
+        <reason>
+          Example of request/response type separation. Use similar pattern for tenant portal types.
+        </reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/units.ts</path>
+        <kind>types</kind>
+        <symbol>Unit, UnitStatus</symbol>
+        <lines>all</lines>
+        <reason>
+          Unit types that will be referenced in tenant dashboard (current unit info display).
+        </reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Property.java</path>
+        <kind>entity</kind>
+        <symbol>Property</symbol>
+        <lines>all</lines>
+        <reason>
+          Backend Property entity that tenant dashboard will reference (property name, address).
+        </reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Unit.java</path>
+        <kind>entity</kind>
+        <symbol>Unit</symbol>
+        <lines>all</lines>
+        <reason>
+          Backend Unit entity that tenant dashboard will display (unit number, floor, bedrooms, bathrooms).
+        </reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/User.java</path>
+        <kind>entity</kind>
+        <symbol>User</symbol>
+        <lines>all</lines>
+        <reason>
+          User entity with TENANT role. Each tenant has a corresponding User for authentication.
+        </reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/controller/AuthController.java</path>
+        <kind>controller</kind>
+        <symbol>AuthController</symbol>
+        <lines>all</lines>
+        <reason>
+          Example of controller pattern: @RestController, @RequestMapping, @PreAuthorize annotations,
+          ResponseEntity usage. Follow this pattern for TenantPortalController.
+        </reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <frontend>
+        <dependency>
+          <name>@tanstack/react-query</name>
+          <version>^5.0.0</version>
+          <reason>Data fetching, caching, and state management for dashboard and profile APIs</reason>
+        </dependency>
+        <dependency>
+          <name>react-dropzone</name>
+          <version>^14.2.3</version>
+          <reason>Document upload drag-and-drop functionality</reason>
+        </dependency>
+        <dependency>
+          <name>date-fns</name>
+          <version>^4.1.0</version>
+          <status>already installed</status>
+          <reason>Date formatting (dd MMM yyyy) and calculations (days remaining)</reason>
+        </dependency>
+        <dependency>
+          <name>lucide-react</name>
+          <version>^0.553.0</version>
+          <status>already installed</status>
+          <reason>Icons for dashboard, navigation, and buttons</reason>
+        </dependency>
+        <dependency>
+          <name>react-hook-form</name>
+          <version>^7.66.0</version>
+          <status>already installed</status>
+          <reason>Password change form handling</reason>
+        </dependency>
+        <dependency>
+          <name>zod</name>
+          <version>^4.1.12</version>
+          <status>already installed</status>
+          <reason>changePasswordSchema validation</reason>
+        </dependency>
+        <dependency>
+          <name>axios</name>
+          <version>^1.13.2</version>
+          <status>already installed</status>
+          <reason>HTTP client for API calls</reason>
+        </dependency>
+      </frontend>
+      <backend>
+        <dependency>
+          <name>Spring Boot</name>
+          <version>3.4.7</version>
+          <status>already installed</status>
+          <reason>Backend framework for REST APIs</reason>
+        </dependency>
+        <dependency>
+          <name>Spring Security</name>
+          <version>6.x</version>
+          <status>already installed</status>
+          <reason>@PreAuthorize for TENANT role authorization</reason>
+        </dependency>
+        <dependency>
+          <name>Spring Data JPA</name>
+          <version>3.4.x</version>
+          <status>already installed</status>
+          <reason>Database access for tenant, lease, document queries</reason>
+        </dependency>
+        <dependency>
+          <name>BCrypt</name>
+          <version>built-in</version>
+          <status>already installed</status>
+          <reason>Password hashing and validation for change password</reason>
+        </dependency>
+      </backend>
+      <shadcn-components>
+        <component name="card" status="already installed" />
+        <component name="tabs" status="need to install" usage="Profile section navigation (desktop)" />
+        <component name="accordion" status="need to install" usage="Profile sections (mobile)" />
+        <component name="separator" status="need to install" usage="Dividing sections" />
+        <component name="table" status="need to install" usage="Rent breakdown, document repository" />
+        <component name="badge" status="already installed" usage="Lease status, lease type" />
+        <component name="avatar" status="need to install" usage="User profile menu" />
+        <component name="skeleton" status="already installed" usage="Loading states" />
+        <component name="form" status="already installed" usage="Password change form" />
+        <component name="input" status="already installed" usage="Password fields" />
+        <component name="label" status="already installed" usage="Form field labels" />
+        <component name="button" status="already installed" usage="Action buttons" />
+        <component name="select" status="already installed" usage="Language preference, document type" />
+        <component name="toast" status="already installed" usage="Success/error notifications (sonner)" />
+        <component name="dialog" status="already installed" usage="Confirmation dialogs" />
+        <component name="alert" status="already installed" usage="Informational banners" />
+        <component name="progress" status="need to install" usage="Document upload progress" />
+      </shadcn-components>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Read-Only vs Editable: Personal info, lease info, parking info are READ-ONLY (display only). Account settings (password) is EDITABLE with validation. Document upload is EDITABLE (add new documents).
+    - File Handling: Lease PDFs stored in /uploads/leases/{tenantId}/, additional documents in /uploads/tenants/{tenantId}/additional/, Mulkiya document path from Story 3.3 onboarding.
+    - Security: All endpoints require TENANT role authorization. Password change requires current password validation. No ability to change email or personal info (prevents account takeover). Document downloads must verify tenant owns the document.
+    - Date/Time: All dates displayed in UAE timezone (GST). Use date-fns for date manipulation and formatting. Store dates as UTC in database, convert to GST for display. Lease expiration countdown updates daily at midnight GST.
+    - Route Protection: Use Next.js middleware to protect /tenant/* routes. Verify user has TENANT role from JWT token. Redirect to /login if not authenticated. Follow pattern from Story 2.5 middleware implementation.
+    - Server vs Client Components: Dashboard page is Server Component for initial data fetch (faster load). Interactive sections are Client Components for state management. Use 'use client' directive only where needed for hooks/state.
+    - API Integration: Follow Axios interceptor pattern from Story 2.5. All API calls through centralized apiClient from lib/api.ts. Use React Query for caching and state management. Implement optimistic UI updates for better UX.
+    - Testing Standards: ALL interactive elements MUST have data-testid attributes. Convention: {component}-{element}-{action}. Mandatory for buttons, inputs, links, modals. Verified in code review before PR approval.
+    - Contact Management: Profile is read-only - tenant must contact property management for changes. All notifications sent via email only.
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>GET /api/v1/tenant/dashboard</name>
+      <kind>REST endpoint</kind>
+      <signature>
+        Response: {
+          currentUnit: {
+            propertyName: string,
+            address: string,
+            unitNumber: string,
+            floor: number,
+            bedrooms: number,
+            bathrooms: number,
+            leaseStartDate: string (ISO 8601),
+            leaseEndDate: string (ISO 8601),
+            daysRemaining: number,
+            leaseStatus: "ACTIVE" | "EXPIRING_SOON"
+          },
+          stats: {
+            outstandingBalance: number,
+            nextPaymentDue: {
+              date: string (ISO 8601),
+              amount: number
+            },
+            openRequestsCount: number,
+            upcomingBookingsCount: number
+          },
+          quickActions: [
+            { name: string, url: string, icon: string }
+          ]
+        }
+      </signature>
+      <path>backend/src/main/java/com/ultrabms/controller/TenantPortalController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/tenant/profile</name>
+      <kind>REST endpoint</kind>
+      <signature>
+        Response: {
+          tenant: {
+            id: UUID,
+            firstName: string,
+            lastName: string,
+            email: string,
+            phone: string,
+            dateOfBirth: string,
+            nationalId: string,
+            emergencyContactName: string,
+            emergencyContactPhone: string
+          },
+          lease: {
+            propertyName: string,
+            address: string,
+            unitNumber: string,
+            leaseType: "FIXED_TERM" | "MONTH_TO_MONTH" | "YEARLY",
+            startDate: string,
+            endDate: string,
+            duration: number (months),
+            baseRent: number,
+            serviceCharge: number,
+            parkingFee: number,
+            totalMonthlyRent: number,
+            securityDeposit: number,
+            paymentFrequency: "MONTHLY" | "QUARTERLY" | "ANNUAL",
+            paymentDueDate: number,
+            paymentMethod: string
+          },
+          parking: {
+            spots: number,
+            spotNumbers: string,
+            feePerSpot: number,
+            totalFee: number,
+            mulkiyaDocumentPath: string
+          },
+          documents: [
+            {
+              id: UUID,
+              type: "EMIRATES_ID" | "PASSPORT" | "VISA" | "SIGNED_LEASE" | "MULKIYA" | "OTHER",
+              fileName: string,
+              fileSize: number,
+              uploadedAt: string
+            }
+          ]
+        }
+      </signature>
+      <path>backend/src/main/java/com/ultrabms/controller/TenantPortalController.java</path>
+    </interface>
+    <interface>
+      <name>POST /api/v1/tenant/account/change-password</name>
+      <kind>REST endpoint</kind>
+      <signature>
+        Request: {
+          currentPassword: string,
+          newPassword: string
+        }
+        Response: 200 OK or 400 Bad Request with error
+      </signature>
+      <path>backend/src/main/java/com/ultrabms/controller/TenantPortalController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/tenant/lease/download</name>
+      <kind>REST endpoint</kind>
+      <signature>
+        Response: PDF file (Content-Type: application/pdf, Content-Disposition: attachment)
+      </signature>
+      <path>backend/src/main/java/com/ultrabms/controller/TenantPortalController.java</path>
+    </interface>
+    <interface>
+      <name>POST /api/v1/tenant/documents</name>
+      <kind>REST endpoint</kind>
+      <signature>
+        Request: multipart/form-data (file, optional type)
+        Response: TenantDocument { id, type, fileName, fileSize, uploadedAt }
+      </signature>
+      <path>backend/src/main/java/com/ultrabms/controller/TenantPortalController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/tenant/documents/{id}/download</name>
+      <kind>REST endpoint</kind>
+      <signature>
+        Response: File stream with Content-Type based on extension
+      </signature>
+      <path>backend/src/main/java/com/ultrabms/controller/TenantPortalController.java</path>
+    </interface>
+    <interface>
+      <name>useTenantDashboard()</name>
+      <kind>React Query hook</kind>
+      <signature>
+        Returns: { data: DashboardData, isLoading: boolean, error: Error }
+        Options: queryKey ['tenant', 'dashboard'], staleTime 5 minutes, refetchOnWindowFocus false
+      </signature>
+      <path>frontend/src/hooks/useTenantDashboard.ts</path>
+    </interface>
+    <interface>
+      <name>useTenantProfile()</name>
+      <kind>React Query hook</kind>
+      <signature>
+        Returns: { data: TenantProfile, isLoading: boolean, error: Error }
+        Options: queryKey ['tenant', 'profile'], staleTime 10 minutes, cache indefinitely until logout
+      </signature>
+      <path>frontend/src/hooks/useTenantProfile.ts</path>
+    </interface>
+    <interface>
+      <name>useChangePassword()</name>
+      <kind>React Query mutation hook</kind>
+      <signature>
+        Mutation function: (data: ChangePasswordFormData) => Promise&lt;void&gt;
+        onSuccess: invalidate queries, show toast, redirect to /login after 3 seconds
+      </signature>
+      <path>frontend/src/hooks/useChangePassword.ts</path>
+    </interface>
+    <interface>
+      <name>useUploadDocument()</name>
+      <kind>React Query mutation hook</kind>
+      <signature>
+        Mutation function: (file: File, type?: string) => Promise&lt;TenantDocument&gt;
+        onSuccess: invalidate ['tenant', 'profile'], refetch documents list
+      </signature>
+      <path>frontend/src/hooks/useUploadDocument.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing framework: Jest for unit tests, Playwright for E2E tests. All interactive elements require data-testid
+      attributes following convention: {component}-{element}-{action}. Backend tests: JUnit 5 with Mockito for unit
+      tests, TestContainers for integration tests. Target coverage: ≥80% for new code. E2E tests verify complete user
+      flows from login to task completion. Run scripts/check-services.sh before E2E tests to ensure backend/frontend running.
+    </standards>
+    <locations>
+      - frontend/src/components/**/__tests__/*.test.tsx
+      - frontend/src/hooks/__tests__/*.test.ts
+      - frontend/src/services/__tests__/*.test.ts
+      - backend/src/test/java/com/ultrabms/controller/*Test.java
+      - backend/src/test/java/com/ultrabms/service/*Test.java
+      - e2e/tenant-portal.spec.ts
+    </locations>
+    <ideas>
+      <test id="AC1">
+        Dashboard route accessible at /tenant/dashboard. Redirects to /login if not authenticated.
+        Uses Next.js App Router with (dashboard) route group. Server component fetches initial data.
+        Tests: Navigate to dashboard → verify redirect if not logged in → login as tenant → verify dashboard loads.
+      </test>
+      <test id="AC2">
+        Dashboard welcome section displays correctly. Welcome message shows tenant first name. Unit information
+        card shows property, unit, lease details, countdown timer.
+        Tests: Mock tenant data → render dashboard → verify welcome message "Welcome back, {firstName}!" →
+        verify unit card displays all fields → verify days remaining calculation.
+      </test>
+      <test id="AC3">
+        Quick stats cards show correct data. Outstanding balance, next payment, open requests, upcoming bookings.
+        Tests: Mock dashboard API → render stats → verify all 4 cards display → verify currency formatting (AED) →
+        verify clickable cards navigate to correct pages.
+      </test>
+      <test id="AC9">
+        Account settings password change works. Form validates current password, new password complexity,
+        confirm password match. On success, redirects to login.
+        Tests: Fill password form with valid data → submit → verify API called → verify toast shown →
+        verify redirect to /login. Test validation: weak password rejected, mismatch rejected.
+      </test>
+      <test id="AC10">
+        Document repository displays and allows uploads. Drag-and-drop zone accepts PDF/JPG/PNG, max 5MB.
+        Lists existing documents with download links.
+        Tests: Upload document → verify progress bar → verify added to table → download document →
+        verify file streams. Test validation: reject >5MB file, reject invalid type.
+      </test>
+      <test id="AC12">
+        Responsive design works across breakpoints. Mobile: single column, bottom nav. Tablet: 2-col grid,
+        side nav. Desktop: 3-col grid, full tables.
+        Tests: Resize viewport to 320px, 768px, 1024px, 1440px → verify layout changes → verify touch targets
+        ≥44x44px on mobile → verify bottom nav visible on mobile only.
+      </test>
+      <test id="AC13">
+        React Query caching works. Dashboard data cached for 5 minutes, profile for 10 minutes. Mutations
+        invalidate queries.
+        Tests: Load dashboard → check network tab for API call → reload within 5 min → verify no API call →
+        wait >5 min → verify refetch. Change password → verify invalidation → verify refetch.
+      </test>
+      <test id="AC15">
+        Accessibility requirements met. All interactive elements have data-testid. Keyboard navigation works.
+        ARIA labels present. Color contrast ≥4.5:1.
+        Tests: Tab through all elements → verify focus indicators → verify screen reader announces labels →
+        run Lighthouse accessibility audit → verify AA compliance.
+      </test>
+    </ideas>
+  </tests>
+</story-context>

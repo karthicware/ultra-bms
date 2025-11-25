@@ -1,0 +1,343 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>4</storyId>
+    <title>Job Progress Tracking and Completion</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-25T18:51:08+04:00</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-4/4-4-job-progress-tracking-and-completion.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a maintenance staff or vendor</asA>
+    <iWant>to update job progress and mark work as complete</iWant>
+    <soThat>work completion is tracked</soThat>
+    <tasks>
+- Task 1: Define TypeScript Types, Enums, and Schemas
+- Task 2: Implement Backend WorkOrderProgress Entity
+- Task 3: Implement Backend Start Work API Endpoint
+- Task 4: Implement Backend Add Progress Update API Endpoint
+- Task 5: Implement Backend Mark Complete API Endpoint
+- Task 6: Implement Backend Timeline API Endpoint
+- Task 7: Implement Email Notification Templates
+- Task 8: Add Start Work Button to Work Order Detail Page
+- Task 9: Create Progress Update Section and Dialog
+- Task 10: Create Mark as Complete Dialog
+- Task 11: Add Mark as Complete Button to Work Order Detail Page
+- Task 12: Create Photo Gallery Component
+- Task 13: Create Before/After Comparison Component
+- Task 14: Create Progress Timeline Component
+- Task 15: Update Work Order Detail Page UI
+- Task 16: Implement Mobile Optimization
+- Task 17: Implement Role-Based Cost Visibility
+- Task 18: Implement Follow-up Tracking
+- Task 19: Add Accessibility Features
+- Task 20: Write Unit and Integration Tests
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+AC1: Start Work Button and Access Control - Button accessible from work order detail page, displayed when status=ASSIGNED and user is assignee, uses shadcn Button with Play icon, disabled if conditions not met, tooltip on hover, data-testid="btn-start-work"
+
+AC2: Start Work Flow and Backend Processing - Confirmation dialog on click, PATCH /api/v1/work-orders/{id}/start updates status to IN_PROGRESS, sets startedAt timestamp, creates timeline entry, sends email to property manager, returns success response, optimistic UI update
+
+AC3: Progress Update Section Structure - Visible when status=IN_PROGRESS, displays timeline of progress notes, "Add Progress Update" button, before/during photo galleries, empty state message, data-testid="section-progress-updates"
+
+AC4: Add Progress Update Dialog - Modal dialog 600px width (full-screen mobile), sections for progress notes, photo upload, estimated completion date, action buttons, React Hook Form validation, data-testid="dialog-add-progress-update"
+
+AC5: Progress Notes Field - Textarea required, max 500 chars, character counter, placeholder with examples, data-testid="textarea-progress-notes"
+
+AC6: Upload Progress Photos - File upload for images (jpeg/png/webp), multiple files (max 5), max 5MB per photo, compress to ~1MB, photo previews with remove button, upload progress bar, labeled as "During" photos, data-testid="input-progress-photos"
+
+AC7: Update Estimated Completion Date - Date picker optional, default to current scheduledDate, validation ≥ today, format "dd MMM yyyy", data-testid="calendar-estimated-completion"
+
+AC8: Progress Update Form Validation - Zod schema: progressNotes (required, 1-500 chars), photos (optional, max 5, max 5MB each), estimatedCompletionDate (optional, ≥ today), React Hook Form with zodResolver, submit button with loading state, data-testid="btn-save-progress-update"
+
+AC9: Progress Update Backend Processing - POST /api/v1/work-orders/{id}/progress with multipart/form-data, creates WorkOrderProgress entity, uploads photos to S3 (/work-orders/{workOrderId}/progress/), updates scheduledDate if provided, creates timeline entry, sends email notification, returns success response
+
+AC10: Post-Progress Update Flow - On success: close dialog, show toast, invalidate React Query cache, update timeline UI optimistically, clear form. On failure: show error toast, keep dialog open, enable retry
+
+AC11: Mark as Complete Button - Shown when status=IN_PROGRESS and user is assignee, shadcn Button success variant (green) with CheckCircle icon, data-testid="btn-mark-complete", opens completion dialog
+
+AC12: Completion Dialog Structure - Modal 700px width (full-screen mobile), sections for completion notes, after photos, time/cost, recommendations, follow-up, React Hook Form validation, data-testid="dialog-mark-complete"
+
+AC13: Completion Notes Field - Textarea required, min 20 chars, max 1000 chars, character counter, examples provided, data-testid="textarea-completion-notes"
+
+AC14: Upload After Photos - File upload required, min 1 photo, max 5 photos, accept jpeg/png/webp, max 5MB per photo, compress to ~1MB, photo previews, upload progress, validation error if no photos, labeled as "After" photos, data-testid="input-after-photos"
+
+AC15: Time and Cost Fields - Two number inputs: "Total Hours Spent" (required, decimal, min 0.1, max 999, step 0.5) and "Total Cost" (required, decimal, min 0, max 999999, step 0.01, currency "AED"), data-testid="input-hours-spent" and "input-total-cost"
+
+AC16: Recommendations Field - Textarea optional, max 500 chars, character counter, placeholder with examples, data-testid="textarea-recommendations"
+
+AC17: Follow-up Required Section - Checkbox "Follow-up Required", if checked shows textarea "Follow-up Description" (required, max 200 chars), data-testid="checkbox-follow-up-required" and "textarea-follow-up-description"
+
+AC18: Completion Form Validation - Zod schema: completionNotes (required, 20-1000 chars), afterPhotos (required, 1-5 files, max 5MB each), hoursSpent (required, 0.1-999), totalCost (required, 0-999999), recommendations (optional, max 500 chars), followUpRequired (boolean), followUpDescription (required if followUpRequired, max 200 chars), React Hook Form, submit button with loading state, data-testid="btn-submit-completion"
+
+AC19: Completion Backend Processing - PATCH /api/v1/work-orders/{id}/complete with multipart/form-data, updates WorkOrder (status=COMPLETED, completedAt, completionNotes, hoursSpent, totalCost, recommendations, followUpRequired, followUpDescription), uploads after photos to S3 (/work-orders/{workOrderId}/after/), creates timeline entry, sends email to property manager and tenant, returns success response
+
+AC20: Post-Completion Flow - On success: close dialog, show toast, invalidate cache, update UI optimistically (status badge, completion details, before/after comparison, timeline). On failure: show error toast, keep dialog open, enable retry
+
+AC21: Photo Gallery and Before/After Comparison - Three sections: Before Photos, During Photos (with timestamps), After Photos. Before/after comparison view: side-by-side on desktop, stacked on mobile, slider control, zoom, full-screen lightbox, uses shadcn Card, empty states, data-testid="gallery-work-order-photos"
+
+AC22: Progress Timeline Display - Complete timeline showing all events chronologically (newest first): Created, Assigned, Started, Progress Updates, Completed. Each entry with icon, timestamp ("dd MMM yyyy HH:mm"), user avatar/name, details. Uses shadcn Card, data-testid="timeline-work-order-progress"
+
+AC23: Mobile-Friendly Interface - Touch-optimized buttons (≥44×44px), camera integration (input type="file" capture="environment"), file upload on mobile, optimized form inputs, vertical timeline on mobile, swipeable photo carousel, tested on 375px/768px/1440px viewports
+
+AC24: Photo Compression Before Upload - Client-side compression using browser-image-compression library, compress to max 1MB (quality: 0.8, maxWidthOrHeight: 1920), show compression progress, handle errors gracefully, automatic on file selection
+
+AC25: Cost Visibility and Role-Based Access - Cost field (totalCost) visible only to PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR. Hidden from TENANT role. Backend excludes cost fields for tenant users. Frontend conditional rendering based on user role. Hours spent visible to all roles
+
+AC26: Backend API Endpoints - PATCH /api/v1/work-orders/{id}/start (starts work, updates status, sets startedAt, sends notification), POST /api/v1/work-orders/{id}/progress (adds progress update, creates WorkOrderProgress, uploads photos, updates timeline, sends notification), PATCH /api/v1/work-orders/{id}/complete (marks complete, updates status, sets completion fields, uploads photos, sends notifications), GET /api/v1/work-orders/{id}/timeline (returns complete timeline ordered by timestamp DESC, role-based filtering). All require authentication, start/progress/complete require user to be assignee
+
+AC27: Email Notifications - Work Started: send to property manager with WO details, assignee, start time. Progress Update: send to property manager with notes, photos, updated completion date. Work Completed: send to property manager and tenant with completion notes, before/after photos, hours/cost (manager only), recommendations, follow-up flag. All emails sent asynchronously (@Async), use HTML templates, log status in audit_logs
+
+AC28: TypeScript Types and Schemas - Create types/work-order-progress.ts with WorkOrderProgress, AddProgressUpdateRequest, MarkCompleteRequest, TimelineEntry interfaces. Define enum TimelineEntryType. Create lib/validations/work-order-progress.ts with addProgressUpdateSchema, markCompleteSchema (Zod). Update services/work-order.service.ts with progress tracking methods
+
+AC29: Responsive Design and Accessibility - Responsive: Mobile (<640px) full-screen dialogs, single column, full-width fields, ≥44×44px touch targets, stacked photos, vertical timeline, swipeable gallery. Tablet (640px-1024px) centered dialogs 700px, 2-column time/cost. Desktop (>1024px) centered dialogs, hover states. Accessibility: data-testid on all elements, keyboard navigation (Tab/Enter/Escape), ARIA labels (role="dialog", aria-label, aria-describedby, aria-live="polite", aria-busy="true"), screen reader announcements, color contrast ≥4.5:1, visible focus indicators
+
+AC30: Follow-up Tracking and Display - If followUpRequired=true: display banner on work order detail page (yellow/orange background, AlertCircle icon, follow-up description, "Create Follow-up Work Order" button). Banner visible only to property managers and supervisors. data-testid="banner-follow-up-required". Implement filter: GET /api/v1/work-orders?followUpRequired=true
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics/epic-4-maintenance-operations.md</path>
+        <title>Epic 4: Maintenance Operations</title>
+        <section>Story 4.4: Job Progress Tracking and Completion</section>
+        <snippet>Three-stage workflow: Start Work (ASSIGNED → IN_PROGRESS), Update Progress (add notes, photos, estimated completion), Mark Complete (IN_PROGRESS → COMPLETED with completion notes, after photos, hours, cost, recommendations, follow-up tracking)</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Frontend Implementation Patterns</title>
+        <section>Form Pattern with React Hook Form + Zod</section>
+        <snippet>Use React Hook Form with zodResolver for form validation. Define Zod schemas for validation rules. Implement inline validation errors with focus on first error field. Show loading states during submission.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - File Storage</title>
+        <section>AWS S3 Integration</section>
+        <snippet>Store attachments in S3 with organized paths. Photo compression before upload (max 1MB per photo). Use FileStorageService for S3 uploads. Bucket structure: ultra-bms-documents, ultra-bms-assets.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Email Service</title>
+        <section>Spring Mail + @Async</section>
+        <snippet>Send email notifications asynchronously using Spring @Async. HTML templates in resources/templates/. Log email sending status in audit_logs. Notifications sent on status changes.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - REST API Conventions</title>
+        <section>API Response Format</section>
+        <snippet>All APIs return consistent structure: {success, data, message, timestamp}. Error response: {success: false, error: {code, message, field}, timestamp}. Status codes: 200 OK, 201 Created, 400 Bad Request, 404 Not Found.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Date and Time Handling</title>
+        <section>Date Formatting</section>
+        <snippet>Storage: UTC timezone in database. API: ISO 8601 format. Display: Convert to user timezone in frontend. Use date-fns for formatting: format(date, 'dd MMM yyyy HH:mm').</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Role-Based Access Control</title>
+        <section>RBAC Roles</section>
+        <snippet>Roles: SUPER_ADMIN, PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR, FINANCE_MANAGER, TENANT, VENDOR. Permission model: Resource + Action. Cost fields visible only to PROPERTY_MANAGER and MAINTENANCE_SUPERVISOR.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic-4/4-1-work-order-creation-and-management.md</path>
+        <title>Story 4.1: Work Order Creation and Management</title>
+        <section>File Upload Pattern</section>
+        <snippet>Photo upload with compression using browser-image-compression library. Upload to S3 with FileStorageService. Max 5 photos per upload, max 5MB per photo before compression, compress to ~1MB.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic-4/4-2-preventive-maintenance-scheduling.md</path>
+        <title>Story 4.2: Preventive Maintenance Scheduling</title>
+        <section>Email Notification Pattern</section>
+        <snippet>Spring Mail + @Async for asynchronous email sending. HTML templates for notifications. Log email status in audit_logs. Send notifications on PM schedule events.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>frontend/src/types/work-orders.ts</path>
+        <kind>type-definitions</kind>
+        <symbol>WorkOrder, WorkOrderStatus</symbol>
+        <lines>1-100</lines>
+        <reason>Existing work order types to extend with progress tracking fields (startedAt, completedAt, completionNotes, hoursSpent, totalCost, recommendations, followUpRequired, followUpDescription)</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/work-orders.service.ts</path>
+        <kind>service</kind>
+        <symbol>WorkOrderService</symbol>
+        <lines>1-200</lines>
+        <reason>Existing work order service to extend with progress tracking methods: startWork(), addProgressUpdate(), markComplete(), getTimeline()</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/schemas/workOrderSchemas.ts</path>
+        <kind>validation-schemas</kind>
+        <symbol>workOrderSchemas</symbol>
+        <lines>1-100</lines>
+        <reason>Existing Zod schemas to extend with addProgressUpdateSchema and markCompleteSchema for form validation</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <frontend>
+        <package name="react-hook-form" version="^7.66.0" usage="Form management for progress update and completion dialogs" />
+        <package name="zod" version="^4.1.12" usage="Schema validation for addProgressUpdateSchema and markCompleteSchema" />
+        <package name="@hookform/resolvers" version="^5.2.2" usage="zodResolver for React Hook Form integration" />
+        <package name="browser-image-compression" version="^2.0.2" usage="Client-side photo compression before upload (compress to max 1MB, quality 0.8)" />
+        <package name="date-fns" version="^4.1.0" usage="Date formatting for timestamps: format(date, 'dd MMM yyyy HH:mm')" />
+        <package name="@tanstack/react-query" version="^5.90.9" usage="Data fetching, caching, optimistic updates for work order mutations" />
+        <package name="lucide-react" version="^0.553.0" usage="Icons: Play (start work), CheckCircle (complete), AlertCircle (follow-up), MessageSquare (progress)" />
+        <package name="axios" version="^1.13.2" usage="HTTP client for API calls with multipart/form-data support" />
+        <package name="@radix-ui/react-dialog" version="^1.1.4" usage="shadcn Dialog component for progress update and completion modals" />
+        <package name="@radix-ui/react-alert-dialog" version="^1.1.15" usage="shadcn Alert Dialog for start work confirmation" />
+        <package name="@radix-ui/react-checkbox" version="^1.3.3" usage="shadcn Checkbox for follow-up required field" />
+        <package name="@radix-ui/react-progress" version="^1.1.8" usage="shadcn Progress component for photo upload progress bars" />
+        <package name="sonner" version="^2.0.7" usage="Toast notifications for success/error messages" />
+      </frontend>
+      <backend>
+        <package name="spring-boot-starter-web" version="3.4.7" usage="REST API endpoints for work order progress tracking" />
+        <package name="spring-boot-starter-data-jpa" version="3.4.7" usage="WorkOrderProgress entity and repository" />
+        <package name="spring-boot-starter-mail" version="3.4.7" usage="Email notifications for status changes" />
+        <package name="aws-java-sdk-s3" version="latest" usage="S3 file storage for progress photos and after photos" />
+      </backend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="status-progression">
+      <rule>ASSIGNED → IN_PROGRESS (when "Start Work" clicked)</rule>
+      <rule>IN_PROGRESS → COMPLETED (when "Mark as Complete" submitted)</rule>
+      <rule>Cannot start work if status ≠ ASSIGNED</rule>
+      <rule>Cannot add progress if status ≠ IN_PROGRESS</rule>
+      <rule>Cannot mark complete if status ≠ IN_PROGRESS</rule>
+      <rule>Only assignee can start work, add progress, mark complete</rule>
+    </constraint>
+    <constraint type="photo-requirements">
+      <rule>Before photos: optional (uploaded when starting work)</rule>
+      <rule>During photos: optional (uploaded in progress updates, max 5 per update)</rule>
+      <rule>After photos: required (min 1 photo, max 5 photos on completion)</rule>
+      <rule>Max file size: 5MB per photo (before compression)</rule>
+      <rule>Compressed to: ~1MB per photo (quality: 0.8, maxWidthOrHeight: 1920)</rule>
+      <rule>Accepted formats: image/jpeg, image/png, image/webp</rule>
+    </constraint>
+    <constraint type="completion-requirements">
+      <rule>Completion notes: required, min 20 chars, max 1000 chars</rule>
+      <rule>After photos: required, min 1 photo, max 5 photos</rule>
+      <rule>Hours spent: required, decimal, min 0.1, max 999</rule>
+      <rule>Total cost: required, decimal, min 0, max 999999</rule>
+      <rule>Recommendations: optional, max 500 chars</rule>
+      <rule>Follow-up required: optional checkbox</rule>
+      <rule>Follow-up description: required if checkbox checked, max 200 chars</rule>
+    </constraint>
+    <constraint type="role-based-access">
+      <rule>Cost fields (totalCost) visible only to PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR</rule>
+      <rule>Hours spent visible to all roles</rule>
+      <rule>Completion notes visible to all roles</rule>
+      <rule>Follow-up banner visible only to managers and supervisors (not tenants)</rule>
+      <rule>Backend API excludes cost fields from response for tenant users</rule>
+      <rule>Frontend conditionally renders based on user role from auth context</rule>
+    </constraint>
+    <constraint type="email-notifications">
+      <rule>Work started: send to property manager</rule>
+      <rule>Progress update: send to property manager</rule>
+      <rule>Work completed: send to property manager and tenant</rule>
+      <rule>All emails sent asynchronously (@Async)</rule>
+      <rule>Include photos (thumbnails) in emails</rule>
+      <rule>Completion email includes before/after comparison</rule>
+    </constraint>
+    <constraint type="s3-storage">
+      <rule>Before photos path: /work-orders/{workOrderId}/before/{timestamp}_{filename}</rule>
+      <rule>Progress photos path: /work-orders/{workOrderId}/progress/{timestamp}_{filename}</rule>
+      <rule>After photos path: /work-orders/{workOrderId}/after/{timestamp}_{filename}</rule>
+    </constraint>
+  </constraints>
+  <interfaces>
+    <api>
+      <endpoint method="PATCH" path="/api/v1/work-orders/{id}/start">
+        <description>Start work on assigned work order</description>
+        <request>No body required</request>
+        <response>{success: true, data: {workOrderId, status: "IN_PROGRESS", startedAt}}</response>
+        <auth>Required - user must be assignee</auth>
+      </endpoint>
+      <endpoint method="POST" path="/api/v1/work-orders/{id}/progress">
+        <description>Add progress update with notes, photos, estimated completion</description>
+        <request>multipart/form-data: {progressNotes (string), photos (File[]), estimatedCompletionDate (date)}</request>
+        <response>{success: true, data: {progressUpdateId, createdAt, photoUrls}}</response>
+        <auth>Required - user must be assignee</auth>
+      </endpoint>
+      <endpoint method="PATCH" path="/api/v1/work-orders/{id}/complete">
+        <description>Mark work order as complete with completion details</description>
+        <request>multipart/form-data: {completionNotes, afterPhotos (File[]), hoursSpent, totalCost, recommendations, followUpRequired, followUpDescription}</request>
+        <response>{success: true, data: {workOrderId, status: "COMPLETED", completedAt, totalCost, hoursSpent}}</response>
+        <auth>Required - user must be assignee</auth>
+      </endpoint>
+      <endpoint method="GET" path="/api/v1/work-orders/{id}/timeline">
+        <description>Get complete timeline of work order events</description>
+        <request>No body required</request>
+        <response>{success: true, data: {timeline: [{type, timestamp, userId, userName, details, photoUrls}]}}</response>
+        <auth>Required - accessible to property managers, supervisors, assignees, tenants (cost fields excluded for tenants)</auth>
+      </endpoint>
+    </api>
+    <components>
+      <component name="ProgressUpdateDialog">
+        <props>workOrderId: string, isOpen: boolean, onClose: () => void, onSuccess: () => void</props>
+        <description>Reusable dialog for adding progress updates with notes, photos, estimated completion date</description>
+      </component>
+      <component name="CompletionDialog">
+        <props>workOrderId: string, isOpen: boolean, onClose: () => void, onSuccess: () => void</props>
+        <description>Reusable dialog for marking work order complete with all required fields</description>
+      </component>
+      <component name="ProgressTimeline">
+        <props>workOrderId: string</props>
+        <description>Timeline display component showing all work order events chronologically</description>
+      </component>
+      <component name="PhotoGallery">
+        <props>beforePhotos: string[], duringPhotos: {url: string, timestamp: string}[], afterPhotos: string[]</props>
+        <description>Photo gallery with three sections: Before, During, After photos with lightbox view</description>
+      </component>
+      <component name="BeforeAfterComparison">
+        <props>beforePhoto: string, afterPhoto: string</props>
+        <description>Side-by-side photo comparison with slider control and zoom</description>
+      </component>
+      <component name="FollowUpBanner">
+        <props>followUpDescription: string, workOrderId: string</props>
+        <description>Banner showing follow-up required with action button to create follow-up work order</description>
+      </component>
+    </components>
+  </interfaces>
+  <tests>
+    <standards>
+      <standard>All interactive elements MUST have data-testid attributes following convention: {component}-{element}-{action}</standard>
+      <standard>Use Jest + React Testing Library for component tests</standard>
+      <standard>Use Playwright for E2E tests (Story 4.4.e2e)</standard>
+      <standard>Mock API calls with MSW (Mock Service Worker)</standard>
+      <standard>Test form validation errors display correctly</standard>
+      <standard>Test photo compression functionality</standard>
+      <standard>Test role-based cost visibility</standard>
+      <standard>Achieve ≥ 80% code coverage for new code</standard>
+      <standard>Verify servers running before E2E tests (scripts/check-services.sh)</standard>
+    </standards>
+    <locations>
+      <location>frontend/src/__tests__/components/work-orders/</location>
+      <location>frontend/e2e/work-orders/</location>
+      <location>backend/src/test/java/com/ultrabms/controller/</location>
+      <location>backend/src/test/java/com/ultrabms/service/</location>
+    </locations>
+    <ideas>
+      <test-idea ac="AC1, AC2">Test start work button visibility and confirmation dialog flow</test-idea>
+      <test-idea ac="AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10">Test progress update dialog with form validation, photo upload, and submission</test-idea>
+      <test-idea ac="AC11, AC12, AC13, AC14, AC15, AC16, AC17, AC18, AC19, AC20">Test completion dialog with all required fields, photo upload, and validation</test-idea>
+      <test-idea ac="AC21">Test photo gallery displays before/during/after photos with lightbox and comparison view</test-idea>
+      <test-idea ac="AC22">Test progress timeline displays all events chronologically with correct icons and timestamps</test-idea>
+      <test-idea ac="AC23">Test mobile-friendly interface with touch-optimized buttons and camera integration</test-idea>
+      <test-idea ac="AC24">Test photo compression before upload reduces file size to ~1MB</test-idea>
+      <test-idea ac="AC25">Test cost visibility based on user role (visible to managers, hidden from tenants)</test-idea>
+      <test-idea ac="AC26">Test backend API endpoints return correct responses and handle errors</test-idea>
+      <test-idea ac="AC27">Test email notifications sent at each status change with correct content</test-idea>
+      <test-idea ac="AC28">Test TypeScript types and schemas validate correctly</test-idea>
+      <test-idea ac="AC29">Test responsive design and accessibility features (keyboard navigation, ARIA labels, screen reader)</test-idea>
+      <test-idea ac="AC30">Test follow-up tracking displays banner and creates follow-up work order</test-idea>
+    </ideas>
+  </tests>
+</story-context>

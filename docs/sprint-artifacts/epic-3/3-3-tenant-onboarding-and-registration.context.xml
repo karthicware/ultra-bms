@@ -1,0 +1,380 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>3</storyId>
+    <title>Tenant Onboarding and Registration</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-3/3-3-tenant-onboarding-and-registration.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>property manager</asA>
+    <iWant>to onboard new tenants with complete information capture</iWant>
+    <soThat>I have all necessary details for lease management and compliance</soThat>
+    <tasks>
+      <task id="1">Define TypeScript Types and Enums (AC: #13)</task>
+      <task id="2">Create Zod Validation Schemas (AC: #12, #13)</task>
+      <task id="3">Implement Tenant Service Layer (AC: #13)</task>
+      <task id="4">Create Multi-Step Wizard Container (AC: #1)</task>
+      <task id="5">Implement Step 1 - Personal Information (AC: #2)</task>
+      <task id="6">Implement Step 2 - Lease Information (AC: #3)</task>
+      <task id="7">Implement Step 3 - Rent Breakdown (AC: #4)</task>
+      <task id="8">Implement Step 4 - Parking Allocation (AC: #5)</task>
+      <task id="9">Implement Step 5 - Payment Schedule (AC: #6)</task>
+      <task id="10">Implement Step 6 - Document Upload (AC: #7)</task>
+      <task id="11">Implement Step 7 - Review and Submit (AC: #8)</task>
+      <task id="12">Implement Lead Conversion Pre-population (AC: #14)</task>
+      <task id="13">Backend - Tenant Entity and API (AC: #9)</task>
+      <task id="14">Backend - User Account Creation (AC: #10)</task>
+      <task id="15">Backend - Unit Update and Notifications (AC: #11)</task>
+      <task id="16">Add Responsive Design and Accessibility (AC: #15)</task>
+      <task id="17">Write Tests (AC: #15)</task>
+      <task id="18">Documentation</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="AC1">Multi-Step Wizard Structure: 7-step wizard at /tenants/create with tabs navigation, visual progress (1/7), back button, React Hook Form state persistence</ac>
+    <ac id="AC2">Personal Information Step: firstName, lastName, email (unique), phone (E.164), dateOfBirth (age ≥ 18), nationalId, nationality, emergencyContact with shadcn components</ac>
+    <ac id="AC3">Lease Information Step: propertyId, unitId (AVAILABLE only), leaseStartDate (≥ today), leaseEndDate, leaseDuration (auto-calc), leaseType, renewalOption</ac>
+    <ac id="AC4">Rent Breakdown Step: baseRent, adminFee, serviceCharge, securityDeposit with real-time totalMonthlyRent calculation (baseRent + serviceCharge + parking fees)</ac>
+    <ac id="AC5">Parking Allocation (Optional): parkingSpots (0-10), parkingFeePerSpot, spotNumbers, mulkiyaDocument upload (single file, PDF/JPG/PNG, 5MB max)</ac>
+    <ac id="AC6">Payment Schedule Step: paymentFrequency (MONTHLY/QUARTERLY/YEARLY), paymentDueDate (1-31), paymentMethod, pdcChequeCount (if PDC)</ac>
+    <ac id="AC7">Document Upload Step: Required: emiratesId, passport, signedLease (PDF 10MB). Optional: visa, additionalDocuments. File validation, drag-and-drop with react-dropzone</ac>
+    <ac id="AC8">Review and Submit: Display all sections, edit buttons per section, confirmation dialog, submit creates tenant, shows success toast, redirects to /tenants/{id}</ac>
+    <ac id="AC9">Backend Tenant Creation: Tenant entity with userId FK, lease details, payment schedule, tenantNumber (TNT-2025-XXXX), transaction rollback on failure</ac>
+    <ac id="AC10">User Account Creation: Create User with TENANT role, BCrypt password (12 chars), send welcome email with credentials and reset link using Spring Mail</ac>
+    <ac id="AC11">Unit Status Update: Change unit status to OCCUPIED, send lease agreement email if document uploaded, log activity in audit_logs</ac>
+    <ac id="AC12">Form Validation: Zod client-side (age, email uniqueness, dates, file size/type), server-side @Valid with field errors</ac>
+    <ac id="AC13">TypeScript Types: types/tenant.ts with Tenant, TenantDocument, enums (LeaseType, PaymentFrequency, PaymentMethod, DocumentType), lib/validations/tenant.ts with 7-step schemas</ac>
+    <ac id="AC14">Lead Conversion: Pre-populate from /tenants/create?fromLead&fromQuotation query params, link tenant to lead/quotation, update statuses to CONVERTED</ac>
+    <ac id="AC15">Responsive & Accessible: Mobile/tablet/desktop responsive, ARIA labels, keyboard navigation, focus management, dark theme support, all elements have data-testid</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics/epic-3-tenant-management-portal.md</path>
+        <title>Epic 3: Tenant Management & Portal</title>
+        <section>Story 3.3: Tenant Onboarding and Registration</section>
+        <snippet>Complete specification for 7-step tenant onboarding wizard including personal info, lease details, rent breakdown, parking allocation (optional with Mulkiya upload), payment schedule, document upload (Emirates ID, passport, visa, signed lease), and review/submit. Includes lead-to-tenant conversion flow, validation rules, and backend entity creation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>3.3 Tenant Management Module - 3.3.1 Tenant Onboarding</section>
+        <snippet>Tenant onboarding captures personal information, lease terms, rent breakdown, unit assignment, parking allocation, payment schedule, and document attachments. Features include automated lease generation, digital signatures, welcome packets, and access management.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Documentation</title>
+        <section>Frontend Implementation Patterns</section>
+        <snippet>React Hook Form + Zod validation pattern, shadcn/ui component library, TypeScript strict mode, Next.js App Router with server/client components, API client with Axios and JWT auth, form pattern with zodResolver.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Documentation</title>
+        <section>Backend Implementation Patterns</section>
+        <snippet>Spring Boot service pattern with @Transactional, controller with @Valid validation, repository extending JpaRepository, DTO pattern with records, exception handling with @ControllerAdvice, BCrypt password hashing.</snippet>
+      </doc>
+      <doc>
+        <path>docs/development/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Component Library: shadcn/ui</section>
+        <snippet>Form components: form, input, select, calendar, checkbox, radio-group, button, label. Layout: tabs (wizard navigation), card, accordion (mobile review), dialog (confirmation). Feedback: sonner/toast, alert, skeleton (loading). Accessibility: WCAG 2.1 AA compliance, keyboard navigation, ARIA labels.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic-3/3-1-lead-management-and-quotation-system.md</path>
+        <title>Story 3.1: Lead Management and Quotation System</title>
+        <section>Patterns to Reuse</section>
+        <snippet>Established patterns from Story 3.1: React Hook Form + Zod validation, API service layer (leads.service.ts), real-time calculations, file upload validation (FormData with File type), currency formatting (formatCurrency helper), date validation, debounced API calls (300ms), conditional form fields. File references: lib/validations/leads.ts (Emirates ID regex, E.164 phone, email RFC 5322), lib/api.ts (Axios with auth), components/forms/submit-button.tsx (loading state).</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>frontend/src/lib/validations/leads.ts</path>
+        <kind>validation</kind>
+        <symbol>emiratesIdRegex, e164PhoneRegex, emailSchema, passportNumberSchema</symbol>
+        <lines>1-100</lines>
+        <reason>Reusable validation patterns for Emirates ID (XXX-XXXX-XXXXXXX-X), E.164 phone (+971XXXXXXXXX), RFC 5322 email, passport number. Use these exact patterns for tenant personal info validation.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/lib/validations/leads.ts</path>
+        <kind>validation</kind>
+        <symbol>uploadDocumentSchema</symbol>
+        <lines>145-165</lines>
+        <reason>File upload validation: File instanceof, size ≤ 5MB, type validation (PDF/JPG/PNG). Reuse for tenant document uploads (Emirates ID, passport, visa). Note: Signed lease has 10MB limit.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/leads.service.ts</path>
+        <kind>service</kind>
+        <symbol>uploadDocument</symbol>
+        <lines>192-225</lines>
+        <reason>File upload pattern using FormData with File type. Example of multipart/form-data API call with proper error handling. Adapt for tenant document upload service method.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/lib/api.ts</path>
+        <kind>api-client</kind>
+        <symbol>apiClient</symbol>
+        <lines>1-156</lines>
+        <reason>Axios instance configured with JWT Bearer token auth, CSRF token handling, automatic token refresh on 401, request/response interceptors. Base pattern for all tenant service API calls.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/app/(dashboard)/leads/create/page.tsx</path>
+        <kind>component</kind>
+        <symbol>LeadCreatePage</symbol>
+        <lines>50-70</lines>
+        <reason>React Hook Form + Zod pattern: useForm with zodResolver, form state management, validation error display with shadcn Form components. Template for tenant wizard step components.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/app/(dashboard)/leads/[id]/page.tsx</path>
+        <kind>component</kind>
+        <symbol>handleUploadDocument</symbol>
+        <lines>112-132</lines>
+        <reason>File upload handler pattern: useState for file selection, FormData submission, loading state, success/error toast notifications, form reset after upload. Use for tenant document upload step.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/leads.ts</path>
+        <kind>types</kind>
+        <symbol>DocumentType enum</symbol>
+        <lines>60-75</lines>
+        <reason>DocumentType enum pattern (EMIRATES_ID, PASSPORT, VISA). Create similar enums for tenant: LeaseType, PaymentFrequency, PaymentMethod, DocumentType matching backend Java enums.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/components/ui/form.tsx</path>
+        <kind>component</kind>
+        <symbol>Form, FormField, FormItem, FormLabel, FormControl, FormMessage</symbol>
+        <lines>1-160</lines>
+        <reason>shadcn Form components for React Hook Form integration. Use these for all 7 wizard step forms to ensure consistent validation error display and accessibility.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/components/ui/tabs.tsx</path>
+        <kind>component</kind>
+        <symbol>Tabs, TabsList, TabsTrigger, TabsContent</symbol>
+        <lines>all</lines>
+        <reason>shadcn Tabs component for multi-step wizard navigation. Use for 7-step wizard structure with visual progress indicator showing current step (1/7).</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/components/ui/calendar.tsx</path>
+        <kind>component</kind>
+        <symbol>Calendar</symbol>
+        <lines>all</lines>
+        <reason>shadcn Calendar component (react-day-picker) for date selection. Use for dateOfBirth, leaseStartDate, leaseEndDate with validation (age ≥ 18, leaseEnd > leaseStart).</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/quotations.ts</path>
+        <kind>types</kind>
+        <symbol>LeadConversionResponse</symbol>
+        <lines>289-300</lines>
+        <reason>Lead conversion response structure from Story 3.1. Use to understand data available when tenant creation is triggered from /tenants/create?fromLead=&fromQuotation= for form pre-population.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/quotations.service.ts</path>
+        <kind>service</kind>
+        <symbol>convertToTenant</symbol>
+        <lines>333-370</lines>
+        <reason>Lead-to-tenant conversion API call from Story 3.1. Shows integration point: after quotation acceptance, redirect to tenant onboarding with query params. Backend updates lead/quotation status to CONVERTED.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/package.json</path>
+        <kind>config</kind>
+        <symbol>dependencies</symbol>
+        <lines>24-56</lines>
+        <reason>Current dependencies: react-hook-form, zod, @hookform/resolvers, date-fns, axios already installed. MISSING: react-dropzone (needed for document upload). Add to package.json: "react-dropzone": "^14.2.3"</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <frontend>
+        <package name="react" version="19.2.0">Core React library</package>
+        <package name="next" version="16.0.2">Next.js App Router framework</package>
+        <package name="react-hook-form" version="^7.66.0">Form state management and validation</package>
+        <package name="zod" version="^4.1.12">Schema validation library</package>
+        <package name="@hookform/resolvers" version="^5.2.2">Zod resolver for React Hook Form</package>
+        <package name="date-fns" version="^4.1.0">Date manipulation (age calculation, duration)</package>
+        <package name="axios" version="^1.13.2">HTTP client for API calls</package>
+        <package name="lucide-react" version="^0.553.0">Icon library</package>
+        <package name="sonner" version="^2.0.7">Toast notifications (success/error feedback)</package>
+        <package name="react-dropzone" version="^14.2.3" status="REQUIRED - NOT YET INSTALLED">Drag-and-drop file upload (Step 6: Document Upload with multiple files, file preview, validation)</package>
+        <shadcn-component name="form">React Hook Form integration</shadcn-component>
+        <shadcn-component name="input">Text inputs for names, email, phone, etc.</shadcn-component>
+        <shadcn-component name="select">Dropdowns for property, unit, nationality, payment method</shadcn-component>
+        <shadcn-component name="calendar">Date pickers for DOB, lease start/end</shadcn-component>
+        <shadcn-component name="checkbox">Renewal option, document requirements</shadcn-component>
+        <shadcn-component name="radio-group">Lease type, payment frequency selection</shadcn-component>
+        <shadcn-component name="button">Submit, next, back, edit buttons</shadcn-component>
+        <shadcn-component name="label">Form field labels</shadcn-component>
+        <shadcn-component name="tabs">Multi-step wizard navigation with 7 tabs</shadcn-component>
+        <shadcn-component name="card">Section containers, summary cards</shadcn-component>
+        <shadcn-component name="accordion">Mobile review sections (responsive)</shadcn-component>
+        <shadcn-component name="dialog">Confirmation dialog before submit</shadcn-component>
+        <shadcn-component name="alert">Validation errors, warnings</shadcn-component>
+        <shadcn-component name="skeleton">Loading states during property/unit fetch</shadcn-component>
+        <shadcn-component name="badge">Status indicators, pre-filled badges</shadcn-component>
+        <shadcn-component name="progress">Wizard step indicator (optional)</shadcn-component>
+      </frontend>
+      <backend>
+        <package name="spring-boot" version="3.4.7">Spring Boot framework</package>
+        <package name="spring-data-jpa" version="3.4.x">Database ORM and repository</package>
+        <package name="spring-security" version="6.x">Authentication and authorization (RBAC)</package>
+        <package name="spring-mail">Email service for welcome and lease emails (Gmail API)</package>
+        <package name="postgresql-driver">PostgreSQL database driver</package>
+        <package name="jakarta-validation">Bean validation for @Valid, @NotNull, @Size</package>
+        <package name="bcrypt">Password hashing (BCrypt cost factor 12)</package>
+      </backend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="security">
+      <rule>Protected route: Only PROPERTY_MANAGER and SUPER_ADMIN roles can access /tenants/create (middleware from Story 2.5)</rule>
+      <rule>Email uniqueness: Check via GET /api/v1/tenants/check-email/{email} with 300ms debounce to prevent duplicate accounts</rule>
+      <rule>Password generation: SecureRandom 12-char password with mixed case, numbers, symbols. Hash with BCrypt cost factor 12 (Story 2.1 pattern)</rule>
+      <rule>File upload security: Validate file type (PDF/JPG/PNG), size limits (5MB general, 10MB lease), sanitize filenames, store in /uploads/tenants/{tenantId}/</rule>
+    </constraint>
+    <constraint type="validation">
+      <rule>Age validation: dateOfBirth must result in age ≥ 18 years using date-fns differenceInYears(today, dateOfBirth)</rule>
+      <rule>Lease dates: leaseStartDate ≥ today (allow same day), leaseEndDate > leaseStartDate</rule>
+      <rule>Rent validation: baseRent ≥ 0, securityDeposit > 0 (typically 1-2 months rent), all decimal values max 999999.99</rule>
+      <rule>Unit availability: Only units with status AVAILABLE can be selected. Backend validates unit status before tenant creation.</rule>
+      <rule>File validation: Client-side (Zod) and server-side (@Valid) for type (PDF/JPG/PNG), size (5MB/10MB). Return 400 Bad Request with field-specific errors.</rule>
+    </constraint>
+    <constraint type="architecture">
+      <rule>Multi-step wizard: Use React Hook Form with 7 separate Zod schemas (one per step). State persists across steps. Submit only on final Review step.</rule>
+      <rule>Database transaction: Tenant + User + TenantDocument creation must be atomic with @Transactional. Rollback if any step fails.</rule>
+      <rule>File storage: Store files in /uploads/tenants/{tenantId}/ directory. Backend returns file paths (relative to storage root) in TenantDocument entity.</rule>
+      <rule>Email automation: Send welcome email with credentials immediately after tenant creation. Send lease agreement email with PDF attachment if lease document uploaded. Use Spring Mail + Gmail API.</rule>
+      <rule>Unit status update: Change unit.status from AVAILABLE to OCCUPIED after successful tenant creation. Log activity in audit_logs table.</rule>
+    </constraint>
+    <constraint type="ui-ux">
+      <rule>Responsive design: Single column on mobile (<640px), two-column on desktop (>768px). Wizard progress horizontal on desktop, vertical dots on mobile.</rule>
+      <rule>Accessibility: ALL interactive elements MUST have data-testid attributes (naming: {component}-{element}-{action}). ARIA labels on form fields, role="progressbar" on wizard, aria-current="step" on active step.</rule>
+      <rule>Focus management: Focus first field on step load, focus first error field on validation failure. Keyboard navigation: Tab through fields, Enter to next step, Shift+Tab to go back.</rule>
+      <rule>Real-time calculations: Total monthly rent = baseRent + serviceCharge + (parkingSpots × parkingFeePerSpot). Update display as user types using formatCurrency helper (AED, 2 decimals).</rule>
+      <rule>Dark theme: Support dark mode using Tailwind dark: prefix. All components must be tested in both light and dark themes.</rule>
+    </constraint>
+    <constraint type="testing">
+      <rule>Pre-test validation: Run scripts/check-services.sh before E2E tests to verify backend (8080) and frontend (3000) are running</rule>
+      <rule>Test data: Use test database (ultra_bms_test). Clean up created tenants and users after test suite completion.</rule>
+      <rule>Coverage: E2E tests must cover all 15 acceptance criteria including happy path, validation errors, lead conversion, and responsive design.</rule>
+      <rule>data-testid naming: Follow convention - wizard-tenant-create, tab-step-{n}, btn-next-step, input-first-name, calendar-dob, dropzone-emirates-id, etc.</rule>
+    </constraint>
+    <constraint type="integration">
+      <rule>Lead conversion: Pre-populate form when accessed via /tenants/create?fromLead={leadId}&fromQuotation={quotationId}. Fetch lead and quotation data, fill Steps 1-4, display "Pre-filled from Quotation #XXX" badge.</rule>
+      <rule>Status updates: After successful tenant creation, update Lead.status = CONVERTED and Quotation.status = CONVERTED via PATCH /api/v1/leads/{id}/status and /api/v1/quotations/{id}/status</rule>
+      <rule>Property/Unit data: Fetch properties via GET /api/v1/properties, units via GET /api/v1/properties/{propertyId}/units?status=AVAILABLE. Display unit details on selection.</rule>
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>GET /api/v1/tenants/check-email/{email}</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/tenants/check-email/{email} -> {available: boolean, message?: string}</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/TenantController.java (NEW)</path>
+      <description>Check email uniqueness for tenant registration. Called on blur with 300ms debounce. Returns 200 OK with {available: true} if email not in use, {available: false, message: "Email already exists"} if duplicate.</description>
+    </interface>
+    <interface>
+      <name>POST /api/v1/tenants</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/tenants (multipart/form-data) -> {success: true, data: Tenant, message: string}</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/TenantController.java (NEW)</path>
+      <description>Create tenant with multipart/form-data (all form fields + file uploads). Creates Tenant, User (TENANT role), TenantDocument entities in transaction. Updates unit status to OCCUPIED. Sends welcome email. Returns 201 Created with tenant DTO. Returns 400 Bad Request with field errors on validation failure.</description>
+    </interface>
+    <interface>
+      <name>GET /api/v1/properties</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/properties -> {data: Property[]}</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/PropertyController.java (from Story 3.2)</path>
+      <description>Fetch all properties for dropdown in Step 2 (Lease Information). Returns array of properties with id, name, address.</description>
+    </interface>
+    <interface>
+      <name>GET /api/v1/properties/{propertyId}/units</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/properties/{propertyId}/units?status=AVAILABLE -> {data: Unit[]}</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/PropertyController.java (from Story 3.2)</path>
+      <description>Fetch units for selected property filtered by status=AVAILABLE. Returns array of units with id, unitNumber, floor, bedrooms, bathrooms, baseRent. Used in Step 2 dropdown.</description>
+    </interface>
+    <interface>
+      <name>createTenant</name>
+      <kind>Service method (frontend)</kind>
+      <signature>createTenant(formData: FormData): Promise<Tenant></signature>
+      <path>frontend/src/services/tenant.service.ts (NEW)</path>
+      <description>Frontend service method to POST /api/v1/tenants with multipart/form-data containing all form fields and File objects. Returns created Tenant with tenantNumber. Throws error on validation failure.</description>
+    </interface>
+    <interface>
+      <name>checkEmailAvailability</name>
+      <kind>Service method (frontend)</kind>
+      <signature>checkEmailAvailability(email: string): Promise<boolean></signature>
+      <path>frontend/src/services/tenant.service.ts (NEW)</path>
+      <description>Check if email is available for tenant registration. Calls GET /api/v1/tenants/check-email/{email}. Returns true if available, false if duplicate. Used in Step 1 with 300ms debounce on email input blur.</description>
+    </interface>
+    <interface>
+      <name>Tenant (entity)</name>
+      <kind>JPA entity (backend)</kind>
+      <signature>Tenant entity with id (UUID), userId (FK), unitId (FK), propertyId (FK), personal info, lease details, payment schedule, parking, tenantNumber, status, timestamps</signature>
+      <path>backend/src/main/java/com/ultrabms/entity/Tenant.java (NEW)</path>
+      <description>Main tenant entity with relationships to User (userId FK), Unit (unitId FK), Property (propertyId FK). Includes all fields from 7-step wizard. Status enum: PENDING, ACTIVE, EXPIRED, TERMINATED.</description>
+    </interface>
+    <interface>
+      <name>TenantDocument (entity)</name>
+      <kind>JPA entity (backend)</kind>
+      <signature>TenantDocument entity with id, tenantId (FK), documentType (enum), filePath, fileName, fileSize, uploadedBy, uploadedAt</signature>
+      <path>backend/src/main/java/com/ultrabms/entity/TenantDocument.java (NEW)</path>
+      <description>Stores metadata for uploaded documents. documentType enum: EMIRATES_ID, PASSPORT, VISA, SIGNED_LEASE, MULKIYA, OTHER. filePath stored as relative path to /uploads/tenants/{tenantId}/</description>
+    </interface>
+    <interface>
+      <name>createTenantSchema (7-step union)</name>
+      <kind>Zod schema</kind>
+      <signature>Union of 7 step schemas: personalInfoSchema, leaseInfoSchema, rentBreakdownSchema, parkingAllocationSchema, paymentScheduleSchema, documentUploadSchema, reviewSchema</signature>
+      <path>frontend/src/lib/validations/tenant.ts (NEW)</path>
+      <description>Master validation schema combining all 7 wizard steps. Each step schema validates its specific fields with rules from AC#12. Export individual schemas and combined schema for form validation.</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      <standard>Frontend: Vitest + React Testing Library for unit tests. Playwright for E2E tests. All interactive elements MUST have data-testid attributes following convention: {component}-{element}-{action} (e.g., wizard-tenant-create, input-first-name, btn-next-step).</standard>
+      <standard>Backend: JUnit 5 + Mockito for unit tests. Spring Boot Test with @SpringBootTest for integration tests. TestContainers for database tests with PostgreSQL container.</standard>
+      <standard>Pre-test validation: Execute scripts/check-services.sh before E2E tests to verify backend (localhost:8080) and frontend (localhost:3000) are running. Fail fast if services are down.</standard>
+      <standard>Test database: Use ultra_bms_test database for all tests. Clean up created data (tenants, users, documents) after each test suite to prevent pollution.</standard>
+      <standard>Test coverage target: All 15 acceptance criteria must be covered. Include happy path, validation errors, edge cases, lead conversion flow, and responsive design tests.</standard>
+    </standards>
+
+    <locations>
+      <location>frontend/src/app/(dashboard)/tenants/__tests__/</location>
+      <location>frontend/src/components/tenants/__tests__/</location>
+      <location>frontend/src/lib/validations/__tests__/tenant.test.ts</location>
+      <location>frontend/src/services/__tests__/tenant.service.test.ts</location>
+      <location>frontend/tests/e2e/tenant-onboarding.spec.ts</location>
+      <location>backend/src/test/java/com/ultrabms/controller/TenantControllerTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/service/TenantServiceTest.java</location>
+    </locations>
+
+    <ideas>
+      <idea ac="AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8">E2E: Complete 7-step wizard flow - Fill all steps → Submit → Verify tenant created, user account created (TENANT role), welcome email sent, unit status = OCCUPIED, redirect to /tenants/{id}. Verify tenantNumber generated (TNT-2025-XXXX format).</idea>
+      <idea ac="AC2">E2E: Age validation - Enter DOB resulting in age < 18 → Verify inline error "must be at least 18 years old" → Cannot proceed to next step. Fix to valid age → Error clears → Next step enabled.</idea>
+      <idea ac="AC2">E2E: Email uniqueness - Enter existing email → Blur → Wait 300ms → Verify error message "Email already exists" → Change email → Error clears.</idea>
+      <idea ac="AC3">E2E: Unit availability - Select property → Verify unit dropdown shows only AVAILABLE units → Select OCCUPIED unit (should not be in list) → Verify not selectable.</idea>
+      <idea ac="AC3">E2E: Lease date validation - Set leaseStartDate = yesterday → Verify error "must be today or future date" → Set leaseEndDate < leaseStartDate → Verify error "must be after start date" → Fix dates → Errors clear.</idea>
+      <idea ac="AC4">E2E: Real-time rent calculation - Enter baseRent=5000, serviceCharge=500 → Verify totalMonthlyRent displays "5,500.00 AED" → Add parkingSpots=2, parkingFeePerSpot=200 → Verify total updates to "5,900.00 AED".</idea>
+      <idea ac="AC5">E2E: Parking optional flow - Set parkingSpots=0 → Verify parkingFeePerSpot and spotNumbers hidden → Click "Skip Parking" → Proceed to next step without errors.</idea>
+      <idea ac="AC5">E2E: Mulkiya upload validation - Upload file > 5MB → Verify error "File size must be less than 5MB" → Upload invalid type (e.g., .docx) → Verify error "File must be PDF, JPG, or PNG" → Upload valid file → Success.</idea>
+      <idea ac="AC7">Unit: Document upload schema validation - Test uploadDocumentSchema with valid File (PDF, 2MB) → Expect success → Test with 6MB file → Expect error → Test with .txt file → Expect error.</idea>
+      <idea ac="AC7">E2E: Required document validation - Try to proceed from Step 6 without uploading emiratesId → Verify error "Emirates ID is required" → Upload all required docs → Proceed successfully.</idea>
+      <idea ac="AC8">E2E: Review step - Navigate to Step 7 → Verify all entered data displayed in sections (Personal, Lease, Rent, Parking, Payment, Documents) → Click "Edit" on Personal section → Redirect to Step 1 → Verify data persisted.</idea>
+      <idea ac="AC8">E2E: Confirmation dialog - Click "Submit" → Verify dialog appears "This will create tenant account and update unit status to OCCUPIED. Continue?" → Click Cancel → Verify form not submitted → Click Submit again → Confirm → Verify tenant created.</idea>
+      <idea ac="AC12">Unit: Zod schema validation - Test personalInfoSchema with age 17 → Expect error → Test with age 20 → Expect success. Test leaseInfoSchema with leaseEndDate < leaseStartDate → Expect error. Test rentBreakdownSchema with securityDeposit=0 → Expect error.</idea>
+      <idea ac="AC14">E2E: Lead conversion pre-population - Navigate to /tenants/create?fromLead=lead-123&fromQuotation=quo-456 → Verify Step 1 pre-filled (name, email, phone) → Verify badge "Pre-filled from Quotation #QUO-2025-XXXX" → Navigate to Step 3 → Verify rent details pre-filled → Edit fields → Submit → Verify lead and quotation status = CONVERTED.</idea>
+      <idea ac="AC15">E2E: Responsive design - Test on mobile (375px width) → Verify single column layout, vertical wizard progress, collapsible file upload zones, accordion review sections → Test on desktop (1920px) → Verify multi-column forms, horizontal progress.</idea>
+      <idea ac="AC15">E2E: Keyboard navigation - Tab through all fields in Step 1 → Verify focus order → Press Enter on "Next" button → Verify navigates to Step 2 → Shift+Tab to go back → Verify reverse navigation. Submit with validation error → Verify focus moves to first error field.</idea>
+      <idea ac="AC15">E2E: Dark mode - Toggle dark theme → Verify all wizard steps render correctly with dark backgrounds, readable text, proper contrast → Test form validation errors visible in dark mode → Toggle back to light → Verify smooth transition.</idea>
+      <idea ac="AC9, AC10, AC11">Backend Integration: Transaction rollback - Mock database to throw exception during User creation → Call createTenant API → Verify Tenant NOT created (rollback successful) → Verify no orphaned records in database.</idea>
+      <idea ac="AC10">Backend: Email sending - Create tenant → Verify welcome email sent to tenant's email with subject "Welcome to {PropertyName}" containing login credentials, password reset link, lease start date, move-in instructions.</idea>
+      <idea ac="AC11">Backend: Unit status update - Create tenant → Verify Unit.status changed from AVAILABLE to OCCUPIED → If lease document uploaded, verify lease agreement email sent with PDF attachment.</idea>
+    </ideas>
+  </tests>
+</story-context>

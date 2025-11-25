@@ -583,11 +583,11 @@ steps:
 ## Appendix
 
 ### Epic 2 Story Files Reference
-1. `/docs/sprint-artifacts/2-1-user-registration-and-login-with-jwt-authentication.md`
-2. `/docs/sprint-artifacts/2-2-role-based-access-control-rbac-implementation.md`
-3. `/docs/sprint-artifacts/2-3-password-reset-and-recovery-workflow.md`
-4. `/docs/sprint-artifacts/2-4-session-management-and-security-enhancements.md`
-5. `/docs/sprint-artifacts/2-5-frontend-authentication-components-and-protected-routes.md`
+1. `/docs/sprint-artifacts/epic-2/2-1-user-registration-and-login-with-jwt-authentication.md`
+2. `/docs/sprint-artifacts/epic-2/2-2-role-based-access-control-rbac-implementation.md`
+3. `/docs/sprint-artifacts/epic-2/2-3-password-reset-and-recovery-workflow.md`
+4. `/docs/sprint-artifacts/epic-2/2-4-session-management-and-security-enhancements.md`
+5. `/docs/sprint-artifacts/epic-2/2-5-frontend-authentication-components-and-protected-routes.md`
 
 ### Epic Definition
 - `/docs/epics/epic-2-authentication-user-management.md`

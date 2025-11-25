@@ -181,7 +181,7 @@ fi
 **Usage:**
 ```bash
 # Validate single story
-./scripts/validate-story-status.sh docs/sprint-artifacts/3-2-property-and-unit-management.md
+./scripts/validate-story-status.sh docs/sprint-artifacts/epic-3/3-2-property-and-unit-management.md
 
 # Validate all stories (add to CI/CD)
 find docs/sprint-artifacts -name "*.md" -exec ./scripts/validate-story-status.sh {} \;
@@ -432,8 +432,8 @@ This change proposal is successful when:
 
 ## References
 
-- **Story 3.2:** `/Users/natarajan/Documents/Projects/ultra-bms/docs/sprint-artifacts/3-2-property-and-unit-management.md`
-- **Story 3.2.e2e:** `/Users/natarajan/Documents/Projects/ultra-bms/docs/sprint-artifacts/3-2-e2e-property-and-unit-management.md`
+- **Story 3.2:** `/Users/natarajan/Documents/Projects/ultra-bms/docs/sprint-artifacts/epic-3/3-2-property-and-unit-management.md`
+- **Story 3.2.e2e:** `/Users/natarajan/Documents/Projects/ultra-bms/docs/sprint-artifacts/epic-3/3-2-e2e-property-and-unit-management.md`
 - **Test Results:** `/tmp/e2e-verification.log`
 - **Epic 3:** `/Users/natarajan/Documents/Projects/ultra-bms/docs/epics/epic-3-tenant-management-portal.md`
 

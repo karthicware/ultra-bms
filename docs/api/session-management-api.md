@@ -361,6 +361,6 @@ apiClient.interceptors.response.use(
 ## Related Documentation
 
 - [Password Reset API](./password-reset-api.md)
-- [Story 2.4: Session Management](../sprint-artifacts/2-4-session-management-and-security-enhancements.md)
+- [Story 2.4: Session Management](../sprint-artifacts/epic-2/2-4-session-management-and-security-enhancements.md)
 - [Architecture: Session Management](../architecture.md#session-management)
 - [PRD: Security Requirements](../prd.md#5.4)

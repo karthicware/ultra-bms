@@ -149,7 +149,7 @@ export GMAIL_APP_PASSWORD=ndnmkexrjsfjqoxm
 
 - **Setup Guide:** `/Users/natarajan/Documents/Projects/ultra-bms/docs/deployment/gmail-configuration.md`
 - **API Documentation:** `/Users/natarajan/Documents/Projects/ultra-bms/docs/api/password-reset-api.md`
-- **Story File:** `/Users/natarajan/Documents/Projects/ultra-bms/docs/sprint-artifacts/2-3-password-reset-and-recovery-workflow.md`
+- **Story File:** `/Users/natarajan/Documents/Projects/ultra-bms/docs/sprint-artifacts/epic-2/2-3-password-reset-and-recovery-workflow.md`
 
 ## Security Checklist
 

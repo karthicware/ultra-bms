@@ -24,7 +24,7 @@
 **Usage:**
 ```bash
 # Validate single story
-./scripts/validate-story-status.sh docs/sprint-artifacts/3-2-property-and-unit-management.md
+./scripts/validate-story-status.sh docs/sprint-artifacts/epic-3/3-2-property-and-unit-management.md
 
 # Validate all stories
 find docs/sprint-artifacts -name "*.md" -exec ./scripts/validate-story-status.sh {} \;
@@ -56,7 +56,7 @@ The script successfully detected the status mismatch in Story 3.2.
 
 ### 2. Story 3.2 Status Corrected ✅
 
-**File:** `docs/sprint-artifacts/3-2-property-and-unit-management.md`
+**File:** `docs/sprint-artifacts/epic-3/3-2-property-and-unit-management.md`
 
 **Before:**
 ```markdown
@@ -91,7 +91,7 @@ Last Updated: 2025-11-20 (Status corrected: Only backend + TypeScript types impl
 
 ### 3. Story 3.2.e2e Status Updated ✅
 
-**File:** `docs/sprint-artifacts/3-2-e2e-property-and-unit-management.md`
+**File:** `docs/sprint-artifacts/epic-3/3-2-e2e-property-and-unit-management.md`
 
 **Before:**
 ```markdown
@@ -268,8 +268,8 @@ Story 3.2 header claimed "completed (100% complete)" when only backend was done.
 ## Files Modified
 
 1. ✅ Created: `scripts/validate-story-status.sh`
-2. ✅ Updated: `docs/sprint-artifacts/3-2-property-and-unit-management.md` (status corrected)
-3. ✅ Updated: `docs/sprint-artifacts/3-2-e2e-property-and-unit-management.md` (blocked status)
+2. ✅ Updated: `docs/sprint-artifacts/epic-3/3-2-property-and-unit-management.md` (status corrected)
+3. ✅ Updated: `docs/sprint-artifacts/epic-3/3-2-e2e-property-and-unit-management.md` (blocked status)
 4. ✅ Created: `docs/sprint-change-proposals/SCP-2025-11-20-story-status-mismatch.md`
 5. ✅ Created: `docs/sprint-change-proposals/SCP-2025-11-20-implementation-summary.md` (this file)
 

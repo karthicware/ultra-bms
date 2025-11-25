@@ -1,0 +1,265 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>4</storyId>
+    <title>Core Domain Models and JPA Entities</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-13</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-1/1-4-core-domain-models-and-jpa-entities.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>backend developer</asA>
+    <iWant>core domain entities defined with JPA annotations</iWant>
+    <soThat>the database schema is established and relationships are mapped correctly</soThat>
+    <tasks>
+      <task id="1" ac="1,2,3">Create Enums for Domain Values - UserRole, PropertyType, UnitStatus enums in com.ultrabms.entity.enums package</task>
+      <task id="2" ac="4">Create Base Auditable Entity - Abstract BaseEntity with audit fields, @MappedSuperclass, id/createdAt/updatedAt/version, @EntityListeners</task>
+      <task id="3" ac="4">Configure JPA Auditing - JpaAuditingConfig with @EnableJpaAuditing, AuditorAware bean, snake_case naming strategy, ddl-auto=validate</task>
+      <task id="4" ac="1">Create User Entity - Extends BaseEntity, fields: email/passwordHash/firstName/lastName/role/active/mfaEnabled, @JsonIgnore on passwordHash, validation annotations</task>
+      <task id="5" ac="2">Create Property Entity - Extends BaseEntity, fields: name/address/type/totalUnits/manager, @ManyToOne relationship to User</task>
+      <task id="6" ac="3">Create Unit Entity - Extends BaseEntity, fields: property/unitNumber/floor/bedroomCount/bathroomCount/squareFootage/status, @ManyToOne to Property, unique constraint on property_id+unit_number</task>
+      <task id="7" ac="5">Create UserRepository Interface - Extends JpaRepository&lt;User, UUID&gt;, methods: findByEmail, findByRole, findByActiveTrue</task>
+      <task id="8" ac="5">Create PropertyRepository Interface - Extends JpaRepository&lt;Property, UUID&gt;, methods: findByManagerId, findByType, findByName</task>
+      <task id="9" ac="5">Create UnitRepository Interface - Extends JpaRepository&lt;Unit, UUID&gt;, methods: findByPropertyId, findByStatus, findByPropertyIdAndUnitNumber, countByPropertyIdAndStatus</task>
+      <task id="10" ac="1,2,3,4">Create Flyway Migration Script - V3__create_domain_entities.sql with CREATE TABLE statements for users, properties, units with constraints and indexes</task>
+      <task id="11" ac="5">Test Entity Mappings and Repositories - Manual tests: Start app, verify logs, check Flyway migration, verify DB schema, test data insertion</task>
+      <task id="12" ac="1,2,3">Update README with Entity Documentation - Add "Core Domain Model" section with entity descriptions, relationships, naming conventions, enum values</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1" priority="high">
+      <title>User Entity</title>
+      <description>Create User entity with JPA annotations including: id (UUID primary key), email (unique, not null, max 255 chars), passwordHash (not null, BCrypt hashed), firstName and lastName (not null, max 100 chars each), role (enum: SUPER_ADMIN, PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR, FINANCE_MANAGER, TENANT, VENDOR), active (boolean, default true), mfaEnabled (boolean, default false), createdAt and updatedAt (timestamps, auto-managed with @EntityListeners).</description>
+    </ac>
+    <ac id="2" priority="high">
+      <title>Property Entity</title>
+      <description>Create Property entity with: id (UUID primary key), name (not null, max 200 chars), address (not null, max 500 chars), type (enum: RESIDENTIAL, COMMERCIAL, MIXED_USE), totalUnits (integer), managerId (foreign key to User via @ManyToOne), createdAt and updatedAt timestamps.</description>
+    </ac>
+    <ac id="3" priority="high">
+      <title>Unit Entity</title>
+      <description>Create Unit entity with: id (UUID primary key), propertyId (foreign key to Property via @ManyToOne), unitNumber (not null, max 50 chars), floor (integer), bedroomCount and bathroomCount (integer), squareFootage (decimal), status (enum: AVAILABLE, OCCUPIED, UNDER_MAINTENANCE), createdAt and updatedAt timestamps.</description>
+    </ac>
+    <ac id="4" priority="high">
+      <title>JPA Configuration</title>
+      <description>Configure JPA with: AuditorAware implementation for tracking created/modified by user, @EnableJpaAuditing in configuration class, snake_case naming strategy for database columns, UUID generation strategy for primary keys, optimistic locking with @Version annotation for concurrent updates, proper entity annotations (@Entity, @Table, @Id, @Column, @ManyToOne, etc.), Lombok annotations (@Data, @NoArgsConstructor, @AllArgsConstructor), validation annotations (@NotNull, @Email, @Size), and JSON serialization (@JsonIgnore for sensitive fields like passwordHash).</description>
+    </ac>
+    <ac id="5" priority="high">
+      <title>Repository Interfaces</title>
+      <description>Create Spring Data JPA repositories: UserRepository extends JpaRepository&lt;User, UUID&gt;, PropertyRepository extends JpaRepository&lt;Property, UUID&gt;, UnitRepository extends JpaRepository&lt;Unit, UUID&gt; with custom query methods using Spring Data JPA naming conventions (e.g., findByEmail, findByPropertyId).</description>
+    </ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document - User Roles</title>
+        <section>3.1.2 User Roles</section>
+        <snippet>Defines 6 user roles that map to UserRole enum: SUPER_ADMIN (full system access), PROPERTY_MANAGER (property-specific management), MAINTENANCE_SUPERVISOR (work order and vendor management), FINANCE_MANAGER (financial operations and reporting), TENANT (self-service portal access), VENDOR (job assignment and completion tracking)</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document - Tenant Management</title>
+        <section>3.3 Tenant Management Module</section>
+        <snippet>Specifies tenant onboarding data capture including personal information (name, contact, ID), lease terms and duration, rent breakdown (base, admin, service, parking fees), unit assignment, parking spot allocation, payment schedule setup, and document attachments (ID, visa, tenancy contract)</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Database Schema Overview</title>
+        <section>Data Architecture - Users & Authentication</section>
+        <snippet>Users table schema: id BIGSERIAL PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL, password_hash VARCHAR(255) NOT NULL, first_name VARCHAR(100), last_name VARCHAR(100), phone VARCHAR(20), role_id BIGINT REFERENCES roles(id), is_active BOOLEAN DEFAULT true, last_login TIMESTAMP, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Database Schema Overview</title>
+        <section>Data Architecture - Properties & Units</section>
+        <snippet>Properties table: id, name, address, city, total_units, property_manager_id REFERENCES users(id), created_at, updated_at. Units table: id, property_id REFERENCES properties(id), unit_number, floor, bedrooms, bathrooms, area_sqft, unit_type, status VARCHAR(50) DEFAULT 'VACANT', created_at, updated_at, UNIQUE(property_id, unit_number)</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Implementation Patterns</title>
+        <section>Backend Implementation Patterns - Naming Conventions</section>
+        <snippet>Classes: PascalCase (UserController, TenantService). Methods: camelCase (findTenantById, calculateRent). Variables: camelCase (tenantId, totalAmount). Constants: ALL_CAPS. REST Endpoints: kebab-case. Database tables: snake_case plural (users, properties, units). Database columns: snake_case (first_name, created_at). Foreign keys: {table}_id (tenant_id, property_id)</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Data Architecture</title>
+        <section>Data Architecture - Entity Design Pattern</section>
+        <snippet>BaseEntity Pattern: All entities extend a common base class with audit fields (createdAt, updatedAt, version). UUID Primary Keys: Using UUID instead of auto-increment Long for better scalability. Snake Case Naming: Database columns use snake_case (e.g., first_name) while Java fields use camelCase. JPA Configuration: @EntityListeners with AuditorAware for tracking, @Version field for optimistic locking, Bean Validation annotations (@NotNull, @Email, @Size)</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture - Consistency Rules</title>
+        <section>Database Naming</section>
+        <snippet>Tables: snake_case, plural (work_orders, tenants). Columns: snake_case (first_name, created_at). Foreign Keys: {table}_id (tenant_id, property_id). Indexes: idx_{table}_{column} (idx_tenants_email). Constraints: uq_{table}_{column} for unique, fk_{table}_{ref} for foreign keys</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 1: Platform Foundation</title>
+        <section>Story 1.4 Acceptance Criteria</section>
+        <snippet>Defines User entity (UUID PK, email unique, passwordHash BCrypt, firstName/lastName, role enum, active/mfaEnabled booleans), Property entity (UUID PK, name, address, type enum, totalUnits, manager FK), Unit entity (UUID PK, property FK, unitNumber, floor, bedrooms/bathrooms, squareFootage decimal, status enum), JPA configuration (@EntityListeners, snake_case naming, UUID generation, @Version optimistic locking), and Repository interfaces (extends JpaRepository with custom query methods)</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/UltraBmsApplication.java</path>
+        <kind>configuration</kind>
+        <symbol>UltraBmsApplication</symbol>
+        <lines>1-15</lines>
+        <reason>Main application class with @SpringBootApplication and @EnableCaching annotations already configured. This story will add @EnableJpaAuditing to this class or create separate JpaAuditingConfig.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/resources/application-dev.yml</path>
+        <kind>configuration</kind>
+        <symbol>spring.jpa configuration</symbol>
+        <lines>14-21</lines>
+        <reason>JPA configuration with ddl-auto=update (will change to validate after Flyway), show-sql=true for dev, and PostgreSQL dialect. Entities will use this configuration.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/resources/application-dev.yml</path>
+        <kind>configuration</kind>
+        <symbol>spring.datasource configuration</symbol>
+        <lines>2-12</lines>
+        <reason>PostgreSQL datasource configuration on port 5433 with HikariCP connection pooling. Entities will persist to this database via configured connection.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/pom.xml</path>
+        <kind>dependency</kind>
+        <symbol>spring-boot-starter-data-jpa</symbol>
+        <lines>42-44</lines>
+        <reason>Spring Data JPA starter already included - provides JPA, Hibernate, and repository support needed for entity creation.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/pom.xml</path>
+        <kind>dependency</kind>
+        <symbol>lombok</symbol>
+        <lines>98-103</lines>
+        <reason>Lombok 1.18.36 already included - will be used for @Data, @NoArgsConstructor, @AllArgsConstructor annotations on entities to reduce boilerplate.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/pom.xml</path>
+        <kind>dependency</kind>
+        <symbol>spring-boot-starter-validation</symbol>
+        <lines>49-52</lines>
+        <reason>Bean Validation starter already included - provides @NotNull, @Email, @Size annotations for entity field validation.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <backend>
+        <framework name="Spring Boot" version="3.4.0" />
+        <framework name="Spring Data JPA" version="3.4.0" />
+        <framework name="Hibernate ORM" version="6.6.x (via Spring Boot)" />
+        <database name="PostgreSQL" version="15+" />
+        <library name="Lombok" version="1.18.36" />
+        <library name="MapStruct" version="1.6.3" />
+        <library name="Bean Validation API" version="3.1.x (via Spring Boot)" />
+      </backend>
+      <notes>
+        All required dependencies are already present in pom.xml. No additional dependencies needed for this story. Flyway will be added in Task 10 for database migrations.
+      </notes>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <architectural>
+      <constraint>All entities MUST extend BaseEntity abstract class with audit fields (id, createdAt, updatedAt, version)</constraint>
+      <constraint>All entities MUST use UUID as primary key type (NOT Long or BIGSERIAL)</constraint>
+      <constraint>Database columns MUST use snake_case naming (e.g., first_name, created_at)</constraint>
+      <constraint>Java entity fields MUST use camelCase naming (e.g., firstName, createdAt)</constraint>
+      <constraint>Entity class names MUST use PascalCase (e.g., User, Property, Unit)</constraint>
+      <constraint>All entities MUST be annotated with @EntityListeners(AuditingEntityListener.class)</constraint>
+      <constraint>Enum values MUST be stored as STRING type in database (NOT ordinal)</constraint>
+      <constraint>spring.jpa.hibernate.ddl-auto MUST be set to validate (NOT update) after Flyway migrations are in place</constraint>
+    </architectural>
+    <coding>
+      <constraint>Entities MUST use Lombok annotations: @Data, @NoArgsConstructor, @AllArgsConstructor</constraint>
+      <constraint>Entities MUST use validation annotations: @NotNull, @Email, @Size where appropriate</constraint>
+      <constraint>Sensitive fields (passwordHash) MUST be annotated with @JsonIgnore</constraint>
+      <constraint>Foreign key fields MUST use @ManyToOne with @JoinColumn(name = "field_name_id")</constraint>
+      <constraint>Unique constraints MUST be defined at @Table level using @UniqueConstraint</constraint>
+      <constraint>Indexes MUST be defined at @Table level using @Index annotation</constraint>
+      <constraint>Repository interfaces MUST extend JpaRepository&lt;Entity, UUID&gt;</constraint>
+      <constraint>Custom query methods MUST follow Spring Data JPA naming conventions</constraint>
+    </coding>
+    <testing>
+      <constraint>Manual testing REQUIRED: Application startup without errors</constraint>
+      <constraint>Manual testing REQUIRED: Flyway migration V3 executes successfully</constraint>
+      <constraint>Manual testing REQUIRED: Database schema matches entity definitions (snake_case columns, correct types, constraints)</constraint>
+      <constraint>Manual testing REQUIRED: Insert test data via psql to verify schema integrity</constraint>
+      <constraint>NO unit tests required for entities (configuration story - testing at integration level)</constraint>
+    </testing>
+  </constraints>
+
+  <interfaces>
+    <jpa-configuration>
+      <interface name="AuditorAware&lt;UUID&gt;" kind="Spring Data JPA">
+        <signature>public interface AuditorAware&lt;UUID&gt; { Optional&lt;UUID&gt; getCurrentAuditor(); }</signature>
+        <path>To be created in com.ultrabms.config.JpaAuditingConfig</path>
+        <description>Implementation returns Optional.empty() for now (will be updated in Epic 2 with authentication to return current user ID)</description>
+      </interface>
+    </jpa-configuration>
+    <repository-interfaces>
+      <interface name="UserRepository" kind="Spring Data JPA Repository">
+        <signature>public interface UserRepository extends JpaRepository&lt;User, UUID&gt;</signature>
+        <path>backend/src/main/java/com/ultrabms/repository/UserRepository.java</path>
+        <methods>
+          <method>Optional&lt;User&gt; findByEmail(String email)</method>
+          <method>List&lt;User&gt; findByRole(UserRole role)</method>
+          <method>List&lt;User&gt; findByActiveTrue()</method>
+        </methods>
+      </interface>
+      <interface name="PropertyRepository" kind="Spring Data JPA Repository">
+        <signature>public interface PropertyRepository extends JpaRepository&lt;Property, UUID&gt;</signature>
+        <path>backend/src/main/java/com/ultrabms/repository/PropertyRepository.java</path>
+        <methods>
+          <method>List&lt;Property&gt; findByManagerId(UUID managerId)</method>
+          <method>List&lt;Property&gt; findByType(PropertyType type)</method>
+          <method>Optional&lt;Property&gt; findByName(String name)</method>
+        </methods>
+      </interface>
+      <interface name="UnitRepository" kind="Spring Data JPA Repository">
+        <signature>public interface UnitRepository extends JpaRepository&lt;Unit, UUID&gt;</signature>
+        <path>backend/src/main/java/com/ultrabms/repository/UnitRepository.java</path>
+        <methods>
+          <method>List&lt;Unit&gt; findByPropertyId(UUID propertyId)</method>
+          <method>List&lt;Unit&gt; findByStatus(UnitStatus status)</method>
+          <method>Optional&lt;Unit&gt; findByPropertyIdAndUnitNumber(UUID propertyId, String unitNumber)</method>
+          <method>long countByPropertyIdAndStatus(UUID propertyId, UnitStatus status)</method>
+        </methods>
+      </interface>
+    </repository-interfaces>
+  </interfaces>
+
+  <tests>
+    <standards>
+      This is a configuration and entity definition story with NO automated tests required. Testing approach is MANUAL VERIFICATION at application startup and database level. Standards: (1) Application must start without JPA/Hibernate errors, (2) Flyway migration must execute successfully creating tables with correct schema, (3) Database columns must use snake_case naming, (4) All constraints and indexes must be present, (5) Test data insertion must succeed validating foreign keys and unique constraints. Integration tests for repositories will be added in future service-layer stories.
+    </standards>
+    <locations>
+      <location>Manual testing via application startup logs: Check for "Started UltraBmsApplication" message</location>
+      <location>Manual testing via Flyway logs: Verify V3__create_domain_entities.sql execution</location>
+      <location>Manual testing via PostgreSQL: Connect with psql -U ultrabms_user -d ultrabms_dev and verify schema</location>
+      <location>Manual testing via psql commands: \dt (list tables), \d users, \d properties, \d units (describe schemas), \di (list indexes)</location>
+      <location>Future automated tests location: backend/src/test/java/com/ultrabms/repository/ (deferred to service-layer stories)</location>
+    </locations>
+    <ideas>
+      <test-idea ac="1" priority="high">
+        <description>Test User Entity: Start application and verify users table created with columns: id (UUID), email (VARCHAR unique), password_hash, first_name, last_name, role (VARCHAR for enum), active (BOOLEAN default true), mfa_enabled (BOOLEAN default false), created_at, updated_at, version. Verify index idx_users_email exists.</description>
+      </test-idea>
+      <test-idea ac="2" priority="high">
+        <description>Test Property Entity: Verify properties table with columns: id (UUID), name, address, type (VARCHAR for enum), total_units (INTEGER), manager_id (UUID FK to users), created_at, updated_at, version. Verify index idx_properties_manager_id exists. Test FK constraint by inserting property with valid/invalid manager_id.</description>
+      </test-idea>
+      <test-idea ac="3" priority="high">
+        <description>Test Unit Entity: Verify units table with columns: id (UUID), property_id (UUID FK), unit_number, floor, bedroom_count, bathroom_count, square_footage (DECIMAL), status (VARCHAR for enum), created_at, updated_at, version. Verify unique constraint uk_unit_property_number on (property_id, unit_number). Verify indexes: idx_units_property_id, idx_units_status.</description>
+      </test-idea>
+      <test-idea ac="4" priority="high">
+        <description>Test JPA Auditing: Insert User entity via repository.save() and verify created_at and updated_at are auto-populated. Update entity and verify updated_at changes. Test optimistic locking by updating same entity twice in parallel (should throw OptimisticLockException on second commit).</description>
+      </test-idea>
+      <test-idea ac="5" priority="high">
+        <description>Test Repository Query Methods: Call userRepository.findByEmail("test@example.com") and verify result. Call propertyRepository.findByManagerId(uuid) and verify filtering works. Call unitRepository.countByPropertyIdAndStatus(propertyId, OCCUPIED) and verify count is correct.</description>
+      </test-idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -989,7 +989,7 @@ npx playwright show-trace trace.zip
 ## Additional Resources
 
 - [API Documentation](../api/lead-quotation-api.md)
-- [Story 3.1 Requirements](../sprint-artifacts/stories/3-1-lead-management-and-quotation-system.md)
+- [Story 3.1 Requirements](../sprint-artifacts/epic-3/3-1-lead-management-and-quotation-system.md)
 - [Testing Guide](../testing/README.md)
 - [UltraBMS Architecture](../architecture/README.md)
 

@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 # Check if file argument provided
 if [ $# -eq 0 ]; then
     echo "Usage: $0 <story-file.md>"
-    echo "Example: $0 docs/sprint-artifacts/3-2-property-and-unit-management.md"
+    echo "Example: $0 docs/sprint-artifacts/epic-3/3-2-property-and-unit-management.md"
     exit 1
 fi
 
