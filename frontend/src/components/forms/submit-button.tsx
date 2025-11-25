@@ -1,10 +1,11 @@
 'use client';
 
-import { Button, ButtonProps } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import React from 'react';
 
-interface SubmitButtonProps extends Omit<ButtonProps, 'children'> {
+interface SubmitButtonProps extends Omit<React.ComponentPropsWithoutRef<typeof Button>, 'children'> {
   isLoading?: boolean;
   loadingText?: string;
   children?: React.ReactNode;

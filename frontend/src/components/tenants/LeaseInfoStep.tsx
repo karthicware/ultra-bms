@@ -106,10 +106,7 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
   }, [selectedPropertyId, form]);
 
   const onSubmit = (values: LeaseInfoFormData) => {
-    onComplete({
-      ...values,
-      leaseDuration,
-    });
+    onComplete(values);
   };
 
   return (
@@ -190,7 +187,7 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
                       <SelectContent>
                         {units.map((unit) => (
                           <SelectItem key={unit.id} value={unit.id}>
-                            Unit {unit.unitNumber} - Floor {unit.floor} - {unit.bedrooms}BR, {unit.bathrooms}BA - AED {unit.monthlyRent}/mo
+                            Unit {unit.unitNumber} - Floor {unit.floor} - {unit.bedroomCount}BR, {unit.bathroomCount}BA - AED {unit.monthlyRent}/mo
                           </SelectItem>
                         ))}
                       </SelectContent>

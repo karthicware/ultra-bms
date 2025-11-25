@@ -12,25 +12,26 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, X } from 'lucide-react';
 
 import { FileUploadZone } from './FileUploadZone';
-import { documentUploadSchema, type DocumentUploadFormData } from '@/lib/validations/tenant';
+import { documentUploadSchema } from '@/lib/validations/tenant';
+import type { TenantDocumentUploadFormData } from '@/types/tenant';
 
 interface DocumentUploadStepProps {
-  data: DocumentUploadFormData;
-  onComplete: (data: DocumentUploadFormData) => void;
+  data: TenantDocumentUploadFormData;
+  onComplete: (data: TenantDocumentUploadFormData) => void;
   onBack: () => void;
 }
 
 export function DocumentUploadStep({ data, onComplete, onBack }: DocumentUploadStepProps) {
   const [emiratesIdFile, setEmiratesIdFile] = useState<File | null>(data.emiratesIdFile);
   const [passportFile, setPassportFile] = useState<File | null>(data.passportFile);
-  const [visaFile, setVisaFile] = useState<File | null>(data.visaFile);
+  const [visaFile, setVisaFile] = useState<File | null>(data.visaFile ?? null);
   const [signedLeaseFile, setSignedLeaseFile] = useState<File | null>(data.signedLeaseFile);
   const [additionalFiles, setAdditionalFiles] = useState<File[]>(data.additionalFiles || []);
 
-  const form = useForm<DocumentUploadFormData>({
+  const form = useForm<TenantDocumentUploadFormData>({
     resolver: zodResolver(documentUploadSchema),
     defaultValues: data,
   });

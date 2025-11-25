@@ -34,7 +34,7 @@ interface ParkingAllocationStepProps {
 }
 
 export function ParkingAllocationStep({ data, onComplete, onBack }: ParkingAllocationStepProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(data.mulkiyaFile);
+  const [selectedFile, setSelectedFile] = useState<File | null>(data.mulkiyaFile ?? null);
 
   const form = useForm<ParkingAllocationFormData>({
     resolver: zodResolver(parkingAllocationSchema),

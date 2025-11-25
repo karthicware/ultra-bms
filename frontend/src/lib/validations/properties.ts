@@ -34,10 +34,7 @@ const addressSchema = z
  * Total units count validation
  */
 const totalUnitsCountSchema = z
-  .number({
-    required_error: 'Total units count is required',
-    invalid_type_error: 'Total units count must be a number',
-  })
+  .number()
   .int('Total units count must be a whole number')
   .min(1, 'Property must have at least 1 unit')
   .max(10000, 'Total units count cannot exceed 10,000');
@@ -46,9 +43,7 @@ const totalUnitsCountSchema = z
  * Year built validation
  */
 const yearBuiltSchema = z
-  .number({
-    invalid_type_error: 'Year built must be a number',
-  })
+  .number()
   .int('Year built must be a whole number')
   .min(1800, 'Year built must be 1800 or later')
   .max(new Date().getFullYear() + 2, `Year built cannot exceed ${new Date().getFullYear() + 2}`)
@@ -59,9 +54,7 @@ const yearBuiltSchema = z
  * Square footage validation
  */
 const squareFootageSchema = z
-  .number({
-    invalid_type_error: 'Square footage must be a number',
-  })
+  .number()
   .positive('Square footage must be positive')
   .max(10000000, 'Square footage cannot exceed 10,000,000 sq ft')
   .optional()
@@ -83,9 +76,7 @@ const amenitiesSchema = z
   .array(
     z.string().min(1, 'Amenity name cannot be empty').max(100, 'Amenity name is too long')
   )
-  .max(50, 'Maximum 50 amenities allowed')
-  .optional()
-  .default([]);
+  .max(50, 'Maximum 50 amenities allowed');
 
 // ===========================
 // Form Validation Schemas
@@ -98,10 +89,7 @@ const amenitiesSchema = z
 export const createPropertySchema = z.object({
   name: propertyNameSchema,
   address: addressSchema,
-  propertyType: z.nativeEnum(PropertyType, {
-    required_error: 'Property type is required',
-    invalid_type_error: 'Please select a valid property type',
-  }),
+  propertyType: z.nativeEnum(PropertyType),
   totalUnitsCount: totalUnitsCountSchema,
   managerId: managerIdSchema,
   yearBuilt: yearBuiltSchema,

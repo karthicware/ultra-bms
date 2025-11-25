@@ -107,7 +107,7 @@ export function DocumentRepositorySection({ profile }: DocumentRepositorySection
               {documents.map((doc) => (
                 <TableRow key={doc.id}>
                   <TableCell className="font-medium">{doc.fileName}</TableCell>
-                  <TableCell>{doc.type}</TableCell>
+                  <TableCell>{doc.documentType}</TableCell>
                   <TableCell>{formatFileSize(doc.fileSize)}</TableCell>
                   <TableCell>{formatDate(doc.uploadedAt)}</TableCell>
                   <TableCell className="text-right">

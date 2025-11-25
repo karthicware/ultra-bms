@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from '@/lib/api';
+import { UnitStatus } from '@/types/units';
 import type {
   Unit,
   UnitResponse,
@@ -17,7 +18,6 @@ import type {
   BulkCreateResult,
   UnitSearchParams,
   UnitHistory,
-  UnitStatus,
 } from '@/types';
 
 const UNITS_BASE_PATH = '/v1/units';
@@ -357,7 +357,7 @@ export async function getUnitHistory(id: string): Promise<UnitHistory[]> {
  * ```
  */
 export async function getAvailableUnits(propertyId: string): Promise<Unit[]> {
-  return getUnitsByProperty(propertyId, { status: ['AVAILABLE'] });
+  return getUnitsByProperty(propertyId, { status: [UnitStatus.AVAILABLE] });
 }
 
 /**
@@ -418,10 +418,10 @@ export function isValidStatusTransition(
   newStatus: UnitStatus
 ): boolean {
   const transitions: Record<UnitStatus, UnitStatus[]> = {
-    AVAILABLE: ['RESERVED', 'UNDER_MAINTENANCE'],
-    RESERVED: ['OCCUPIED', 'AVAILABLE', 'UNDER_MAINTENANCE'],
-    OCCUPIED: ['AVAILABLE', 'UNDER_MAINTENANCE'],
-    UNDER_MAINTENANCE: ['AVAILABLE', 'RESERVED'],
+    [UnitStatus.AVAILABLE]: [UnitStatus.RESERVED, UnitStatus.UNDER_MAINTENANCE],
+    [UnitStatus.RESERVED]: [UnitStatus.OCCUPIED, UnitStatus.AVAILABLE, UnitStatus.UNDER_MAINTENANCE],
+    [UnitStatus.OCCUPIED]: [UnitStatus.AVAILABLE, UnitStatus.UNDER_MAINTENANCE],
+    [UnitStatus.UNDER_MAINTENANCE]: [UnitStatus.AVAILABLE, UnitStatus.RESERVED],
   };
 
   return transitions[currentStatus]?.includes(newStatus) ?? false;

@@ -15,10 +15,7 @@ import { QuotationStatus, StayType } from '@/types/quotations';
  */
 const positiveNumberSchema = (fieldName: string) =>
   z
-    .number({
-      required_error: `${fieldName} is required`,
-      invalid_type_error: `${fieldName} must be a number`,
-    })
+    .number()
     .positive(`${fieldName} must be greater than 0`);
 
 /**
@@ -26,10 +23,7 @@ const positiveNumberSchema = (fieldName: string) =>
  */
 const nonNegativeNumberSchema = (fieldName: string) =>
   z
-    .number({
-      required_error: `${fieldName} is required`,
-      invalid_type_error: `${fieldName} must be a number`,
-    })
+    .number()
     .nonnegative(`${fieldName} must be 0 or greater`);
 
 /**
@@ -37,10 +31,7 @@ const nonNegativeNumberSchema = (fieldName: string) =>
  */
 const futureDateSchema = (fieldName: string) =>
   z
-    .date({
-      required_error: `${fieldName} is required`,
-      invalid_type_error: 'Please enter a valid date',
-    })
+    .date()
     .refine(
       (date) => date > new Date(),
       {
@@ -55,16 +46,11 @@ const futureDateSchema = (fieldName: string) =>
 export const createQuotationSchema = z
   .object({
     leadId: z.string().uuid('Please provide a valid lead ID'),
-    issueDate: z.date({
-      required_error: 'Issue date is required',
-      invalid_type_error: 'Please enter a valid date',
-    }),
+    issueDate: z.date(),
     validityDate: futureDateSchema('Validity date'),
     propertyId: z.string().min(1, 'Please select a property'),
     unitId: z.string().min(1, 'Please select a unit'),
-    stayType: z.nativeEnum(StayType, {
-      errorMap: () => ({ message: 'Please select a stay type' }),
-    }),
+    stayType: z.nativeEnum(StayType),
     baseRent: positiveNumberSchema('Base rent'),
     serviceCharges: nonNegativeNumberSchema('Service charges'),
     parkingSpots: nonNegativeNumberSchema('Parking spots')
@@ -74,8 +60,7 @@ export const createQuotationSchema = z
     adminFee: nonNegativeNumberSchema('Admin fee'),
     documentRequirements: z
       .array(z.string())
-      .min(1, 'Please select at least one document requirement')
-      .default([]),
+      .min(1, 'Please select at least one document requirement'),
     paymentTerms: z
       .string()
       .min(10, 'Payment terms must be at least 10 characters')

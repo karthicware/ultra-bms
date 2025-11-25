@@ -31,11 +31,12 @@ export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  accessToken: string | null;
 }
 
 export interface AuthContextType extends AuthState {
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  register: (userData: RegisterRequest) => Promise<void>;
+  register: (userData: RegisterRequest) => Promise<{ user: Omit<User, 'permissions'>; message: string }>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   updateAccessToken: (token: string) => void;

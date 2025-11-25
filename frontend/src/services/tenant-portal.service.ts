@@ -7,7 +7,7 @@ import { apiClient } from '@/lib/api';
 import type {
   DashboardData,
   TenantProfile,
-  ChangePasswordFormData,
+  TenantChangePasswordFormData,
   DocumentUploadRequest,
 } from '@/types/tenant-portal';
 import type { TenantDocument } from '@/types/tenant';
@@ -79,7 +79,7 @@ export async function getTenantProfile(): Promise<TenantProfile> {
  * // Success - user will be logged out and redirected to login
  * ```
  */
-export async function changePassword(data: ChangePasswordFormData): Promise<void> {
+export async function changePassword(data: TenantChangePasswordFormData): Promise<void> {
   await apiClient.post(`${TENANT_BASE_PATH}/account/change-password`, {
     currentPassword: data.currentPassword,
     newPassword: data.newPassword,

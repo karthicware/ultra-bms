@@ -1,0 +1,1140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Story Context for Story 4.1: Work Order Creation and Management
+  Generated: 2025-11-24
+  Purpose: Provide comprehensive context for AI-assisted development
+  Source Story: /docs/sprint-artifacts/4-1-work-order-creation-and-management.md
+-->
+
+<story-context>
+  <metadata>
+    <story-id>4.1</story-id>
+    <story-title>Work Order Creation and Management</story-title>
+    <epic-id>4</epic-id>
+    <epic-title>Maintenance Operations</epic-title>
+    <status>drafted</status>
+    <prerequisites>
+      <prerequisite story-id="3.1">Property and Unit Management</prerequisite>
+      <prerequisite story-id="3.4">Tenant Maintenance Request Submission</prerequisite>
+    </prerequisites>
+  </metadata>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 1: STORY OVERVIEW AND REQUIREMENTS -->
+  <!-- ================================================================ -->
+  <story-requirements>
+    <user-story>
+      As a property manager,
+      I want to create and manage work orders from multiple sources,
+      So that all maintenance needs are tracked and assigned efficiently.
+    </user-story>
+
+    <key-acceptance-criteria>
+      <criterion id="ac-1">Work order form with basic information fields (property, unit, category, priority, title, description, scheduled date, access instructions, photo attachments)</criterion>
+      <criterion id="ac-2">Work order entity with comprehensive fields including workOrderNumber (WO-YYYY-NNNN), status lifecycle, cost tracking</criterion>
+      <criterion id="ac-3">Filterable work order list with search, color-coded priority badges, and quick actions</criterion>
+      <criterion id="ac-4">Work order detail page with full information, status history, photos, comments</criterion>
+      <criterion id="ac-5">Role-based access control: hide cost fields (estimatedCost, actualCost) from TENANT role</criterion>
+      <criterion id="ac-6">Complete REST API with CRUD operations and specialized endpoints</criterion>
+    </key-acceptance-criteria>
+
+    <technical-notes>
+      <note>Work order numbers auto-increment with year prefix (WO-2025-0001, WO-2025-0002, etc.)</note>
+      <note>Implement role-based access control for cost visibility - check user role and exclude cost fields for TENANT role</note>
+      <note>Add database indexes on propertyId, status, assignedTo, scheduledDate for query performance</note>
+      <note>Frontend: Use shadcn/ui DataTable with server-side pagination</note>
+      <note>Store attachments in S3 using path pattern: /work-orders/{workOrderId}/</note>
+      <note>Send email notifications on creation, assignment, and status changes</note>
+      <note>Link tenant maintenance requests to work orders automatically via maintenanceRequestId</note>
+    </technical-notes>
+  </story-requirements>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 2: ARCHITECTURE AND DESIGN DECISIONS -->
+  <!-- ================================================================ -->
+  <architecture-guidance>
+    <domain-modeling>
+      <entity name="WorkOrder">
+        <description>Central entity for maintenance work tracking, distinct from tenant-submitted MaintenanceRequests</description>
+        <key-differences-from-maintenance-request>
+          <difference>WorkOrder uses OPEN status for new orders; MaintenanceRequest uses SUBMITTED</difference>
+          <difference>WorkOrder has cost fields (estimatedCost, actualCost) hidden from tenants</difference>
+          <difference>WorkOrder can reference MaintenanceRequest via maintenanceRequestId (optional)</difference>
+          <difference>WorkOrder has workOrderNumber (WO-YYYY-NNNN); MaintenanceRequest has requestNumber (MR-YYYY-NNNN)</difference>
+          <difference>WorkOrder is property manager-facing; MaintenanceRequest is tenant-facing</difference>
+        </key-differences-from-maintenance-request>
+
+        <required-fields>
+          <field name="id" type="UUID" description="Primary key"/>
+          <field name="workOrderNumber" type="String" description="Unique identifier (WO-2025-0001), auto-generated, indexed"/>
+          <field name="propertyId" type="UUID" description="Foreign key to Property, indexed"/>
+          <field name="unitId" type="UUID" description="Foreign key to Unit, nullable for property-wide work"/>
+          <field name="category" type="enum MaintenanceCategory" description="PLUMBING, ELECTRICAL, HVAC, APPLIANCE, CARPENTRY, PEST_CONTROL, CLEANING, PAINTING, LANDSCAPING, OTHER"/>
+          <field name="priority" type="enum WorkOrderPriority" description="HIGH, MEDIUM, LOW - color-coded (red, yellow, blue)"/>
+          <field name="title" type="String" description="Max 100 chars, required"/>
+          <field name="description" type="String" description="Max 1000 chars, required"/>
+          <field name="status" type="enum WorkOrderStatus" description="OPEN, ASSIGNED, IN_PROGRESS, COMPLETED, CLOSED - indexed"/>
+          <field name="requestedBy" type="UUID" description="User ID (tenant or manager), indexed"/>
+          <field name="assignedTo" type="UUID" description="Vendor ID or staff user ID, nullable, indexed"/>
+          <field name="scheduledDate" type="LocalDate" description="When work is scheduled, indexed"/>
+          <field name="completedDate" type="LocalDateTime" description="When work was completed, nullable"/>
+          <field name="accessInstructions" type="String" description="Max 500 chars, optional"/>
+          <field name="attachments" type="List&lt;String&gt;" description="JSONB array of S3 file paths, max 5 photos"/>
+          <field name="estimatedCost" type="BigDecimal" description="Estimated cost, hidden from tenants"/>
+          <field name="actualCost" type="BigDecimal" description="Actual cost after completion, hidden from tenants"/>
+          <field name="maintenanceRequestId" type="UUID" description="Optional foreign key if work order created from tenant request"/>
+        </required-fields>
+
+        <new-enum-required>
+          <enum-name>WorkOrderStatus</enum-name>
+          <enum-values>OPEN, ASSIGNED, IN_PROGRESS, COMPLETED, CLOSED</enum-values>
+          <location>backend/src/main/java/com/ultrabms/entity/enums/WorkOrderStatus.java</location>
+          <rationale>WorkOrder uses OPEN instead of SUBMITTED to distinguish from MaintenanceRequest lifecycle</rationale>
+        </new-enum-required>
+
+        <indexes>
+          <index>idx_work_orders_property_id on propertyId</index>
+          <index>idx_work_orders_status on status</index>
+          <index>idx_work_orders_assigned_to on assignedTo</index>
+          <index>idx_work_orders_scheduled_date on scheduledDate DESC</index>
+          <index>uk_work_order_number on workOrderNumber (unique)</index>
+        </indexes>
+      </entity>
+
+      <existing-enums>
+        <enum name="MaintenanceCategory" location="backend/src/main/java/com/ultrabms/entity/enums/MaintenanceCategory.java">
+          <values>PLUMBING, ELECTRICAL, HVAC, APPLIANCE, CARPENTRY, PEST_CONTROL, CLEANING, OTHER</values>
+          <note>Story 4.1 adds PAINTING and LANDSCAPING to existing enum</note>
+        </enum>
+        <enum name="MaintenancePriority" location="backend/src/main/java/com/ultrabms/entity/enums/MaintenancePriority.java">
+          <values>HIGH, MEDIUM, LOW</values>
+          <note>Can be reused for WorkOrder priority. HIGH = emergency/safety, MEDIUM = important not urgent, LOW = non-critical</note>
+        </enum>
+      </existing-enums>
+    </domain-modeling>
+
+    <technology-stack>
+      <backend>
+        <framework>Spring Boot 3.4.0</framework>
+        <database>PostgreSQL 15+ with JSONB support</database>
+        <orm>Spring Data JPA with Hibernate</orm>
+        <validation>Jakarta Validation (Bean Validation 3.0)</validation>
+        <file-storage>AWS S3 via S3Service (supports LocalStack for local dev)</file-storage>
+        <email>Spring Mail with JavaMailSender and Thymeleaf templates</email>
+        <caching>Ehcache 3.x for application-level caching</caching>
+      </backend>
+      <frontend>
+        <framework>Next.js 15 (App Router)</framework>
+        <ui-library>shadcn/ui with Radix UI primitives</ui-library>
+        <styling>Tailwind CSS with Airbnb-inspired theme</styling>
+        <forms>React Hook Form with Zod validation</forms>
+        <state-management>React Context + SWR for data fetching</state-management>
+      </frontend>
+    </technology-stack>
+
+    <design-patterns>
+      <pattern name="Repository Pattern">Use Spring Data JPA repositories for data access</pattern>
+      <pattern name="Service Layer">Business logic in @Service classes, controllers are thin</pattern>
+      <pattern name="DTO Pattern">Use DTOs for API requests/responses, map with MapStruct or manual mapping</pattern>
+      <pattern name="Role-Based Access Control">Check UserRole enum at service layer, filter cost fields for TENANT role</pattern>
+      <pattern name="Async Email">Use @Async annotation for email sending to avoid blocking API responses</pattern>
+    </design-patterns>
+  </architecture-guidance>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 3: EXISTING CODEBASE CONTEXT -->
+  <!-- ================================================================ -->
+  <existing-codebase>
+    <related-entities>
+      <entity name="MaintenanceRequest" location="backend/src/main/java/com/ultrabms/entity/MaintenanceRequest.java">
+        <description>Tenant-submitted maintenance requests from Story 3.4</description>
+        <key-fields>requestNumber (MR-YYYY-NNNN), tenantId, unitId, propertyId, category, priority, title, description, status (SUBMITTED/ASSIGNED/IN_PROGRESS/COMPLETED/CLOSED/CANCELLED), attachments, submittedAt, assignedAt, startedAt, completedAt</key-fields>
+        <relationship-to-work-order>WorkOrder can optionally reference MaintenanceRequest via maintenanceRequestId when work order is created from a tenant request</relationship-to-work-order>
+      </entity>
+
+      <entity name="Property" location="backend/src/main/java/com/ultrabms/entity/Property.java">
+        <description>Real estate properties managed in the system</description>
+        <key-fields>id (UUID), name, address, propertyType (RESIDENTIAL/COMMERCIAL/MIXED_USE), totalUnitsCount, manager (User), status (ACTIVE/INACTIVE)</key-fields>
+        <usage-in-story>WorkOrder references Property via propertyId for location identification</usage-in-story>
+      </entity>
+
+      <entity name="Unit" location="backend/src/main/java/com/ultrabms/entity/Unit.java">
+        <description>Individual rental units within properties</description>
+        <key-fields>id (UUID), property (Property), unitNumber, floor, bedroomCount, bathroomCount, squareFootage, monthlyRent, status (AVAILABLE/RESERVED/OCCUPIED/UNDER_MAINTENANCE)</key-fields>
+        <usage-in-story>WorkOrder references Unit via unitId for specific unit maintenance</usage-in-story>
+      </entity>
+
+      <entity name="User" location="backend/src/main/java/com/ultrabms/entity/User.java">
+        <description>System users with roles (ADMIN, PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR, TENANT)</description>
+        <key-fields>id (UUID), email, firstName, lastName, role (UserRole enum), enabled</key-fields>
+        <usage-in-story>WorkOrder.requestedBy references User; WorkOrder.assignedTo can reference User (staff) or Vendor</usage-in-story>
+      </entity>
+
+      <entity name="Tenant" location="backend/src/main/java/com/ultrabms/entity/Tenant.java">
+        <description>Tenant records with lease information</description>
+        <key-fields>id (UUID), firstName, lastName, email, phone, property, unit, leaseStartDate, leaseEndDate, monthlyRent, status</key-fields>
+        <usage-in-story>Tenant can be the requestedBy user for work orders originating from maintenance requests</usage-in-story>
+      </entity>
+    </related-entities>
+
+    <services>
+      <service name="S3Service" location="backend/src/main/java/com/ultrabms/service/S3Service.java">
+        <description>AWS S3 file upload/download service with LocalStack support</description>
+        <methods>
+          <method name="uploadFile" signature="String uploadFile(MultipartFile file, String directory)" description="Upload file to S3, returns file path"/>
+          <method name="deleteFile" signature="void deleteFile(String filePath)" description="Delete single file (idempotent)"/>
+          <method name="deleteFiles" signature="void deleteFiles(List&lt;String&gt; filePaths)" description="Batch delete files"/>
+          <method name="getPresignedUrl" signature="String getPresignedUrl(String filePath)" description="Get presigned download URL (5-minute expiry)"/>
+        </methods>
+        <usage-pattern>
+          <code><![CDATA[
+// Upload work order attachment
+String filePath = s3Service.uploadFile(file, "work-orders/" + workOrderId);
+
+// Get download URL
+String downloadUrl = s3Service.getPresignedUrl(filePath);
+
+// Delete attachments on work order deletion
+s3Service.deleteFiles(workOrder.getAttachments());
+          ]]></code>
+        </usage-pattern>
+      </service>
+
+      <service name="EmailService" location="backend/src/main/java/com/ultrabms/service/EmailService.java">
+        <description>Asynchronous email notification service using Thymeleaf templates</description>
+        <existing-templates>
+          <template>password-reset-email.html</template>
+          <template>password-change-confirmation.html</template>
+          <template>quotation-email.html</template>
+          <template>welcome-email.html</template>
+          <template>maintenance-request-confirmation.html</template>
+          <template>maintenance-request-new.html</template>
+          <template>maintenance-request-status-change.html</template>
+        </existing-templates>
+        <new-templates-needed>
+          <template>work-order-created.html - Notify property manager when work order created</template>
+          <template>work-order-assigned.html - Notify assigned vendor/staff</template>
+          <template>work-order-completed.html - Notify property manager on completion</template>
+        </new-templates-needed>
+        <usage-pattern>
+          <code><![CDATA[
+// Send work order created notification
+@Async("emailTaskExecutor")
+public void sendWorkOrderCreatedNotification(WorkOrder workOrder, Property property) {
+    Context context = new Context();
+    context.setVariable("workOrderNumber", workOrder.getWorkOrderNumber());
+    context.setVariable("propertyName", property.getName());
+    context.setVariable("title", workOrder.getTitle());
+    // ... render template and send email
+}
+          ]]></code>
+        </usage-pattern>
+      </service>
+
+      <service name="PropertyService" location="backend/src/main/java/com/ultrabms/service/PropertyService.java">
+        <description>Property management service</description>
+        <relevant-methods>getPropertyById, getAllProperties (for dropdowns)</relevant-methods>
+      </service>
+
+      <service name="UnitService" location="backend/src/main/java/com/ultrabms/service/UnitService.java">
+        <description>Unit management service</description>
+        <relevant-methods>getUnitById, getUnitsByPropertyId (for property-filtered dropdowns)</relevant-methods>
+      </service>
+    </services>
+
+    <frontend-components>
+      <ui-library>shadcn/ui</ui-library>
+      <installed-components>
+        <component>Button (/frontend/src/components/ui/button.tsx)</component>
+        <component>Input (/frontend/src/components/ui/input.tsx)</component>
+        <component>Textarea (/frontend/src/components/ui/textarea.tsx)</component>
+        <component>Select (/frontend/src/components/ui/select.tsx)</component>
+        <component>Form (/frontend/src/components/ui/form.tsx)</component>
+        <component>Card (/frontend/src/components/ui/card.tsx)</component>
+        <component>Table (/frontend/src/components/ui/table.tsx)</component>
+        <component>Badge (/frontend/src/components/ui/badge.tsx)</component>
+        <component>Dialog (/frontend/src/components/ui/dialog.tsx)</component>
+        <component>Calendar (/frontend/src/components/ui/calendar.tsx)</component>
+        <component>Tabs (/frontend/src/components/ui/tabs.tsx)</component>
+        <component>Alert (/frontend/src/components/ui/alert.tsx)</component>
+        <component>Skeleton (/frontend/src/components/ui/skeleton.tsx)</component>
+      </installed-components>
+
+      <missing-components>
+        <component name="DataTable">Advanced table with sorting, filtering, pagination - use TanStack Table with shadcn/ui table</component>
+        <component name="FileUpload">Drag-and-drop file upload zone - build custom using Input type="file" with drag events</component>
+      </missing-components>
+
+      <theme-variables location="frontend/src/app/globals.css">
+        <color-scheme>Airbnb-inspired warm coral theme</color-scheme>
+        <primary-color>oklch(0.6579 0.2309 17.0745) - Warm coral</primary-color>
+        <success-color>#22C55E - Green for completed</success-color>
+        <warning-color>#F59E0B - Amber for medium priority</warning-color>
+        <destructive-color>#EF4444 - Red for high priority/cancel</destructive-color>
+      </theme-variables>
+    </frontend-components>
+  </existing-codebase>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 4: UX DESIGN SPECIFICATIONS -->
+  <!-- ================================================================ -->
+  <ux-design-specifications>
+    <design-system>shadcn/ui with Tailwind CSS, Airbnb-inspired warm coral theme</design-system>
+    <accessibility-target>WCAG 2.1 Level AA compliance</accessibility-target>
+
+    <user-journey name="Create Work Order" source="ux-design-specification.md Section 5.1">
+      <step number="1">Entry Point - User clicks "New Work Order" button (available on maintenance dashboard and global header) → System opens modal dialog</step>
+      <step number="2">
+        Job Details Input (Step 1 of 2)
+        - Select property/unit (dropdown with search)
+        - Select issue category (PLUMBING, ELECTRICAL, HVAC, etc.)
+        - Set priority level (HIGH/MEDIUM/LOW) - auto-suggested based on category
+        - Enter description (textarea with voice input option)
+        - Upload photos/videos (drag-drop or click, max 5 photos, 5MB each)
+        - System provides: smart suggestions based on category, recent similar issues, estimated response time
+      </step>
+      <step number="3">
+        Assignment & Scheduling (Step 2 of 2)
+        - System auto-suggests qualified vendors based on category, availability, past performance
+        - System suggests tentative schedule based on priority and vendor availability
+        - User can accept auto-assignment or manually select vendor
+        - User can adjust schedule if needed
+        - User can set follow-up reminders
+      </step>
+      <step number="4">
+        Confirmation & Notification
+        - User reviews summary
+        - Clicks "Create Work Order"
+        - System generates unique work order ID (WO-YYYY-NNNN)
+        - Notifies assigned vendor via email/SMS
+        - Notifies tenant of scheduled visit
+        - Shows success toast with work order number
+      </step>
+      <step number="5">Success State - User redirected to work order detail page, can track status, add notes, modify assignment</step>
+
+      <decision-points>
+        <decision>If priority = HIGH → System suggests immediate vendor notification</decision>
+        <decision>If asset selected → System checks if PM schedule exists, suggests preventive action</decision>
+        <decision>If similar recent job exists → System offers to copy details</decision>
+      </decision-points>
+
+      <error-handling>
+        <error>Required field validation with inline error messages</error>
+        <error>Vendor availability check before assignment</error>
+        <error>Conflict detection (same unit, overlapping time)</error>
+        <error>Clear error messages with suggested corrections</error>
+      </error-handling>
+    </user-journey>
+
+    <component-specifications>
+      <component name="Work Order List Page">
+        <layout>Full-width data table with filters panel on left or top</layout>
+        <filters>
+          <filter>Status (multi-select: OPEN, ASSIGNED, IN_PROGRESS, COMPLETED, CLOSED)</filter>
+          <filter>Priority (multi-select: HIGH, MEDIUM, LOW)</filter>
+          <filter>Category (multi-select dropdown)</filter>
+          <filter>Property (searchable dropdown)</filter>
+          <filter>Date range (calendar picker)</filter>
+        </filters>
+        <search>Search by work order number, title, or description (debounced 300ms)</search>
+        <columns>
+          <column>Work Order Number (sortable, clickable link)</column>
+          <column>Property/Unit (display as "Property Name - Unit #")</column>
+          <column>Title (truncate if > 50 chars)</column>
+          <column>Priority (color-coded badge: red=HIGH, yellow=MEDIUM, blue=LOW)</column>
+          <column>Status (badge with status color)</column>
+          <column>Scheduled Date (sortable, format: MMM DD, YYYY)</column>
+          <column>Assigned Vendor (display name or "Unassigned")</column>
+          <column>Actions (View, Edit, Assign buttons as dropdown)</column>
+        </columns>
+        <pagination>Server-side pagination, 20 items per page</pagination>
+        <empty-state>
+          <illustration>Empty box icon</illustration>
+          <heading>No work orders yet</heading>
+          <description>Create your first work order to start managing maintenance tasks</description>
+          <cta>New Work Order button</cta>
+        </empty-state>
+      </component>
+
+      <component name="Work Order Detail Page">
+        <layout>2-column layout: left column = main info, right column = sidebar (status history, actions)</layout>
+        <sections>
+          <section name="Header">Work order number, status badge, priority badge, created date</section>
+          <section name="Basic Information">Property, unit, category, priority, title, description, scheduled date, access instructions</section>
+          <section name="Costs">
+            <visibility>Property Manager and Admin only</visibility>
+            <fields>Estimated cost, actual cost</fields>
+          </section>
+          <section name="Attachments">Photo gallery with lightbox, download all button</section>
+          <section name="Assignment">Assigned vendor/staff details, assigned date, contact info</section>
+          <section name="Status History">Timeline with timestamps and status changes</section>
+          <section name="Comments">Comments section with add comment textarea and submit button</section>
+        </sections>
+        <actions>
+          <action>Edit Work Order (if status = OPEN or ASSIGNED)</action>
+          <action>Assign/Reassign Vendor</action>
+          <action>Cancel Work Order (if status ≠ COMPLETED or CLOSED)</action>
+          <action>Download PDF Report</action>
+        </actions>
+      </component>
+
+      <component name="Create Work Order Modal">
+        <modal-size>lg (800px)</modal-size>
+        <steps>2-step wizard with progress indicator</steps>
+        <step-1 title="Job Details">
+          <field name="property" type="searchable-select" required validation="Must select property"/>
+          <field name="unit" type="searchable-select" optional note="Leave blank for property-wide work"/>
+          <field name="category" type="select" required options="PLUMBING, ELECTRICAL, HVAC, APPLIANCE, CARPENTRY, PEST_CONTROL, CLEANING, PAINTING, LANDSCAPING, OTHER"/>
+          <field name="priority" type="radio-group" required options="HIGH (red), MEDIUM (yellow), LOW (blue)"/>
+          <field name="title" type="text" required maxLength="100" validation="Required, max 100 chars"/>
+          <field name="description" type="textarea" required maxLength="1000" rows="5" validation="Required, max 1000 chars"/>
+          <field name="scheduledDate" type="date-picker" required validation="Cannot be in the past"/>
+          <field name="accessInstructions" type="textarea" optional maxLength="500" rows="3"/>
+          <field name="attachments" type="file-upload" optional accept="image/jpeg,image/png" maxFiles="5" maxSize="5MB"/>
+        </step-1>
+        <step-2 title="Assignment & Scheduling">
+          <field name="assignedTo" type="searchable-select" optional note="Select vendor or staff member (can assign later)"/>
+          <field name="estimatedCost" type="number" optional prefix="AED" placeholder="0.00"/>
+          <notes>Assignment notes textarea (visible only to managers)</notes>
+        </step-2>
+        <actions>
+          <action>Cancel (secondary button, left-aligned)</action>
+          <action>Back (secondary button, step 2 only)</action>
+          <action>Next (primary button, step 1 only)</action>
+          <action>Create Work Order (primary button, step 2 only)</action>
+        </actions>
+      </component>
+
+      <color-coding>
+        <priority-high color="destructive" hex="#EF4444">High priority - Red badge</priority-high>
+        <priority-medium color="warning" hex="#F59E0B">Medium priority - Yellow badge</priority-medium>
+        <priority-low color="info" hex="#3B82F6">Low priority - Blue badge</priority-low>
+        <status-open color="secondary">Open - Gray badge</status-open>
+        <status-assigned color="info">Assigned - Blue badge</status-assigned>
+        <status-in-progress color="warning">In Progress - Yellow badge</status-in-progress>
+        <status-completed color="success">Completed - Green badge</status-completed>
+        <status-closed color="muted">Closed - Light gray badge</status-closed>
+      </color-coding>
+    </component-specifications>
+
+    <responsive-behavior>
+      <breakpoint size="mobile" max="640px">
+        <layout>Single column, cards instead of table</layout>
+        <navigation>Bottom sheet for modal</navigation>
+        <file-upload>Camera integration for photo capture</file-upload>
+      </breakpoint>
+      <breakpoint size="tablet" min="641px" max="1024px">
+        <layout>Collapsible sidebar, 2-column layout for forms</layout>
+        <table>Hide less critical columns (access instructions, cost)</table>
+      </breakpoint>
+      <breakpoint size="desktop" min="1025px">
+        <layout>Full layout with persistent sidebar</layout>
+        <table>All columns visible</table>
+      </breakpoint>
+    </responsive-behavior>
+  </ux-design-specifications>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 5: API SPECIFICATIONS -->
+  <!-- ================================================================ -->
+  <api-specifications>
+    <base-path>/api/v1/work-orders</base-path>
+    <authentication>JWT Bearer token required for all endpoints</authentication>
+
+    <endpoints>
+      <endpoint method="POST" path="/api/v1/work-orders">
+        <description>Create new work order</description>
+        <authorization>PROPERTY_MANAGER, ADMIN, MAINTENANCE_SUPERVISOR</authorization>
+        <request-body>
+          <field name="propertyId" type="UUID" required/>
+          <field name="unitId" type="UUID" optional/>
+          <field name="category" type="MaintenanceCategory" required/>
+          <field name="priority" type="WorkOrderPriority" required/>
+          <field name="title" type="String" required max-length="100"/>
+          <field name="description" type="String" required max-length="1000"/>
+          <field name="scheduledDate" type="LocalDate" required/>
+          <field name="accessInstructions" type="String" optional max-length="500"/>
+          <field name="attachments" type="List&lt;String&gt;" optional max-items="5"/>
+          <field name="assignedTo" type="UUID" optional/>
+          <field name="estimatedCost" type="BigDecimal" optional/>
+          <field name="maintenanceRequestId" type="UUID" optional/>
+        </request-body>
+        <response-body>
+          <field name="id" type="UUID"/>
+          <field name="workOrderNumber" type="String"/>
+          <field name="status" type="WorkOrderStatus" default="OPEN"/>
+          <field name="createdAt" type="LocalDateTime"/>
+          <all-request-fields/>
+        </response-body>
+        <validation>
+          <rule>propertyId must exist in database</rule>
+          <rule>unitId (if provided) must belong to specified property</rule>
+          <rule>scheduledDate cannot be in the past</rule>
+          <rule>attachments list max size = 5</rule>
+          <rule>assignedTo (if provided) must be valid Vendor or User with MAINTENANCE_SUPERVISOR role</rule>
+        </validation>
+        <side-effects>
+          <effect>Generate workOrderNumber (WO-{YEAR}-{SEQUENCE})</effect>
+          <effect>Send email notification to property manager</effect>
+          <effect>If assignedTo provided, send email to assigned vendor/staff</effect>
+          <effect>If maintenanceRequestId provided, update MaintenanceRequest status to CONVERTED_TO_WORK_ORDER</effect>
+        </side-effects>
+      </endpoint>
+
+      <endpoint method="GET" path="/api/v1/work-orders">
+        <description>List work orders with filtering and pagination</description>
+        <authorization>All authenticated users (results filtered by role)</authorization>
+        <query-parameters>
+          <param name="status" type="WorkOrderStatus[]" optional>Filter by status (multi-select)</param>
+          <param name="priority" type="WorkOrderPriority[]" optional>Filter by priority (multi-select)</param>
+          <param name="category" type="MaintenanceCategory[]" optional>Filter by category (multi-select)</param>
+          <param name="propertyId" type="UUID" optional>Filter by property</param>
+          <param name="assignedTo" type="UUID" optional>Filter by assigned vendor/staff</param>
+          <param name="startDate" type="LocalDate" optional>Filter scheduled date from</param>
+          <param name="endDate" type="LocalDate" optional>Filter scheduled date to</param>
+          <param name="search" type="String" optional>Search in workOrderNumber, title, description</param>
+          <param name="page" type="Integer" default="0">Page number (0-indexed)</param>
+          <param name="size" type="Integer" default="20">Page size (max 100)</param>
+          <param name="sort" type="String" default="scheduledDate,desc">Sort field and direction</param>
+        </query-parameters>
+        <response-body>
+          <field name="content" type="List&lt;WorkOrderDTO&gt;"/>
+          <field name="totalElements" type="Long"/>
+          <field name="totalPages" type="Integer"/>
+          <field name="number" type="Integer">Current page number</field>
+          <field name="size" type="Integer">Page size</field>
+        </response-body>
+        <role-based-filtering>
+          <role name="TENANT">Only show work orders where requestedBy = current user AND hide cost fields</role>
+          <role name="MAINTENANCE_SUPERVISOR">Only show work orders assigned to current user OR unassigned</role>
+          <role name="PROPERTY_MANAGER">Show all work orders for managed properties</role>
+          <role name="ADMIN">Show all work orders</role>
+        </role-based-filtering>
+      </endpoint>
+
+      <endpoint method="GET" path="/api/v1/work-orders/{id}">
+        <description>Get work order details by ID</description>
+        <authorization>All authenticated users (role-based field visibility)</authorization>
+        <path-parameters>
+          <param name="id" type="UUID">Work order ID</param>
+        </path-parameters>
+        <response-body>
+          <field name="id" type="UUID"/>
+          <field name="workOrderNumber" type="String"/>
+          <field name="propertyId" type="UUID"/>
+          <field name="propertyName" type="String"/>
+          <field name="unitId" type="UUID" nullable/>
+          <field name="unitNumber" type="String" nullable/>
+          <field name="category" type="MaintenanceCategory"/>
+          <field name="priority" type="WorkOrderPriority"/>
+          <field name="title" type="String"/>
+          <field name="description" type="String"/>
+          <field name="status" type="WorkOrderStatus"/>
+          <field name="requestedBy" type="UUID"/>
+          <field name="requestedByName" type="String"/>
+          <field name="assignedTo" type="UUID" nullable/>
+          <field name="assignedToName" type="String" nullable/>
+          <field name="scheduledDate" type="LocalDate"/>
+          <field name="completedDate" type="LocalDateTime" nullable/>
+          <field name="accessInstructions" type="String" nullable/>
+          <field name="attachments" type="List&lt;AttachmentDTO&gt;">Each attachment has: fileName, filePath, presignedUrl, uploadedAt</field>
+          <field name="estimatedCost" type="BigDecimal" nullable visibility="HIDDEN_FROM_TENANT"/>
+          <field name="actualCost" type="BigDecimal" nullable visibility="HIDDEN_FROM_TENANT"/>
+          <field name="maintenanceRequestId" type="UUID" nullable/>
+          <field name="statusHistory" type="List&lt;StatusHistoryDTO&gt;"/>
+          <field name="comments" type="List&lt;CommentDTO&gt;"/>
+          <field name="createdAt" type="LocalDateTime"/>
+          <field name="updatedAt" type="LocalDateTime"/>
+        </response-body>
+        <authorization-check>
+          <check>If user role = TENANT: verify requestedBy = current user, hide cost fields</check>
+          <check>If user role = MAINTENANCE_SUPERVISOR: verify assignedTo = current user OR work order unassigned</check>
+          <check>If user role = PROPERTY_MANAGER: verify property is managed by current user</check>
+          <check>If user role = ADMIN: allow access to all</check>
+        </authorization-check>
+      </endpoint>
+
+      <endpoint method="PUT" path="/api/v1/work-orders/{id}">
+        <description>Update work order (only allowed for OPEN or ASSIGNED status)</description>
+        <authorization>PROPERTY_MANAGER, ADMIN</authorization>
+        <path-parameters>
+          <param name="id" type="UUID">Work order ID</param>
+        </path-parameters>
+        <request-body>Same fields as POST, all optional (partial update)</request-body>
+        <response-body>Updated WorkOrderDTO</response-body>
+        <validation>
+          <rule>Can only update if status = OPEN or ASSIGNED</rule>
+          <rule>Cannot change workOrderNumber</rule>
+          <rule>Cannot change requestedBy</rule>
+        </validation>
+        <side-effects>
+          <effect>If assignedTo changed, send reassignment emails</effect>
+          <effect>If scheduledDate changed, send notification emails</effect>
+        </side-effects>
+      </endpoint>
+
+      <endpoint method="PATCH" path="/api/v1/work-orders/{id}/status">
+        <description>Update work order status</description>
+        <authorization>PROPERTY_MANAGER, ADMIN, MAINTENANCE_SUPERVISOR (if assigned)</authorization>
+        <path-parameters>
+          <param name="id" type="UUID">Work order ID</param>
+        </path-parameters>
+        <request-body>
+          <field name="status" type="WorkOrderStatus" required/>
+          <field name="notes" type="String" optional>Notes for status change</field>
+        </request-body>
+        <response-body>Updated WorkOrderDTO</response-body>
+        <validation>
+          <rule>Status transitions: OPEN → ASSIGNED → IN_PROGRESS → COMPLETED → CLOSED</rule>
+          <rule>Can skip ASSIGNED (OPEN → IN_PROGRESS for internal staff)</rule>
+          <rule>Cannot move from COMPLETED back to IN_PROGRESS</rule>
+        </validation>
+        <side-effects>
+          <effect>Log status change in status history table</effect>
+          <effect>Send status change notification emails</effect>
+          <effect>If status = COMPLETED, set completedDate timestamp</effect>
+        </side-effects>
+      </endpoint>
+
+      <endpoint method="POST" path="/api/v1/work-orders/{id}/assign">
+        <description>Assign work order to vendor or staff</description>
+        <authorization>PROPERTY_MANAGER, ADMIN</authorization>
+        <path-parameters>
+          <param name="id" type="UUID">Work order ID</param>
+        </path-parameters>
+        <request-body>
+          <field name="assignedTo" type="UUID" required>Vendor or Staff user ID</field>
+          <field name="assignmentNotes" type="String" optional/>
+        </request-body>
+        <response-body>Updated WorkOrderDTO</response-body>
+        <validation>
+          <rule>assignedTo must be valid Vendor or User with MAINTENANCE_SUPERVISOR role</rule>
+          <rule>Can only assign if status = OPEN or can reassign if status = ASSIGNED</rule>
+        </validation>
+        <side-effects>
+          <effect>Update status: OPEN → ASSIGNED</effect>
+          <effect>Set assignedAt timestamp</effect>
+          <effect>Send assignment email to vendor/staff with work order details</effect>
+          <effect>If reassignment, notify previous assignee</effect>
+        </side-effects>
+      </endpoint>
+
+      <endpoint method="POST" path="/api/v1/work-orders/{id}/comments">
+        <description>Add comment to work order</description>
+        <authorization>All authenticated users (must have access to work order)</authorization>
+        <path-parameters>
+          <param name="id" type="UUID">Work order ID</param>
+        </path-parameters>
+        <request-body>
+          <field name="comment" type="String" required max-length="1000"/>
+          <field name="visibility" type="CommentVisibility" default="ALL">ALL, INTERNAL_ONLY, TENANT_VISIBLE</field>
+        </request-body>
+        <response-body>
+          <field name="id" type="UUID"/>
+          <field name="workOrderId" type="UUID"/>
+          <field name="userId" type="UUID"/>
+          <field name="userName" type="String"/>
+          <field name="comment" type="String"/>
+          <field name="visibility" type="CommentVisibility"/>
+          <field name="createdAt" type="LocalDateTime"/>
+        </response-body>
+        <authorization-check>Check user has access to work order before allowing comment</authorization-check>
+      </endpoint>
+
+      <endpoint method="DELETE" path="/api/v1/work-orders/{id}">
+        <description>Cancel work order (soft delete, status changed to CANCELLED)</description>
+        <authorization>PROPERTY_MANAGER, ADMIN</authorization>
+        <path-parameters>
+          <param name="id" type="UUID">Work order ID</param>
+        </path-parameters>
+        <request-body>
+          <field name="cancellationReason" type="String" required max-length="500"/>
+        </request-body>
+        <response-body>Success message</response-body>
+        <validation>
+          <rule>Cannot cancel if status = COMPLETED or CLOSED</rule>
+        </validation>
+        <side-effects>
+          <effect>Update status to CANCELLED (not deleted from database)</effect>
+          <effect>Send cancellation notification to assigned vendor/staff</effect>
+          <effect>If linked to MaintenanceRequest, update MaintenanceRequest status back to SUBMITTED</effect>
+        </side-effects>
+      </endpoint>
+    </endpoints>
+
+    <error-responses>
+      <error code="400">Bad Request - Validation errors</error>
+      <error code="401">Unauthorized - Missing or invalid JWT token</error>
+      <error code="403">Forbidden - Insufficient permissions</error>
+      <error code="404">Not Found - Work order not found</error>
+      <error code="409">Conflict - Business rule violation (e.g., invalid status transition)</error>
+      <error code="500">Internal Server Error - Unexpected server error</error>
+    </error-responses>
+  </api-specifications>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 6: DATABASE SCHEMA -->
+  <!-- ================================================================ -->
+  <database-schema>
+    <table name="work_orders">
+      <column name="id" type="UUID" primary-key="true"/>
+      <column name="work_order_number" type="VARCHAR(20)" nullable="false" unique="true">
+        <index>uk_work_order_number</index>
+      </column>
+      <column name="property_id" type="UUID" nullable="false">
+        <foreign-key references="properties.id" on-delete="RESTRICT"/>
+        <index>idx_work_orders_property_id</index>
+      </column>
+      <column name="unit_id" type="UUID" nullable="true">
+        <foreign-key references="units.id" on-delete="SET NULL"/>
+      </column>
+      <column name="category" type="VARCHAR(20)" nullable="false">
+        <check>category IN ('PLUMBING', 'ELECTRICAL', 'HVAC', 'APPLIANCE', 'CARPENTRY', 'PEST_CONTROL', 'CLEANING', 'PAINTING', 'LANDSCAPING', 'OTHER')</check>
+        <index>idx_work_orders_category</index>
+      </column>
+      <column name="priority" type="VARCHAR(10)" nullable="false">
+        <check>priority IN ('HIGH', 'MEDIUM', 'LOW')</check>
+      </column>
+      <column name="title" type="VARCHAR(100)" nullable="false"/>
+      <column name="description" type="VARCHAR(1000)" nullable="false"/>
+      <column name="status" type="VARCHAR(20)" nullable="false" default="'OPEN'">
+        <check>status IN ('OPEN', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CLOSED', 'CANCELLED')</check>
+        <index>idx_work_orders_status</index>
+      </column>
+      <column name="requested_by" type="UUID" nullable="false">
+        <foreign-key references="users.id" on-delete="RESTRICT"/>
+      </column>
+      <column name="assigned_to" type="UUID" nullable="true">
+        <comment>Can reference vendors.id OR users.id (polymorphic)</comment>
+        <index>idx_work_orders_assigned_to</index>
+      </column>
+      <column name="scheduled_date" type="DATE" nullable="false">
+        <index>idx_work_orders_scheduled_date DESC</index>
+      </column>
+      <column name="completed_date" type="TIMESTAMP" nullable="true"/>
+      <column name="access_instructions" type="VARCHAR(500)" nullable="true"/>
+      <column name="attachments" type="JSONB" nullable="true">
+        <comment>Array of S3 file paths</comment>
+      </column>
+      <column name="estimated_cost" type="NUMERIC(12,2)" nullable="true"/>
+      <column name="actual_cost" type="NUMERIC(12,2)" nullable="true"/>
+      <column name="maintenance_request_id" type="UUID" nullable="true">
+        <foreign-key references="maintenance_requests.id" on-delete="SET NULL"/>
+      </column>
+      <column name="created_at" type="TIMESTAMP" nullable="false" default="CURRENT_TIMESTAMP"/>
+      <column name="updated_at" type="TIMESTAMP" nullable="false" default="CURRENT_TIMESTAMP"/>
+      <column name="created_by" type="UUID" nullable="true"/>
+      <column name="updated_by" type="UUID" nullable="true"/>
+    </table>
+
+    <table name="work_order_status_history">
+      <description>Track status changes for audit and timeline display</description>
+      <column name="id" type="UUID" primary-key="true"/>
+      <column name="work_order_id" type="UUID" nullable="false">
+        <foreign-key references="work_orders.id" on-delete="CASCADE"/>
+        <index>idx_work_order_status_history_work_order_id</index>
+      </column>
+      <column name="from_status" type="VARCHAR(20)" nullable="true">
+        <comment>NULL for initial creation</comment>
+      </column>
+      <column name="to_status" type="VARCHAR(20)" nullable="false"/>
+      <column name="notes" type="VARCHAR(1000)" nullable="true"/>
+      <column name="changed_by" type="UUID" nullable="false">
+        <foreign-key references="users.id" on-delete="RESTRICT"/>
+      </column>
+      <column name="changed_at" type="TIMESTAMP" nullable="false" default="CURRENT_TIMESTAMP"/>
+    </table>
+
+    <table name="work_order_comments">
+      <description>Comments/notes on work orders</description>
+      <column name="id" type="UUID" primary-key="true"/>
+      <column name="work_order_id" type="UUID" nullable="false">
+        <foreign-key references="work_orders.id" on-delete="CASCADE"/>
+        <index>idx_work_order_comments_work_order_id</index>
+      </column>
+      <column name="user_id" type="UUID" nullable="false">
+        <foreign-key references="users.id" on-delete="RESTRICT"/>
+      </column>
+      <column name="comment" type="VARCHAR(1000)" nullable="false"/>
+      <column name="visibility" type="VARCHAR(20)" nullable="false" default="'ALL'">
+        <check>visibility IN ('ALL', 'INTERNAL_ONLY', 'TENANT_VISIBLE')</check>
+      </column>
+      <column name="created_at" type="TIMESTAMP" nullable="false" default="CURRENT_TIMESTAMP"/>
+      <column name="updated_at" type="TIMESTAMP" nullable="false" default="CURRENT_TIMESTAMP"/>
+    </table>
+
+    <migration-notes>
+      <note>Use Flyway or Liquibase for database migrations</note>
+      <note>Migration file naming: V{version}__{description}.sql (e.g., V1.4.1__create_work_orders_table.sql)</note>
+      <note>Add MaintenanceCategory enum values: PAINTING, LANDSCAPING to existing enum if not present</note>
+      <note>Create new WorkOrderStatus enum with values: OPEN, ASSIGNED, IN_PROGRESS, COMPLETED, CLOSED, CANCELLED</note>
+    </migration-notes>
+  </database-schema>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 7: TESTING STRATEGY -->
+  <!-- ================================================================ -->
+  <testing-strategy>
+    <unit-tests>
+      <test-class name="WorkOrderServiceTest">
+        <test>createWorkOrder_ValidInput_ReturnsCreatedWorkOrder</test>
+        <test>createWorkOrder_PropertyNotFound_ThrowsNotFoundException</test>
+        <test>createWorkOrder_PastScheduledDate_ThrowsValidationException</test>
+        <test>getWorkOrderById_ExistingId_ReturnsWorkOrder</test>
+        <test>getWorkOrderById_NonExistingId_ThrowsNotFoundException</test>
+        <test>getWorkOrderById_TenantRole_HidesCostFields</test>
+        <test>updateWorkOrderStatus_ValidTransition_UpdatesStatus</test>
+        <test>updateWorkOrderStatus_InvalidTransition_ThrowsException</test>
+        <test>assignWorkOrder_ValidVendor_AssignsAndSendsEmail</test>
+        <test>cancelWorkOrder_CompletedStatus_ThrowsException</test>
+      </test-class>
+
+      <test-class name="WorkOrderControllerTest">
+        <test>createWorkOrder_ValidRequest_Returns201Created</test>
+        <test>createWorkOrder_InvalidRequest_Returns400BadRequest</test>
+        <test>createWorkOrder_UnauthorizedUser_Returns403Forbidden</test>
+        <test>listWorkOrders_WithFilters_ReturnsFilteredList</test>
+        <test>listWorkOrders_TenantRole_OnlyReturnsOwnWorkOrders</test>
+        <test>getWorkOrder_ExistingId_Returns200OK</test>
+        <test>getWorkOrder_NonExistingId_Returns404NotFound</test>
+        <test>updateWorkOrder_ValidUpdate_Returns200OK</test>
+        <test>updateWorkOrder_InvalidStatus_Returns409Conflict</test>
+      </test-class>
+    </unit-tests>
+
+    <integration-tests>
+      <test-class name="WorkOrderIntegrationTest">
+        <test>fullWorkOrderLifecycle_CreateAssignProgressComplete_Success</test>
+        <test>workOrderCreation_WithMaintenanceRequest_LinksCorrectly</test>
+        <test>workOrderAssignment_SendsEmailNotification_Success</test>
+        <test>workOrderStatusChange_UpdatesHistory_Success</test>
+        <test>workOrderCancellation_UpdatesLinkedMaintenanceRequest_Success</test>
+      </test-class>
+    </integration-tests>
+
+    <e2e-tests location="Story 4.1.e2e">
+      <test-suite>Work Order Creation Flow</test-suite>
+      <test-suite>Work Order List Page Filtering and Search</test-suite>
+      <test-suite>Work Order Detail Page Display</test-suite>
+      <test-suite>Role-Based Access Control (TENANT vs MANAGER)</test-suite>
+      <test-suite>Work Order Updates and Status Changes</test-suite>
+      <test-suite>Validation and Error Handling</test-suite>
+    </e2e-tests>
+
+    <test-data>
+      <fixture name="Properties">Create 3 test properties with different types</fixture>
+      <fixture name="Units">Create 10 test units across properties</fixture>
+      <fixture name="Users">Create users with all roles (ADMIN, PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR, TENANT)</fixture>
+      <fixture name="Vendors">Create 5 test vendors with different service categories</fixture>
+      <fixture name="MaintenanceRequests">Create 5 test maintenance requests to link to work orders</fixture>
+    </test-data>
+  </testing-strategy>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 8: IMPLEMENTATION CHECKLIST -->
+  <!-- ================================================================ -->
+  <implementation-checklist>
+    <phase name="Backend - Entities and Enums">
+      <task>Create WorkOrderStatus enum (OPEN, ASSIGNED, IN_PROGRESS, COMPLETED, CLOSED, CANCELLED)</task>
+      <task>Add PAINTING and LANDSCAPING to MaintenanceCategory enum</task>
+      <task>Create WorkOrder entity with all fields per specification</task>
+      <task>Create WorkOrderStatusHistory entity for status tracking</task>
+      <task>Create WorkOrderComment entity for comments</task>
+      <task>Verify Vendor entity exists or create if missing</task>
+    </phase>
+
+    <phase name="Backend - Database">
+      <task>Create Flyway migration for work_orders table</task>
+      <task>Create Flyway migration for work_order_status_history table</task>
+      <task>Create Flyway migration for work_order_comments table</task>
+      <task>Add indexes per schema specification</task>
+      <task>Test migrations on clean database</task>
+    </phase>
+
+    <phase name="Backend - Repositories">
+      <task>Create WorkOrderRepository interface extending JpaRepository</task>
+      <task>Add custom query methods: findByStatus, findByPropertyId, findByAssignedTo, searchByKeyword</task>
+      <task>Create WorkOrderStatusHistoryRepository</task>
+      <task>Create WorkOrderCommentRepository</task>
+    </phase>
+
+    <phase name="Backend - DTOs">
+      <task>Create CreateWorkOrderRequest DTO with validation annotations</task>
+      <task>Create UpdateWorkOrderRequest DTO</task>
+      <task>Create WorkOrderResponse DTO with role-based field visibility</task>
+      <task>Create WorkOrderListResponse DTO for paginated lists</task>
+      <task>Create StatusHistoryDTO</task>
+      <task>Create CommentDTO</task>
+      <task>Create AttachmentDTO with presignedUrl field</task>
+    </phase>
+
+    <phase name="Backend - Services">
+      <task>Create WorkOrderService interface</task>
+      <task>Implement WorkOrderServiceImpl with business logic</task>
+      <task>Implement work order number generation (WO-YYYY-NNNN)</task>
+      <task>Implement role-based cost field filtering in getWorkOrderById</task>
+      <task>Implement status transition validation</task>
+      <task>Add photo upload handling via S3Service</task>
+      <task>Add email notifications via EmailService (create new templates)</task>
+      <task>Implement linking to MaintenanceRequest when creating from request</task>
+    </phase>
+
+    <phase name="Backend - Controllers">
+      <task>Create WorkOrderController with @RestController and @RequestMapping</task>
+      <task>Implement POST /api/v1/work-orders (createWorkOrder)</task>
+      <task>Implement GET /api/v1/work-orders (listWorkOrders with filters)</task>
+      <task>Implement GET /api/v1/work-orders/{id} (getWorkOrderById)</task>
+      <task>Implement PUT /api/v1/work-orders/{id} (updateWorkOrder)</task>
+      <task>Implement PATCH /api/v1/work-orders/{id}/status (updateStatus)</task>
+      <task>Implement POST /api/v1/work-orders/{id}/assign (assignWorkOrder)</task>
+      <task>Implement POST /api/v1/work-orders/{id}/comments (addComment)</task>
+      <task>Implement DELETE /api/v1/work-orders/{id} (cancelWorkOrder)</task>
+      <task>Add @PreAuthorize annotations for role-based security</task>
+    </phase>
+
+    <phase name="Backend - Email Templates">
+      <task>Create work-order-created.html Thymeleaf template</task>
+      <task>Create work-order-created.txt plain text template</task>
+      <task>Create work-order-assigned.html template</task>
+      <task>Create work-order-assigned.txt template</task>
+      <task>Create work-order-completed.html template</task>
+      <task>Create work-order-completed.txt template</task>
+      <task>Add sendWorkOrderCreatedNotification method to EmailService</task>
+      <task>Add sendWorkOrderAssignedNotification method to EmailService</task>
+      <task>Add sendWorkOrderCompletedNotification method to EmailService</task>
+    </phase>
+
+    <phase name="Backend - Testing">
+      <task>Write unit tests for WorkOrderService (10+ test cases)</task>
+      <task>Write unit tests for WorkOrderController (8+ test cases)</task>
+      <task>Write integration tests for full work order lifecycle</task>
+      <task>Test role-based access control (TENANT vs MANAGER)</task>
+      <task>Test email notifications (mock SMTP)</task>
+      <task>Test S3 file upload integration (use LocalStack)</task>
+    </phase>
+
+    <phase name="Frontend - API Client">
+      <task>Create workOrderApi.ts with axios client</task>
+      <task>Implement createWorkOrder API call</task>
+      <task>Implement getWorkOrders API call with filters</task>
+      <task>Implement getWorkOrderById API call</task>
+      <task>Implement updateWorkOrder API call</task>
+      <task>Implement updateWorkOrderStatus API call</task>
+      <task>Implement assignWorkOrder API call</task>
+      <task>Implement addWorkOrderComment API call</task>
+      <task>Implement cancelWorkOrder API call</task>
+      <task>Add error handling and toast notifications</task>
+    </phase>
+
+    <phase name="Frontend - Type Definitions">
+      <task>Create WorkOrder interface in types/workOrder.ts</task>
+      <task>Create WorkOrderStatus enum</task>
+      <task>Create WorkOrderPriority enum</task>
+      <task>Create CreateWorkOrderRequest interface</task>
+      <task>Create WorkOrderFilters interface</task>
+      <task>Create StatusHistory interface</task>
+      <task>Create WorkOrderComment interface</task>
+    </phase>
+
+    <phase name="Frontend - Components">
+      <task>Create WorkOrderListPage with DataTable component</task>
+      <task>Implement filters panel (status, priority, category, property, date range)</task>
+      <task>Implement search bar with debounced search</task>
+      <task>Add priority and status badge components</task>
+      <task>Create CreateWorkOrderModal (2-step wizard)</task>
+      <task>Implement property and unit dropdown with search</task>
+      <task>Implement category and priority selection</task>
+      <task>Create FileUploadZone component for photo attachments (max 5, 5MB each)</task>
+      <task>Implement date picker for scheduledDate</task>
+      <task>Create WorkOrderDetailPage layout (2-column)</task>
+      <task>Implement status history timeline component</task>
+      <task>Implement comments section with add comment form</task>
+      <task>Create photo gallery with lightbox</task>
+      <task>Add role-based cost field visibility</task>
+      <task>Implement assign/reassign vendor modal</task>
+    </phase>
+
+    <phase name="Frontend - Routing">
+      <task>Add /work-orders route for list page</task>
+      <task>Add /work-orders/new route for create modal</task>
+      <task>Add /work-orders/[id] route for detail page</task>
+      <task>Add /work-orders/[id]/edit route for edit modal</task>
+      <task>Protect routes with role-based guards</task>
+    </phase>
+
+    <phase name="Frontend - E2E Tests">
+      <task>Write E2E test: Create work order flow</task>
+      <task>Write E2E test: Work order list filtering and search</task>
+      <task>Write E2E test: Work order detail page display</task>
+      <task>Write E2E test: Role-based access control</task>
+      <task>Write E2E test: Work order status updates</task>
+      <task>Write E2E test: File upload validation (max 5, 5MB)</task>
+      <task>Write E2E test: Work order cancellation</task>
+      <task>Write E2E test: Comments functionality</task>
+    </phase>
+
+    <phase name="Documentation and Deployment">
+      <task>Update API documentation (Swagger/OpenAPI)</task>
+      <task>Update user guide with work order management instructions</task>
+      <task>Perform smoke tests on staging environment</task>
+      <task>Deploy to production</task>
+      <task>Monitor logs for errors</task>
+      <task>Mark story as DONE in sprint-status.yaml</task>
+    </phase>
+  </implementation-checklist>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 9: IMPLEMENTATION NOTES AND GOTCHAS -->
+  <!-- ================================================================ -->
+  <implementation-notes>
+    <note priority="critical">
+      <title>Work Order vs Maintenance Request Distinction</title>
+      <description>
+        WorkOrder is a separate entity from MaintenanceRequest. Key differences:
+        - MaintenanceRequest: Tenant-submitted, uses SUBMITTED status, no cost fields
+        - WorkOrder: Manager-created OR generated from MaintenanceRequest, uses OPEN status, has cost fields
+        - WorkOrder can link to MaintenanceRequest via maintenanceRequestId (optional)
+        - When creating WorkOrder from MaintenanceRequest, copy relevant fields and set maintenanceRequestId
+      </description>
+    </note>
+
+    <note priority="high">
+      <title>Work Order Number Generation</title>
+      <description>
+        Implement auto-increment sequence for work order numbers in format WO-{YEAR}-{SEQUENCE}.
+        Use database sequence or atomic counter to prevent duplicates in concurrent requests.
+        Example implementation:
+        ```java
+        // Option 1: Database sequence
+        @SequenceGenerator(name = "work_order_seq", sequenceName = "work_order_sequence", allocationSize = 1)
+
+        // Option 2: Synchronized service method with query
+        String workOrderNumber = generateWorkOrderNumber(); // WO-2025-0001
+        ```
+      </description>
+    </note>
+
+    <note priority="high">
+      <title>Role-Based Cost Field Visibility</title>
+      <description>
+        Cost fields (estimatedCost, actualCost) must be hidden from TENANT role.
+        Implement at service layer by checking user role and excluding fields from DTO.
+        ```java
+        if (currentUser.getRole() == UserRole.TENANT) {
+            workOrderDTO.setEstimatedCost(null);
+            workOrderDTO.setActualCost(null);
+        }
+        ```
+        Also ensure database queries don't return cost fields for tenant queries.
+      </description>
+    </note>
+
+    <note priority="medium">
+      <title>File Upload Validation</title>
+      <description>
+        Validate file uploads:
+        - Max 5 photos per work order
+        - Max 5MB per photo
+        - Accept only JPG/PNG formats
+        - Validate on backend even if frontend has validation
+        - Store in S3 using path pattern: /work-orders/{workOrderId}/
+        - Generate presigned URLs for downloads (5-minute expiry)
+      </description>
+    </note>
+
+    <note priority="medium">
+      <title>Status Transition Validation</title>
+      <description>
+        Enforce valid status transitions:
+        - OPEN → ASSIGNED → IN_PROGRESS → COMPLETED → CLOSED
+        - Can skip ASSIGNED (OPEN → IN_PROGRESS) for internal staff
+        - Cannot move from COMPLETED back to IN_PROGRESS
+        - CANCELLED is terminal state
+        Implement validation in service layer before persisting status change.
+      </description>
+    </note>
+
+    <note priority="medium">
+      <title>Email Notifications</title>
+      <description>
+        Send emails asynchronously (@Async) for:
+        - Work order created → notify property manager
+        - Work order assigned → notify assigned vendor/staff
+        - Status changed → notify relevant parties
+        - Work order completed → notify property manager and tenant (if linked to MaintenanceRequest)
+        Use existing EmailService pattern with Thymeleaf templates.
+      </description>
+    </note>
+
+    <note priority="low">
+      <title>Frontend DataTable Performance</title>
+      <description>
+        Use server-side pagination for work order list to handle large datasets.
+        Default page size: 20 items
+        Max page size: 100 items
+        Implement debounced search (300ms delay) to reduce API calls.
+        Cache filter results using SWR or React Query for better UX.
+      </description>
+    </note>
+
+    <note priority="low">
+      <title>MaintenanceCategory Enum Extension</title>
+      <description>
+        Story 4.1 adds PAINTING and LANDSCAPING to existing MaintenanceCategory enum.
+        This requires database migration to add new enum values:
+        ```sql
+        ALTER TYPE maintenance_category ADD VALUE IF NOT EXISTS 'PAINTING';
+        ALTER TYPE maintenance_category ADD VALUE IF NOT EXISTS 'LANDSCAPING';
+        ```
+      </description>
+    </note>
+  </implementation-notes>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 10: GLOSSARY AND REFERENCES -->
+  <!-- ================================================================ -->
+  <glossary>
+    <term name="Work Order">
+      <definition>A maintenance task created by property managers to track and manage maintenance work, either created directly or generated from tenant maintenance requests.</definition>
+    </term>
+    <term name="Maintenance Request">
+      <definition>A tenant-submitted request for maintenance services, tracked separately from work orders until converted.</definition>
+    </term>
+    <term name="Work Order Number">
+      <definition>Unique identifier for work orders in format WO-YYYY-NNNN (e.g., WO-2025-0001)</definition>
+    </term>
+    <term name="Priority">
+      <definition>Urgency level of work order: HIGH (emergency/safety), MEDIUM (important not urgent), LOW (non-critical)</definition>
+    </term>
+    <term name="Category">
+      <definition>Type of maintenance work: PLUMBING, ELECTRICAL, HVAC, APPLIANCE, CARPENTRY, PEST_CONTROL, CLEANING, PAINTING, LANDSCAPING, OTHER</definition>
+    </term>
+    <term name="Status">
+      <definition>Current state of work order: OPEN (newly created), ASSIGNED (assigned to vendor/staff), IN_PROGRESS (work started), COMPLETED (work done), CLOSED (finalized), CANCELLED (cancelled)</definition>
+    </term>
+    <term name="Role-Based Access Control (RBAC)">
+      <definition>Security mechanism that restricts system access based on user roles. Cost fields are hidden from TENANT role but visible to PROPERTY_MANAGER and ADMIN roles.</definition>
+    </term>
+  </glossary>
+
+  <references>
+    <reference type="story" location="/docs/sprint-artifacts/4-1-work-order-creation-and-management.md">Source story for this context</reference>
+    <reference type="prd" location="/docs/prd.md">Product Requirements Document</reference>
+    <reference type="architecture" location="/docs/architecture.md">Technical Architecture Document</reference>
+    <reference type="ux-design" location="/docs/ux-design-specification.md">UX Design Specification with Airbnb theme</reference>
+    <reference type="epic" location="/docs/epics/epic-4-maintenance-operations.md">Epic 4: Maintenance Operations</reference>
+    <reference type="prerequisite-story" location="Story 3.1">Property and Unit Management</reference>
+    <reference type="prerequisite-story" location="Story 3.4">Tenant Maintenance Request Submission</reference>
+    <reference type="related-entity" location="backend/src/main/java/com/ultrabms/entity/MaintenanceRequest.java">Existing MaintenanceRequest entity</reference>
+    <reference type="related-service" location="backend/src/main/java/com/ultrabms/service/S3Service.java">S3 file storage service</reference>
+    <reference type="related-service" location="backend/src/main/java/com/ultrabms/service/EmailService.java">Email notification service</reference>
+  </references>
+
+  <generation-metadata>
+    <generated-by>BMad Method - Story Context Workflow</generated-by>
+    <generated-at>2025-11-24</generated-at>
+    <workflow-version>1.0</workflow-version>
+    <story-status>drafted</story-status>
+    <ai-agent>Claude (Scrum Master agent - Bob)</ai-agent>
+  </generation-metadata>
+</story-context>

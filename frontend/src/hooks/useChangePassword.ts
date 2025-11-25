@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { changePassword } from '@/services/tenant-portal.service';
-import type { ChangePasswordFormData } from '@/types/tenant-portal';
+import type { TenantChangePasswordFormData } from '@/types/tenant-portal';
 
 export function useChangePassword() {
   const queryClient = useQueryClient();

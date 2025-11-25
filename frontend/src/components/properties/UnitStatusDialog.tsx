@@ -55,10 +55,10 @@ interface UnitStatusDialogProps {
  */
 const isValidTransition = (from: UnitStatus, to: UnitStatus): boolean => {
   const transitions: Record<UnitStatus, UnitStatus[]> = {
-    AVAILABLE: ['RESERVED', 'UNDER_MAINTENANCE'],
-    RESERVED: ['OCCUPIED', 'AVAILABLE', 'UNDER_MAINTENANCE'],
-    OCCUPIED: ['AVAILABLE', 'UNDER_MAINTENANCE'],
-    UNDER_MAINTENANCE: ['AVAILABLE', 'RESERVED'],
+    [UnitStatus.AVAILABLE]: [UnitStatus.RESERVED, UnitStatus.UNDER_MAINTENANCE],
+    [UnitStatus.RESERVED]: [UnitStatus.OCCUPIED, UnitStatus.AVAILABLE, UnitStatus.UNDER_MAINTENANCE],
+    [UnitStatus.OCCUPIED]: [UnitStatus.AVAILABLE, UnitStatus.UNDER_MAINTENANCE],
+    [UnitStatus.UNDER_MAINTENANCE]: [UnitStatus.AVAILABLE, UnitStatus.RESERVED],
   };
 
   return transitions[from]?.includes(to) || false;
@@ -113,7 +113,7 @@ export function UnitStatusDialog({
       setIsSubmitting(true);
       setShowConfirmation(false);
 
-      await updateUnitStatus(unitId, newStatus, reason || undefined);
+      await updateUnitStatus(unitId, { status: newStatus, reason: reason || undefined });
 
       toast({
         title: 'Success',

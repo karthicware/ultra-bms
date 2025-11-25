@@ -159,9 +159,9 @@ export default function PropertyDetailPage() {
   }
 
   const occupancyRate = property.occupancyRate || 0;
-  const occupiedUnits = property.occupiedUnits || 0;
+  const occupiedUnits = property.unitCounts?.occupied || 0;
   const totalUnits = property.totalUnitsCount || 0;
-  const availableUnits = totalUnits - occupiedUnits;
+  const availableUnits = property.unitCounts?.available || (totalUnits - occupiedUnits);
 
   return (
     <div className="container mx-auto p-6 space-y-6" data-testid="property-detail-page">

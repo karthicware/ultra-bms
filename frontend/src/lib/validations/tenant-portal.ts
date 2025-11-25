@@ -36,15 +36,13 @@ export const changePasswordSchema = z.object({
   path: ['confirmPassword'],
 });
 
-export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+export type TenantChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
 /**
  * Language preference validation
  */
 export const languagePreferenceSchema = z.object({
-  language: z.enum(['en', 'ar'], {
-    required_error: 'Please select a language',
-  }),
+  language: z.enum(['en', 'ar']),
 });
 
 export type LanguagePreferenceFormData = z.infer<typeof languagePreferenceSchema>;
@@ -66,4 +64,4 @@ export const documentUploadSchema = z.object({
   type: z.enum(['EMIRATES_ID', 'PASSPORT', 'VISA', 'SIGNED_LEASE', 'MULKIYA', 'OTHER']).optional(),
 });
 
-export type DocumentUploadFormData = z.infer<typeof documentUploadSchema>;
+export type TenantPortalDocumentUploadFormData = z.infer<typeof documentUploadSchema>;

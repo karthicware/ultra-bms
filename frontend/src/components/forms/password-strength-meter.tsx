@@ -61,9 +61,9 @@ export function PasswordStrengthMeter({
               />
             ))}
           </div>
-          {analysis.feedback.crackTimesDisplay && (
+          {(analysis as any).crack_times_display && (
             <p className="text-xs text-muted-foreground">
-              Estimated crack time: {analysis.feedback.crackTimesDisplay.offlineSlowHashing1e4PerSecond}
+              Estimated crack time: {(analysis as any).crack_times_display.offline_slow_hashing_1e4_per_second}
             </p>
           )}
         </div>

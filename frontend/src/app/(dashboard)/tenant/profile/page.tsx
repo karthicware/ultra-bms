@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth-context';
 import { useTenantProfile } from '@/hooks/useTenantProfile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +13,9 @@ import { PersonalInfoSection } from '@/components/tenant/PersonalInfoSection';
 import { LeaseInfoSection } from '@/components/tenant/LeaseInfoSection';
 import { ParkingInfoSection } from '@/components/tenant/ParkingInfoSection';
 import { DocumentRepositorySection } from '@/components/tenant/DocumentRepositorySection';
+
+// Force dynamic rendering for user-specific content
+export const dynamic = 'force-dynamic';
 
 /**
  * Tenant Profile Page

@@ -41,7 +41,7 @@ import {
   getLeadHistory,
 } from '@/services/leads.service';
 import { getQuotationsByLeadId, convertToTenant } from '@/services/quotations.service';
-import type { Lead, LeadDocument, LeadHistory, Quotation, DocumentType, QuotationStatus } from '@/types';
+import type { Lead, LeadDocument, LeadHistory, Quotation, LeadDocumentType, QuotationStatus } from '@/types';
 import {
   FileText,
   Download,
@@ -78,7 +78,7 @@ export default function LeadDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedDocType, setSelectedDocType] = useState<DocumentType>('EMIRATES_ID' as DocumentType);
+  const [selectedDocType, setSelectedDocType] = useState<LeadDocumentType>('EMIRATES_ID' as LeadDocumentType);
   const [isUploading, setIsUploading] = useState(false);
   const [convertingQuotationId, setConvertingQuotationId] = useState<string | null>(null);
 
@@ -364,7 +364,7 @@ export default function LeadDetailPage() {
                       <Label>Document Type</Label>
                       <Select
                         value={selectedDocType}
-                        onValueChange={(v) => setSelectedDocType(v as DocumentType)}
+                        onValueChange={(v) => setSelectedDocType(v as LeadDocumentType)}
                       >
                         <SelectTrigger data-testid="select-document-type">
                           <SelectValue />

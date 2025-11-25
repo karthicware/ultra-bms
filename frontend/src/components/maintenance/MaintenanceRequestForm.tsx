@@ -114,8 +114,14 @@ export function MaintenanceRequestForm() {
       // Compress photos before upload
       const compressedPhotos = await compressPhotos(photos);
 
+      // Convert Date to ISO string for DTO
+      const requestData = {
+        ...data,
+        preferredAccessDate: data.preferredAccessDate.toISOString(),
+      };
+
       // Submit request
-      const response = await createMaintenanceRequest(data, compressedPhotos);
+      const response = await createMaintenanceRequest(requestData, compressedPhotos);
 
       toast({
         title: 'Request submitted successfully',

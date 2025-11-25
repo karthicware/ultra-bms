@@ -56,10 +56,7 @@ const nationalIdSchema = z
  * Date of birth validation (must be 18+ years)
  */
 const dateOfBirthSchema = z
-  .date({
-    required_error: 'Date of birth is required',
-    invalid_type_error: 'Please enter a valid date',
-  })
+  .date()
   .refine(
     (date) => {
       const age = differenceInYears(new Date(), date);
@@ -142,10 +139,7 @@ export const leaseInfoSchema = z.object({
     .string()
     .min(1, 'Unit selection is required'),
   leaseStartDate: z
-    .date({
-      required_error: 'Lease start date is required',
-      invalid_type_error: 'Please enter a valid date',
-    })
+    .date()
     .refine(
       (date) => {
         const today = new Date();
@@ -157,14 +151,9 @@ export const leaseInfoSchema = z.object({
       }
     ),
   leaseEndDate: z
-    .date({
-      required_error: 'Lease end date is required',
-      invalid_type_error: 'Please enter a valid date',
-    }),
-  leaseType: z.nativeEnum(LeaseType, {
-    errorMap: () => ({ message: 'Please select a lease type' }),
-  }),
-  renewalOption: z.boolean().default(false),
+    .date(),
+  leaseType: z.nativeEnum(LeaseType),
+  renewalOption: z.boolean(),
 }).refine(
   (data) => data.leaseEndDate > data.leaseStartDate,
   {
@@ -181,31 +170,19 @@ export type LeaseInfoFormData = z.infer<typeof leaseInfoSchema>;
 
 export const rentBreakdownSchema = z.object({
   baseRent: z
-    .number({
-      required_error: 'Base rent is required',
-      invalid_type_error: 'Base rent must be a number',
-    })
+    .number()
     .min(0, 'Base rent must be 0 or greater')
     .max(999999.99, 'Base rent must be less than 1,000,000'),
   adminFee: z
-    .number({
-      invalid_type_error: 'Admin fee must be a number',
-    })
+    .number()
     .min(0, 'Admin fee must be 0 or greater')
-    .max(999999.99, 'Admin fee must be less than 1,000,000')
-    .default(0),
+    .max(999999.99, 'Admin fee must be less than 1,000,000'),
   serviceCharge: z
-    .number({
-      invalid_type_error: 'Service charge must be a number',
-    })
+    .number()
     .min(0, 'Service charge must be 0 or greater')
-    .max(999999.99, 'Service charge must be less than 1,000,000')
-    .default(0),
+    .max(999999.99, 'Service charge must be less than 1,000,000'),
   securityDeposit: z
-    .number({
-      required_error: 'Security deposit is required',
-      invalid_type_error: 'Security deposit must be a number',
-    })
+    .number()
     .min(0.01, 'Security deposit must be greater than 0')
     .max(999999.99, 'Security deposit must be less than 1,000,000'),
 });
@@ -218,19 +195,13 @@ export type RentBreakdownFormData = z.infer<typeof rentBreakdownSchema>;
 
 export const parkingAllocationSchema = z.object({
   parkingSpots: z
-    .number({
-      invalid_type_error: 'Parking spots must be a number',
-    })
+    .number()
     .min(0, 'Parking spots must be 0 or greater')
-    .max(10, 'Maximum 10 parking spots allowed')
-    .default(0),
+    .max(10, 'Maximum 10 parking spots allowed'),
   parkingFeePerSpot: z
-    .number({
-      invalid_type_error: 'Parking fee must be a number',
-    })
+    .number()
     .min(0, 'Parking fee must be 0 or greater')
-    .max(999999.99, 'Parking fee must be less than 1,000,000')
-    .default(0),
+    .max(999999.99, 'Parking fee must be less than 1,000,000'),
   spotNumbers: z
     .string()
     .max(200, 'Spot numbers must be less than 200 characters')
@@ -272,23 +243,14 @@ export type ParkingAllocationFormData = z.infer<typeof parkingAllocationSchema>;
 // ===========================
 
 export const paymentScheduleSchema = z.object({
-  paymentFrequency: z.nativeEnum(PaymentFrequency, {
-    errorMap: () => ({ message: 'Please select a payment frequency' }),
-  }),
+  paymentFrequency: z.nativeEnum(PaymentFrequency),
   paymentDueDate: z
-    .number({
-      required_error: 'Payment due date is required',
-      invalid_type_error: 'Payment due date must be a number',
-    })
+    .number()
     .min(1, 'Due date must be between 1 and 31')
     .max(31, 'Due date must be between 1 and 31'),
-  paymentMethod: z.nativeEnum(PaymentMethod, {
-    errorMap: () => ({ message: 'Please select a payment method' }),
-  }),
+  paymentMethod: z.nativeEnum(PaymentMethod),
   pdcChequeCount: z
-    .number({
-      invalid_type_error: 'PDC cheque count must be a number',
-    })
+    .number()
     .min(1, 'At least 1 PDC cheque is required')
     .max(12, 'Maximum 12 PDC cheques allowed')
     .optional(),
@@ -319,12 +281,10 @@ export const documentUploadSchema = z.object({
   signedLeaseFile: fileSchema10MB,
   additionalFiles: z
     .array(fileSchema5MB)
-    .max(5, 'Maximum 5 additional files allowed')
-    .optional()
-    .default([]),
+    .max(5, 'Maximum 5 additional files allowed'),
 });
 
-export type DocumentUploadFormData = z.infer<typeof documentUploadSchema>;
+export type TenantDocumentUploadFormData = z.infer<typeof documentUploadSchema>;
 
 // ===========================
 // Step 7: Review Schema (Combines all schemas)

@@ -5,7 +5,7 @@
  * 7-step multi-step form for complete tenant registration
  */
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -44,7 +44,7 @@ import type {
   RentBreakdownFormData,
   ParkingAllocationFormData,
   PaymentScheduleFormData,
-  DocumentUploadFormData,
+  TenantDocumentUploadFormData,
   LeaseType,
   PaymentFrequency,
   PaymentMethod,
@@ -57,7 +57,7 @@ interface TenantOnboardingFormData {
   rentBreakdown: RentBreakdownFormData;
   parkingAllocation: ParkingAllocationFormData;
   paymentSchedule: PaymentScheduleFormData;
-  documentUpload: DocumentUploadFormData;
+  documentUpload: TenantDocumentUploadFormData;
 }
 
 const WIZARD_STEPS = [
@@ -70,7 +70,7 @@ const WIZARD_STEPS = [
   { id: 'step-7', label: 'Review', value: '7' },
 ];
 
-export default function CreateTenantPage() {
+function CreateTenantWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -90,7 +90,7 @@ export default function CreateTenantPage() {
       lastName: '',
       email: '',
       phone: '',
-      dateOfBirth: null,
+      dateOfBirth: new Date(),
       nationalId: '',
       nationality: '',
       emergencyContactName: '',
@@ -99,8 +99,8 @@ export default function CreateTenantPage() {
     leaseInfo: {
       propertyId: '',
       unitId: '',
-      leaseStartDate: null,
-      leaseEndDate: null,
+      leaseStartDate: new Date(),
+      leaseEndDate: new Date(),
       leaseDuration: 0,
       leaseType: 'FIXED_TERM' as LeaseType,
       renewalOption: false,
@@ -125,10 +125,10 @@ export default function CreateTenantPage() {
       pdcChequeCount: 0,
     },
     documentUpload: {
-      emiratesIdFile: null,
-      passportFile: null,
+      emiratesIdFile: new File([], ''),
+      passportFile: new File([], ''),
       visaFile: null,
-      signedLeaseFile: null,
+      signedLeaseFile: new File([], ''),
       additionalFiles: [],
     },
   });
@@ -488,5 +488,20 @@ export default function CreateTenantPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function CreateTenantPage() {
+  return (
+    <Suspense fallback={
+      <div className="container max-w-6xl mx-auto py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Create New Tenant</h1>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <CreateTenantWizard />
+    </Suspense>
   );
 }

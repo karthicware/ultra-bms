@@ -24,9 +24,7 @@ const unitNumberSchema = z
  * Floor validation
  */
 const floorSchema = z
-  .number({
-    invalid_type_error: 'Floor must be a number',
-  })
+  .number()
   .int('Floor must be a whole number')
   .min(-5, 'Floor cannot be below -5 (basement 5)')
   .max(200, 'Floor cannot exceed 200')
@@ -37,10 +35,7 @@ const floorSchema = z
  * Bedroom count validation
  */
 const bedroomCountSchema = z
-  .number({
-    required_error: 'Bedroom count is required',
-    invalid_type_error: 'Bedroom count must be a number',
-  })
+  .number()
   .int('Bedroom count must be a whole number')
   .min(0, 'Bedroom count cannot be negative')
   .max(20, 'Bedroom count cannot exceed 20');
@@ -49,10 +44,7 @@ const bedroomCountSchema = z
  * Bathroom count validation
  */
 const bathroomCountSchema = z
-  .number({
-    required_error: 'Bathroom count is required',
-    invalid_type_error: 'Bathroom count must be a number',
-  })
+  .number()
   .min(0.5, 'Bathroom count must be at least 0.5')
   .max(20, 'Bathroom count cannot exceed 20')
   .refine((val) => val % 0.5 === 0, {
@@ -63,9 +55,7 @@ const bathroomCountSchema = z
  * Square footage validation (for units)
  */
 const unitSquareFootageSchema = z
-  .number({
-    invalid_type_error: 'Square footage must be a number',
-  })
+  .number()
   .positive('Square footage must be positive')
   .min(100, 'Unit must be at least 100 sq ft')
   .max(50000, 'Unit cannot exceed 50,000 sq ft')
@@ -76,10 +66,7 @@ const unitSquareFootageSchema = z
  * Monthly rent validation
  */
 const monthlyRentSchema = z
-  .number({
-    required_error: 'Monthly rent is required',
-    invalid_type_error: 'Monthly rent must be a number',
-  })
+  .number()
   .positive('Monthly rent must be positive')
   .min(500, 'Monthly rent must be at least AED 500')
   .max(1000000, 'Monthly rent cannot exceed AED 1,000,000')
@@ -118,8 +105,8 @@ export const createUnitSchema = z.object({
   bathroomCount: bathroomCountSchema,
   squareFootage: unitSquareFootageSchema,
   monthlyRent: monthlyRentSchema,
-  status: z.nativeEnum(UnitStatus).optional().default(UnitStatus.AVAILABLE),
-  features: z.record(z.union([z.string(), z.number(), z.boolean()])).optional().default({}),
+  status: z.nativeEnum(UnitStatus),
+  features: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
 
 export type CreateUnitFormData = z.infer<typeof createUnitSchema>;
@@ -137,7 +124,7 @@ export const updateUnitSchema = z
     squareFootage: unitSquareFootageSchema,
     monthlyRent: monthlyRentSchema.optional(),
     status: z.nativeEnum(UnitStatus).optional(),
-    features: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
+    features: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
   })
   .refine(
     (data) =>
@@ -160,29 +147,21 @@ export const bulkCreateUnitsSchema = z
     propertyId: propertyIdSchema,
     startingUnitNumber: unitNumberSchema,
     count: z
-      .number({
-        required_error: 'Count is required',
-        invalid_type_error: 'Count must be a number',
-      })
+      .number()
       .int('Count must be a whole number')
       .min(2, 'Must create at least 2 units for bulk operation')
       .max(500, 'Cannot create more than 500 units at once'),
     floor: z
-      .number({
-        required_error: 'Floor is required for bulk creation',
-        invalid_type_error: 'Floor must be a number',
-      })
+      .number()
       .int('Floor must be a whole number')
       .min(-5, 'Floor cannot be below -5')
       .max(200, 'Floor cannot exceed 200'),
-    incrementPattern: z.nativeEnum(IncrementPattern, {
-      required_error: 'Increment pattern is required',
-    }),
+    incrementPattern: z.nativeEnum(IncrementPattern),
     bedroomCount: bedroomCountSchema,
     bathroomCount: bathroomCountSchema,
     squareFootage: unitSquareFootageSchema,
     monthlyRent: monthlyRentSchema,
-    features: z.record(z.union([z.string(), z.number(), z.boolean()])).optional().default({}),
+    features: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
   })
   .refine(
     (data) => {
@@ -207,9 +186,7 @@ export type BulkCreateUnitsFormData = z.infer<typeof bulkCreateUnitsSchema>;
  */
 export const updateUnitStatusSchema = z
   .object({
-    status: z.nativeEnum(UnitStatus, {
-      required_error: 'New status is required',
-    }),
+    status: z.nativeEnum(UnitStatus),
     reason: statusChangeReasonSchema.optional(),
   })
   .refine(
@@ -238,9 +215,7 @@ export const bulkUpdateStatusSchema = z.object({
     .array(z.string().uuid())
     .min(1, 'Please select at least one unit')
     .max(100, 'Cannot update more than 100 units at once'),
-  newStatus: z.nativeEnum(UnitStatus, {
-    required_error: 'New status is required',
-  }),
+  newStatus: z.nativeEnum(UnitStatus),
   reason: statusChangeReasonSchema.optional(),
 });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams } from 'next/navigation';
@@ -25,7 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { AlertCircle } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginForm() {
   const searchParams = useSearchParams();
   const { login } = useAuth();
   const [error, setError] = useState<string>('');
@@ -197,5 +197,22 @@ export default function LoginPage() {
         </form>
       </Form>
     </AuthLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <AuthLayout
+        title="Sign in to your account"
+        description="Enter your credentials to access Ultra BMS"
+      >
+        <div className="flex items-center justify-center p-8">
+          <div className="text-center text-muted-foreground">Loading...</div>
+        </div>
+      </AuthLayout>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

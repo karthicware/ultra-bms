@@ -104,10 +104,10 @@ export function UnitGrid({ units, onViewUnit, onEditUnit, onDeleteUnit, onStatus
     }
 
     // Floor filter
-    if (floorMin && unit.floor < parseInt(floorMin)) {
+    if (floorMin && unit.floor !== undefined && unit.floor < parseInt(floorMin)) {
       return false;
     }
-    if (floorMax && unit.floor > parseInt(floorMax)) {
+    if (floorMax && unit.floor !== undefined && unit.floor > parseInt(floorMax)) {
       return false;
     }
 

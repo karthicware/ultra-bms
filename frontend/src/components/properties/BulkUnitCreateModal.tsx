@@ -67,7 +67,7 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [creationProgress, setCreationProgress] = useState(0);
-  const [result, setResult] = useState<{ success: number; failed: number; errors: string[] } | null>(null);
+  const [result, setResult] = useState<{ success: number; failed: number; errors: Array<{ unitNumber: string; reason: string; }> } | null>(null);
 
   const form = useForm<BulkCreateUnitsFormData>({
     resolver: zodResolver(bulkCreateUnitsSchema),
@@ -136,14 +136,14 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
         setCreationProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      const result = await bulkCreateUnits(propertyId, data);
+      const result = await bulkCreateUnits({ ...data, propertyId } as any);
 
       clearInterval(progressInterval);
       setCreationProgress(100);
 
       const successCount = result.successCount || 0;
-      const failedCount = result.failedCount || 0;
-      const errors = result.errors || [];
+      const failedCount = result.failureCount || 0;
+      const errors = result.failures || [];
 
       setResult({
         success: successCount,
@@ -477,7 +477,7 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
                             <p className="font-semibold">{result.failed} units failed:</p>
                             <ul className="list-disc list-inside text-sm">
                               {result.errors.slice(0, 5).map((error, idx) => (
-                                <li key={idx}>{error}</li>
+                                <li key={idx}>Unit {error.unitNumber}: {error.reason}</li>
                               ))}
                               {result.errors.length > 5 && (
                                 <li>...and {result.errors.length - 5} more</li>

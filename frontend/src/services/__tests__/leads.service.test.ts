@@ -15,7 +15,7 @@ import {
   deleteLead,
 } from '../leads.service';
 import { apiClient } from '@/lib/api';
-import { LeadSource, LeadStatus, DocumentType } from '@/types';
+import { LeadSource, LeadStatus, LeadDocumentType } from '@/types';
 
 // Mock the API client
 jest.mock('@/lib/api', () => ({
@@ -191,7 +191,7 @@ describe('Lead Service', () => {
       const mockDocument = {
         id: 'doc-123',
         leadId: 'lead-123',
-        documentType: DocumentType.EMIRATES_ID,
+        documentType: LeadDocumentType.EMIRATES_ID,
         fileName: 'emirates-id.pdf',
         fileSize: 1024,
       };
@@ -200,7 +200,7 @@ describe('Lead Service', () => {
         data: { success: true, data: mockDocument },
       });
 
-      const result = await uploadDocument('lead-123', mockFile, DocumentType.EMIRATES_ID);
+      const result = await uploadDocument('lead-123', mockFile, LeadDocumentType.EMIRATES_ID);
 
       expect(mockedApiClient.post).toHaveBeenCalledWith(
         '/v1/leads/lead-123/documents',

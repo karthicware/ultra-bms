@@ -25,7 +25,7 @@ export enum LeadSource {
   OTHER = 'OTHER'
 }
 
-export enum DocumentType {
+export enum LeadDocumentType {
   EMIRATES_ID = 'EMIRATES_ID',
   PASSPORT = 'PASSPORT',
   MARRIAGE_CERTIFICATE = 'MARRIAGE_CERTIFICATE',
@@ -69,7 +69,7 @@ export interface Lead {
 export interface LeadDocument {
   id: string;
   leadId: string;
-  documentType: DocumentType;
+  documentType: LeadDocumentType;
   fileName: string;
   filePath: string;
   fileSize: number; // in bytes
@@ -132,7 +132,7 @@ export interface LeadSearchParams {
 
 export interface UploadDocumentRequest {
   file: File;
-  documentType: DocumentType;
+  documentType: LeadDocumentType;
 }
 
 // ===========================
@@ -198,9 +198,9 @@ export interface LeadFormData {
   propertyInterest?: string;
 }
 
-export interface DocumentUploadFormData {
+export interface LeadDocumentUploadFormData {
   file: File;
-  documentType: DocumentType;
+  documentType: LeadDocumentType;
 }
 
 // ===========================

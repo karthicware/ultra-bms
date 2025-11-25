@@ -81,7 +81,7 @@ export function UnitFormModal({ propertyId, onSuccess, trigger }: UnitFormModalP
         features,
       };
 
-      const unit = await createUnit(propertyId, payload);
+      const unit = await createUnit({ ...payload, propertyId } as any);
 
       toast({
         title: 'Success',
@@ -201,6 +201,7 @@ export function UnitFormModal({ propertyId, onSuccess, trigger }: UnitFormModalP
                             type="number"
                             placeholder="1"
                             {...field}
+                            value={field.value ?? ''}
                             onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                             data-testid="input-floor"
                           />

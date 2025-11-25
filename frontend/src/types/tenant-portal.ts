@@ -3,7 +3,7 @@
  * Defines types for tenant dashboard and profile management
  */
 
-import { DocumentType, TenantDocument } from './tenant';
+import { TenantDocumentType, TenantDocument } from './tenant';
 
 // ===========================
 // Enums
@@ -112,7 +112,7 @@ export interface TenantProfile {
 // Account Settings Types
 // ===========================
 
-export interface ChangePasswordFormData {
+export interface TenantChangePasswordFormData {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
@@ -128,7 +128,7 @@ export interface LanguagePreference {
 
 export interface DocumentUploadRequest {
   file: File;
-  type?: DocumentType;
+  type?: TenantDocumentType;
 }
 
 export interface DocumentDownloadInfo {

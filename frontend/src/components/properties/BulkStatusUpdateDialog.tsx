@@ -72,7 +72,7 @@ export function BulkStatusUpdateDialog({
   const [result, setResult] = useState<{
     success: number;
     failed: number;
-    errors: string[];
+    errors: Array<{ unitId: string; unitNumber: string; reason: string; }>;
   } | null>(null);
 
   const handleSubmit = () => {
@@ -102,14 +102,14 @@ export function BulkStatusUpdateDialog({
         setProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      const response = await bulkUpdateUnitStatus(unitIds, newStatus, reason || undefined);
+      const response = await bulkUpdateUnitStatus({ unitIds, newStatus, reason: reason || undefined });
 
       clearInterval(progressInterval);
       setProgress(100);
 
       const successCount = response.successCount || 0;
-      const failedCount = response.failedCount || 0;
-      const errors = response.errors || [];
+      const failedCount = response.failureCount || 0;
+      const errors = response.failures || [];
 
       setResult({
         success: successCount,
@@ -243,7 +243,7 @@ export function BulkStatusUpdateDialog({
                         <p className="font-semibold">{result.failed} units failed:</p>
                         <ul className="list-disc list-inside text-sm">
                           {result.errors.slice(0, 5).map((error, idx) => (
-                            <li key={idx}>{error}</li>
+                            <li key={idx}>Unit {error.unitNumber}: {error.reason}</li>
                           ))}
                           {result.errors.length > 5 && (
                             <li>...and {result.errors.length - 5} more</li>

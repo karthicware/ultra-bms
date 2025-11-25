@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { LeadSource, DocumentType } from '@/types/leads';
+import { LeadSource, LeadDocumentType } from '@/types/leads';
 
 // ===========================
 // Common Validation Rules
@@ -63,10 +63,7 @@ export const passportNumberSchema = z
  * Passport expiry date validation (must be in future)
  */
 const passportExpirySchema = z
-  .date({
-    required_error: 'Passport expiry date is required',
-    invalid_type_error: 'Please enter a valid date',
-  })
+  .date()
   .refine(
     (date) => date > new Date(),
     {
@@ -111,9 +108,7 @@ export const createLeadSchema = z.object({
   homeCountry: homeCountrySchema,
   email: emailSchema,
   contactNumber: phoneSchema,
-  leadSource: z.nativeEnum(LeadSource, {
-    errorMap: () => ({ message: 'Please select a valid lead source' }),
-  }),
+  leadSource: z.nativeEnum(LeadSource),
   notes: notesSchema,
   propertyInterest: z.string().optional(),
 });
@@ -158,9 +153,7 @@ export const uploadDocumentSchema = z.object({
         message: 'File must be PDF, JPG, or PNG',
       }
     ),
-  documentType: z.nativeEnum(DocumentType, {
-    errorMap: () => ({ message: 'Please select a document type' }),
-  }),
+  documentType: z.nativeEnum(LeadDocumentType),
 });
 
 export type UploadDocumentFormData = z.infer<typeof uploadDocumentSchema>;

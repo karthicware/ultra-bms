@@ -7,7 +7,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { changePasswordSchema } from '@/lib/validations/tenant-portal';
-import type { ChangePasswordFormData } from '@/lib/validations/tenant-portal';
+import type { TenantChangePasswordFormData } from '@/lib/validations/tenant-portal';
 import { useChangePassword } from '@/hooks/useChangePassword';
 import {
   Form,
@@ -24,7 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export function AccountSettingsSection() {
   const changePasswordMutation = useChangePassword();
 
-  const form = useForm<ChangePasswordFormData>({
+  const form = useForm<TenantChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
     defaultValues: {
       currentPassword: '',
@@ -33,7 +33,7 @@ export function AccountSettingsSection() {
     },
   });
 
-  const onSubmit = (data: ChangePasswordFormData) => {
+  const onSubmit = (data: TenantChangePasswordFormData) => {
     changePasswordMutation.mutate(data);
   };
 

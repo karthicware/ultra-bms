@@ -41,5 +41,5 @@ export async function getPropertyManagers(): Promise<GetPropertyManagersResponse
   const response = await apiClient.get<GetPropertyManagersResponse>(
     `${USERS_BASE_PATH}?role=PROPERTY_MANAGER&page=0&size=100`
   );
-  return response;
+  return response.data;
 }

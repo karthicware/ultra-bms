@@ -5,7 +5,7 @@
  * Form for creating quotations with real-time total calculation
  */
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -55,7 +55,7 @@ const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', minimumFractionDigits: 0 }).format(amount);
 };
 
-export default function CreateQuotationPage() {
+function CreateQuotationForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -512,5 +512,20 @@ export default function CreateQuotationPage() {
         </form>
       </Form>
     </div>
+  );
+}
+
+export default function CreateQuotationPage() {
+  return (
+    <Suspense fallback={
+      <div className="container max-w-5xl mx-auto py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Create Quotation</h1>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <CreateQuotationForm />
+    </Suspense>
   );
 }

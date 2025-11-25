@@ -70,8 +70,8 @@ development_status:
 
   # Epic 4: Maintenance Operations (4 technical stories + 4 E2E stories)
   epic-4: backlog
-  4-1-work-order-creation-and-management: backlog
-  4-2-preventive-maintenance-scheduling: backlog
+  4-1-work-order-creation-and-management: done  # Completed 2025-11-24 - Full implementation: Work order CRUD, status management, comments, timeline, photo uploads. Backend: 22 files (entities, repos, DTOs, service, controller, tests). Frontend: 8 files (types, schemas, service, 3 pages, 2 components). Tests: WorkOrderServiceTest with 20+ test cases. All 12 REST endpoints implemented. Story context: docs/sprint-artifacts/stories/4-1-work-order-creation-and-management.context.xml. Total: 30 files, ~7,430 lines of code.
+  4-2-preventive-maintenance-scheduling: ready-for-dev  # Ready for Dev 2025-11-24 - Story context generated
   4-3-work-order-assignment-and-vendor-coordination: backlog
   4-4-job-progress-tracking-and-completion: backlog
   # E2E Testing Stories (implement after all technical stories complete)

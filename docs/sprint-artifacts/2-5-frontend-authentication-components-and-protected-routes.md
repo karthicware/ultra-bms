@@ -1131,3 +1131,12 @@ Modified:
 - src/components/session-expiry-warning.tsx
 - src/app/layout.tsx
 - README.md
+
+### Post-Completion Updates
+
+**2025-11-24 - Sidebar Navigation Added:**
+- Created `Sidebar.tsx` component (deferred from Story 2.2 AC9)
+- Integrated sidebar into dashboard layout
+- Addresses critical usability issue discovered during testing
+- Implemented via correct-course workflow
+- Permission-based filtering marked as TODO for future enhancement

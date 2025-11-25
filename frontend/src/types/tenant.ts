@@ -27,7 +27,7 @@ export enum PaymentMethod {
   ONLINE = 'ONLINE'
 }
 
-export enum DocumentType {
+export enum TenantDocumentType {
   EMIRATES_ID = 'EMIRATES_ID',
   PASSPORT = 'PASSPORT',
   VISA = 'VISA',
@@ -119,7 +119,7 @@ export interface Tenant {
 export interface TenantDocument {
   id: string;
   tenantId: string;
-  documentType: DocumentType;
+  documentType: TenantDocumentType;
   fileName: string;
   filePath: string; // S3 path
   fileSize: number; // in bytes
@@ -279,7 +279,7 @@ export interface PersonalInfoFormData {
   lastName: string;
   email: string;
   phone: string;
-  dateOfBirth: Date | null;
+  dateOfBirth: Date;
   nationalId: string;
   nationality: string;
   emergencyContactName: string;
@@ -289,8 +289,8 @@ export interface PersonalInfoFormData {
 export interface LeaseInfoFormData {
   propertyId: string;
   unitId: string;
-  leaseStartDate: Date | null;
-  leaseEndDate: Date | null;
+  leaseStartDate: Date;
+  leaseEndDate: Date;
   leaseDuration: number; // calculated
   leaseType: LeaseType;
   renewalOption: boolean;
@@ -318,11 +318,11 @@ export interface PaymentScheduleFormData {
   pdcChequeCount: number;
 }
 
-export interface DocumentUploadFormData {
-  emiratesIdFile: File | null;
-  passportFile: File | null;
-  visaFile: File | null;
-  signedLeaseFile: File | null;
+export interface TenantDocumentUploadFormData {
+  emiratesIdFile: File;
+  passportFile: File;
+  visaFile?: File | null;
+  signedLeaseFile: File;
   additionalFiles: File[];
 }
 
@@ -333,7 +333,7 @@ export interface TenantOnboardingFormData {
   rentBreakdown: RentBreakdownFormData;
   parkingAllocation: ParkingAllocationFormData;
   paymentSchedule: PaymentScheduleFormData;
-  documentUpload: DocumentUploadFormData;
+  documentUpload: TenantDocumentUploadFormData;
 
   // Optional lead conversion data
   fromLead?: string;

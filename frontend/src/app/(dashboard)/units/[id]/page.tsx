@@ -186,7 +186,7 @@ export default function UnitDetailPage() {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink href={`/properties/${unit.propertyId}`}>
-              {unit.property?.name || 'Property'}
+              {unit.propertyName || 'Property'}
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />

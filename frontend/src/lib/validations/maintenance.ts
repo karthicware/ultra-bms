@@ -12,30 +12,13 @@ import { isAfter, isSameDay, startOfDay } from 'date-fns';
 // ENUM SCHEMAS
 // ============================================================================
 
-export const maintenanceCategorySchema = z.enum([
-  'PLUMBING',
-  'ELECTRICAL',
-  'HVAC',
-  'APPLIANCE',
-  'CARPENTRY',
-  'PEST_CONTROL',
-  'CLEANING',
-  'OTHER'
-]);
+import { MaintenanceCategory, MaintenancePriority, PreferredAccessTime } from '@/types/maintenance';
 
-export const maintenancePrioritySchema = z.enum([
-  'HIGH',
-  'MEDIUM',
-  'LOW'
-]);
+export const maintenanceCategorySchema = z.nativeEnum(MaintenanceCategory);
 
-export const preferredAccessTimeSchema = z.enum([
-  'IMMEDIATE',
-  'MORNING',
-  'AFTERNOON',
-  'EVENING',
-  'ANY_TIME'
-]);
+export const maintenancePrioritySchema = z.nativeEnum(MaintenancePriority);
+
+export const preferredAccessTimeSchema = z.nativeEnum(PreferredAccessTime);
 
 // ============================================================================
 // FILE VALIDATION

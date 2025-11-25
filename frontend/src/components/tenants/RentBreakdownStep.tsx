@@ -46,10 +46,7 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
   const totalFirstPayment = securityDeposit + adminFee + totalMonthlyRent;
 
   const onSubmit = (values: RentBreakdownFormData) => {
-    onComplete({
-      ...values,
-      totalMonthlyRent,
-    });
+    onComplete(values);
   };
 
   return (

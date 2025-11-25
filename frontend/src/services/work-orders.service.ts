@@ -1,0 +1,520 @@
+/**
+ * Work Order API Service
+ * Story 4.1: Work Order Creation and Management
+ *
+ * All work order-related API calls with comprehensive JSDoc documentation
+ */
+
+import { apiClient } from '@/lib/api';
+import type {
+  WorkOrder,
+  WorkOrderListItem,
+  WorkOrderComment,
+  CreateWorkOrderDto,
+  UpdateWorkOrderDto,
+  UpdateWorkOrderStatusDto,
+  AssignWorkOrderDto,
+  AddCommentDto,
+  WorkOrderFilters,
+  WorkOrderResponse,
+  WorkOrderListResponse,
+  WorkOrderCommentsResponse
+} from '@/types/work-orders';
+
+const WORK_ORDERS_BASE_PATH = '/v1/work-orders';
+
+// ============================================================================
+// CREATE WORK ORDER
+// ============================================================================
+
+/**
+ * Create a new work order with file uploads
+ *
+ * @param data - Work order data (property, unit, category, priority, title, description, etc.)
+ * @param files - Array of image files (max 5, JPG/PNG, max 5MB each)
+ *
+ * @returns Promise that resolves to the created WorkOrder with workOrderNumber
+ *
+ * @throws {ValidationException} When validation fails (400)
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ * @throws {ForbiddenException} When user lacks required role (403)
+ *
+ * @example
+ * ```typescript
+ * const workOrder = await createWorkOrder({
+ *   propertyId: '550e8400-e29b-41d4-a716-446655440000',
+ *   unitId: '550e8400-e29b-41d4-a716-446655440001',
+ *   category: 'PLUMBING',
+ *   priority: 'HIGH',
+ *   title: 'Fix leaking kitchen faucet - Unit 101',
+ *   description: 'Tenant reported water dripping from kitchen faucet handle...',
+ *   scheduledDate: '2025-11-25T10:00:00Z',
+ *   estimatedCost: 150.00
+ * }, [imageFile1, imageFile2]);
+ *
+ * console.log(workOrder.workOrderNumber); // "WO-2025-0001"
+ * console.log(workOrder.status); // "OPEN"
+ * ```
+ */
+export async function createWorkOrder(
+  data: CreateWorkOrderDto,
+  files?: File[]
+): Promise<WorkOrder> {
+  const formData = new FormData();
+
+  // Append request data as JSON blob
+  formData.append('request', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+
+  // Append files if provided
+  if (files && files.length > 0) {
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+  }
+
+  const response = await apiClient.post<WorkOrderResponse>(
+    WORK_ORDERS_BASE_PATH,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  return response.data.data;
+}
+
+// ============================================================================
+// LIST WORK ORDERS
+// ============================================================================
+
+/**
+ * Get paginated list of work orders with filters
+ *
+ * @param filters - Optional filters (property, unit, status, category, priority, etc.)
+ *
+ * @returns Promise that resolves to paginated list of WorkOrderListItem
+ *
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ *
+ * @example
+ * ```typescript
+ * // Get all work orders for a property
+ * const response = await getWorkOrders({
+ *   propertyId: '550e8400-e29b-41d4-a716-446655440000',
+ *   page: 0,
+ *   size: 20
+ * });
+ *
+ * // Filter by status and priority
+ * const highPriorityOpen = await getWorkOrders({
+ *   status: ['OPEN', 'ASSIGNED'],
+ *   priority: ['HIGH'],
+ *   sortBy: 'scheduledDate',
+ *   sortDirection: 'ASC'
+ * });
+ * ```
+ */
+export async function getWorkOrders(filters?: WorkOrderFilters): Promise<WorkOrderListResponse> {
+  const params: Record<string, any> = {
+    page: filters?.page ?? 0,
+    size: filters?.size ?? 20,
+    sortBy: filters?.sortBy ?? 'scheduledDate',
+    sortDirection: filters?.sortDirection ?? 'DESC',
+  };
+
+  // Add filters if provided
+  if (filters?.propertyId) {
+    params.propertyId = filters.propertyId;
+  }
+  if (filters?.unitId) {
+    params.unitId = filters.unitId;
+  }
+  if (filters?.status && filters.status.length > 0) {
+    params.status = filters.status.join(',');
+  }
+  if (filters?.category && filters.category.length > 0) {
+    params.category = filters.category.join(',');
+  }
+  if (filters?.priority && filters.priority.length > 0) {
+    params.priority = filters.priority.join(',');
+  }
+  if (filters?.assignedTo) {
+    params.assignedTo = filters.assignedTo;
+  }
+  if (filters?.startDate) {
+    params.startDate = filters.startDate;
+  }
+  if (filters?.endDate) {
+    params.endDate = filters.endDate;
+  }
+  if (filters?.search) {
+    params.search = filters.search;
+  }
+
+  const response = await apiClient.get<WorkOrderListResponse>(
+    WORK_ORDERS_BASE_PATH,
+    { params }
+  );
+
+  return response.data;
+}
+
+// ============================================================================
+// GET WORK ORDER BY ID
+// ============================================================================
+
+/**
+ * Get work order details by ID
+ *
+ * @param id - Work order UUID
+ *
+ * @returns Promise that resolves to full WorkOrder details
+ *
+ * @throws {EntityNotFoundException} When work order not found (404)
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ * @throws {ForbiddenException} When user lacks access to this work order (403)
+ *
+ * @example
+ * ```typescript
+ * const workOrder = await getWorkOrderById('550e8400-e29b-41d4-a716-446655440000');
+ * console.log(workOrder.title);
+ * console.log(workOrder.status);
+ * ```
+ */
+export async function getWorkOrderById(id: string): Promise<WorkOrder> {
+  const response = await apiClient.get<WorkOrderResponse>(`${WORK_ORDERS_BASE_PATH}/${id}`);
+  return response.data.data;
+}
+
+// ============================================================================
+// GET WORK ORDER BY NUMBER
+// ============================================================================
+
+/**
+ * Get work order details by work order number
+ *
+ * @param workOrderNumber - Work order number (e.g., "WO-2025-0001")
+ *
+ * @returns Promise that resolves to full WorkOrder details
+ *
+ * @throws {EntityNotFoundException} When work order not found (404)
+ *
+ * @example
+ * ```typescript
+ * const workOrder = await getWorkOrderByNumber('WO-2025-0001');
+ * ```
+ */
+export async function getWorkOrderByNumber(workOrderNumber: string): Promise<WorkOrder> {
+  const response = await apiClient.get<WorkOrderResponse>(
+    `${WORK_ORDERS_BASE_PATH}/number/${workOrderNumber}`
+  );
+  return response.data.data;
+}
+
+// ============================================================================
+// UPDATE WORK ORDER
+// ============================================================================
+
+/**
+ * Update work order details (partial updates supported)
+ *
+ * @param id - Work order UUID
+ * @param data - Updated work order data (only changed fields)
+ *
+ * @returns Promise that resolves to updated WorkOrder
+ *
+ * @throws {ValidationException} When validation fails (400)
+ * @throws {EntityNotFoundException} When work order not found (404)
+ * @throws {ForbiddenException} When user lacks permission (403)
+ *
+ * @example
+ * ```typescript
+ * const updated = await updateWorkOrder(workOrderId, {
+ *   priority: 'HIGH',
+ *   estimatedCost: 200.00,
+ *   scheduledDate: '2025-11-26T14:00:00Z'
+ * });
+ * ```
+ */
+export async function updateWorkOrder(
+  id: string,
+  data: UpdateWorkOrderDto
+): Promise<WorkOrder> {
+  const response = await apiClient.put<WorkOrderResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}`,
+    data
+  );
+  return response.data.data;
+}
+
+// ============================================================================
+// UPDATE WORK ORDER STATUS
+// ============================================================================
+
+/**
+ * Update work order status with optional notes
+ *
+ * @param id - Work order UUID
+ * @param data - Status update data (status and notes)
+ *
+ * @returns Promise that resolves to updated WorkOrder
+ *
+ * @throws {ValidationException} When invalid status transition (400)
+ * @throws {EntityNotFoundException} When work order not found (404)
+ *
+ * @example
+ * ```typescript
+ * const updated = await updateWorkOrderStatus(workOrderId, {
+ *   status: 'IN_PROGRESS',
+ *   notes: 'Started work on the plumbing repair'
+ * });
+ * ```
+ */
+export async function updateWorkOrderStatus(
+  id: string,
+  data: UpdateWorkOrderStatusDto
+): Promise<WorkOrder> {
+  const response = await apiClient.patch<WorkOrderResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/status`,
+    data
+  );
+  return response.data.data;
+}
+
+// ============================================================================
+// ASSIGN WORK ORDER
+// ============================================================================
+
+/**
+ * Assign work order to a vendor or staff member
+ *
+ * @param id - Work order UUID
+ * @param data - Assignment data (assignedTo user ID and optional notes)
+ *
+ * @returns Promise that resolves to updated WorkOrder
+ *
+ * @throws {EntityNotFoundException} When work order or assignee not found (404)
+ * @throws {ForbiddenException} When user lacks permission (403)
+ *
+ * @example
+ * ```typescript
+ * const assigned = await assignWorkOrder(workOrderId, {
+ *   assignedTo: vendorUserId,
+ *   assignmentNotes: 'Urgent - complete by EOD'
+ * });
+ * ```
+ */
+export async function assignWorkOrder(
+  id: string,
+  data: AssignWorkOrderDto
+): Promise<WorkOrder> {
+  const response = await apiClient.post<WorkOrderResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/assign`,
+    data
+  );
+  return response.data.data;
+}
+
+// ============================================================================
+// ADD COMMENT
+// ============================================================================
+
+/**
+ * Add a comment to a work order
+ *
+ * @param id - Work order UUID
+ * @param data - Comment data (commentText)
+ *
+ * @returns Promise that resolves to created WorkOrderComment
+ *
+ * @throws {EntityNotFoundException} When work order not found (404)
+ * @throws {ValidationException} When comment text invalid (400)
+ *
+ * @example
+ * ```typescript
+ * const comment = await addWorkOrderComment(workOrderId, {
+ *   commentText: 'Parts have arrived, will complete work tomorrow'
+ * });
+ * ```
+ */
+export async function addWorkOrderComment(
+  id: string,
+  data: AddCommentDto
+): Promise<WorkOrderComment> {
+  const response = await apiClient.post<{ success: boolean; data: WorkOrderComment }>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/comments`,
+    data
+  );
+  return response.data.data;
+}
+
+// ============================================================================
+// GET COMMENTS
+// ============================================================================
+
+/**
+ * Get all comments for a work order
+ *
+ * @param id - Work order UUID
+ *
+ * @returns Promise that resolves to array of WorkOrderComment (chronological order)
+ *
+ * @throws {EntityNotFoundException} When work order not found (404)
+ *
+ * @example
+ * ```typescript
+ * const comments = await getWorkOrderComments(workOrderId);
+ * comments.forEach(comment => {
+ *   console.log(`${comment.createdByName}: ${comment.commentText}`);
+ * });
+ * ```
+ */
+export async function getWorkOrderComments(id: string): Promise<WorkOrderComment[]> {
+  const response = await apiClient.get<WorkOrderCommentsResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/comments`
+  );
+  return response.data.data;
+}
+
+// ============================================================================
+// GET STATUS HISTORY
+// ============================================================================
+
+/**
+ * Get status change history for a work order
+ *
+ * @param id - Work order UUID
+ *
+ * @returns Promise that resolves to array of status change comments
+ *
+ * @throws {EntityNotFoundException} When work order not found (404)
+ *
+ * @example
+ * ```typescript
+ * const history = await getWorkOrderStatusHistory(workOrderId);
+ * history.forEach(change => {
+ *   console.log(`${change.previousStatus} -> ${change.newStatus} at ${change.createdAt}`);
+ * });
+ * ```
+ */
+export async function getWorkOrderStatusHistory(id: string): Promise<WorkOrderComment[]> {
+  const response = await apiClient.get<WorkOrderCommentsResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/status-history`
+  );
+  return response.data.data;
+}
+
+// ============================================================================
+// UPLOAD COMPLETION PHOTOS
+// ============================================================================
+
+/**
+ * Upload completion photos for a work order
+ *
+ * @param id - Work order UUID
+ * @param files - Array of image files (JPG/PNG, max 5MB each)
+ *
+ * @returns Promise that resolves to updated WorkOrder
+ *
+ * @throws {ValidationException} When file validation fails (400)
+ * @throws {EntityNotFoundException} When work order not found (404)
+ *
+ * @example
+ * ```typescript
+ * const updated = await uploadCompletionPhotos(workOrderId, [
+ *   beforePhoto1,
+ *   beforePhoto2,
+ *   afterPhoto1,
+ *   afterPhoto2
+ * ]);
+ * ```
+ */
+export async function uploadCompletionPhotos(
+  id: string,
+  files: File[]
+): Promise<WorkOrder> {
+  const formData = new FormData();
+
+  files.forEach((file) => {
+    formData.append('files', file);
+  });
+
+  const response = await apiClient.post<WorkOrderResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/completion-photos`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  return response.data.data;
+}
+
+// ============================================================================
+// GET UNASSIGNED WORK ORDERS
+// ============================================================================
+
+/**
+ * Get paginated list of unassigned work orders (status = OPEN)
+ *
+ * @param propertyId - Optional property ID to filter by
+ * @param page - Page number (0-indexed), default 0
+ * @param size - Page size, default 20
+ *
+ * @returns Promise that resolves to paginated list of unassigned work orders
+ *
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ *
+ * @example
+ * ```typescript
+ * const unassigned = await getUnassignedWorkOrders(propertyId, 0, 20);
+ * console.log(`${unassigned.pagination.totalElements} work orders need assignment`);
+ * ```
+ */
+export async function getUnassignedWorkOrders(
+  propertyId?: string,
+  page: number = 0,
+  size: number = 20
+): Promise<WorkOrderListResponse> {
+  const params: Record<string, any> = { page, size };
+
+  if (propertyId) {
+    params.propertyId = propertyId;
+  }
+
+  const response = await apiClient.get<WorkOrderListResponse>(
+    `${WORK_ORDERS_BASE_PATH}/unassigned`,
+    { params }
+  );
+
+  return response.data;
+}
+
+// ============================================================================
+// CANCEL WORK ORDER
+// ============================================================================
+
+/**
+ * Cancel a work order (soft delete by setting status to CLOSED)
+ *
+ * @param id - Work order UUID
+ *
+ * @returns Promise that resolves when cancellation succeeds
+ *
+ * @throws {EntityNotFoundException} When work order not found (404)
+ * @throws {ValidationException} When work order cannot be cancelled (already completed/closed) (400)
+ * @throws {ForbiddenException} When user lacks permission (403)
+ *
+ * @example
+ * ```typescript
+ * await cancelWorkOrder(workOrderId);
+ * console.log('Work order cancelled successfully');
+ * ```
+ */
+export async function cancelWorkOrder(id: string): Promise<void> {
+  await apiClient.delete(`${WORK_ORDERS_BASE_PATH}/${id}`);
+}

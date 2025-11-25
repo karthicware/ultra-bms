@@ -16,7 +16,7 @@ import type {
   LeadDocumentListResponse,
   LeadHistory,
   LeadHistoryResponse,
-  DocumentType,
+  LeadDocumentType,
 } from '@/types';
 
 const LEADS_BASE_PATH = '/v1/leads';
@@ -209,7 +209,7 @@ export async function deleteLead(id: string): Promise<void> {
 export async function uploadDocument(
   leadId: string,
   file: File,
-  documentType: DocumentType
+  documentType: LeadDocumentType
 ): Promise<LeadDocument> {
   const formData = new FormData();
   formData.append('file', file);
