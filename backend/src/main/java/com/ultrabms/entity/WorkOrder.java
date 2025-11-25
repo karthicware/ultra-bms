@@ -50,7 +50,8 @@ import java.util.UUID;
         @Index(name = "idx_work_orders_assigned_to", columnList = "assigned_to"),
         @Index(name = "idx_work_orders_scheduled_date", columnList = "scheduled_date"),
         @Index(name = "idx_work_orders_requested_by", columnList = "requested_by"),
-        @Index(name = "idx_work_orders_work_order_number", columnList = "work_order_number")
+        @Index(name = "idx_work_orders_work_order_number", columnList = "work_order_number"),
+        @Index(name = "idx_work_orders_pm_schedule_id", columnList = "pm_schedule_id")
     }
 )
 @Data
@@ -110,6 +111,14 @@ public class WorkOrder extends BaseEntity {
      */
     @Column(name = "maintenance_request_id")
     private UUID maintenanceRequestId;
+
+    /**
+     * PM Schedule that generated this work order (nullable if not PM-generated)
+     * Links preventive maintenance schedules to generated work orders
+     * Story 4.2: Preventive Maintenance Scheduling
+     */
+    @Column(name = "pm_schedule_id")
+    private UUID pmScheduleId;
 
     // =================================================================
     // WORK ORDER DETAILS

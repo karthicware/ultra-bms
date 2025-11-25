@@ -142,45 +142,6 @@ Expected ready-for-dev or in-progress. Continuing anyway...
     </check>
   </step>
 
-  <step n="1.7" goal="Validate component strategy (shadcn/ui MCP compliance)">
-    <critical>Prevents developers from skipping component discovery and rebuilding existing components</critical>
-
-    <action>Check if story file contains "## Component Mapping" section</action>
-
-    <check if="Component mapping section missing or incomplete">
-      <output>⚠️ Component Mapping Missing
-
-Story does not have required "Component Mapping" section. Running component discovery now...
-      </output>
-      <action>Identify UI components needed from acceptance criteria and tasks</action>
-      <action>Use MCP shadcn tools to discover available components:</action>
-        - mcp__shadcn__search_items_in_registries with registries=['@shadcn']
-        - mcp__shadcn__view_items_in_registries for component details
-      <action>Update story file with "Component Mapping" section before continuing</action>
-      <action>Notify user: Component mapping added - review before proceeding</action>
-    </check>
-
-    <check if="Component mapping exists">
-      <action>Review component mapping to understand implementation strategy</action>
-      <action>Note which shadcn components to install and use</action>
-      <action>Note any custom components and their rationale</action>
-    </check>
-
-    <critical>Priority Order: 1) Use shadcn/ui, 2) Compose from shadcn primitives, 3) Custom only if necessary</critical>
-
-    <reminder>Before creating ANY custom component during implementation:</reminder>
-      - Verify shadcn alternative doesn't exist using mcp__shadcn__search_items_in_registries
-      - Document rationale for custom component in code comments
-      - Ensure custom component follows UX Design Spec patterns
-      - Add to story's Component Mapping section with justification
-
-    <output>✅ Component strategy validated
-
-shadcn/ui components: {{shadcn_components_count}}
-Custom components: {{custom_components_count}}
-    </output>
-  </step>
-
   <step n="2" goal="Plan and implement task">
     <action>Review acceptance criteria and dev notes for the selected task</action>
     <action>Plan implementation steps and edge cases; write down a brief plan in Dev Agent Record → Debug Log</action>
@@ -202,15 +163,6 @@ Custom components: {{custom_components_count}}
 
   <step n="4" goal="Run validations and tests">
     <action>Determine how to run tests for this repo (infer or use {{run_tests_command}} if provided)</action>
-
-    <critical>MANDATORY: Before running any tests, verify that required services are running</critical>
-    <action>Check if E2E tests are being executed (look for playwright, cypress, or similar)</action>
-    <check if="E2E tests will be executed">
-      <action>Run service health check script: bash frontend/scripts/check-services.sh</action>
-      <action if="health check fails">HALT with clear message: "Services not running. Start backend (port 8080) and frontend (port 3000) servers before running E2E tests"</action>
-      <action if="health check succeeds">Log: "✅ All services verified - proceeding with tests"</action>
-    </check>
-
     <action>Run all existing tests to ensure no regressions</action>
     <action>Run the new tests to verify implementation correctness</action>
     <action>Run linting and code quality checks if configured</action>
