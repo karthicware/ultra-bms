@@ -78,7 +78,7 @@
 
 **AC15 - Caching with Ehcache:** Backend implements Ehcache for property list with TTL 2 hours (7200 seconds). Properties are frequently viewed but change infrequently. Add @Cacheable annotation to PropertyService.findAll() method with cache name "properties", cache key includes search and filter params. Add @CacheEvict to create, update, delete methods to invalidate cache. Configure in application.properties: spring.cache.type=ehcache, ehcache.xml defines cache "properties" with maxEntriesLocalHeap=1000, timeToLiveSeconds=7200. Unit list not cached (changes frequently with tenant assignments). Frontend doesn't need to implement cache logic (relies on backend caching for performance).
 
-**AC16 - Responsive Design and Accessibility:** All pages responsive: single column on mobile (<640px), grid on tablet (2 columns), multi-column on desktop (3-4 columns for unit grid). Unit grid cards min 280px width. Touch targets min 44×44px. All forms keyboard navigable with proper tab order. ARIA labels on all interactive elements: aria-label="Search properties", aria-label="Filter by type". Loading states with Skeleton components for property list, unit grid. Success/error feedback with toast notifications (green for success, red for error). Color-coded status badges include text labels for accessibility (not color-only). Use shadcn dark theme classes. All interactive elements have data-testid attributes per docs/data-testid-conventions.md: form-property-create, input-property-name, btn-add-unit, table-units, select-unit-status, btn-bulk-create, grid-units, card-unit-{unitNumber}.
+**AC16 - Responsive Design and Accessibility:** All pages responsive: single column on mobile (<640px), grid on tablet (2 columns), multi-column on desktop (3-4 columns for unit grid). Unit grid cards min 280px width. Touch targets min 44×44px. All forms keyboard navigable with proper tab order. ARIA labels on all interactive elements: aria-label="Search properties", aria-label="Filter by type". Loading states with Skeleton components for property list, unit grid. Success/error feedback with toast notifications (green for success, red for error). Color-coded status badges include text labels for accessibility (not color-only). Use shadcn dark theme classes. All interactive elements have data-testid attributes per docs/development/data-testid-conventions.md: form-property-create, input-property-name, btn-add-unit, table-units, select-unit-status, btn-bulk-create, grid-units, card-unit-{unitNumber}.
 
 **AC17 - Form Validation and Error Handling:** Property form validates: name required and ≤ 200 chars, address required and ≤ 500 chars, totalUnitsCount ≥ 1, yearBuilt between 1900 and current year (if provided), property type selected from enum, assigned manager exists and has PROPERTY_MANAGER role. Unit form validates: unitNumber required and unique within property, floor is integer (can be negative), bedroomCount ≥ 0 and ≤ 10, bathroomCount ≥ 0 and ≤ 10, squareFootage > 0, monthlyRent > 0. Image upload validates: file type is JPG or PNG (use MIME type check), file size ≤ 5MB, total images ≤ 5 per property. Frontend uses Zod schemas with React Hook Form, displays inline errors below fields in red text, focuses first error field on submit. Backend validates with @Valid annotation, returns 400 with field-specific errors: { success: false, error: { code: "VALIDATION_ERROR", fields: { "unitNumber": "Unit number already exists" } } }. Use shadcn Alert for general errors, inline text for field errors.
 
@@ -118,19 +118,19 @@
         <snippet>Use @Cacheable annotation for frequently accessed, rarely changed data. Configure CaffeineCacheManager with maximumSize=1000, expireAfterWrite=10 minutes. Use @CacheEvict on create, update, delete methods to invalidate cache. Example cache names: "users", "properties", "tenants", "vendors".</snippet>
       </doc>
       <doc>
-        <path>docs/ux-design-specification.md</path>
+        <path>docs/development/ux-design-specification.md</path>
         <title>UX Design - shadcn/ui Component Library</title>
         <section>6.1 Component Mapping</section>
         <snippet>Core UI components: button, input, card, table, dialog, sheet, toast, alert, tabs, badge, avatar for consistent design. Forms use React Hook Form + Zod validation. Tables use shadcn data-table with sorting, filtering, pagination. Cards for KPI metrics, info displays. Install via: npx shadcn@latest add [component-name]</snippet>
       </doc>
       <doc>
-        <path>docs/ux-design-specification.md</path>
+        <path>docs/development/ux-design-specification.md</path>
         <title>UX Design - Form Validation Patterns</title>
         <section>7.1.3 Form Patterns</section>
         <snippet>Label position above input (vertical stacking). Required field indicator: asterisk (*) in red. Validation timing: on blur for individual fields, on submit for entire form, real-time for password strength/username availability. Error display: inline message below field + red border. Help text: small gray text below input.</snippet>
       </doc>
       <doc>
-        <path>docs/ux-design-specification.md</path>
+        <path>docs/development/ux-design-specification.md</path>
         <title>UX Design - Responsive Design Strategy</title>
         <section>8.1 Responsive Strategy</section>
         <snippet>Breakpoints: mobile (<640px) single column, tablet (641px-1024px) 2-column layout, desktop (1025px+) multi-column. Navigation: persistent sidebar on desktop, collapsible on tablet, hamburger menu on mobile. Tables: all columns on desktop, hide less important on tablet, card view on mobile.</snippet>

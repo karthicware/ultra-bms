@@ -80,7 +80,7 @@
         <snippet>Spring Boot service pattern with @Transactional, controller with @Valid validation, repository extending JpaRepository, DTO pattern with records, exception handling with @ControllerAdvice, BCrypt password hashing.</snippet>
       </doc>
       <doc>
-        <path>docs/ux-design-specification.md</path>
+        <path>docs/development/ux-design-specification.md</path>
         <title>UX Design Specification</title>
         <section>Component Library: shadcn/ui</section>
         <snippet>Form components: form, input, select, calendar, checkbox, radio-group, button, label. Layout: tabs (wizard navigation), card, accordion (mobile review), dialog (confirmation). Feedback: sonner/toast, alert, skeleton (loading). Accessibility: WCAG 2.1 AA compliance, keyboard navigation, ARIA labels.</snippet>

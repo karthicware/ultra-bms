@@ -166,6 +166,8 @@ Expected ready-for-dev or in-progress. Continuing anyway...
     <action>Run all existing tests to ensure no regressions</action>
     <action>Run the new tests to verify implementation correctness</action>
     <action>Run linting and code quality checks if configured</action>
+    <action critical="true">Run TypeScript compilation check (npx tsc --noEmit) for frontend/UI projects - ALL errors must be resolved before proceeding</action>
+    <action if="TypeScript errors exist">STOP and fix ALL compilation errors before continuing - do not leave for manual cleanup</action>
     <action>Validate implementation meets ALL story acceptance criteria; if ACs include quantitative thresholds (e.g., test pass rate), ensure they are met before marking complete</action>
     <action if="regression tests fail">STOP and fix before continuing, consider how current changes made broke regression</action>
     <action if="new tests fail">STOP and fix before continuing</action>
@@ -208,6 +210,8 @@ Expected ready-for-dev or in-progress. Continuing anyway...
   <step n="6" goal="Story completion and mark for review" tag="sprint-status">
     <action>Verify ALL tasks and subtasks are marked [x] (re-scan the story document now)</action>
     <action>Run the full regression suite (do not skip)</action>
+    <action critical="true">For frontend/TypeScript projects: Run final TypeScript compilation check (npx tsc --noEmit) - ZERO errors required before marking complete</action>
+    <action if="TypeScript errors remain">HALT: Cannot mark story complete with compilation errors. Return to Step 4 to resolve.</action>
     <action>Confirm File List includes every changed file</action>
     <action>Execute story definition-of-done checklist, if the story includes one</action>
     <action>Update the story Status to: review</action>

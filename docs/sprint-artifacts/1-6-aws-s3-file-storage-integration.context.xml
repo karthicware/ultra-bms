@@ -110,7 +110,7 @@
     </document>
 
     <!-- UX Design: User Experience Specification -->
-    <document type="ux-design" path="docs/ux-design-specification.md">
+    <document type="ux-design" path="docs/development/ux-design-specification.md">
       <relevant-sections>
         <section name="6.1.4 File Upload Zone Component" lines="854-868">
           <summary>

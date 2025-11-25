@@ -673,7 +673,7 @@ So that I can ensure the complete user flows work correctly across frontend and 
 
 **Technical Notes:**
 - Use Playwright with TypeScript for all tests
-- Verify all data-testid attributes exist per docs/data-testid-conventions.md
+- Verify all data-testid attributes exist per docs/development/data-testid-conventions.md
 - Run scripts/check-services.sh before test execution
 - Backend must be running on localhost:8080
 - Frontend must be running on localhost:3000

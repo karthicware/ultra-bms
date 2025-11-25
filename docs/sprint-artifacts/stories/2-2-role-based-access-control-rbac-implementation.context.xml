@@ -82,7 +82,7 @@
       </doc>
 
       <doc>
-        <path>docs/ux-design-specification.md</path>
+        <path>docs/development/ux-design-specification.md</path>
         <title>UX Design Specification</title>
         <section>7.1.9 Navigation Patterns - Active State Indication</section>
         <snippet>Sidebar navigation shows active state with background color change and persists based on current route. Role-based navigation filters menu items based on user permissions from JWT token.</snippet>

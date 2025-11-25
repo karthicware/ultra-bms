@@ -218,6 +218,72 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, UUID> {
     boolean existsByMaintenanceRequestId(UUID maintenanceRequestId);
 
     // =================================================================
+    // PM SCHEDULE LINK (Story 4.2)
+    // =================================================================
+
+    /**
+     * Find work orders generated from a specific PM schedule
+     *
+     * @param pmScheduleId PM schedule UUID
+     * @param pageable Pagination parameters
+     * @return Page of work orders
+     */
+    Page<WorkOrder> findByPmScheduleIdOrderByCreatedAtDesc(UUID pmScheduleId, Pageable pageable);
+
+    /**
+     * Count work orders generated from a specific PM schedule
+     *
+     * @param pmScheduleId PM schedule UUID
+     * @return Count of work orders
+     */
+    long countByPmScheduleId(UUID pmScheduleId);
+
+    /**
+     * Count completed work orders from a PM schedule
+     *
+     * @param pmScheduleId PM schedule UUID
+     * @param status COMPLETED status
+     * @return Count of completed work orders
+     */
+    long countByPmScheduleIdAndStatus(UUID pmScheduleId, WorkOrderStatus status);
+
+    /**
+     * Check if a PM schedule has generated any work orders
+     *
+     * @param pmScheduleId PM schedule UUID
+     * @return True if work orders exist for this PM schedule
+     */
+    boolean existsByPmScheduleId(UUID pmScheduleId);
+
+    /**
+     * Count overdue work orders from a PM schedule
+     *
+     * @param pmScheduleId PM schedule UUID
+     * @param now Current timestamp
+     * @param statuses List of non-completed statuses
+     * @return Count of overdue work orders
+     */
+    @Query("SELECT COUNT(wo) FROM WorkOrder wo WHERE wo.pmScheduleId = :pmScheduleId AND " +
+            "wo.scheduledDate < :now AND wo.status IN :statuses")
+    long countOverdueByPmScheduleId(
+            @Param("pmScheduleId") UUID pmScheduleId,
+            @Param("now") LocalDateTime now,
+            @Param("statuses") List<WorkOrderStatus> statuses);
+
+    /**
+     * Calculate average completion time (in days) for completed work orders from a PM schedule
+     *
+     * @param pmScheduleId PM schedule UUID
+     * @param status COMPLETED status
+     * @return Average days to complete (null if no completed work orders)
+     */
+    @Query("SELECT AVG(EXTRACT(EPOCH FROM (wo.completedAt - wo.createdAt)) / 86400.0) " +
+            "FROM WorkOrder wo WHERE wo.pmScheduleId = :pmScheduleId AND wo.status = :status AND wo.completedAt IS NOT NULL")
+    Double calculateAverageCompletionDaysByPmScheduleId(
+            @Param("pmScheduleId") UUID pmScheduleId,
+            @Param("status") WorkOrderStatus status);
+
+    // =================================================================
     // ANALYTICS AND COUNTS
     // =================================================================
 

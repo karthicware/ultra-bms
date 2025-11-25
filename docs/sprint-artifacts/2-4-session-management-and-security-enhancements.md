@@ -411,7 +411,7 @@ This story implements robust session management and security enhancements as spe
 **Frontend Implementation:**
 - **Next.js Middleware:** Server-side route protection with token validation [Source: docs/architecture.md#project-structure]
 - **Axios Interceptors:** Automatic token refresh on 401 responses with retry logic [Source: docs/architecture.md#frontend-implementation-patterns]
-- **shadcn/ui Components:** Dialog, Table, Badge, Button for session management UI [Source: docs/ux-design-specification.md#component-library-strategy]
+- **shadcn/ui Components:** Dialog, Table, Badge, Button for session management UI [Source: docs/development/ux-design-specification.md#component-library-strategy]
 - **React Context:** Global auth state management for access token and user info [Source: docs/architecture.md#state-management-pattern]
 
 **Alignment with PRD:**
@@ -815,7 +815,7 @@ Story 2.1 established core authentication that Story 2.4 enhances:
 - [Story 2.1: User Registration and Login with JWT Authentication](docs/sprint-artifacts/2-1-user-registration-and-login-with-jwt-authentication.md)
 - [Story 2.2: Role-Based Access Control (RBAC) Implementation](docs/sprint-artifacts/2-2-role-based-access-control-rbac-implementation.md)
 - [Story 2.3: Password Reset and Recovery Workflow](docs/sprint-artifacts/2-3-password-reset-and-recovery-workflow.md)
-- [UX Design: Session Management Patterns](docs/ux-design-specification.md#session-management)
+- [UX Design: Session Management Patterns](docs/development/ux-design-specification.md#session-management)
 
 ## Dev Agent Record
 

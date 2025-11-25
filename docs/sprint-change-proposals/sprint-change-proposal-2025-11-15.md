@@ -399,7 +399,7 @@ All epics (Epic 3-9) retain their original goals, acceptance criteria, and deliv
 - ✅ **SM (Bob)** - Owner of implementation
 
 ### Communication Channels
-- **This Document** - Saved to `/docs/sprint-artifacts/sprint-change-proposal-2025-11-15.md`
+- **This Document** - Saved to `/docs/sprint-change-proposals/sprint-change-proposal-2025-11-15.md`
 - **Sprint Status File** - No update needed (process change, not story status change)
 - **Retrospective Notes** - Document as process improvement from Epic 3
 
@@ -413,7 +413,7 @@ All epics (Epic 3-9) retain their original goals, acceptance criteria, and deliv
 
 ### Related Documents
 - **Architecture:** `/docs/architecture.md` (ADR-005: shadcn/ui MCP Server Integration)
-- **UX Design Spec:** `/docs/ux-design-specification.md` (Section 6: Component Library, Section 9.3: Development Guidelines)
+- **UX Design Spec:** `/docs/development/ux-design-specification.md` (Section 6: Component Library, Section 9.3: Development Guidelines)
 - **Epic 2 Retrospective:** `/docs/retrospectives/epic-2-retrospective.md` (AI-2-1: data-testid requirement)
 - **Sprint Status:** `/docs/sprint-artifacts/sprint-status.yaml`
 

@@ -38,8 +38,8 @@ describe('check-services.sh', () => {
         // If servers are not running, that's expected in some environments
         if (error.status === 1) {
           console.log('✓ Script correctly fails when services are down');
-          expect(error.stderr || error.stdout).toContain(
-            'not running' || 'not responding'
+          expect(error.stderr || error.stdout).toMatch(
+            /not running|not responding/
           );
         } else {
           throw error;
@@ -59,7 +59,7 @@ describe('check-services.sh', () => {
         expect(error.status).toBe(1);
         const output = error.stderr || error.stdout;
         expect(output).toContain('Backend');
-        expect(output).toContain('not responding' || 'not running');
+        expect(output).toMatch(/not responding|not running/);
       }
     });
 
@@ -74,8 +74,8 @@ describe('check-services.sh', () => {
       } catch (error: any) {
         expect(error.status).toBe(1);
         const output = error.stderr || error.stdout;
-        expect(output).toContain('Frontend' || 'Backend');
-        expect(output).toContain('not responding' || 'not running');
+        expect(output).toMatch(/Frontend|Backend/);
+        expect(output).toMatch(/not responding|not running/);
       }
     });
   });
@@ -91,7 +91,7 @@ describe('check-services.sh', () => {
       } catch (error: any) {
         const output = error.stderr || error.stdout;
         // Should use default localhost:8080 and localhost:3000
-        expect(output).toContain('localhost:8080' || 'localhost:3000');
+        expect(output).toMatch(/localhost:8080|localhost:3000/);
       }
     });
 
@@ -115,7 +115,7 @@ describe('check-services.sh', () => {
         });
       } catch (error: any) {
         const output = error.stderr || error.stdout;
-        expect(output).toContain('custom-frontend' || 'Backend');
+        expect(output).toMatch(/custom-frontend|Backend/);
       }
     });
   });
@@ -197,7 +197,7 @@ describe('check-services.sh', () => {
 
         // Should contain helpful instructions
         expect(output).toContain('Please start');
-        expect(output).toContain('backend' || 'Backend');
+        expect(output).toMatch(/backend|Backend/i);
       }
     });
 

@@ -300,7 +300,7 @@ This proposal documents the acceleration of AWS S3 file storage integration from
 - ✅ `docs/epics/epic-1-platform-foundation-infrastructure.md`
 - ✅ `docs/sprint-artifacts/sprint-status.yaml`
 - ✅ `docs/architecture.md`
-- ✅ `docs/sprint-artifacts/sprint-change-proposal-s3-migration.md` (this document)
+- ✅ `docs/sprint-change-proposals/sprint-change-proposal-s3-migration.md` (this document)
 
 ### Next Communication:
 - Dev team updates sprint-status.yaml when Story 1.6 moves to `in-progress`

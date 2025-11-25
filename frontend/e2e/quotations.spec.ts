@@ -99,11 +99,11 @@ test.describe('Quotation Management', () => {
 
     // Test invalid base rent (zero or negative)
     await page.fill('input[name="baseRent"]', '0');
-    await page.blur('input[name="baseRent"]');
+    await page.locator('input[name="baseRent"]').blur();
     await expect(page.getByText('Base rent must be greater than 0')).toBeVisible();
 
     await page.fill('input[name="baseRent"]', '-1000');
-    await page.blur('input[name="baseRent"]');
+    await page.locator('input[name="baseRent"]').blur();
     await expect(page.getByText('Base rent must be greater than 0')).toBeVisible();
 
     // Test invalid dates (validity before issue date)
@@ -114,7 +114,7 @@ test.describe('Quotation Management', () => {
 
     await page.fill('input[name="issueDate"]', today);
     await page.fill('input[name="validityDate"]', pastDate);
-    await page.blur('input[name="validityDate"]');
+    await page.locator('input[name="validityDate"]').blur();
     await expect(page.getByText('Validity date must be after issue date')).toBeVisible();
   });
 

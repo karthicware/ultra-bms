@@ -83,3 +83,41 @@ export class PropertyPage extends BasePage {
         }
     }
 }
+
+export class UnitPage extends BasePage {
+    readonly addUnitButton: Locator;
+    readonly bulkCreateButton: Locator;
+    readonly unitNumberInput: Locator;
+    readonly floorInput: Locator;
+    readonly bedroomsInput: Locator;
+    readonly bathroomsInput: Locator;
+    readonly rentInput: Locator;
+    readonly submitButton: Locator;
+
+    constructor(page: Page) {
+        super(page);
+        this.addUnitButton = page.getByTestId('btn-add-unit');
+        this.bulkCreateButton = page.getByTestId('btn-bulk-create');
+        this.unitNumberInput = page.getByTestId('input-unit-number');
+        this.floorInput = page.getByTestId('input-floor');
+        this.bedroomsInput = page.getByTestId('input-bedrooms');
+        this.bathroomsInput = page.getByTestId('input-bathrooms');
+        this.rentInput = page.getByTestId('input-rent');
+        this.submitButton = page.getByTestId('btn-submit-unit');
+    }
+
+    async navigateToUnits(propertyId: string) {
+        await this.page.goto(`/properties/${propertyId}`);
+        await this.page.getByTestId('tab-units').click();
+    }
+
+    async addUnit(data: { unitNumber: string; floor: string; bedrooms: string; bathrooms: string; rent: string }) {
+        await this.addUnitButton.click();
+        await this.unitNumberInput.fill(data.unitNumber);
+        await this.floorInput.fill(data.floor);
+        await this.bedroomsInput.fill(data.bedrooms);
+        await this.bathroomsInput.fill(data.bathrooms);
+        await this.rentInput.fill(data.rent);
+        await this.submitButton.click();
+    }
+}

@@ -38,7 +38,7 @@ So that I can track prospects and convert them to tenants efficiently.
 
 14. **AC14 - Responsive Design and UX:** All pages responsive: single column on mobile (<640px), multi-column on desktop. Touch targets min 44×44px. Loading states with Skeleton components during data fetch. Success feedback with green toast notifications. Error feedback with red toast and inline validation messages. Quotation form shows real-time calculation updates as user types. "Quotes Expiring Soon" table highlights rows by color (urgency). Use shadcn dark theme support. All forms keyboard navigable, ARIA labels for accessibility.
 
-15. **AC15 - Testing and Documentation:** Write E2E tests with Playwright: create lead flow, upload document, create quotation, send quotation, accept quotation, convert to tenant, search/filter leads, quotation expiry. Unit tests for services and Zod schemas. Test quotation PDF generation. Document API endpoints in README. Add JSDoc comments to all service methods. Create developer guide for lead and quotation workflows. All interactive elements have data-testid attributes following naming convention (btn-create-lead, form-lead-create, input-lead-name, table-leads, etc.) per docs/data-testid-conventions.md.
+15. **AC15 - Testing and Documentation:** Write E2E tests with Playwright: create lead flow, upload document, create quotation, send quotation, accept quotation, convert to tenant, search/filter leads, quotation expiry. Unit tests for services and Zod schemas. Test quotation PDF generation. Document API endpoints in README. Add JSDoc comments to all service methods. Create developer guide for lead and quotation workflows. All interactive elements have data-testid attributes following naming convention (btn-create-lead, form-lead-create, input-lead-name, table-leads, etc.) per docs/development/data-testid-conventions.md.
 
 ## Tasks / Subtasks
 
@@ -276,7 +276,7 @@ This story implements lead management and quotation system as the entry point fo
 - **shadcn/ui Components:** Form, Input, Select, Table, Card, Dialog, Badge, Toast [Source: docs/architecture.md#ui-components]
 - **Dark Theme Support:** All components support dark mode [Source: docs/architecture.md#styling-conventions]
 - **Responsive Design:** Mobile-first approach with breakpoints [Source: docs/architecture.md#responsive-design]
-- **Accessibility:** WCAG 2.1 AA compliance with ARIA labels and keyboard navigation [Source: docs/ux-design-specification.md#8.2]
+- **Accessibility:** WCAG 2.1 AA compliance with ARIA labels and keyboard navigation [Source: docs/development/ux-design-specification.md#8.2]
 
 ### Project Structure Notes
 
@@ -426,8 +426,8 @@ NEXT_PUBLIC_FILE_UPLOAD_MAX_SIZE=5242880  # 5MB in bytes
 - ✅ **Route Protection:** Middleware already configured for (dashboard) routes [Source: docs/sprint-artifacts/2-5-frontend-authentication-components-and-protected-routes.md#middleware-configuration-pattern]
 
 **Critical Standards from Epic 2 Retrospective:**
-- ⭐ **MANDATORY (P0):** ALL interactive elements MUST have data-testid attributes [Source: docs/data-testid-conventions.md]
-- ⭐ **Naming Convention:** `{component}-{element}-{action}` pattern (e.g., btn-create-lead, form-lead-create) [Source: docs/data-testid-conventions.md#naming-convention]
+- ⭐ **MANDATORY (P0):** ALL interactive elements MUST have data-testid attributes [Source: docs/development/data-testid-conventions.md]
+- ⭐ **Naming Convention:** `{component}-{element}-{action}` pattern (e.g., btn-create-lead, form-lead-create) [Source: docs/development/data-testid-conventions.md#naming-convention]
 - ⭐ **Pre-test Validation:** Verify backend (port 8080) and frontend (port 3000) running before E2E tests [Source: docs/definition-of-done.md#test-execution]
 - ⭐ **Completion Notes:** MANDATORY comprehensive notes with file list, dependencies, test results [Source: docs/definition-of-done.md#story-documentation]
 
@@ -695,7 +695,7 @@ test.describe('Lead Management', () => {
 - [Architecture: Backend Implementation Patterns](docs/architecture.md#backend-implementation-patterns-javaspring-boot)
 - [Architecture: REST API Conventions](docs/architecture.md#rest-api-conventions)
 - [API Integration Layer - Epic 3](docs/patterns/api-integration-layer-epic3.md)
-- [data-testid Naming Conventions](docs/data-testid-conventions.md)
+- [data-testid Naming Conventions](docs/development/data-testid-conventions.md)
 - [Definition of Done](docs/definition-of-done.md)
 - [Story 2.5: Frontend Authentication Components](docs/sprint-artifacts/2-5-frontend-authentication-components-and-protected-routes.md)
 

@@ -59,7 +59,7 @@ This story accelerates S3 implementation from future backlog to Epic 1 (Platform
 
 **References:**
 - [Epic 1: Story 1.6](docs/epics/epic-1-platform-foundation-infrastructure.md#story-16-aws-s3-file-storage-integration)
-- [Sprint Change Proposal](docs/sprint-artifacts/sprint-change-proposal-s3-migration.md)
+- [Sprint Change Proposal](docs/sprint-change-proposals/sprint-change-proposal-s3-migration.md)
 - [Architecture: File Storage](docs/architecture.md#file-storage)
 - [Existing FileStorageService](backend/src/main/java/com/ultrabms/service/impl/FileStorageServiceImpl.java)
 
@@ -455,7 +455,7 @@ Story 1.6 is infrastructure-focused:
 
 **Epic and Story Context:**
 - [Epic 1: Story 1.6 Definition](docs/epics/epic-1-platform-foundation-infrastructure.md#story-16-aws-s3-file-storage-integration)
-- [Sprint Change Proposal: S3 Migration](docs/sprint-artifacts/sprint-change-proposal-s3-migration.md)
+- [Sprint Change Proposal: S3 Migration](docs/sprint-change-proposals/sprint-change-proposal-s3-migration.md)
 - [Previous Story: 1-5 REST API Structure](docs/sprint-artifacts/1-5-basic-rest-api-structure-and-exception-handling.md)
 
 **Architecture and Technical Specifications:**

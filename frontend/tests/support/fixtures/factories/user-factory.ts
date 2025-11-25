@@ -12,6 +12,8 @@ interface User {
   lastName: string;
   password: string;
   roleName?: string;
+  role?: string; // Alias for roleName (for test compatibility)
+  permissions?: string[];
 }
 
 export class UserFactory {
@@ -53,13 +55,16 @@ export class UserFactory {
       throw new Error('Backend API is not available. Start the backend server to run integration tests.');
     }
 
+    // Handle role alias (tests may pass 'role' instead of 'roleName')
+    const effectiveRoleName = overrides.role || overrides.roleName || 'PROPERTY_MANAGER';
+
     const user: User = {
       email: faker.internet.email(),
       firstName: faker.person.firstName(),
       lastName: faker.person.lastName(),
       password: 'Test@123', // Strong password that meets all requirements
-      roleName: 'PROPERTY_MANAGER',
       ...overrides,
+      roleName: effectiveRoleName, // Ensure roleName is set correctly
     };
 
     // API call to create user via registration endpoint

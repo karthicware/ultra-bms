@@ -306,8 +306,8 @@ This story implements Role-Based Access Control (RBAC) as specified in the Archi
 
 **Frontend Authorization:**
 - **Route Protection:** Next.js middleware guards routes based on role/permission requirements [Source: docs/sprint-artifacts/epics/2-authentication-and-user-management.md#story-22-frontend-route-protection]
-- **Conditional Rendering:** usePermission hook enables UI elements to show/hide based on user permissions [Source: docs/ux-design-specification.md#ux-pattern-decisions]
-- **Role-Based Navigation:** Sidebar dynamically filters menu items based on user's permissions [Source: docs/ux-design-specification.md#role-based-navigation-menu]
+- **Conditional Rendering:** usePermission hook enables UI elements to show/hide based on user permissions [Source: docs/development/ux-design-specification.md#ux-pattern-decisions]
+- **Role-Based Navigation:** Sidebar dynamically filters menu items based on user's permissions [Source: docs/development/ux-design-specification.md#role-based-navigation-menu]
 
 **Alignment with PRD:**
 - **Access Control Requirements:** Implements RBAC as core security requirement [Source: docs/prd.md#31-authentication-access-control]

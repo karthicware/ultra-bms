@@ -36,8 +36,10 @@ function TestComponent() {
       await register({
         email: 'new@example.com',
         password: 'password123',
+        confirmPassword: 'password123',
         firstName: 'John',
         lastName: 'Doe',
+        termsAccepted: true,
       });
     } catch (error) {
       // Expected error - silently catch

@@ -92,7 +92,8 @@ test.describe('Login Flow - Successful Authentication', () => {
         lastName: faker.person.lastName(),
       });
     } catch (error) {
-      test.skip(error.message.includes('Backend API is not available'));
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      test.skip(errorMessage.includes('Backend API is not available'));
       return;
     }
 

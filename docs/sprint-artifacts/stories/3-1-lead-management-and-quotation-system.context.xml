@@ -80,7 +80,7 @@ Complete API integration architecture for Epic 3. Defines type structure (types/
 </doc>
 
 <!-- Testing Standards -->
-<doc path="docs/data-testid-conventions.md" title="data-testid Naming Conventions" section="Naming Convention">
+<doc path="docs/development/data-testid-conventions.md" title="data-testid Naming Conventions" section="Naming Convention">
 MANDATORY from Epic 3: All interactive elements MUST have data-testid attributes following pattern: {component}-{element}-{action}. Examples: btn-create-lead, form-lead-create, input-lead-name, table-leads. Includes component-specific conventions for buttons, forms, inputs, tables, modals, navigation.
 </doc>
 

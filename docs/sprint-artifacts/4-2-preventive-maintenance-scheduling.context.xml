@@ -114,7 +114,7 @@
 
       <!-- UX Design Specification -->
       <doc>
-        <path>docs/ux-design-specification.md</path>
+        <path>docs/development/ux-design-specification.md</path>
         <title>UX Design Specification</title>
         <section>8.2 WCAG Compliance</section>
         <snippet>Color contrast ratio ≥ 4.5:1, keyboard navigation, ARIA labels, screen reader support, focus indicators on all interactive elements.</snippet>
@@ -262,7 +262,7 @@
     <constraint type="accessibility">
       <name>WCAG Compliance</name>
       <description>Color contrast ratio ≥ 4.5:1 for all text. Keyboard navigation (Tab, Enter, Escape, Arrow keys). ARIA labels (role="form", role="table", aria-label on icon buttons, aria-describedby for hints, aria-live="polite" for updates, aria-busy="true" during loading). Screen reader announcements for status updates. Focus indicators visible on all interactive elements.</description>
-      <source>docs/ux-design-specification.md#8.2-wcag-compliance</source>
+      <source>docs/development/ux-design-specification.md#8.2-wcag-compliance</source>
     </constraint>
 
     <constraint type="edit-restriction">

@@ -86,7 +86,7 @@
         <snippet>Complete JWT authentication implementation with registration, login, token refresh, logout, rate limiting, account lockout, password strength validation, and audit logging. Prerequisites: Story 1.4 (User entity), Story 1.5 (REST API structure)</snippet>
       </doc>
       <doc>
-        <path>docs/ux-design-specification.md</path>
+        <path>docs/development/ux-design-specification.md</path>
         <title>UX Design Specification</title>
         <section>Design System Foundation</section>
         <snippet>shadcn/ui with Tailwind CSS for UI components. TypeScript-first with Radix UI for WCAG 2.1 Level AA accessibility. Form components: form, label, input, textarea, date-picker. Feedback: toast, alert for validation errors.</snippet>

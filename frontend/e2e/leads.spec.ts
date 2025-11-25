@@ -66,17 +66,17 @@ test.describe('Lead Management', () => {
 
     // Test invalid Emirates ID format
     await page.fill('input[name="emiratesId"]', 'invalid-id');
-    await page.blur('input[name="emiratesId"]');
+    await page.locator('input[name="emiratesId"]').blur();
     await expect(page.getByText('Invalid Emirates ID format')).toBeVisible();
 
     // Test invalid phone number format
     await page.fill('input[name="contactNumber"]', '123456');
-    await page.blur('input[name="contactNumber"]');
+    await page.locator('input[name="contactNumber"]').blur();
     await expect(page.getByText('Invalid UAE phone number format')).toBeVisible();
 
     // Test invalid email
     await page.fill('input[name="email"]', 'invalid-email');
-    await page.blur('input[name="email"]');
+    await page.locator('input[name="email"]').blur();
     await expect(page.getByText('Invalid email address')).toBeVisible();
   });
 

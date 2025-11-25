@@ -144,9 +144,9 @@ export interface MaintenanceRequestListItem {
 // ============================================================================
 
 /**
- * Category display information
+ * Category display information for maintenance requests
  */
-export interface CategoryInfo {
+export interface MaintenanceCategoryInfo {
   value: MaintenanceCategory;
   label: string;
   icon: string;
@@ -154,9 +154,9 @@ export interface CategoryInfo {
 }
 
 /**
- * Priority display information
+ * Priority display information for maintenance requests
  */
-export interface PriorityInfo {
+export interface MaintenancePriorityInfo {
   value: MaintenancePriority;
   label: string;
   color: string;
@@ -164,9 +164,9 @@ export interface PriorityInfo {
 }
 
 /**
- * Status display information
+ * Status display information for maintenance requests
  */
-export interface StatusInfo {
+export interface MaintenanceStatusInfo {
   value: MaintenanceStatus;
   label: string;
   description: string;
@@ -175,9 +175,9 @@ export interface StatusInfo {
 }
 
 /**
- * Timeline checkpoint for status timeline
+ * Timeline checkpoint for maintenance status timeline
  */
-export interface TimelineCheckpoint {
+export interface MaintenanceTimelineCheckpoint {
   status: MaintenanceStatus;
   label: string;
   timestamp?: string;

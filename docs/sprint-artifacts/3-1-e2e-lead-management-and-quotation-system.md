@@ -133,7 +133,7 @@ So that I can ensure the complete user flows work correctly across frontend and 
 - Follow naming convention: `{component}-{element}-{action}`
 - Examples: `btn-create-lead`, `input-email`, `select-lead-source`
 - Verify all interactive elements have data-testid (Epic 2 retrospective AI-2-1)
-- Reference: docs/data-testid-conventions.md (if exists) or establish conventions
+- Reference: docs/development/data-testid-conventions.md (if exists) or establish conventions
 
 **Service Validation:**
 - Run scripts/check-services.sh before executing E2E tests (AI-2-2)

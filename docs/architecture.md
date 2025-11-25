@@ -203,7 +203,7 @@ ultra-bms/
 ├── docs/                       # Project documentation
 │   ├── prd.md
 │   ├── architecture.md         # This document
-│   └── bmm-workflow-status.yaml
+│   └── workflows/bmm-workflow-status.yaml
 ├── stitch_building_maintenance_software/  # UX designs
 └── .mcp.json                   # MCP server config
 ```

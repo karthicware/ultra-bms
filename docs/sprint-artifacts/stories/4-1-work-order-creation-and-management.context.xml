@@ -1121,7 +1121,7 @@ public void sendWorkOrderCreatedNotification(WorkOrder workOrder, Property prope
     <reference type="story" location="/docs/sprint-artifacts/4-1-work-order-creation-and-management.md">Source story for this context</reference>
     <reference type="prd" location="/docs/prd.md">Product Requirements Document</reference>
     <reference type="architecture" location="/docs/architecture.md">Technical Architecture Document</reference>
-    <reference type="ux-design" location="/docs/ux-design-specification.md">UX Design Specification with Airbnb theme</reference>
+    <reference type="ux-design" location="/docs/development/ux-design-specification.md">UX Design Specification with Airbnb theme</reference>
     <reference type="epic" location="/docs/epics/epic-4-maintenance-operations.md">Epic 4: Maintenance Operations</reference>
     <reference type="prerequisite-story" location="Story 3.1">Property and Unit Management</reference>
     <reference type="prerequisite-story" location="Story 3.4">Tenant Maintenance Request Submission</reference>

@@ -464,8 +464,8 @@ This story implements the password reset and recovery workflow as specified in t
 **Frontend Implementation:**
 - **Next.js Pages:** /forgot-password and /reset-password routes in (auth) route group [Source: docs/architecture.md#project-structure]
 - **React Hook Form + Zod:** Standard form validation pattern for consistency [Source: docs/architecture.md#form-pattern-with-react-hook-form-zod]
-- **shadcn/ui Components:** Card, Input, Button, Alert for consistent UI [Source: docs/ux-design-specification.md#component-library-strategy]
-- **Password Strength Meter:** Real-time validation feedback following UX patterns [Source: docs/ux-design-specification.md#form-patterns]
+- **shadcn/ui Components:** Card, Input, Button, Alert for consistent UI [Source: docs/development/ux-design-specification.md#component-library-strategy]
+- **Password Strength Meter:** Real-time validation feedback following UX patterns [Source: docs/development/ux-design-specification.md#form-patterns]
 
 **Alignment with PRD:**
 - **3-Step Password Reset:** Request → Validate → Complete flow as specified [Source: docs/prd.md#311-user-authentication]
@@ -785,7 +785,7 @@ Story 2.1 established core authentication infrastructure that Story 2.3 extends:
 - [Architecture: Async Processing](docs/architecture.md#async-processing)
 - [Story 2.1: User Registration and Login with JWT Authentication](docs/sprint-artifacts/2-1-user-registration-and-login-with-jwt-authentication.md)
 - [Story 2.2: Role-Based Access Control (RBAC) Implementation](docs/sprint-artifacts/2-2-role-based-access-control-rbac-implementation.md)
-- [UX Design: Form Patterns](docs/ux-design-specification.md#form-patterns)
+- [UX Design: Form Patterns](docs/development/ux-design-specification.md#form-patterns)
 
 ## Dev Agent Record
 

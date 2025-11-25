@@ -366,8 +366,8 @@ Theme toggle should be accessible:
 
 ## Resources
 
-- **Interactive Demo:** Open `/docs/ux-color-themes.html` to toggle between modes
-- **UX Specification:** Full dark mode strategy in `/docs/ux-design-specification.md`
+- **Interactive Demo:** Open `/docs/development/ux-color-themes.html` to toggle between modes
+- **UX Specification:** Full dark mode strategy in `/docs/development/ux-design-specification.md`
 - **next-themes Docs:** https://github.com/pacocoursey/next-themes
 - **Tailwind Dark Mode:** https://tailwindcss.com/docs/dark-mode
 

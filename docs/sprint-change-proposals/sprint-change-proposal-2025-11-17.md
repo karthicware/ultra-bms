@@ -27,7 +27,7 @@ On November 17, 2025, a complete Airbnb-inspired theme was generated from tweakc
 
 ### Evidence
 
-1. **UX Design Specification v2.0** (docs/ux-design-specification.md)
+1. **UX Design Specification v2.0** (docs/development/ux-design-specification.md)
    - Complete OKLCH color palette documented (Section 3.1)
    - Airbnb Cereal App typography specified (Section 3.2)
    - Comprehensive shadow system defined (Section 3.3)
@@ -668,7 +668,7 @@ npm run dev
 
 ### Appendix A: Quick Reference Links
 
-- **UX Design Specification v2.0:** docs/ux-design-specification.md
+- **UX Design Specification v2.0:** docs/development/ux-design-specification.md
 - **Airbnb Theme Installation Command:** `npx shadcn@latest add https://tweakcn.com/r/themes/cmi3cq5te000004jvd2g0aq35`
 - **Complete Theme CSS:** UX Design Specification Section 10.3
 - **Migration Checklist:** UX Design Specification Section 10.5

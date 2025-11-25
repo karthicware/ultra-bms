@@ -373,7 +373,7 @@ This story implements frontend authentication components and route protection as
 
 **Frontend Framework Standards:**
 - **React Hook Form + Zod:** Form validation pattern specified in architecture [Source: docs/architecture.md#form-pattern-with-react-hook-form--zod]
-- **shadcn/ui Components:** Use shadcn Button, Input, Form, Dialog, Table, Badge as per UX spec [Source: docs/ux-design-specification.md#component-library-strategy]
+- **shadcn/ui Components:** Use shadcn Button, Input, Form, Dialog, Table, Badge as per UX spec [Source: docs/development/ux-design-specification.md#component-library-strategy]
 - **TypeScript Strict Mode:** All types explicitly defined, no any types [Source: docs/architecture.md#typescript-strict-mode]
 - **Axios API Client:** Configured with interceptors for auth and error handling [Source: docs/architecture.md#api-client-pattern]
 
@@ -384,11 +384,11 @@ This story implements frontend authentication components and route protection as
 - **Rate Limiting:** Backend handles rate limiting; frontend shows appropriate errors [Source: docs/architecture.md#api-security]
 
 **UX Design Implementation:**
-- **Authentication Pages:** Follow AuthLayout pattern from UX spec with centered card, logo, form [Source: docs/ux-design-specification.md#7.1.3]
-- **Form Validation:** Inline error messages below fields, red text, error icon [Source: docs/ux-design-specification.md#7.1.3]
-- **Loading States:** Skeleton loaders, disabled buttons with spinners [Source: docs/ux-design-specification.md#7.1.2]
-- **Success/Error Feedback:** Toast notifications (top-right, auto-dismiss) [Source: docs/ux-design-specification.md#7.1.2]
-- **Accessibility:** WCAG 2.1 Level AA compliance, keyboard navigation, screen reader support [Source: docs/ux-design-specification.md#8.2]
+- **Authentication Pages:** Follow AuthLayout pattern from UX spec with centered card, logo, form [Source: docs/development/ux-design-specification.md#7.1.3]
+- **Form Validation:** Inline error messages below fields, red text, error icon [Source: docs/development/ux-design-specification.md#7.1.3]
+- **Loading States:** Skeleton loaders, disabled buttons with spinners [Source: docs/development/ux-design-specification.md#7.1.2]
+- **Success/Error Feedback:** Toast notifications (top-right, auto-dismiss) [Source: docs/development/ux-design-specification.md#7.1.2]
+- **Accessibility:** WCAG 2.1 Level AA compliance, keyboard navigation, screen reader support [Source: docs/development/ux-design-specification.md#8.2]
 
 **API Integration:**
 - **Authentication Endpoints:** POST /api/v1/auth/login, /register, /logout, /refresh from Story 2.1 [Source: docs/sprint-artifacts/2-1-user-registration-and-login-with-jwt-authentication.md]
@@ -950,9 +950,9 @@ test.describe('Authentication Flow', () => {
 - [PRD: User Experience Design](docs/prd.md#4.2)
 - [Architecture: Frontend Implementation Patterns](docs/architecture.md#frontend-implementation-patterns-nextjsreacttypescript)
 - [Architecture: Authentication & Authorization](docs/architecture.md#authentication--authorization)
-- [UX Design: Authentication Pages](docs/ux-design-specification.md#journey-1-maintenance-work-order-creation--assignment)
-- [UX Design: Form Patterns](docs/ux-design-specification.md#713-form-patterns)
-- [UX Design: Component Library Strategy](docs/ux-design-specification.md#6-component-library-strategy)
+- [UX Design: Authentication Pages](docs/development/ux-design-specification.md#journey-1-maintenance-work-order-creation--assignment)
+- [UX Design: Form Patterns](docs/development/ux-design-specification.md#713-form-patterns)
+- [UX Design: Component Library Strategy](docs/development/ux-design-specification.md#6-component-library-strategy)
 - [Story 2.1: User Registration and Login with JWT Authentication](docs/sprint-artifacts/2-1-user-registration-and-login-with-jwt-authentication.md)
 - [Story 2.2: Role-Based Access Control (RBAC) Implementation](docs/sprint-artifacts/2-2-role-based-access-control-rbac-implementation.md)
 - [Story 2.3: Password Reset and Recovery Workflow](docs/sprint-artifacts/2-3-password-reset-and-recovery-workflow.md)

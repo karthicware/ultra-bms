@@ -95,7 +95,7 @@ The Ultra BMS project has completed Phase 1 (Planning) with a comprehensive PRD 
 - **Impact:** No implementation tasks defined for development team
 
 **⚠️ Test Design System**
-- **Expected Location:** `/docs/test-design-system.md`
+- **Expected Location:** `/docs/test-plans/test-design-system.md`
 - **Status:** ⚠️ **NOT FOUND - RECOMMENDED**
 - **Impact:** Testability concerns not formally assessed
 - **Note:** Recommended for BMad Method, required for Enterprise Method
@@ -297,7 +297,7 @@ No user stories exist. Stories are the atomic unit of work for implementation an
 No test design system document exists. While not strictly required for BMad Method track, it's strongly recommended to assess testability before implementation.
 
 **Expected:**
-- Test design document at `/docs/test-design-system.md`
+- Test design document at `/docs/test-plans/test-design-system.md`
 - Testability assessment: Controllability, Observability, Reliability
 - Test strategy per module
 - Identification of hard-to-test components
@@ -870,7 +870,7 @@ The project can proceed to Phase 4 (Implementation) **ONLY AFTER** the following
 - **Requirement:** Run `/bmad:bmm:workflows:test-design` workflow
 - **Deliverable:** Test design system document
 - **Expected:** Testability assessment with identified challenges
-- **Verification:** `/docs/test-design-system.md` exists
+- **Verification:** `/docs/test-plans/test-design-system.md` exists
 - **Estimated Time:** 1-2 hours
 - **Blocking:** NO (recommended for BMad Method, required for Enterprise Method)
 

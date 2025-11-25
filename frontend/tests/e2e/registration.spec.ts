@@ -72,7 +72,7 @@ test.describe('Registration Flow - Successful Registration', () => {
       lastName: faker.person.lastName(),
       email: faker.internet.email(),
       password: 'ValidP@ssw0rd123',
-      phone: faker.phone.number('+1##########'),
+      phone: faker.phone.number({ style: 'international' }),
     };
 
     // Fill in all fields
@@ -96,7 +96,7 @@ test.describe('Registration Flow - Successful Registration', () => {
 
     // Verify success message or redirect
     await expect(
-      page.locator('text=/registration successful|account created|check your email/i').or(page)
+      page.locator('text=/registration successful|account created|check your email/i')
     ).toBeVisible({ timeout: 10000 });
 
     // Should redirect to login page or show email verification message

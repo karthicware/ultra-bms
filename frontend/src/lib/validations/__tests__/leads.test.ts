@@ -158,8 +158,7 @@ describe('Lead Validation Schemas', () => {
     });
 
     it('should accept lead without optional notes', () => {
-      const leadWithoutNotes = { ...validLead };
-      delete leadWithoutNotes.notes;
+      const { notes, ...leadWithoutNotes } = validLead;
       const result = createLeadSchema.safeParse(leadWithoutNotes);
       expect(result.success).toBe(true);
     });

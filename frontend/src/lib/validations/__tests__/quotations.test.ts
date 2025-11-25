@@ -86,8 +86,7 @@ describe('Quotation Validation Schemas', () => {
     });
 
     it('should accept quotation without optional special terms', () => {
-      const quotationWithoutSpecialTerms = { ...validQuotation };
-      delete quotationWithoutSpecialTerms.specialTerms;
+      const { specialTerms, ...quotationWithoutSpecialTerms } = validQuotation;
       const result = createQuotationSchema.safeParse(quotationWithoutSpecialTerms);
       expect(result.success).toBe(true);
     });

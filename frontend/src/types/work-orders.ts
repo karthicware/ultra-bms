@@ -253,9 +253,9 @@ export interface WorkOrderCommentsResponse {
 // ============================================================================
 
 /**
- * Category display information
+ * Category display information for work orders
  */
-export interface CategoryInfo {
+export interface WorkOrderCategoryInfo {
   value: WorkOrderCategory;
   label: string;
   icon: string;
@@ -263,9 +263,9 @@ export interface CategoryInfo {
 }
 
 /**
- * Priority display information
+ * Priority display information for work orders
  */
-export interface PriorityInfo {
+export interface WorkOrderPriorityInfo {
   value: WorkOrderPriority;
   label: string;
   color: string;
@@ -274,9 +274,9 @@ export interface PriorityInfo {
 }
 
 /**
- * Status display information
+ * Status display information for work orders
  */
-export interface StatusInfo {
+export interface WorkOrderStatusInfo {
   value: WorkOrderStatus;
   label: string;
   description: string;
@@ -286,9 +286,9 @@ export interface StatusInfo {
 }
 
 /**
- * Timeline checkpoint for status timeline
+ * Timeline checkpoint for work order status timeline
  */
-export interface TimelineCheckpoint {
+export interface WorkOrderTimelineCheckpoint {
   status: WorkOrderStatus;
   label: string;
   timestamp?: string;

@@ -29,7 +29,7 @@ Evidence: Lines 61-111 - 5 documentation artifacts included:
 1. docs/prd.md - Section 3.1 (User roles and RBAC requirement)
 2. docs/architecture.md - Security Architecture (Permission model and method-level security)
 3. docs/architecture.md - Data Architecture (Database schema for roles/permissions)
-4. docs/ux-design-specification.md - Navigation patterns (Role-based navigation)
+4. docs/development/ux-design-specification.md - Navigation patterns (Role-based navigation)
 5. docs/sprint-artifacts/epics/2-authentication-and-user-management.md - Story 2.2 details
 
 Each includes project-relative path, section, and relevant snippet (2-3 sentences).

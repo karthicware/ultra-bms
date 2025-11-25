@@ -17,13 +17,6 @@ const uuidSchema = z
   .string()
   .uuid('Please provide a valid ID');
 
-const optionalUuidSchema = z
-  .string()
-  .uuid('Please provide a valid ID')
-  .optional()
-  .nullable()
-  .or(z.literal(''));
-
 // ===========================
 // Create PM Schedule Schema
 // ===========================
@@ -35,10 +28,16 @@ export const createPMScheduleSchema = z.object({
     .max(100, 'Schedule name must be less than 100 characters')
     .trim(),
 
-  propertyId: optionalUuidSchema.transform(val => val === '' ? null : val),
+  propertyId: z
+    .string()
+    .uuid('Please provide a valid ID')
+    .nullable()
+    .optional()
+    .or(z.literal(''))
+    .transform(val => val === '' ? null : (val ?? null)),
 
   category: z.nativeEnum(WorkOrderCategory, {
-    errorMap: () => ({ message: 'Please select a category' })
+    message: 'Please select a category'
   }),
 
   description: z
@@ -48,14 +47,11 @@ export const createPMScheduleSchema = z.object({
     .trim(),
 
   recurrenceType: z.nativeEnum(RecurrenceType, {
-    errorMap: () => ({ message: 'Please select a recurrence type' })
+    message: 'Please select a recurrence type'
   }),
 
   startDate: z
-    .date({
-      required_error: 'Start date is required',
-      invalid_type_error: 'Please provide a valid date'
-    })
+    .date({ message: 'Start date is required' })
     .refine(
       (date) => {
         const today = new Date();
@@ -66,17 +62,21 @@ export const createPMScheduleSchema = z.object({
     ),
 
   endDate: z
-    .date({
-      invalid_type_error: 'Please provide a valid date'
-    })
+    .date({ message: 'Please provide a valid date' })
     .optional()
     .nullable(),
 
   defaultPriority: z.nativeEnum(WorkOrderPriority, {
-    errorMap: () => ({ message: 'Please select a priority' })
+    message: 'Please select a priority'
   }),
 
-  defaultAssigneeId: optionalUuidSchema.transform(val => val === '' ? null : val)
+  defaultAssigneeId: z
+    .string()
+    .uuid('Please provide a valid ID')
+    .nullable()
+    .optional()
+    .or(z.literal(''))
+    .transform(val => val === '' ? null : (val ?? null))
 }).refine(
   (data) => {
     // If endDate is provided, it must be after startDate
@@ -91,7 +91,18 @@ export const createPMScheduleSchema = z.object({
   }
 );
 
-export type CreatePMScheduleFormData = z.infer<typeof createPMScheduleSchema>;
+// Explicit form data type for React Hook Form
+export interface CreatePMScheduleFormData {
+  scheduleName: string;
+  propertyId: string | null;
+  category: WorkOrderCategory;
+  description: string;
+  recurrenceType: RecurrenceType;
+  startDate: Date;
+  endDate?: Date | null;
+  defaultPriority: WorkOrderPriority;
+  defaultAssigneeId: string | null;
+}
 
 // ===========================
 // Update PM Schedule Schema
@@ -116,17 +127,29 @@ export const updatePMScheduleSchema = z.object({
 
   defaultPriority: z.nativeEnum(WorkOrderPriority).optional(),
 
-  defaultAssigneeId: optionalUuidSchema.transform(val => val === '' ? null : val),
+  defaultAssigneeId: z
+    .string()
+    .uuid('Please provide a valid ID')
+    .nullable()
+    .optional()
+    .or(z.literal(''))
+    .transform(val => val === '' ? null : (val ?? null)),
 
   endDate: z
-    .date({
-      invalid_type_error: 'Please provide a valid date'
-    })
+    .date({ message: 'Please provide a valid date' })
     .optional()
     .nullable()
 });
 
-export type UpdatePMScheduleFormData = z.infer<typeof updatePMScheduleSchema>;
+// Explicit form data type for React Hook Form
+export interface UpdatePMScheduleFormData {
+  scheduleName?: string;
+  description?: string;
+  category?: WorkOrderCategory;
+  defaultPriority?: WorkOrderPriority;
+  defaultAssigneeId?: string | null;
+  endDate?: Date | null;
+}
 
 // ===========================
 // Update Status Schema
@@ -134,7 +157,7 @@ export type UpdatePMScheduleFormData = z.infer<typeof updatePMScheduleSchema>;
 
 export const updatePMScheduleStatusSchema = z.object({
   status: z.nativeEnum(PMScheduleStatus, {
-    errorMap: () => ({ message: 'Please select a valid status' })
+    message: 'Please select a valid status'
   })
 });
 

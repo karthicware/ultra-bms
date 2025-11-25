@@ -98,9 +98,9 @@ All workflow files have been successfully updated to enforce shadcn-ui MCP usage
 
 ## Related Documents
 
-- **Sprint Change Proposal:** `/docs/sprint-artifacts/sprint-change-proposal-2025-11-15.md`
+- **Sprint Change Proposal:** `/docs/sprint-change-proposals/sprint-change-proposal-2025-11-15.md`
 - **Architecture (ADR-005):** `/docs/architecture.md` (shadcn/ui MCP mandate)
-- **UX Design Spec:** `/docs/ux-design-specification.md` (Section 6: Component Library)
+- **UX Design Spec:** `/docs/development/ux-design-specification.md` (Section 6: Component Library)
 - **Sprint Status:** `/docs/sprint-artifacts/sprint-status.yaml`
 
 ---

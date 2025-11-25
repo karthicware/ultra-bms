@@ -67,10 +67,10 @@ AC15: Testing - E2E tests with Playwright, component tests with React Testing Li
       <doc path="docs/architecture.md" title="Architecture Document" section="Frontend Stack">
         Framework: Next.js 15. Language: TypeScript 5.x. UI Library: React 19+. Component Library: shadcn/ui. Styling: Tailwind CSS 4.0. Forms: React Hook Form. Icons: Lucide React. Testing: Vitest, React Testing Library.
       </doc>
-      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="1.1 Design System Choice">
+      <doc path="docs/development/ux-design-specification.md" title="UX Design Specification" section="1.1 Design System Choice">
         Primary Framework: shadcn/ui with Tailwind CSS. Built on Radix UI for WCAG 2.1 Level AA accessibility. TypeScript-first for type safety. Components: button, input, card, table, dialog, alert-dialog, dropdown-menu, form, toast, alert, progress, sidebar-01, breadcrumb.
       </doc>
-      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="3.1 Color System">
+      <doc path="docs/development/ux-design-specification.md" title="UX Design Specification" section="3.1 Color System">
         Primary: Deep Navy (#0A2342). Secondary: Professional Blue (#1152D4). Accent: Gold (#D4AF37). Success: #22C55E. Warning: #F59E0B. Error: #EF4444. Light Background: #FFFFFF. Dark Background: #0B0F19.
       </doc>
       <doc path="docs/epics/epic-2-authentication-user-management.md" title="Epic 2" section="Story 2.1">
