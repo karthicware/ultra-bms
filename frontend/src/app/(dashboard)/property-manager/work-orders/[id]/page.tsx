@@ -3,6 +3,7 @@
 /**
  * Work Order Detail Page
  * Story 4.1: Work Order Creation and Management
+ * Story 4.3: Work Order Assignment and Vendor Coordination
  * Displays complete work order information with timeline, photos, and comments
  */
 
@@ -50,7 +51,12 @@ import {
   getWorkOrderComments,
   getWorkOrderStatusHistory,
   cancelWorkOrder,
+  assignWorkOrderToAssignee,
 } from '@/services/work-orders.service';
+import { AssignmentDialog } from '@/components/work-orders/AssignmentDialog';
+import { ReassignmentDialog } from '@/components/work-orders/ReassignmentDialog';
+import type { AssignWorkOrderFormData, ReassignWorkOrderFormData } from '@/lib/validations/work-order-assignment';
+import { reassignWorkOrder } from '@/services/work-orders.service';
 import {
   WorkOrderStatus,
   WorkOrderPriority,
@@ -60,10 +66,12 @@ import {
 } from '@/types/work-orders';
 import { CommentsSection } from '@/components/work-orders/CommentsSection';
 import { StatusTimeline } from '@/components/work-orders/StatusTimeline';
+import { AssignmentHistory } from '@/components/work-orders/AssignmentHistory';
 import {
   FileText,
   Pencil,
   UserPlus,
+  RefreshCw,
   ChevronLeft,
   Calendar,
   User,
@@ -133,6 +141,12 @@ export default function WorkOrderDetailPage() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  // Story 4.3: Assignment state
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+  // Story 4.3: Reassignment state
+  const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
+  const [isReassigning, setIsReassigning] = useState(false);
 
   // Fetch work order details
   useEffect(() => {
@@ -207,12 +221,75 @@ export default function WorkOrderDetailPage() {
     });
   };
 
+  // Story 4.3: Open assignment dialog
   const handleAssign = () => {
-    // TODO: Implement assign dialog
-    toast({
-      title: 'Coming Soon',
-      description: 'Assignment functionality will be implemented in Story 4.3',
-    });
+    setAssignDialogOpen(true);
+  };
+
+  // Story 4.3: Handle assignment submission
+  const handleAssignSubmit = async (data: AssignWorkOrderFormData) => {
+    try {
+      setIsAssigning(true);
+      await assignWorkOrderToAssignee(workOrderId, {
+        assigneeType: data.assigneeType,
+        assigneeId: data.assigneeId,
+        assignmentNotes: data.assignmentNotes || undefined,
+      });
+
+      // Refresh work order data
+      const updatedWorkOrder = await getWorkOrderById(workOrderId);
+      setWorkOrder(updatedWorkOrder);
+
+      setAssignDialogOpen(false);
+      toast({
+        title: 'Success',
+        description: `Work Order #${workOrder?.workOrderNumber} has been assigned successfully`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Assignment Failed',
+        description: error.response?.data?.error?.message || 'Failed to assign work order',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  // Story 4.3: Open reassignment dialog
+  const handleReassign = () => {
+    setReassignDialogOpen(true);
+  };
+
+  // Story 4.3: Handle reassignment submission
+  const handleReassignSubmit = async (data: ReassignWorkOrderFormData) => {
+    try {
+      setIsReassigning(true);
+      await reassignWorkOrder(workOrderId, {
+        newAssigneeType: data.newAssigneeType,
+        newAssigneeId: data.newAssigneeId,
+        reassignmentReason: data.reassignmentReason,
+        assignmentNotes: data.assignmentNotes || undefined,
+      });
+
+      // Refresh work order data
+      const updatedWorkOrder = await getWorkOrderById(workOrderId);
+      setWorkOrder(updatedWorkOrder);
+
+      setReassignDialogOpen(false);
+      toast({
+        title: 'Success',
+        description: `Work Order #${workOrder?.workOrderNumber} has been reassigned successfully`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Reassignment Failed',
+        description: error.response?.data?.error?.message || 'Failed to reassign work order',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsReassigning(false);
+    }
   };
 
   const openLightbox = (index: number) => {
@@ -311,10 +388,26 @@ export default function WorkOrderDetailPage() {
               Edit
             </Button>
           )}
+          {/* Story 4.3: AC #1 - Assign button for unassigned work orders */}
           {!workOrder.assignedTo && (
-            <Button variant="outline" onClick={handleAssign}>
+            <Button
+              variant="outline"
+              onClick={handleAssign}
+              data-testid="btn-assign-work-order"
+            >
               <UserPlus className="mr-2 h-4 w-4" />
               Assign
+            </Button>
+          )}
+          {/* Story 4.3: AC #10 - Reassign button for already assigned work orders */}
+          {workOrder.assignedTo && (
+            <Button
+              variant="outline"
+              onClick={handleReassign}
+              data-testid="btn-reassign-work-order"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Reassign
             </Button>
           )}
           <DropdownMenu>
@@ -507,7 +600,7 @@ export default function WorkOrderDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Assigned Vendor */}
+          {/* Assigned To */}
           {workOrder.assignedTo && (
             <Card>
               <CardHeader>
@@ -528,6 +621,9 @@ export default function WorkOrderDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Story 4.3: AC #11 - Assignment History */}
+          <AssignmentHistory workOrderId={workOrderId} />
 
           {/* Status Timeline */}
           <StatusTimeline
@@ -599,6 +695,24 @@ export default function WorkOrderDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Story 4.3: Assignment Dialog */}
+      <AssignmentDialog
+        open={assignDialogOpen}
+        onOpenChange={setAssignDialogOpen}
+        workOrder={workOrder}
+        onAssign={handleAssignSubmit}
+        isSubmitting={isAssigning}
+      />
+
+      {/* Story 4.3: Reassignment Dialog */}
+      <ReassignmentDialog
+        open={reassignDialogOpen}
+        onOpenChange={setReassignDialogOpen}
+        workOrder={workOrder}
+        onReassign={handleReassignSubmit}
+        isSubmitting={isReassigning}
+      />
     </div>
   );
 }

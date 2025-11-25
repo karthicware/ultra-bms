@@ -437,6 +437,146 @@ public class EmailService {
         }
     }
 
+    // ========================================================================
+    // Story 4.3: Work Order Assignment Email Notifications
+    // ========================================================================
+
+    /**
+     * Send work order assignment notification email to assignee asynchronously.
+     * Notifies internal staff or external vendor when a work order is assigned to them.
+     * Fails silently (logs error) to avoid blocking user workflow if email delivery fails.
+     *
+     * @param assigneeEmail Assignee's email address
+     * @param assigneeName Assignee's display name
+     * @param workOrder Work order entity with all details
+     * @param assignedByName Name of the user who made the assignment
+     * @param assignmentNotes Optional notes from the assignment
+     */
+    @Async("emailTaskExecutor")
+    public void sendWorkOrderAssignmentEmail(
+            String assigneeEmail,
+            String assigneeName,
+            com.ultrabms.entity.WorkOrder workOrder,
+            String assignedByName,
+            String assignmentNotes
+    ) {
+        try {
+            // Build work order URL
+            String workOrderUrl = frontendUrl + "/property-manager/work-orders/" + workOrder.getId();
+
+            // Build Thymeleaf context with template variables
+            Context context = new Context();
+            context.setVariable("assigneeName", assigneeName);
+            context.setVariable("workOrderNumber", workOrder.getWorkOrderNumber());
+            context.setVariable("title", workOrder.getTitle());
+            context.setVariable("description", workOrder.getDescription());
+            context.setVariable("category", workOrder.getCategory().toString().replace("_", " "));
+            context.setVariable("priority", workOrder.getPriority().toString());
+            context.setVariable("propertyName", workOrder.getProperty() != null ? workOrder.getProperty().getName() : "N/A");
+            context.setVariable("unitNumber", workOrder.getUnit() != null ? workOrder.getUnit().getUnitNumber() : null);
+            context.setVariable("scheduledDate", workOrder.getScheduledDate() != null
+                    ? workOrder.getScheduledDate().format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                    : null);
+            context.setVariable("assignedByName", assignedByName);
+            context.setVariable("assignedDate", LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")));
+            context.setVariable("assignmentNotes", assignmentNotes);
+            context.setVariable("accessInstructions", workOrder.getAccessInstructions());
+            context.setVariable("workOrderUrl", workOrderUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            // Render HTML and plain text templates
+            String htmlContent = templateEngine.process("email/work-order-assignment", context);
+            String textContent = templateEngine.process("email/work-order-assignment.txt", context);
+
+            // Send email
+            sendEmail(
+                assigneeEmail,
+                String.format("Work Order Assigned: %s - %s", workOrder.getWorkOrderNumber(), workOrder.getTitle()),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Work order assignment email sent successfully to: {} for work order: {}",
+                    assigneeEmail, workOrder.getWorkOrderNumber());
+
+        } catch (Exception e) {
+            // Fail silently - don't throw exception to user, just log error
+            log.error("Failed to send work order assignment email to: {} for work order: {}",
+                    assigneeEmail, workOrder.getWorkOrderNumber(), e);
+        }
+    }
+
+    /**
+     * Send work order reassignment notification email to new assignee asynchronously.
+     * Notifies new assignee when a work order is reassigned from another staff/vendor.
+     * Fails silently (logs error) to avoid blocking user workflow if email delivery fails.
+     *
+     * @param newAssigneeEmail New assignee's email address
+     * @param newAssigneeName New assignee's display name
+     * @param previousAssigneeName Name of the previous assignee
+     * @param workOrder Work order entity with all details
+     * @param reassignedByName Name of the user who made the reassignment
+     * @param reassignmentReason Reason for the reassignment
+     * @param assignmentNotes Optional notes from the reassignment
+     */
+    @Async("emailTaskExecutor")
+    public void sendWorkOrderReassignmentEmail(
+            String newAssigneeEmail,
+            String newAssigneeName,
+            String previousAssigneeName,
+            com.ultrabms.entity.WorkOrder workOrder,
+            String reassignedByName,
+            String reassignmentReason,
+            String assignmentNotes
+    ) {
+        try {
+            // Build work order URL
+            String workOrderUrl = frontendUrl + "/property-manager/work-orders/" + workOrder.getId();
+
+            // Build Thymeleaf context with template variables
+            Context context = new Context();
+            context.setVariable("newAssigneeName", newAssigneeName);
+            context.setVariable("previousAssigneeName", previousAssigneeName);
+            context.setVariable("workOrderNumber", workOrder.getWorkOrderNumber());
+            context.setVariable("title", workOrder.getTitle());
+            context.setVariable("description", workOrder.getDescription());
+            context.setVariable("category", workOrder.getCategory().toString().replace("_", " "));
+            context.setVariable("priority", workOrder.getPriority().toString());
+            context.setVariable("propertyName", workOrder.getProperty() != null ? workOrder.getProperty().getName() : "N/A");
+            context.setVariable("unitNumber", workOrder.getUnit() != null ? workOrder.getUnit().getUnitNumber() : null);
+            context.setVariable("scheduledDate", workOrder.getScheduledDate() != null
+                    ? workOrder.getScheduledDate().format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                    : null);
+            context.setVariable("reassignedByName", reassignedByName);
+            context.setVariable("reassignedDate", LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")));
+            context.setVariable("reassignmentReason", reassignmentReason);
+            context.setVariable("assignmentNotes", assignmentNotes);
+            context.setVariable("accessInstructions", workOrder.getAccessInstructions());
+            context.setVariable("workOrderUrl", workOrderUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            // Render HTML and plain text templates
+            String htmlContent = templateEngine.process("email/work-order-reassignment", context);
+            String textContent = templateEngine.process("email/work-order-reassignment.txt", context);
+
+            // Send email
+            sendEmail(
+                newAssigneeEmail,
+                String.format("Work Order Reassigned: %s - %s", workOrder.getWorkOrderNumber(), workOrder.getTitle()),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Work order reassignment email sent successfully to: {} for work order: {}",
+                    newAssigneeEmail, workOrder.getWorkOrderNumber());
+
+        } catch (Exception e) {
+            // Fail silently - don't throw exception to user, just log error
+            log.error("Failed to send work order reassignment email to: {} for work order: {}",
+                    newAssigneeEmail, workOrder.getWorkOrderNumber(), e);
+        }
+    }
+
     /**
      * Internal helper method to send multipart email (HTML + plain text fallback).
      * Creates MimeMessage with both HTML and text content for email client compatibility.

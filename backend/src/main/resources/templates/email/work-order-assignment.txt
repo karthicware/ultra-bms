@@ -1,0 +1,62 @@
+WORK ORDER ASSIGNED TO YOU
+===========================
+
+Hi [(${assigneeName})],
+
+A new work order has been assigned to you. Please review the details below and take action accordingly.
+
+WORK ORDER NUMBER: [(${workOrderNumber})]
+
+[# th:if="${priority == 'HIGH'}"]
+⚠️ HIGH PRIORITY WORK ORDER
+This work order has been flagged as high priority. Please prioritize this task and begin work as soon as possible.
+[/]
+
+WORK ORDER DETAILS
+------------------
+Title:          [(${title})]
+Category:       [(${category})]
+Priority:       [(${priority})]
+Property:       [(${propertyName})]
+[# th:if="${unitNumber != null}"]
+Unit:           Unit [(${unitNumber})]
+[/]
+[# th:if="${scheduledDate != null}"]
+Scheduled Date: [(${scheduledDate})]
+[/]
+Assigned By:    [(${assignedByName})]
+Assigned On:    [(${assignedDate})]
+
+DESCRIPTION
+-----------
+[(${description})]
+
+[# th:if="${assignmentNotes != null and assignmentNotes != ''}"]
+ASSIGNMENT NOTES
+----------------
+[(${assignmentNotes})]
+[/]
+
+[# th:if="${accessInstructions != null and accessInstructions != ''}"]
+ACCESS INSTRUCTIONS
+-------------------
+[(${accessInstructions})]
+[/]
+
+VIEW WORK ORDER: [(${workOrderUrl})]
+
+NEXT STEPS
+----------
+1. Review: Review all work order details and requirements
+2. Schedule: Contact the property or tenant if access scheduling is needed
+3. Execute: Complete the work as described
+4. Update: Update work order status in the system when work begins/completes
+5. Document: Add completion notes and photos if applicable
+
+---
+
+Need Help?
+Contact us at: [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

@@ -59,4 +59,16 @@ public interface PropertyRepository extends JpaRepository<Property, UUID>, JpaSp
      * Find properties by type and status
      */
     Page<Property> findByPropertyTypeAndStatus(PropertyType type, PropertyStatus status, Pageable pageable);
+
+    /**
+     * Find all active (non-deleted) properties
+     * Story 4.2: Preventive Maintenance Scheduling - for PM schedules that apply to all properties
+     */
+    List<Property> findByActiveTrue();
+
+    /**
+     * Find all active properties with ACTIVE status
+     * Story 4.2: Preventive Maintenance Scheduling
+     */
+    List<Property> findByActiveTrueAndStatus(PropertyStatus status);
 }

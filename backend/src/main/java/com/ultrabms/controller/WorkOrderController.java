@@ -2,9 +2,12 @@ package com.ultrabms.controller;
 
 import com.ultrabms.dto.workorders.AddCommentDto;
 import com.ultrabms.dto.workorders.AssignWorkOrderDto;
+import com.ultrabms.dto.workorders.AssignmentResponseDto;
 import com.ultrabms.dto.workorders.CreateWorkOrderDto;
+import com.ultrabms.dto.workorders.ReassignWorkOrderDto;
 import com.ultrabms.dto.workorders.UpdateWorkOrderDto;
 import com.ultrabms.dto.workorders.UpdateWorkOrderStatusDto;
+import com.ultrabms.dto.workorders.WorkOrderAssignmentDto;
 import com.ultrabms.dto.workorders.WorkOrderCommentDto;
 import com.ultrabms.dto.workorders.WorkOrderListDto;
 import com.ultrabms.dto.workorders.WorkOrderResponseDto;
@@ -267,12 +270,13 @@ public class WorkOrderController {
     /**
      * Assign work order to vendor or staff member
      * POST /api/v1/work-orders/{id}/assign
+     * Story 4.3: Enhanced with assignee type and assignment history tracking
      */
     @PostMapping("/{id}/assign")
     @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
     @Operation(
             summary = "Assign work order",
-            description = "Assign work order to a vendor or staff member"
+            description = "Assign work order to internal staff or external vendor with assignment history tracking"
     )
     public ResponseEntity<Map<String, Object>> assignWorkOrder(
             @PathVariable UUID id,
@@ -280,11 +284,64 @@ public class WorkOrderController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         UUID userId = getUserId(userDetails);
-        LOGGER.info("Assigning work order: {} to: {} by user: {}", id, dto.getAssignedTo(), userId);
+        LOGGER.info("Assigning work order: {} to: {} (type: {}) by user: {}",
+                id, dto.getAssignedTo(), dto.getAssigneeType(), userId);
 
-        WorkOrderResponseDto response = workOrderService.assignWorkOrder(id, dto, userId);
+        AssignmentResponseDto response = workOrderService.assignWorkOrderWithHistory(id, dto, userId);
 
         Map<String, Object> responseBody = buildSuccessResponse(response, "Work order assigned successfully");
+        return ResponseEntity.ok(responseBody);
+    }
+
+    /**
+     * Reassign work order to a different vendor or staff member
+     * POST /api/v1/work-orders/{id}/reassign
+     * Story 4.3: Work Order Assignment and Vendor Coordination
+     */
+    @PostMapping("/{id}/reassign")
+    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @Operation(
+            summary = "Reassign work order",
+            description = "Reassign work order to a different assignee with required reason"
+    )
+    public ResponseEntity<Map<String, Object>> reassignWorkOrder(
+            @PathVariable UUID id,
+            @Valid @RequestBody ReassignWorkOrderDto dto,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UUID userId = getUserId(userDetails);
+        LOGGER.info("Reassigning work order: {} to: {} (type: {}) by user: {}",
+                id, dto.getNewAssigneeId(), dto.getNewAssigneeType(), userId);
+
+        AssignmentResponseDto response = workOrderService.reassignWorkOrder(id, dto, userId);
+
+        Map<String, Object> responseBody = buildSuccessResponse(response, "Work order reassigned successfully");
+        return ResponseEntity.ok(responseBody);
+    }
+
+    /**
+     * Get assignment history for a work order
+     * GET /api/v1/work-orders/{id}/assignment-history
+     * Story 4.3: Work Order Assignment and Vendor Coordination
+     */
+    @GetMapping("/{id}/assignment-history")
+    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @Operation(
+            summary = "Get assignment history",
+            description = "Get paginated assignment history showing all assignments and reassignments"
+    )
+    public ResponseEntity<Map<String, Object>> getAssignmentHistory(
+            @PathVariable UUID id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        LOGGER.info("Fetching assignment history for work order: {}", id);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<WorkOrderAssignmentDto> history = workOrderService.getAssignmentHistory(id, pageable);
+
+        Map<String, Object> responseBody = buildPagedResponse(history, "Assignment history retrieved successfully");
         return ResponseEntity.ok(responseBody);
     }
 

@@ -1,5 +1,6 @@
 package com.ultrabms.entity;
 
+import com.ultrabms.entity.enums.AssigneeType;
 import com.ultrabms.entity.enums.WorkOrderCategory;
 import com.ultrabms.entity.enums.WorkOrderPriority;
 import com.ultrabms.entity.enums.WorkOrderStatus;
@@ -104,6 +105,15 @@ public class WorkOrder extends BaseEntity {
      */
     @Column(name = "assigned_to")
     private UUID assignedTo;
+
+    /**
+     * Type of assignee (INTERNAL_STAFF or EXTERNAL_VENDOR)
+     * Determines whether assignedTo references a User or Vendor
+     * Story 4.3: Work Order Assignment and Vendor Coordination
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "assignee_type", length = 20)
+    private AssigneeType assigneeType;
 
     /**
      * Maintenance request that triggered this work order (nullable if created directly)

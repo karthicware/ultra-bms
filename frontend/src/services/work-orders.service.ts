@@ -518,3 +518,227 @@ export async function getUnassignedWorkOrders(
 export async function cancelWorkOrder(id: string): Promise<void> {
   await apiClient.delete(`${WORK_ORDERS_BASE_PATH}/${id}`);
 }
+
+// ============================================================================
+// WORK ORDER ASSIGNMENT (Story 4.3)
+// ============================================================================
+
+import type {
+  AssignWorkOrderRequest,
+  ReassignWorkOrderRequest,
+  AssignWorkOrderResponse,
+  ReassignWorkOrderResponse,
+  AssignmentHistoryResponse,
+  WorkOrderAssignment,
+  InternalStaffAssignee,
+  ExternalVendorAssignee,
+  InternalStaffListResponse,
+  VendorListResponse,
+  UnassignedWorkOrderFilters
+} from '@/types/work-order-assignment';
+
+/**
+ * Assign work order to internal staff or external vendor
+ *
+ * @param id - Work order UUID
+ * @param data - Assignment data (assigneeType, assigneeId, assignmentNotes)
+ *
+ * @returns Promise that resolves to assignment response with assignee details
+ *
+ * @throws {ValidationException} When validation fails (400)
+ * @throws {EntityNotFoundException} When work order or assignee not found (404)
+ * @throws {ForbiddenException} When user lacks permission (403)
+ *
+ * @example
+ * ```typescript
+ * const result = await assignWorkOrderToAssignee(workOrderId, {
+ *   assigneeType: AssigneeType.INTERNAL_STAFF,
+ *   assigneeId: staffUserId,
+ *   assignmentNotes: 'Urgent - complete by EOD'
+ * });
+ * console.log(result.data.assignedTo.name);
+ * ```
+ */
+export async function assignWorkOrderToAssignee(
+  id: string,
+  data: AssignWorkOrderRequest
+): Promise<AssignWorkOrderResponse> {
+  const response = await apiClient.post<AssignWorkOrderResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/assign`,
+    data
+  );
+  return response.data;
+}
+
+/**
+ * Reassign work order to a different assignee
+ *
+ * @param id - Work order UUID
+ * @param data - Reassignment data (newAssigneeType, newAssigneeId, reassignmentReason, assignmentNotes)
+ *
+ * @returns Promise that resolves to reassignment response with both previous and new assignee details
+ *
+ * @throws {ValidationException} When validation fails (400)
+ * @throws {EntityNotFoundException} When work order or assignee not found (404)
+ * @throws {ForbiddenException} When user lacks permission (403)
+ *
+ * @example
+ * ```typescript
+ * const result = await reassignWorkOrder(workOrderId, {
+ *   newAssigneeType: AssigneeType.EXTERNAL_VENDOR,
+ *   newAssigneeId: vendorId,
+ *   reassignmentReason: 'Vendor A unavailable, requires different expertise',
+ *   assignmentNotes: 'Please prioritize this job'
+ * });
+ * console.log(`Reassigned from ${result.data.previousAssignee.name} to ${result.data.newAssignee.name}`);
+ * ```
+ */
+export async function reassignWorkOrder(
+  id: string,
+  data: ReassignWorkOrderRequest
+): Promise<ReassignWorkOrderResponse> {
+  const response = await apiClient.post<ReassignWorkOrderResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/reassign`,
+    data
+  );
+  return response.data;
+}
+
+/**
+ * Get assignment history for a work order
+ *
+ * @param id - Work order UUID
+ * @param page - Page number (0-indexed), default 0
+ * @param size - Page size, default 20
+ *
+ * @returns Promise that resolves to paginated assignment history
+ *
+ * @throws {EntityNotFoundException} When work order not found (404)
+ *
+ * @example
+ * ```typescript
+ * const history = await getAssignmentHistory(workOrderId);
+ * history.data.assignments.forEach(assignment => {
+ *   console.log(`Assigned to ${assignment.assigneeName} on ${assignment.assignedDate}`);
+ * });
+ * ```
+ */
+export async function getAssignmentHistory(
+  id: string,
+  page: number = 0,
+  size: number = 20
+): Promise<AssignmentHistoryResponse> {
+  const response = await apiClient.get<AssignmentHistoryResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/assignment-history`,
+    { params: { page, size } }
+  );
+  return response.data;
+}
+
+/**
+ * Get list of internal staff available for assignment
+ * Returns users with MAINTENANCE_SUPERVISOR role
+ *
+ * @returns Promise that resolves to list of internal staff
+ *
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ *
+ * @example
+ * ```typescript
+ * const staff = await getInternalStaffForAssignment();
+ * staff.data.forEach(member => {
+ *   console.log(`${member.firstName} ${member.lastName} - ${member.email}`);
+ * });
+ * ```
+ */
+export async function getInternalStaffForAssignment(): Promise<InternalStaffListResponse> {
+  const response = await apiClient.get<InternalStaffListResponse>(
+    '/v1/users',
+    { params: { role: 'MAINTENANCE_SUPERVISOR', status: 'ACTIVE' } }
+  );
+  return response.data;
+}
+
+/**
+ * Get list of external vendors available for assignment
+ * Returns active vendors filtered by service category
+ *
+ * @param serviceCategory - Optional category to filter vendors by
+ *
+ * @returns Promise that resolves to list of external vendors
+ *
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ *
+ * @example
+ * ```typescript
+ * const vendors = await getExternalVendorsForAssignment('PLUMBING');
+ * vendors.data.forEach(vendor => {
+ *   console.log(`${vendor.companyName} - Rating: ${vendor.rating}/5`);
+ * });
+ * ```
+ */
+export async function getExternalVendorsForAssignment(
+  serviceCategory?: string
+): Promise<VendorListResponse> {
+  const params: Record<string, any> = { status: 'ACTIVE' };
+  if (serviceCategory) {
+    params.serviceCategory = serviceCategory;
+  }
+  const response = await apiClient.get<VendorListResponse>(
+    '/v1/vendors',
+    { params }
+  );
+  return response.data;
+}
+
+/**
+ * Get paginated list of unassigned work orders with enhanced filters
+ *
+ * @param filters - Filters for listing unassigned work orders
+ *
+ * @returns Promise that resolves to paginated list of unassigned work orders
+ *
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ *
+ * @example
+ * ```typescript
+ * const unassigned = await getUnassignedWorkOrdersFiltered({
+ *   priority: ['HIGH', 'MEDIUM'],
+ *   category: ['PLUMBING', 'ELECTRICAL'],
+ *   search: 'leak',
+ *   page: 0,
+ *   size: 20
+ * });
+ * console.log(`${unassigned.pagination.totalElements} work orders need assignment`);
+ * ```
+ */
+export async function getUnassignedWorkOrdersFiltered(
+  filters?: UnassignedWorkOrderFilters
+): Promise<WorkOrderListResponse> {
+  const params: Record<string, any> = {
+    page: filters?.page ?? 0,
+    size: filters?.size ?? 20,
+    sortBy: filters?.sortBy ?? 'priority',
+    sortDirection: filters?.sortDirection ?? 'DESC'
+  };
+
+  if (filters?.propertyId) {
+    params.propertyId = filters.propertyId;
+  }
+  if (filters?.priority && filters.priority.length > 0) {
+    params.priority = filters.priority.join(',');
+  }
+  if (filters?.category && filters.category.length > 0) {
+    params.category = filters.category.join(',');
+  }
+  if (filters?.search) {
+    params.search = filters.search;
+  }
+
+  const response = await apiClient.get<WorkOrderListResponse>(
+    `${WORK_ORDERS_BASE_PATH}/unassigned`,
+    { params }
+  );
+
+  return response.data;
+}

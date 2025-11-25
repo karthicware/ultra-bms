@@ -1,13 +1,17 @@
 package com.ultrabms.service;
 
 import com.ultrabms.dto.workorders.*;
+import com.ultrabms.entity.User;
 import com.ultrabms.entity.WorkOrder;
+import com.ultrabms.entity.WorkOrderAssignment;
 import com.ultrabms.entity.WorkOrderComment;
+import com.ultrabms.entity.enums.AssigneeType;
 import com.ultrabms.entity.enums.WorkOrderCategory;
 import com.ultrabms.entity.enums.WorkOrderPriority;
 import com.ultrabms.entity.enums.WorkOrderStatus;
 import com.ultrabms.exception.EntityNotFoundException;
 import com.ultrabms.exception.ValidationException;
+import com.ultrabms.repository.WorkOrderAssignmentRepository;
 import com.ultrabms.repository.WorkOrderCommentRepository;
 import com.ultrabms.repository.WorkOrderRepository;
 import com.ultrabms.service.impl.WorkOrderServiceImpl;
@@ -18,6 +22,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +52,7 @@ import static org.mockito.Mockito.*;
  * Tests work order creation, updates, status transitions, and comments
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("WorkOrderService Unit Tests")
 class WorkOrderServiceTest {
 
@@ -54,6 +61,9 @@ class WorkOrderServiceTest {
 
     @Mock
     private WorkOrderCommentRepository workOrderCommentRepository;
+
+    @Mock
+    private WorkOrderAssignmentRepository workOrderAssignmentRepository;
 
     @Mock
     private com.ultrabms.repository.PropertyRepository propertyRepository;
@@ -502,5 +512,418 @@ class WorkOrderServiceTest {
         assertThatThrownBy(() -> workOrderService.createWorkOrder(createWorkOrderDto, testUserId, photos))
                 .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("Only JPG and PNG images are allowed");
+    }
+
+    // ========================================================================
+    // Story 4.3: Work Order Assignment and Vendor Coordination Tests
+    // ========================================================================
+
+    @Test
+    @DisplayName("Should assign work order to internal staff with history tracking")
+    void testAssignWorkOrderWithHistory_InternalStaff_Success() {
+        // Given
+        UUID staffId = UUID.randomUUID();
+        AssignWorkOrderDto assignDto = AssignWorkOrderDto.builder()
+                .assigneeType(AssigneeType.INTERNAL_STAFF)
+                .assignedTo(staffId)
+                .assignmentNotes("Urgent repair needed")
+                .build();
+
+        User staffMember = new User();
+        staffMember.setId(staffId);
+        staffMember.setFirstName("John");
+        staffMember.setLastName("Smith");
+        staffMember.setEmail("john.smith@example.com");
+
+        User manager = new User();
+        manager.setId(testUserId);
+        manager.setFirstName("Jane");
+        manager.setLastName("Doe");
+
+        when(workOrderRepository.findById(testWorkOrderId))
+                .thenReturn(Optional.of(testWorkOrder));
+        when(userRepository.findById(staffId))
+                .thenReturn(Optional.of(staffMember));
+        when(userRepository.findById(testUserId))
+                .thenReturn(Optional.of(manager));
+        when(workOrderRepository.save(any(WorkOrder.class)))
+                .thenReturn(testWorkOrder);
+        when(workOrderAssignmentRepository.save(any(WorkOrderAssignment.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(workOrderCommentRepository.save(any(WorkOrderComment.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        AssignmentResponseDto result = workOrderService.assignWorkOrderWithHistory(testWorkOrderId, assignDto, testUserId);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getWorkOrderId()).isEqualTo(testWorkOrderId);
+        assertThat(result.getAssignedTo()).isNotNull();
+        assertThat(result.getAssignedTo().getId()).isEqualTo(staffId);
+        assertThat(result.getAssignedTo().getName()).isEqualTo("John Smith");
+        assertThat(result.getAssignedTo().getType()).isEqualTo(AssigneeType.INTERNAL_STAFF);
+        assertThat(result.getAssignedDate()).isNotNull();
+
+        verify(workOrderRepository, times(1)).save(any(WorkOrder.class));
+        verify(workOrderAssignmentRepository, times(1)).save(any(WorkOrderAssignment.class));
+        verify(workOrderCommentRepository, times(1)).save(any(WorkOrderComment.class));
+        verify(emailService, times(1)).sendWorkOrderAssignmentEmail(
+                eq("john.smith@example.com"),
+                eq("John Smith"),
+                any(WorkOrder.class),
+                eq("Jane Doe"),
+                eq("Urgent repair needed")
+        );
+    }
+
+    @Test
+    @DisplayName("Should assign work order to external vendor with history tracking")
+    void testAssignWorkOrderWithHistory_ExternalVendor_Success() {
+        // Given
+        UUID vendorId = UUID.randomUUID();
+        AssignWorkOrderDto assignDto = AssignWorkOrderDto.builder()
+                .assigneeType(AssigneeType.EXTERNAL_VENDOR)
+                .assignedTo(vendorId)
+                .assignmentNotes("Specialized equipment needed")
+                .build();
+
+        User manager = new User();
+        manager.setId(testUserId);
+        manager.setFirstName("Jane");
+        manager.setLastName("Doe");
+
+        when(workOrderRepository.findById(testWorkOrderId))
+                .thenReturn(Optional.of(testWorkOrder));
+        when(userRepository.findById(testUserId))
+                .thenReturn(Optional.of(manager));
+        when(workOrderRepository.save(any(WorkOrder.class)))
+                .thenReturn(testWorkOrder);
+        when(workOrderAssignmentRepository.save(any(WorkOrderAssignment.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(workOrderCommentRepository.save(any(WorkOrderComment.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        AssignmentResponseDto result = workOrderService.assignWorkOrderWithHistory(testWorkOrderId, assignDto, testUserId);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getWorkOrderId()).isEqualTo(testWorkOrderId);
+        assertThat(result.getAssignedTo()).isNotNull();
+        assertThat(result.getAssignedTo().getId()).isEqualTo(vendorId);
+        assertThat(result.getAssignedTo().getType()).isEqualTo(AssigneeType.EXTERNAL_VENDOR);
+
+        verify(workOrderRepository, times(1)).save(any(WorkOrder.class));
+        verify(workOrderAssignmentRepository, times(1)).save(any(WorkOrderAssignment.class));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when assigning non-existent work order")
+    void testAssignWorkOrderWithHistory_WorkOrderNotFound() {
+        // Given
+        UUID staffId = UUID.randomUUID();
+        AssignWorkOrderDto assignDto = AssignWorkOrderDto.builder()
+                .assigneeType(AssigneeType.INTERNAL_STAFF)
+                .assignedTo(staffId)
+                .build();
+
+        when(workOrderRepository.findById(testWorkOrderId))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> workOrderService.assignWorkOrderWithHistory(testWorkOrderId, assignDto, testUserId))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Work order not found");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when assigning completed work order")
+    void testAssignWorkOrderWithHistory_CompletedWorkOrder() {
+        // Given
+        testWorkOrder.setStatus(WorkOrderStatus.COMPLETED);
+        UUID staffId = UUID.randomUUID();
+        AssignWorkOrderDto assignDto = AssignWorkOrderDto.builder()
+                .assigneeType(AssigneeType.INTERNAL_STAFF)
+                .assignedTo(staffId)
+                .build();
+
+        when(workOrderRepository.findById(testWorkOrderId))
+                .thenReturn(Optional.of(testWorkOrder));
+
+        // When/Then
+        assertThatThrownBy(() -> workOrderService.assignWorkOrderWithHistory(testWorkOrderId, assignDto, testUserId))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("Cannot assign completed or closed work orders");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when staff member not found")
+    void testAssignWorkOrderWithHistory_StaffNotFound() {
+        // Given
+        UUID staffId = UUID.randomUUID();
+        AssignWorkOrderDto assignDto = AssignWorkOrderDto.builder()
+                .assigneeType(AssigneeType.INTERNAL_STAFF)
+                .assignedTo(staffId)
+                .build();
+
+        when(workOrderRepository.findById(testWorkOrderId))
+                .thenReturn(Optional.of(testWorkOrder));
+        when(userRepository.findById(staffId))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> workOrderService.assignWorkOrderWithHistory(testWorkOrderId, assignDto, testUserId))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Staff member not found");
+    }
+
+    @Test
+    @DisplayName("Should reassign work order successfully")
+    void testReassignWorkOrder_Success() {
+        // Given
+        UUID previousAssigneeId = UUID.randomUUID();
+        UUID newAssigneeId = UUID.randomUUID();
+
+        testWorkOrder.setAssignedTo(previousAssigneeId);
+        testWorkOrder.setAssigneeType(AssigneeType.INTERNAL_STAFF);
+        testWorkOrder.setStatus(WorkOrderStatus.ASSIGNED);
+
+        ReassignWorkOrderDto reassignDto = ReassignWorkOrderDto.builder()
+                .newAssigneeType(AssigneeType.INTERNAL_STAFF)
+                .newAssigneeId(newAssigneeId)
+                .reassignmentReason("Previous assignee unavailable")
+                .assignmentNotes("Please prioritize this")
+                .build();
+
+        User previousAssignee = new User();
+        previousAssignee.setId(previousAssigneeId);
+        previousAssignee.setFirstName("Mike");
+        previousAssignee.setLastName("Johnson");
+
+        User newAssignee = new User();
+        newAssignee.setId(newAssigneeId);
+        newAssignee.setFirstName("Sarah");
+        newAssignee.setLastName("Williams");
+        newAssignee.setEmail("sarah.williams@example.com");
+
+        User manager = new User();
+        manager.setId(testUserId);
+        manager.setFirstName("Jane");
+        manager.setLastName("Doe");
+
+        when(workOrderRepository.findById(testWorkOrderId))
+                .thenReturn(Optional.of(testWorkOrder));
+        when(userRepository.findById(previousAssigneeId))
+                .thenReturn(Optional.of(previousAssignee));
+        when(userRepository.findById(newAssigneeId))
+                .thenReturn(Optional.of(newAssignee));
+        when(userRepository.findById(testUserId))
+                .thenReturn(Optional.of(manager));
+        when(workOrderRepository.save(any(WorkOrder.class)))
+                .thenReturn(testWorkOrder);
+        when(workOrderAssignmentRepository.save(any(WorkOrderAssignment.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(workOrderCommentRepository.save(any(WorkOrderComment.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        AssignmentResponseDto result = workOrderService.reassignWorkOrder(testWorkOrderId, reassignDto, testUserId);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getWorkOrderId()).isEqualTo(testWorkOrderId);
+        assertThat(result.getPreviousAssignee()).isNotNull();
+        assertThat(result.getPreviousAssignee().getId()).isEqualTo(previousAssigneeId);
+        assertThat(result.getPreviousAssignee().getName()).isEqualTo("Mike Johnson");
+        assertThat(result.getAssignedTo()).isNotNull();
+        assertThat(result.getAssignedTo().getId()).isEqualTo(newAssigneeId);
+        assertThat(result.getAssignedTo().getName()).isEqualTo("Sarah Williams");
+
+        verify(workOrderRepository, times(1)).save(any(WorkOrder.class));
+        verify(workOrderAssignmentRepository, times(1)).save(any(WorkOrderAssignment.class));
+        verify(workOrderCommentRepository, times(1)).save(any(WorkOrderComment.class));
+        verify(emailService, times(1)).sendWorkOrderReassignmentEmail(
+                eq("sarah.williams@example.com"),
+                eq("Sarah Williams"),
+                eq("Mike Johnson"),
+                any(WorkOrder.class),
+                eq("Jane Doe"),
+                eq("Previous assignee unavailable"),
+                eq("Please prioritize this")
+        );
+    }
+
+    @Test
+    @DisplayName("Should throw exception when reassigning non-existent work order")
+    void testReassignWorkOrder_WorkOrderNotFound() {
+        // Given
+        ReassignWorkOrderDto reassignDto = ReassignWorkOrderDto.builder()
+                .newAssigneeType(AssigneeType.INTERNAL_STAFF)
+                .newAssigneeId(UUID.randomUUID())
+                .reassignmentReason("Reason for reassignment")
+                .build();
+
+        when(workOrderRepository.findById(testWorkOrderId))
+                .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> workOrderService.reassignWorkOrder(testWorkOrderId, reassignDto, testUserId))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Work order not found");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when reassigning unassigned work order")
+    void testReassignWorkOrder_NotCurrentlyAssigned() {
+        // Given
+        testWorkOrder.setAssignedTo(null);
+
+        ReassignWorkOrderDto reassignDto = ReassignWorkOrderDto.builder()
+                .newAssigneeType(AssigneeType.INTERNAL_STAFF)
+                .newAssigneeId(UUID.randomUUID())
+                .reassignmentReason("Reason for reassignment")
+                .build();
+
+        when(workOrderRepository.findById(testWorkOrderId))
+                .thenReturn(Optional.of(testWorkOrder));
+
+        // When/Then
+        assertThatThrownBy(() -> workOrderService.reassignWorkOrder(testWorkOrderId, reassignDto, testUserId))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("Work order is not currently assigned");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when reassigning completed work order")
+    void testReassignWorkOrder_CompletedWorkOrder() {
+        // Given
+        testWorkOrder.setAssignedTo(UUID.randomUUID());
+        testWorkOrder.setStatus(WorkOrderStatus.COMPLETED);
+
+        ReassignWorkOrderDto reassignDto = ReassignWorkOrderDto.builder()
+                .newAssigneeType(AssigneeType.INTERNAL_STAFF)
+                .newAssigneeId(UUID.randomUUID())
+                .reassignmentReason("Reason for reassignment")
+                .build();
+
+        when(workOrderRepository.findById(testWorkOrderId))
+                .thenReturn(Optional.of(testWorkOrder));
+
+        // When/Then
+        assertThatThrownBy(() -> workOrderService.reassignWorkOrder(testWorkOrderId, reassignDto, testUserId))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("Cannot reassign completed or closed work orders");
+    }
+
+    @Test
+    @DisplayName("Should get assignment history successfully")
+    void testGetAssignmentHistory_Success() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 20);
+        UUID assigneeId = UUID.randomUUID();
+
+        WorkOrderAssignment assignment1 = WorkOrderAssignment.builder()
+                .workOrderId(testWorkOrderId)
+                .assigneeType(AssigneeType.INTERNAL_STAFF)
+                .assigneeId(assigneeId)
+                .assignedBy(testUserId)
+                .assignedDate(LocalDateTime.now().minusDays(1))
+                .assignmentNotes("Initial assignment")
+                .build();
+        assignment1.setId(UUID.randomUUID());
+
+        User assignee = new User();
+        assignee.setId(assigneeId);
+        assignee.setFirstName("John");
+        assignee.setLastName("Smith");
+
+        User manager = new User();
+        manager.setId(testUserId);
+        manager.setFirstName("Jane");
+        manager.setLastName("Doe");
+
+        Page<WorkOrderAssignment> assignmentsPage = new PageImpl<>(
+                Arrays.asList(assignment1), pageable, 1);
+
+        when(workOrderRepository.existsById(testWorkOrderId)).thenReturn(true);
+        when(workOrderAssignmentRepository.findByWorkOrderIdOrderByAssignedDateDesc(testWorkOrderId, pageable))
+                .thenReturn(assignmentsPage);
+        when(workOrderAssignmentRepository.countByWorkOrderId(testWorkOrderId)).thenReturn(1L);
+        when(userRepository.findById(assigneeId)).thenReturn(Optional.of(assignee));
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(manager));
+
+        // When
+        Page<WorkOrderAssignmentDto> result = workOrderService.getAssignmentHistory(testWorkOrderId, pageable);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getAssigneeName()).isEqualTo("John Smith");
+        assertThat(result.getContent().get(0).getAssignedByName()).isEqualTo("Jane Doe");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when getting history for non-existent work order")
+    void testGetAssignmentHistory_WorkOrderNotFound() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 20);
+
+        when(workOrderRepository.existsById(testWorkOrderId)).thenReturn(false);
+
+        // When/Then
+        assertThatThrownBy(() -> workOrderService.getAssignmentHistory(testWorkOrderId, pageable))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Work order not found");
+    }
+
+    @Test
+    @DisplayName("Should update status to ASSIGNED when assigning OPEN work order")
+    void testAssignWorkOrderWithHistory_StatusTransition() {
+        // Given
+        testWorkOrder.setStatus(WorkOrderStatus.OPEN);
+        UUID staffId = UUID.randomUUID();
+        AssignWorkOrderDto assignDto = AssignWorkOrderDto.builder()
+                .assigneeType(AssigneeType.INTERNAL_STAFF)
+                .assignedTo(staffId)
+                .build();
+
+        User staffMember = new User();
+        staffMember.setId(staffId);
+        staffMember.setFirstName("John");
+        staffMember.setLastName("Smith");
+        staffMember.setEmail("john@example.com");
+
+        User manager = new User();
+        manager.setId(testUserId);
+        manager.setFirstName("Jane");
+        manager.setLastName("Doe");
+
+        when(workOrderRepository.findById(testWorkOrderId))
+                .thenReturn(Optional.of(testWorkOrder));
+        when(userRepository.findById(staffId))
+                .thenReturn(Optional.of(staffMember));
+        when(userRepository.findById(testUserId))
+                .thenReturn(Optional.of(manager));
+        when(workOrderRepository.save(any(WorkOrder.class)))
+                .thenAnswer(inv -> {
+                    WorkOrder wo = inv.getArgument(0);
+                    assertThat(wo.getStatus()).isEqualTo(WorkOrderStatus.ASSIGNED);
+                    return wo;
+                });
+        when(workOrderAssignmentRepository.save(any(WorkOrderAssignment.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(workOrderCommentRepository.save(any(WorkOrderComment.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        workOrderService.assignWorkOrderWithHistory(testWorkOrderId, assignDto, testUserId);
+
+        // Then
+        verify(workOrderRepository, times(1)).save(argThat(wo ->
+                wo.getStatus() == WorkOrderStatus.ASSIGNED &&
+                wo.getAssignedTo().equals(staffId) &&
+                wo.getAssigneeType() == AssigneeType.INTERNAL_STAFF
+        ));
     }
 }

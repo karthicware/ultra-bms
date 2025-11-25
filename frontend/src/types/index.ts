@@ -35,4 +35,5 @@ export * from './tenant';
 export * from './tenant-portal';
 export * from './maintenance';
 export * from './work-orders';
+export * from './work-order-assignment';
 export * from './pm-schedule';

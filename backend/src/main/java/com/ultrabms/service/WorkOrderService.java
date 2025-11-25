@@ -2,9 +2,12 @@ package com.ultrabms.service;
 
 import com.ultrabms.dto.workorders.AddCommentDto;
 import com.ultrabms.dto.workorders.AssignWorkOrderDto;
+import com.ultrabms.dto.workorders.AssignmentResponseDto;
 import com.ultrabms.dto.workorders.CreateWorkOrderDto;
+import com.ultrabms.dto.workorders.ReassignWorkOrderDto;
 import com.ultrabms.dto.workorders.UpdateWorkOrderDto;
 import com.ultrabms.dto.workorders.UpdateWorkOrderStatusDto;
+import com.ultrabms.dto.workorders.WorkOrderAssignmentDto;
 import com.ultrabms.dto.workorders.WorkOrderCommentDto;
 import com.ultrabms.dto.workorders.WorkOrderListDto;
 import com.ultrabms.dto.workorders.WorkOrderResponseDto;
@@ -185,4 +188,58 @@ public interface WorkOrderService {
      * @return Generated work order number
      */
     String generateWorkOrderNumber();
+
+    // ========================================================================
+    // Story 4.3: Work Order Assignment and Vendor Coordination
+    // ========================================================================
+
+    /**
+     * Assign work order with assignee type tracking and assignment history
+     * Creates WorkOrderAssignment entry and sends email notification
+     *
+     * @param id Work order ID
+     * @param dto Assignment data including assigneeType
+     * @param currentUserId User making the assignment
+     * @return Assignment response with assignee details
+     */
+    AssignmentResponseDto assignWorkOrderWithHistory(UUID id, AssignWorkOrderDto dto, UUID currentUserId);
+
+    /**
+     * Reassign work order to a different assignee
+     * Requires reassignment reason and creates assignment history entry
+     *
+     * @param id Work order ID
+     * @param dto Reassignment data including reason
+     * @param currentUserId User making the reassignment
+     * @return Assignment response with both previous and new assignee details
+     */
+    AssignmentResponseDto reassignWorkOrder(UUID id, ReassignWorkOrderDto dto, UUID currentUserId);
+
+    /**
+     * Get assignment history for a work order
+     *
+     * @param id Work order ID
+     * @param pageable Pagination parameters
+     * @return Page of assignment history entries
+     */
+    Page<WorkOrderAssignmentDto> getAssignmentHistory(UUID id, Pageable pageable);
+
+    /**
+     * Get unassigned work orders with enhanced filters
+     * Returns work orders where status = OPEN and assignedTo is null
+     *
+     * @param propertyId Optional property filter
+     * @param priorities Optional priority filter
+     * @param categories Optional category filter
+     * @param searchTerm Optional search term
+     * @param pageable Pagination parameters
+     * @return Page of unassigned work orders
+     */
+    Page<WorkOrderListDto> getUnassignedWorkOrdersFiltered(
+            UUID propertyId,
+            List<WorkOrderPriority> priorities,
+            List<WorkOrderCategory> categories,
+            String searchTerm,
+            Pageable pageable
+    );
 }
