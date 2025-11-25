@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 /**
@@ -67,7 +66,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 import { getUnassignedWorkOrdersFiltered, assignWorkOrderToAssignee, getWorkOrderById } from '@/services/work-orders.service';
-import { AssignmentDialog } from '@/components/work-orders/AssignmentDialog';
+import { AssignmentDialog, type AssignmentWorkOrder } from '@/components/work-orders/AssignmentDialog';
+import { AxiosError } from 'axios';
 import {
   WorkOrderPriority,
   WorkOrderCategory,
@@ -186,10 +186,11 @@ export default function UnassignedWorkOrdersPage() {
 
       // Refresh the list
       loadWorkOrders();
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: { message?: string } }>;
       toast({
         title: 'Assignment Failed',
-        description: error.response?.data?.error?.message || 'Failed to assign work order',
+        description: axiosError.response?.data?.error?.message || 'Failed to assign work order',
         variant: 'destructive',
       });
     } finally {
@@ -430,7 +431,7 @@ export default function UnassignedWorkOrdersPage() {
             workOrderNumber: selectedWorkOrder.workOrderNumber,
             title: selectedWorkOrder.title,
             category: selectedWorkOrder.category,
-          } as any}
+          }}
           onAssign={handleAssignSubmit}
           isSubmitting={isAssigning}
         />

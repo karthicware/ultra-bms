@@ -1,0 +1,42 @@
+WORK ORDER REASSIGNED TO ANOTHER ASSIGNEE
+==========================================
+
+Hi [(${previousAssigneeName})],
+
+The following work order has been reassigned from you to another team member or vendor.
+
+WORK ORDER NUMBER: [(${workOrderNumber})]
+
+REASON FOR REASSIGNMENT
+-----------------------
+[(${reassignmentReason})]
+
+NEW ASSIGNEE
+------------
+Name:       [(${newAssigneeName})]
+Type:       [(${newAssigneeType})]
+
+WORK ORDER DETAILS
+------------------
+Title:      [(${title})]
+Category:   [(${category})]
+Priority:   [(${priority})]
+Property:   [(${propertyName})]
+[# th:if="${unitNumber != null}"]
+Unit:       Unit [(${unitNumber})]
+[/]
+
+Reassigned By:    [(${reassignedByName})]
+Reassigned On:    [(${reassignedDate})]
+
+---
+
+No further action is required from you for this work order.
+
+If you have any questions about this reassignment, please contact your supervisor.
+
+Need Help?
+Contact us at: [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

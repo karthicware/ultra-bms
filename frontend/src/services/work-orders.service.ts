@@ -743,3 +743,281 @@ export async function getUnassignedWorkOrdersFiltered(
 
   return response.data;
 }
+
+// ============================================================================
+// WORK ORDER PROGRESS TRACKING (Story 4.4)
+// ============================================================================
+
+import type {
+  StartWorkResponse,
+  AddProgressUpdateResponse,
+  MarkCompleteResponse,
+  TimelineResponse,
+  ProgressUpdatesResponse,
+  WorkOrderProgress,
+  TimelineEntry
+} from '@/types/work-order-progress';
+
+/**
+ * Start work on an assigned work order
+ *
+ * @param id - Work order UUID
+ * @param beforePhotos - Optional array of before photos to upload
+ *
+ * @returns Promise that resolves to start work response with updated status
+ *
+ * @throws {ValidationException} When work order status is not ASSIGNED (400)
+ * @throws {EntityNotFoundException} When work order not found (404)
+ * @throws {ForbiddenException} When user is not the assignee (403)
+ *
+ * @example
+ * ```typescript
+ * const result = await startWork(workOrderId, [beforePhoto1, beforePhoto2]);
+ * console.log(result.data.status); // "IN_PROGRESS"
+ * console.log(result.data.startedAt); // "2025-11-25T10:00:00Z"
+ * ```
+ */
+export async function startWork(
+  id: string,
+  beforePhotos?: File[]
+): Promise<StartWorkResponse> {
+  const formData = new FormData();
+
+  // Append before photos if provided
+  if (beforePhotos && beforePhotos.length > 0) {
+    beforePhotos.forEach((file) => {
+      formData.append('beforePhotos', file);
+    });
+  }
+
+  const response = await apiClient.patch<StartWorkResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/start`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  return response.data;
+}
+
+/**
+ * Add a progress update to a work order
+ *
+ * @param id - Work order UUID
+ * @param progressNotes - Progress notes (required, 1-500 chars)
+ * @param photos - Optional array of progress photos (max 5)
+ * @param estimatedCompletionDate - Optional updated estimated completion date
+ *
+ * @returns Promise that resolves to progress update response with photo URLs
+ *
+ * @throws {ValidationException} When validation fails (400)
+ * @throws {EntityNotFoundException} When work order not found (404)
+ * @throws {ForbiddenException} When user is not the assignee (403)
+ *
+ * @example
+ * ```typescript
+ * const result = await addProgressUpdate(workOrderId, {
+ *   progressNotes: 'Identified issue, ordering replacement parts',
+ *   photos: [photo1, photo2],
+ *   estimatedCompletionDate: '2025-11-26'
+ * });
+ * console.log(result.data.progressUpdateId);
+ * console.log(result.data.photoUrls);
+ * ```
+ */
+export async function addProgressUpdate(
+  id: string,
+  data: {
+    progressNotes: string;
+    photos?: File[];
+    estimatedCompletionDate?: string;
+  }
+): Promise<AddProgressUpdateResponse> {
+  const formData = new FormData();
+
+  // Append progress notes
+  formData.append('progressNotes', data.progressNotes);
+
+  // Append estimated completion date if provided
+  if (data.estimatedCompletionDate) {
+    formData.append('estimatedCompletionDate', data.estimatedCompletionDate);
+  }
+
+  // Append photos if provided
+  if (data.photos && data.photos.length > 0) {
+    data.photos.forEach((file) => {
+      formData.append('photos', file);
+    });
+  }
+
+  const response = await apiClient.post<AddProgressUpdateResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/progress`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  return response.data;
+}
+
+/**
+ * Mark a work order as complete
+ *
+ * @param id - Work order UUID
+ * @param data - Completion data (completionNotes, afterPhotos, hoursSpent, totalCost, etc.)
+ *
+ * @returns Promise that resolves to completion response with final status
+ *
+ * @throws {ValidationException} When validation fails (400)
+ * @throws {EntityNotFoundException} When work order not found (404)
+ * @throws {ForbiddenException} When user is not the assignee (403)
+ *
+ * @example
+ * ```typescript
+ * const result = await markComplete(workOrderId, {
+ *   completionNotes: 'Replaced faulty valve, tested system, all working normally',
+ *   afterPhotos: [afterPhoto1, afterPhoto2],
+ *   hoursSpent: 2.5,
+ *   totalCost: 350.00,
+ *   recommendations: 'Monitor pressure weekly for next month',
+ *   followUpRequired: false
+ * });
+ * console.log(result.data.status); // "COMPLETED"
+ * console.log(result.data.completedAt);
+ * ```
+ */
+export async function markComplete(
+  id: string,
+  data: {
+    completionNotes: string;
+    afterPhotos: File[];
+    hoursSpent: number;
+    totalCost: number;
+    recommendations?: string;
+    followUpRequired: boolean;
+    followUpDescription?: string;
+  }
+): Promise<MarkCompleteResponse> {
+  const formData = new FormData();
+
+  // Append required fields
+  formData.append('completionNotes', data.completionNotes);
+  formData.append('hoursSpent', data.hoursSpent.toString());
+  formData.append('totalCost', data.totalCost.toString());
+  formData.append('followUpRequired', data.followUpRequired.toString());
+
+  // Append optional fields
+  if (data.recommendations) {
+    formData.append('recommendations', data.recommendations);
+  }
+  if (data.followUpDescription) {
+    formData.append('followUpDescription', data.followUpDescription);
+  }
+
+  // Append after photos (required, min 1)
+  data.afterPhotos.forEach((file) => {
+    formData.append('afterPhotos', file);
+  });
+
+  const response = await apiClient.patch<MarkCompleteResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/complete`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  return response.data;
+}
+
+/**
+ * Get complete timeline of work order events
+ *
+ * @param id - Work order UUID
+ *
+ * @returns Promise that resolves to timeline entries ordered by timestamp DESC
+ *
+ * @throws {EntityNotFoundException} When work order not found (404)
+ *
+ * @example
+ * ```typescript
+ * const result = await getWorkOrderTimeline(workOrderId);
+ * result.data.timeline.forEach(entry => {
+ *   console.log(`${entry.type}: ${entry.userName} at ${entry.timestamp}`);
+ * });
+ * ```
+ */
+export async function getWorkOrderTimeline(id: string): Promise<TimelineResponse> {
+  const response = await apiClient.get<TimelineResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/timeline`
+  );
+  return response.data;
+}
+
+/**
+ * Get progress updates for a work order
+ *
+ * @param id - Work order UUID
+ *
+ * @returns Promise that resolves to array of progress updates
+ *
+ * @throws {EntityNotFoundException} When work order not found (404)
+ *
+ * @example
+ * ```typescript
+ * const updates = await getProgressUpdates(workOrderId);
+ * updates.data.forEach(update => {
+ *   console.log(`${update.userName}: ${update.progressNotes}`);
+ * });
+ * ```
+ */
+export async function getProgressUpdates(id: string): Promise<ProgressUpdatesResponse> {
+  const response = await apiClient.get<ProgressUpdatesResponse>(
+    `${WORK_ORDERS_BASE_PATH}/${id}/progress`
+  );
+  return response.data;
+}
+
+/**
+ * Get work orders requiring follow-up
+ *
+ * @param page - Page number (0-indexed), default 0
+ * @param size - Page size, default 20
+ *
+ * @returns Promise that resolves to paginated list of work orders requiring follow-up
+ *
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ *
+ * @example
+ * ```typescript
+ * const followUps = await getFollowUpWorkOrders();
+ * console.log(`${followUps.pagination.totalElements} work orders need follow-up`);
+ * ```
+ */
+export async function getFollowUpWorkOrders(
+  page: number = 0,
+  size: number = 20
+): Promise<WorkOrderListResponse> {
+  const response = await apiClient.get<WorkOrderListResponse>(
+    `${WORK_ORDERS_BASE_PATH}`,
+    {
+      params: {
+        followUpRequired: true,
+        status: 'COMPLETED',
+        page,
+        size,
+        sortBy: 'completedAt',
+        sortDirection: 'DESC'
+      }
+    }
+  );
+  return response.data;
+}

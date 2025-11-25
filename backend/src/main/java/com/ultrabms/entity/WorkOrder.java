@@ -284,12 +284,60 @@ public class WorkOrder extends BaseEntity {
     private BigDecimal totalHours;
 
     /**
-     * Follow-up notes or recommendations from vendor
+     * Follow-up notes or recommendations from vendor (deprecated - use recommendations + followUpDescription)
      * Example: "Monitor for leaks over next 48 hours", "Schedule annual inspection"
      */
     @Size(max = 1000, message = "Follow-up notes must be less than 1000 characters")
     @Column(name = "follow_up_notes", length = 1000)
     private String followUpNotes;
+
+    // =================================================================
+    // STORY 4.4: JOB PROGRESS TRACKING AND COMPLETION
+    // =================================================================
+
+    /**
+     * Recommendations from vendor after completing work
+     * Example: "Monitor pressure weekly", "Replace unit in 6 months", "Schedule annual inspection"
+     */
+    @Size(max = 500, message = "Recommendations must be less than 500 characters")
+    @Column(name = "recommendations", length = 500)
+    private String recommendations;
+
+    /**
+     * Flag indicating if follow-up work is required
+     */
+    @Column(name = "follow_up_required")
+    @Builder.Default
+    private Boolean followUpRequired = false;
+
+    /**
+     * Description of required follow-up work (required if followUpRequired is true)
+     * Example: "Inspect in 1 month", "Order replacement part for next service"
+     */
+    @Size(max = 200, message = "Follow-up description must be less than 200 characters")
+    @Column(name = "follow_up_description", length = 200)
+    private String followUpDescription;
+
+    /**
+     * Array of before photo URLs uploaded when starting work
+     * Stored as JSON array: ["s3://bucket/path/before1.jpg", "s3://bucket/path/before2.jpg"]
+     * S3 path format: /work-orders/{workOrderId}/before/{timestamp}_{filename}
+     */
+    @Type(JsonType.class)
+    @Column(name = "before_photos", columnDefinition = "jsonb")
+    @Builder.Default
+    private List<String> beforePhotos = new ArrayList<>();
+
+    /**
+     * Array of after photo URLs uploaded on completion
+     * Stored as JSON array: ["s3://bucket/path/after1.jpg", "s3://bucket/path/after2.jpg"]
+     * S3 path format: /work-orders/{workOrderId}/after/{timestamp}_{filename}
+     * Required for completion (min 1 photo)
+     */
+    @Type(JsonType.class)
+    @Column(name = "after_photos", columnDefinition = "jsonb")
+    @Builder.Default
+    private List<String> afterPhotos = new ArrayList<>();
 
     // =================================================================
     // LIFECYCLE CALLBACKS

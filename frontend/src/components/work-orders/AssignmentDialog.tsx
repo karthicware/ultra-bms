@@ -47,7 +47,6 @@ import {
 import { assignWorkOrderSchema, type AssignWorkOrderFormData } from '@/lib/validations/work-order-assignment';
 import {
   AssigneeType,
-  type WorkOrder,
   type InternalStaffAssignee,
   type ExternalVendorAssignee
 } from '@/types';
@@ -56,10 +55,20 @@ import {
   getExternalVendorsForAssignment
 } from '@/services/assignees.service';
 
+/**
+ * Minimal work order data required for assignment dialog
+ */
+export interface AssignmentWorkOrder {
+  id: string;
+  workOrderNumber: string;
+  title: string;
+  category: string;
+}
+
 interface AssignmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  workOrder: WorkOrder | null;
+  workOrder: AssignmentWorkOrder | null;
   onAssign: (data: AssignWorkOrderFormData) => Promise<void>;
   isSubmitting?: boolean;
 }

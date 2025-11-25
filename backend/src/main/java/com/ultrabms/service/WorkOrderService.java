@@ -1,10 +1,17 @@
 package com.ultrabms.service;
 
 import com.ultrabms.dto.workorders.AddCommentDto;
+import com.ultrabms.dto.workorders.AddProgressUpdateDto;
 import com.ultrabms.dto.workorders.AssignWorkOrderDto;
 import com.ultrabms.dto.workorders.AssignmentResponseDto;
 import com.ultrabms.dto.workorders.CreateWorkOrderDto;
+import com.ultrabms.dto.workorders.MarkCompleteDto;
+import com.ultrabms.dto.workorders.MarkCompleteResponseDto;
+import com.ultrabms.dto.workorders.ProgressUpdateDto;
+import com.ultrabms.dto.workorders.ProgressUpdateResponseDto;
 import com.ultrabms.dto.workorders.ReassignWorkOrderDto;
+import com.ultrabms.dto.workorders.StartWorkResponseDto;
+import com.ultrabms.dto.workorders.TimelineEntryDto;
 import com.ultrabms.dto.workorders.UpdateWorkOrderDto;
 import com.ultrabms.dto.workorders.UpdateWorkOrderStatusDto;
 import com.ultrabms.dto.workorders.WorkOrderAssignmentDto;
@@ -242,4 +249,81 @@ public interface WorkOrderService {
             String searchTerm,
             Pageable pageable
     );
+
+    // ========================================================================
+    // Story 4.4: Job Progress Tracking and Completion
+    // ========================================================================
+
+    /**
+     * Start work on an assigned work order
+     * Changes status from ASSIGNED to IN_PROGRESS
+     * Optionally uploads before photos
+     *
+     * @param id Work order ID
+     * @param currentUserId Current authenticated user ID (must be assignee)
+     * @param beforePhotos Optional before photos (max 5)
+     * @return Start work response with status and startedAt timestamp
+     */
+    StartWorkResponseDto startWork(UUID id, UUID currentUserId, List<MultipartFile> beforePhotos);
+
+    /**
+     * Add a progress update to a work order
+     * Work order must be in IN_PROGRESS status
+     *
+     * @param id Work order ID
+     * @param dto Progress update data
+     * @param currentUserId Current authenticated user ID (must be assignee)
+     * @param photos Optional progress photos (max 5)
+     * @return Progress update response with created ID and photo URLs
+     */
+    ProgressUpdateResponseDto addProgressUpdate(
+            UUID id,
+            AddProgressUpdateDto dto,
+            UUID currentUserId,
+            List<MultipartFile> photos
+    );
+
+    /**
+     * Mark a work order as complete
+     * Changes status from IN_PROGRESS to COMPLETED
+     * Requires after photos and completion details
+     *
+     * @param id Work order ID
+     * @param dto Completion data
+     * @param currentUserId Current authenticated user ID (must be assignee)
+     * @param afterPhotos After photos (min 1, max 5)
+     * @return Completion response with status, completedAt, and cost details
+     */
+    MarkCompleteResponseDto markComplete(
+            UUID id,
+            MarkCompleteDto dto,
+            UUID currentUserId,
+            List<MultipartFile> afterPhotos
+    );
+
+    /**
+     * Get timeline of work order events
+     * Includes: CREATED, ASSIGNED, STARTED, PROGRESS_UPDATE, COMPLETED
+     *
+     * @param id Work order ID
+     * @return List of timeline entries ordered by timestamp DESC
+     */
+    List<TimelineEntryDto> getTimeline(UUID id);
+
+    /**
+     * Get progress updates for a work order
+     *
+     * @param id Work order ID
+     * @return List of progress updates ordered by createdAt DESC
+     */
+    List<ProgressUpdateDto> getProgressUpdates(UUID id);
+
+    /**
+     * Get work orders requiring follow-up
+     * Returns completed work orders where followUpRequired = true
+     *
+     * @param pageable Pagination parameters
+     * @return Page of work orders requiring follow-up
+     */
+    Page<WorkOrderListDto> getFollowUpWorkOrders(Pageable pageable);
 }

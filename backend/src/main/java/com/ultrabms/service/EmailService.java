@@ -586,6 +586,260 @@ public class EmailService {
     }
 
     /**
+     * Send notification to PREVIOUS assignee when work order is reassigned to someone else.
+     * Informs them they are no longer responsible and provides reason for change.
+     *
+     * Story 4.3: Work Order Assignment and Vendor Coordination (AC #15)
+     *
+     * @param previousAssigneeEmail Email of the previous assignee
+     * @param previousAssigneeName Name of the previous assignee
+     * @param newAssigneeName Name of the new assignee
+     * @param newAssigneeType Type of the new assignee (for display)
+     * @param workOrder Work order entity with all details
+     * @param propertyName Name of the property for the work order
+     * @param unitNumber Unit number (nullable for property-wide work)
+     * @param reassignedByName Name of the user who made the reassignment
+     * @param reassignmentReason Reason for the reassignment
+     */
+    @Async("emailTaskExecutor")
+    public void sendWorkOrderRemovedFromAssignmentEmail(
+            String previousAssigneeEmail,
+            String previousAssigneeName,
+            String newAssigneeName,
+            String newAssigneeType,
+            com.ultrabms.entity.WorkOrder workOrder,
+            String propertyName,
+            String unitNumber,
+            String reassignedByName,
+            String reassignmentReason
+    ) {
+        try {
+            // Build Thymeleaf context with template variables
+            Context context = new Context();
+            context.setVariable("previousAssigneeName", previousAssigneeName);
+            context.setVariable("newAssigneeName", newAssigneeName);
+            context.setVariable("newAssigneeType", newAssigneeType.replace("_", " "));
+            context.setVariable("workOrderNumber", workOrder.getWorkOrderNumber());
+            context.setVariable("title", workOrder.getTitle());
+            context.setVariable("category", workOrder.getCategory().toString().replace("_", " "));
+            context.setVariable("priority", workOrder.getPriority().toString());
+            context.setVariable("propertyName", propertyName != null ? propertyName : "N/A");
+            context.setVariable("unitNumber", unitNumber);
+            context.setVariable("reassignedByName", reassignedByName);
+            context.setVariable("reassignedDate", LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")));
+            context.setVariable("reassignmentReason", reassignmentReason);
+            context.setVariable("supportEmail", supportEmail);
+
+            // Render plain text template (HTML template can be added later)
+            String textContent = templateEngine.process("email/work-order-removed-from-assignment.txt", context);
+
+            // Send email (text only for now)
+            sendEmail(
+                previousAssigneeEmail,
+                String.format("Work Order Reassigned: %s - No Longer Assigned to You", workOrder.getWorkOrderNumber()),
+                textContent,
+                textContent // Use text as HTML fallback
+            );
+
+            log.info("Work order removed from assignment email sent successfully to: {} for work order: {}",
+                    previousAssigneeEmail, workOrder.getWorkOrderNumber());
+
+        } catch (Exception e) {
+            // Fail silently - don't throw exception to user, just log error
+            log.error("Failed to send work order removed from assignment email to: {} for work order: {}",
+                    previousAssigneeEmail, workOrder.getWorkOrderNumber(), e);
+        }
+    }
+
+    // ========================================================================
+    // Story 4.4: Job Progress Tracking and Completion Email Notifications
+    // ========================================================================
+
+    /**
+     * Send work started notification email to property manager asynchronously.
+     * Notifies property manager when assignee starts work on a work order.
+     * Story 4.4: Job Progress Tracking and Completion (AC #27)
+     *
+     * @param pmEmail Property manager's email address
+     * @param workOrder Work order entity
+     * @param propertyName Name of the property
+     * @param unitNumber Unit number (nullable)
+     * @param assigneeName Name of the assignee who started work
+     */
+    @Async("emailTaskExecutor")
+    public void sendWorkOrderStartedEmail(
+            String pmEmail,
+            com.ultrabms.entity.WorkOrder workOrder,
+            String propertyName,
+            String unitNumber,
+            String assigneeName
+    ) {
+        try {
+            String workOrderUrl = frontendUrl + "/property-manager/work-orders/" + workOrder.getId();
+
+            Context context = new Context();
+            context.setVariable("workOrderNumber", workOrder.getWorkOrderNumber());
+            context.setVariable("title", workOrder.getTitle());
+            context.setVariable("category", workOrder.getCategory().toString().replace("_", " "));
+            context.setVariable("priority", workOrder.getPriority().toString());
+            context.setVariable("propertyName", propertyName);
+            context.setVariable("unitNumber", unitNumber);
+            context.setVariable("assigneeName", assigneeName);
+            context.setVariable("startedAt", LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")));
+            context.setVariable("workOrderUrl", workOrderUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String textContent = templateEngine.process("email/work-order-started.txt", context);
+
+            sendEmail(
+                pmEmail,
+                String.format("Work Started: %s - %s", workOrder.getWorkOrderNumber(), workOrder.getTitle()),
+                textContent,
+                textContent
+            );
+
+            log.info("Work order started email sent successfully to: {} for work order: {}",
+                    pmEmail, workOrder.getWorkOrderNumber());
+
+        } catch (Exception e) {
+            log.error("Failed to send work order started email to: {} for work order: {}",
+                    pmEmail, workOrder.getWorkOrderNumber(), e);
+        }
+    }
+
+    /**
+     * Send progress update notification email to property manager asynchronously.
+     * Notifies property manager when assignee adds a progress update.
+     * Story 4.4: Job Progress Tracking and Completion (AC #27)
+     *
+     * @param pmEmail Property manager's email address
+     * @param workOrder Work order entity
+     * @param propertyName Name of the property
+     * @param unitNumber Unit number (nullable)
+     * @param assigneeName Name of the assignee who added the update
+     * @param progressNotes Progress notes content
+     */
+    @Async("emailTaskExecutor")
+    public void sendWorkOrderProgressUpdateEmail(
+            String pmEmail,
+            com.ultrabms.entity.WorkOrder workOrder,
+            String propertyName,
+            String unitNumber,
+            String assigneeName,
+            String progressNotes
+    ) {
+        try {
+            String workOrderUrl = frontendUrl + "/property-manager/work-orders/" + workOrder.getId();
+
+            Context context = new Context();
+            context.setVariable("workOrderNumber", workOrder.getWorkOrderNumber());
+            context.setVariable("title", workOrder.getTitle());
+            context.setVariable("category", workOrder.getCategory().toString().replace("_", " "));
+            context.setVariable("propertyName", propertyName);
+            context.setVariable("unitNumber", unitNumber);
+            context.setVariable("assigneeName", assigneeName);
+            context.setVariable("progressNotes", progressNotes);
+            context.setVariable("updatedAt", LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")));
+            context.setVariable("workOrderUrl", workOrderUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String textContent = templateEngine.process("email/work-order-progress-update.txt", context);
+
+            sendEmail(
+                pmEmail,
+                String.format("Progress Update: %s - %s", workOrder.getWorkOrderNumber(), workOrder.getTitle()),
+                textContent,
+                textContent
+            );
+
+            log.info("Work order progress update email sent successfully to: {} for work order: {}",
+                    pmEmail, workOrder.getWorkOrderNumber());
+
+        } catch (Exception e) {
+            log.error("Failed to send work order progress update email to: {} for work order: {}",
+                    pmEmail, workOrder.getWorkOrderNumber(), e);
+        }
+    }
+
+    /**
+     * Send work completed notification email to property manager asynchronously.
+     * Notifies property manager when assignee completes a work order.
+     * Story 4.4: Job Progress Tracking and Completion (AC #27)
+     *
+     * @param pmEmail Property manager's email address
+     * @param workOrder Work order entity
+     * @param propertyName Name of the property
+     * @param unitNumber Unit number (nullable)
+     * @param assigneeName Name of the assignee who completed work
+     * @param completionNotes Completion notes
+     * @param hoursSpent Total hours spent
+     * @param totalCost Total cost
+     * @param recommendations Recommendations (nullable)
+     * @param followUpRequired Whether follow-up is required
+     * @param followUpDescription Follow-up description (nullable)
+     */
+    @Async("emailTaskExecutor")
+    public void sendWorkOrderCompletedEmail(
+            String pmEmail,
+            com.ultrabms.entity.WorkOrder workOrder,
+            String propertyName,
+            String unitNumber,
+            String assigneeName,
+            String completionNotes,
+            java.math.BigDecimal hoursSpent,
+            java.math.BigDecimal totalCost,
+            String recommendations,
+            Boolean followUpRequired,
+            String followUpDescription
+    ) {
+        try {
+            String workOrderUrl = frontendUrl + "/property-manager/work-orders/" + workOrder.getId();
+
+            Context context = new Context();
+            context.setVariable("workOrderNumber", workOrder.getWorkOrderNumber());
+            context.setVariable("title", workOrder.getTitle());
+            context.setVariable("category", workOrder.getCategory().toString().replace("_", " "));
+            context.setVariable("priority", workOrder.getPriority().toString());
+            context.setVariable("propertyName", propertyName);
+            context.setVariable("unitNumber", unitNumber);
+            context.setVariable("assigneeName", assigneeName);
+            context.setVariable("completedAt", LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")));
+            context.setVariable("completionNotes", completionNotes);
+            context.setVariable("hoursSpent", hoursSpent != null ? hoursSpent.toString() : "N/A");
+            context.setVariable("totalCost", totalCost != null ? "AED " + totalCost.toString() : "N/A");
+            context.setVariable("recommendations", recommendations);
+            context.setVariable("followUpRequired", Boolean.TRUE.equals(followUpRequired));
+            context.setVariable("followUpDescription", followUpDescription);
+            context.setVariable("workOrderUrl", workOrderUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String textContent = templateEngine.process("email/work-order-completed.txt", context);
+
+            String subject = Boolean.TRUE.equals(followUpRequired)
+                    ? String.format("Work Completed (Follow-up Required): %s - %s", workOrder.getWorkOrderNumber(), workOrder.getTitle())
+                    : String.format("Work Completed: %s - %s", workOrder.getWorkOrderNumber(), workOrder.getTitle());
+
+            sendEmail(
+                pmEmail,
+                subject,
+                textContent,
+                textContent
+            );
+
+            log.info("Work order completed email sent successfully to: {} for work order: {}",
+                    pmEmail, workOrder.getWorkOrderNumber());
+
+        } catch (Exception e) {
+            log.error("Failed to send work order completed email to: {} for work order: {}",
+                    pmEmail, workOrder.getWorkOrderNumber(), e);
+        }
+    }
+
+    // ========================================================================
+    // Email Helper Methods
+    // ========================================================================
+
+    /**
      * Internal helper method to send multipart email (HTML + plain text fallback).
      * Creates MimeMessage with both HTML and text content for email client compatibility.
      *

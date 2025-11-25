@@ -37,3 +37,4 @@ export * from './maintenance';
 export * from './work-orders';
 export * from './work-order-assignment';
 export * from './pm-schedule';
+export * from './work-order-progress';

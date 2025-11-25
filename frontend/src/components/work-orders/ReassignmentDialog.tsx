@@ -45,7 +45,6 @@ import {
 import { reassignWorkOrderSchema, type ReassignWorkOrderFormData } from '@/lib/validations/work-order-assignment';
 import {
   AssigneeType,
-  type WorkOrder,
   type InternalStaffAssignee,
   type ExternalVendorAssignee
 } from '@/types';
@@ -54,10 +53,20 @@ import {
   getExternalVendorsForAssignment
 } from '@/services/assignees.service';
 
+/**
+ * Minimal work order data required for reassignment dialog
+ */
+export interface ReassignmentWorkOrder {
+  id: string;
+  workOrderNumber: string;
+  assignedTo?: string;
+  assigneeName?: string;
+}
+
 interface ReassignmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  workOrder: WorkOrder | null;
+  workOrder: ReassignmentWorkOrder | null;
   onReassign: (data: ReassignWorkOrderFormData) => Promise<void>;
   isSubmitting?: boolean;
 }

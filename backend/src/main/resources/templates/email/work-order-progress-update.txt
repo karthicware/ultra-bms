@@ -1,0 +1,31 @@
+Progress Update: [(${workOrderNumber})]
+==============================================
+
+Dear Property Manager,
+
+A progress update has been added to the following work order:
+
+WORK ORDER DETAILS
+------------------
+Work Order Number: [(${workOrderNumber})]
+Title: [(${title})]
+Category: [(${category})]
+Property: [(${propertyName})][# th:if="${unitNumber}"], Unit [(${unitNumber})][/]
+Updated At: [(${updatedAt})]
+Updated By: [(${assigneeName})]
+
+PROGRESS NOTES
+--------------
+[(${progressNotes})]
+
+You can view the full timeline including any photos uploaded with this update.
+
+View Work Order: [(${workOrderUrl})]
+
+If you have any questions, please contact our support team at [(${supportEmail})].
+
+Best regards,
+Ultra BMS Team
+
+---
+This is an automated notification. Please do not reply directly to this email.

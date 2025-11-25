@@ -171,9 +171,43 @@ public class WorkOrderResponseDto {
     private String completionNotes;
 
     /**
-     * Follow-up notes or recommendations
+     * Follow-up notes or recommendations (deprecated - use recommendations)
      */
     private String followUpNotes;
+
+    // =================================================================
+    // Story 4.4: Job Progress Tracking and Completion
+    // =================================================================
+
+    /**
+     * Recommendations from vendor after completing work
+     */
+    private String recommendations;
+
+    /**
+     * Flag indicating if follow-up work is required
+     */
+    private Boolean followUpRequired;
+
+    /**
+     * Description of required follow-up work
+     */
+    private String followUpDescription;
+
+    /**
+     * Before photo URLs uploaded when starting work
+     */
+    private List<String> beforePhotos;
+
+    /**
+     * After photo URLs uploaded on completion
+     */
+    private List<String> afterPhotos;
+
+    /**
+     * Number of progress updates submitted
+     */
+    private Integer progressUpdateCount;
 
     /**
      * When the work order was created

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 /**
@@ -10,6 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { AxiosError } from 'axios';
 import Image from 'next/image';
 import {
   Breadcrumb,
@@ -53,11 +53,20 @@ import {
   getWorkOrderStatusHistory,
   cancelWorkOrder,
   assignWorkOrderToAssignee,
+  startWork,
+  addProgressUpdate,
+  markComplete,
+  getTimeline,
+  reassignWorkOrder,
 } from '@/services/work-orders.service';
 import { AssignmentDialog } from '@/components/work-orders/AssignmentDialog';
 import { ReassignmentDialog } from '@/components/work-orders/ReassignmentDialog';
+import { StartWorkDialog } from '@/components/work-orders/StartWorkDialog';
+import { ProgressUpdateDialog } from '@/components/work-orders/ProgressUpdateDialog';
+import { MarkCompleteDialog } from '@/components/work-orders/MarkCompleteDialog';
+import { ProgressTimeline } from '@/components/work-orders/ProgressTimeline';
+import { BeforeAfterGallery } from '@/components/work-orders/BeforeAfterGallery';
 import type { AssignWorkOrderFormData, ReassignWorkOrderFormData } from '@/lib/validations/work-order-assignment';
-import { reassignWorkOrder } from '@/services/work-orders.service';
 import {
   WorkOrderStatus,
   WorkOrderPriority,
@@ -65,10 +74,12 @@ import {
   type WorkOrder,
   type WorkOrderComment,
 } from '@/types/work-orders';
+import type { TimelineEntry } from '@/types/work-order-progress';
 import { CommentsSection } from '@/components/work-orders/CommentsSection';
 import { StatusTimeline } from '@/components/work-orders/StatusTimeline';
 import { AssignmentHistory } from '@/components/work-orders/AssignmentHistory';
 import {
+  type LucideIcon,
   FileText,
   Pencil,
   UserPlus,
@@ -94,11 +105,15 @@ import {
   Paintbrush,
   Sprout,
   Wrench,
+  Play,
+  MessageSquarePlus,
+  CheckCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 // Category icons mapping
-const CATEGORY_ICONS: Record<WorkOrderCategory, any> = {
+const CATEGORY_ICONS: Record<WorkOrderCategory, LucideIcon> = {
   [WorkOrderCategory.PLUMBING]: Droplet,
   [WorkOrderCategory.ELECTRICAL]: Zap,
   [WorkOrderCategory.HVAC]: Wind,
@@ -149,11 +164,22 @@ export default function WorkOrderDetailPage() {
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
   const [isReassigning, setIsReassigning] = useState(false);
 
+  // Story 4.4: Progress tracking state
+  const [startWorkDialogOpen, setStartWorkDialogOpen] = useState(false);
+  const [isStartingWork, setIsStartingWork] = useState(false);
+  const [progressUpdateDialogOpen, setProgressUpdateDialogOpen] = useState(false);
+  const [isAddingProgress, setIsAddingProgress] = useState(false);
+  const [markCompleteDialogOpen, setMarkCompleteDialogOpen] = useState(false);
+  const [isMarkingComplete, setIsMarkingComplete] = useState(false);
+  const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
+  const [isTimelineLoading, setIsTimelineLoading] = useState(true);
+
   // Fetch work order details
   useEffect(() => {
     const fetchWorkOrder = async () => {
       try {
         setIsLoading(true);
+        setIsTimelineLoading(true);
         const [workOrderData, commentsData, historyData] = await Promise.all([
           getWorkOrderById(workOrderId),
           getWorkOrderComments(workOrderId),
@@ -162,14 +188,25 @@ export default function WorkOrderDetailPage() {
         setWorkOrder(workOrderData);
         setComments(commentsData);
         setStatusHistory(historyData);
-      } catch (error: any) {
+
+        // Story 4.4: Fetch timeline
+        try {
+          const timelineData = await getTimeline(workOrderId);
+          setTimeline(timelineData.data?.timeline || []);
+        } catch {
+          // Timeline not available yet, that's ok
+          setTimeline([]);
+        }
+      } catch (error) {
+        const axiosError = error as AxiosError<{ error?: { message?: string } }>;
         toast({
           title: 'Error',
-          description: error.response?.data?.error?.message || 'Failed to load work order details.',
+          description: axiosError.response?.data?.error?.message || 'Failed to load work order details.',
           variant: 'destructive',
         });
       } finally {
         setIsLoading(false);
+        setIsTimelineLoading(false);
       }
     };
 
@@ -202,10 +239,11 @@ export default function WorkOrderDetailPage() {
         description: `Work Order #${workOrder?.workOrderNumber} has been cancelled`,
       });
       router.push('/property-manager/work-orders');
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: { message?: string } }>;
       toast({
         title: 'Error',
-        description: error.response?.data?.error?.message || 'Failed to cancel work order',
+        description: axiosError.response?.data?.error?.message || 'Failed to cancel work order',
         variant: 'destructive',
       });
     } finally {
@@ -246,10 +284,11 @@ export default function WorkOrderDetailPage() {
         title: 'Success',
         description: `Work Order #${workOrder?.workOrderNumber} has been assigned successfully`,
       });
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: { message?: string } }>;
       toast({
         title: 'Assignment Failed',
-        description: error.response?.data?.error?.message || 'Failed to assign work order',
+        description: axiosError.response?.data?.error?.message || 'Failed to assign work order',
         variant: 'destructive',
       });
     } finally {
@@ -282,14 +321,124 @@ export default function WorkOrderDetailPage() {
         title: 'Success',
         description: `Work Order #${workOrder?.workOrderNumber} has been reassigned successfully`,
       });
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: { message?: string } }>;
       toast({
         title: 'Reassignment Failed',
-        description: error.response?.data?.error?.message || 'Failed to reassign work order',
+        description: axiosError.response?.data?.error?.message || 'Failed to reassign work order',
         variant: 'destructive',
       });
     } finally {
       setIsReassigning(false);
+    }
+  };
+
+  // Story 4.4: Refresh timeline
+  const refreshTimeline = async () => {
+    try {
+      const timelineData = await getTimeline(workOrderId);
+      setTimeline(timelineData.data?.timeline || []);
+    } catch {
+      // Silent fail
+    }
+  };
+
+  // Story 4.4: Handle start work
+  const handleStartWork = async (beforePhotos?: File[]) => {
+    try {
+      setIsStartingWork(true);
+      await startWork(workOrderId, beforePhotos);
+
+      // Refresh work order and timeline
+      const updatedWorkOrder = await getWorkOrderById(workOrderId);
+      setWorkOrder(updatedWorkOrder);
+      await refreshTimeline();
+
+      setStartWorkDialogOpen(false);
+      toast({
+        title: 'Work Started',
+        description: `Work has been started on ${workOrder?.workOrderNumber}`,
+      });
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: { message?: string } }>;
+      toast({
+        title: 'Error',
+        description: axiosError.response?.data?.error?.message || 'Failed to start work',
+        variant: 'destructive',
+      });
+      throw error;
+    } finally {
+      setIsStartingWork(false);
+    }
+  };
+
+  // Story 4.4: Handle add progress update
+  const handleAddProgressUpdate = async (data: {
+    progressNotes: string;
+    photos?: File[];
+    estimatedCompletionDate?: string;
+  }) => {
+    try {
+      setIsAddingProgress(true);
+      await addProgressUpdate(workOrderId, data);
+
+      // Refresh work order and timeline
+      const updatedWorkOrder = await getWorkOrderById(workOrderId);
+      setWorkOrder(updatedWorkOrder);
+      await refreshTimeline();
+
+      setProgressUpdateDialogOpen(false);
+      toast({
+        title: 'Progress Updated',
+        description: 'Progress update has been added successfully',
+      });
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: { message?: string } }>;
+      toast({
+        title: 'Error',
+        description: axiosError.response?.data?.error?.message || 'Failed to add progress update',
+        variant: 'destructive',
+      });
+      throw error;
+    } finally {
+      setIsAddingProgress(false);
+    }
+  };
+
+  // Story 4.4: Handle mark complete
+  const handleMarkComplete = async (data: {
+    completionNotes: string;
+    afterPhotos: File[];
+    hoursSpent: number;
+    totalCost: number;
+    recommendations?: string;
+    followUpRequired: boolean;
+    followUpDescription?: string;
+  }) => {
+    try {
+      setIsMarkingComplete(true);
+      await markComplete(workOrderId, data);
+
+      // Refresh work order and timeline
+      const updatedWorkOrder = await getWorkOrderById(workOrderId);
+      setWorkOrder(updatedWorkOrder);
+      await refreshTimeline();
+
+      setMarkCompleteDialogOpen(false);
+      toast({
+        title: 'Work Completed',
+        description: `${workOrder?.workOrderNumber} has been marked as complete`,
+      });
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: { message?: string } }>;
+      toast({
+        title: 'Error',
+        description: axiosError.response?.data?.error?.message || 'Failed to mark as complete',
+        variant: 'destructive',
+      });
+      throw error;
+    } finally {
+      setIsMarkingComplete(false);
     }
   };
 

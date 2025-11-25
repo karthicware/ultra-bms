@@ -1,0 +1,28 @@
+Work Order Started: [(${workOrderNumber})]
+==============================================
+
+Dear Property Manager,
+
+Work has started on the following work order:
+
+WORK ORDER DETAILS
+------------------
+Work Order Number: [(${workOrderNumber})]
+Title: [(${title})]
+Category: [(${category})]
+Priority: [(${priority})]
+Property: [(${propertyName})][# th:if="${unitNumber}"], Unit [(${unitNumber})][/]
+Started At: [(${startedAt})]
+Assignee: [(${assigneeName})]
+
+The assignee has begun work on this job. You can track progress and view updates through the work order detail page.
+
+View Work Order: [(${workOrderUrl})]
+
+If you have any questions, please contact our support team at [(${supportEmail})].
+
+Best regards,
+Ultra BMS Team
+
+---
+This is an automated notification. Please do not reply directly to this email.
