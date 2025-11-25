@@ -449,6 +449,8 @@ public class EmailService {
      * @param assigneeEmail Assignee's email address
      * @param assigneeName Assignee's display name
      * @param workOrder Work order entity with all details
+     * @param propertyName Name of the property for the work order
+     * @param unitNumber Unit number (nullable for property-wide work)
      * @param assignedByName Name of the user who made the assignment
      * @param assignmentNotes Optional notes from the assignment
      */
@@ -457,6 +459,8 @@ public class EmailService {
             String assigneeEmail,
             String assigneeName,
             com.ultrabms.entity.WorkOrder workOrder,
+            String propertyName,
+            String unitNumber,
             String assignedByName,
             String assignmentNotes
     ) {
@@ -472,8 +476,8 @@ public class EmailService {
             context.setVariable("description", workOrder.getDescription());
             context.setVariable("category", workOrder.getCategory().toString().replace("_", " "));
             context.setVariable("priority", workOrder.getPriority().toString());
-            context.setVariable("propertyName", workOrder.getProperty() != null ? workOrder.getProperty().getName() : "N/A");
-            context.setVariable("unitNumber", workOrder.getUnit() != null ? workOrder.getUnit().getUnitNumber() : null);
+            context.setVariable("propertyName", propertyName != null ? propertyName : "N/A");
+            context.setVariable("unitNumber", unitNumber);
             context.setVariable("scheduledDate", workOrder.getScheduledDate() != null
                     ? workOrder.getScheduledDate().format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
                     : null);
@@ -515,6 +519,8 @@ public class EmailService {
      * @param newAssigneeName New assignee's display name
      * @param previousAssigneeName Name of the previous assignee
      * @param workOrder Work order entity with all details
+     * @param propertyName Name of the property for the work order
+     * @param unitNumber Unit number (nullable for property-wide work)
      * @param reassignedByName Name of the user who made the reassignment
      * @param reassignmentReason Reason for the reassignment
      * @param assignmentNotes Optional notes from the reassignment
@@ -525,6 +531,8 @@ public class EmailService {
             String newAssigneeName,
             String previousAssigneeName,
             com.ultrabms.entity.WorkOrder workOrder,
+            String propertyName,
+            String unitNumber,
             String reassignedByName,
             String reassignmentReason,
             String assignmentNotes
@@ -542,8 +550,8 @@ public class EmailService {
             context.setVariable("description", workOrder.getDescription());
             context.setVariable("category", workOrder.getCategory().toString().replace("_", " "));
             context.setVariable("priority", workOrder.getPriority().toString());
-            context.setVariable("propertyName", workOrder.getProperty() != null ? workOrder.getProperty().getName() : "N/A");
-            context.setVariable("unitNumber", workOrder.getUnit() != null ? workOrder.getUnit().getUnitNumber() : null);
+            context.setVariable("propertyName", propertyName != null ? propertyName : "N/A");
+            context.setVariable("unitNumber", unitNumber);
             context.setVariable("scheduledDate", workOrder.getScheduledDate() != null
                     ? workOrder.getScheduledDate().format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
                     : null);

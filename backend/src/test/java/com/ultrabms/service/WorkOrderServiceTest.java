@@ -1,6 +1,8 @@
 package com.ultrabms.service;
 
 import com.ultrabms.dto.workorders.*;
+import com.ultrabms.entity.Property;
+import com.ultrabms.entity.Unit;
 import com.ultrabms.entity.User;
 import com.ultrabms.entity.WorkOrder;
 import com.ultrabms.entity.WorkOrderAssignment;
@@ -140,6 +142,18 @@ class WorkOrderServiceTest {
     @DisplayName("Should create work order successfully without photos")
     void testCreateWorkOrder_Success_NoPhotos() {
         // Given
+        Property property = new Property();
+        property.setId(testPropertyId);
+        property.setName("Test Property");
+
+        Unit unit = new Unit();
+        unit.setId(testUnitId);
+        unit.setProperty(property);
+
+        when(propertyRepository.findById(testPropertyId))
+                .thenReturn(Optional.of(property));
+        when(unitRepository.findById(testUnitId))
+                .thenReturn(Optional.of(unit));
         when(workOrderRepository.findTopByOrderByWorkOrderNumberDesc())
                 .thenReturn(Optional.empty());
         when(workOrderRepository.save(any(WorkOrder.class)))
@@ -161,6 +175,19 @@ class WorkOrderServiceTest {
     @DisplayName("Should create work order with photos successfully")
     void testCreateWorkOrder_Success_WithPhotos() throws Exception {
         // Given
+        Property property = new Property();
+        property.setId(testPropertyId);
+        property.setName("Test Property");
+
+        Unit unit = new Unit();
+        unit.setId(testUnitId);
+        unit.setProperty(property);
+
+        when(propertyRepository.findById(testPropertyId))
+                .thenReturn(Optional.of(property));
+        when(unitRepository.findById(testUnitId))
+                .thenReturn(Optional.of(unit));
+
         MultipartFile photo1 = mock(MultipartFile.class);
         when(photo1.getOriginalFilename()).thenReturn("photo1.jpg");
         when(photo1.getSize()).thenReturn(1024L * 1024L); // 1MB
@@ -221,7 +248,8 @@ class WorkOrderServiceTest {
     @Test
     @DisplayName("Should update work order status successfully")
     void testUpdateWorkOrderStatus_Success() {
-        // Given
+        // Given - Set status to ASSIGNED so IN_PROGRESS is a valid transition
+        testWorkOrder.setStatus(WorkOrderStatus.ASSIGNED);
         UpdateWorkOrderStatusDto statusDto = UpdateWorkOrderStatusDto.builder()
                 .status(WorkOrderStatus.IN_PROGRESS)
                 .notes("Started work on the repair")
@@ -261,7 +289,7 @@ class WorkOrderServiceTest {
         // When/Then
         assertThatThrownBy(() -> workOrderService.updateWorkOrderStatus(testWorkOrderId, statusDto, testUserId))
                 .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("Invalid status transition");
+                .hasMessageContaining("Cannot transition from COMPLETED to OPEN");
     }
 
     @Test
@@ -274,8 +302,15 @@ class WorkOrderServiceTest {
                 .assignmentNotes("Assigned to plumber John")
                 .build();
 
+        User assignee = new User();
+        assignee.setId(vendorId);
+        assignee.setFirstName("John");
+        assignee.setLastName("Doe");
+
         when(workOrderRepository.findById(testWorkOrderId))
                 .thenReturn(Optional.of(testWorkOrder));
+        when(userRepository.findById(vendorId))
+                .thenReturn(Optional.of(assignee));
 
         testWorkOrder.setAssignedTo(vendorId);
         testWorkOrder.setStatus(WorkOrderStatus.ASSIGNED);
@@ -332,6 +367,8 @@ class WorkOrderServiceTest {
     @DisplayName("Should get work order comments successfully")
     void testGetComments_Success() {
         // Given
+        when(workOrderRepository.existsById(testWorkOrderId)).thenReturn(true);
+
         WorkOrderComment comment1 = new WorkOrderComment();
         comment1.setId(UUID.randomUUID());
         comment1.setWorkOrderId(testWorkOrderId);
@@ -360,6 +397,8 @@ class WorkOrderServiceTest {
     @DisplayName("Should get status history successfully")
     void testGetStatusHistory_Success() {
         // Given
+        when(workOrderRepository.existsById(testWorkOrderId)).thenReturn(true);
+
         WorkOrderComment statusChange = new WorkOrderComment();
         statusChange.setId(UUID.randomUUID());
         statusChange.setWorkOrderId(testWorkOrderId);
@@ -401,7 +440,9 @@ class WorkOrderServiceTest {
         Pageable pageable = PageRequest.of(0, 20);
         Page<WorkOrder> workOrderPage = new PageImpl<>(Arrays.asList(testWorkOrder));
 
-        when(workOrderRepository.findAll(any(Pageable.class)))
+        // Mock the searchWithFilters method which is called when statuses/categories/priorities are provided
+        when(workOrderRepository.searchWithFilters(
+                any(), any(), any(), any(), any(), any(), any(), any(Pageable.class)))
                 .thenReturn(workOrderPage);
 
         // When
@@ -460,32 +501,49 @@ class WorkOrderServiceTest {
         // Given
         when(workOrderRepository.findById(testWorkOrderId))
                 .thenReturn(Optional.of(testWorkOrder));
+        when(workOrderRepository.save(any(WorkOrder.class)))
+                .thenReturn(testWorkOrder);
+        when(workOrderCommentRepository.save(any(WorkOrderComment.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
         // When
         workOrderService.cancelWorkOrder(testWorkOrderId, testUserId);
 
-        // Then
-        verify(workOrderRepository, times(1)).delete(any(WorkOrder.class));
+        // Then - implementation uses soft delete (sets status to CLOSED)
+        verify(workOrderRepository, times(1)).save(any(WorkOrder.class));
     }
 
     @Test
-    @DisplayName("Should throw validation exception when cancelling non-OPEN work order")
+    @DisplayName("Should throw validation exception when cancelling completed work order")
     void testCancelWorkOrder_InvalidStatus() {
         // Given
-        testWorkOrder.setStatus(WorkOrderStatus.ASSIGNED);
+        testWorkOrder.setStatus(WorkOrderStatus.COMPLETED);
         when(workOrderRepository.findById(testWorkOrderId))
                 .thenReturn(Optional.of(testWorkOrder));
 
         // When/Then
         assertThatThrownBy(() -> workOrderService.cancelWorkOrder(testWorkOrderId, testUserId))
                 .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("Only OPEN work orders can be cancelled");
+                .hasMessageContaining("Cannot cancel completed or closed work orders");
     }
 
     @Test
     @DisplayName("Should validate photo count limit")
     void testCreateWorkOrder_TooManyPhotos() {
         // Given
+        Property property = new Property();
+        property.setId(testPropertyId);
+        property.setName("Test Property");
+
+        Unit unit = new Unit();
+        unit.setId(testUnitId);
+        unit.setProperty(property);
+
+        when(propertyRepository.findById(testPropertyId))
+                .thenReturn(Optional.of(property));
+        when(unitRepository.findById(testUnitId))
+                .thenReturn(Optional.of(unit));
+
         List<MultipartFile> photos = new ArrayList<>();
         for (int i = 0; i < 6; i++) {
             MultipartFile photo = mock(MultipartFile.class);
@@ -502,6 +560,19 @@ class WorkOrderServiceTest {
     @DisplayName("Should validate photo file type")
     void testCreateWorkOrder_InvalidFileType() throws Exception {
         // Given
+        Property property = new Property();
+        property.setId(testPropertyId);
+        property.setName("Test Property");
+
+        Unit unit = new Unit();
+        unit.setId(testUnitId);
+        unit.setProperty(property);
+
+        when(propertyRepository.findById(testPropertyId))
+                .thenReturn(Optional.of(property));
+        when(unitRepository.findById(testUnitId))
+                .thenReturn(Optional.of(unit));
+
         MultipartFile invalidPhoto = mock(MultipartFile.class);
         when(invalidPhoto.getContentType()).thenReturn("application/pdf");
         when(invalidPhoto.getOriginalFilename()).thenReturn("document.pdf");
@@ -572,6 +643,8 @@ class WorkOrderServiceTest {
                 eq("john.smith@example.com"),
                 eq("John Smith"),
                 any(WorkOrder.class),
+                any(),  // propertyName
+                any(),  // unitNumber
                 eq("Jane Doe"),
                 eq("Urgent repair needed")
         );
@@ -748,6 +821,8 @@ class WorkOrderServiceTest {
                 eq("Sarah Williams"),
                 eq("Mike Johnson"),
                 any(WorkOrder.class),
+                any(),  // propertyName
+                any(),  // unitNumber
                 eq("Jane Doe"),
                 eq("Previous assignee unavailable"),
                 eq("Please prioritize this")

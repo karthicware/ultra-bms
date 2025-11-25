@@ -99,7 +99,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         LOGGER.info("Creating work order for property: {} by user: {}", dto.getPropertyId(), requestedBy);
 
         // Validate property exists
-        Property property = propertyRepository.findById(dto.getPropertyId())
+        propertyRepository.findById(dto.getPropertyId())
                 .orElseThrow(() -> new EntityNotFoundException("Property not found: " + dto.getPropertyId()));
 
         // Validate unit if provided
@@ -660,10 +660,18 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             String assignedByName = userRepository.findById(currentUserId)
                     .map(u -> u.getFirstName() + " " + u.getLastName())
                     .orElse("Property Manager");
+            String propertyName = propertyRepository.findById(workOrder.getPropertyId())
+                    .map(Property::getName)
+                    .orElse("N/A");
+            String unitNumber = workOrder.getUnitId() != null
+                    ? unitRepository.findById(workOrder.getUnitId()).map(Unit::getUnitNumber).orElse(null)
+                    : null;
             emailService.sendWorkOrderAssignmentEmail(
                     assigneeEmail,
                     assigneeName,
                     workOrder,
+                    propertyName,
+                    unitNumber,
                     assignedByName,
                     dto.getAssignmentNotes()
             );
@@ -757,11 +765,19 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             String reassignedByName = userRepository.findById(currentUserId)
                     .map(u -> u.getFirstName() + " " + u.getLastName())
                     .orElse("Property Manager");
+            String propertyName = propertyRepository.findById(workOrder.getPropertyId())
+                    .map(Property::getName)
+                    .orElse("N/A");
+            String unitNumber = workOrder.getUnitId() != null
+                    ? unitRepository.findById(workOrder.getUnitId()).map(Unit::getUnitNumber).orElse(null)
+                    : null;
             emailService.sendWorkOrderReassignmentEmail(
                     newAssigneeEmail,
                     newAssigneeName,
                     previousAssigneeName,
                     workOrder,
+                    propertyName,
+                    unitNumber,
                     reassignedByName,
                     dto.getReassignmentReason(),
                     dto.getAssignmentNotes()

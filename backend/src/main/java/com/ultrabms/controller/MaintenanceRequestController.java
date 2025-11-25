@@ -5,7 +5,6 @@ import com.ultrabms.dto.maintenance.MaintenanceRequestListItemResponse;
 import com.ultrabms.dto.maintenance.MaintenanceRequestResponse;
 import com.ultrabms.dto.maintenance.SubmitFeedbackDto;
 import com.ultrabms.entity.Tenant;
-import com.ultrabms.entity.User;
 import com.ultrabms.entity.enums.MaintenanceCategory;
 import com.ultrabms.entity.enums.MaintenanceStatus;
 import com.ultrabms.exception.EntityNotFoundException;
@@ -266,7 +265,8 @@ public class MaintenanceRequestController {
      * Get tenant ID from user ID
      */
     private UUID getTenantIdByUserId(UUID userId) {
-        User user = userRepository.findById(userId)
+        // Verify user exists
+        userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
 
         Tenant tenant = tenantRepository.findByUserId(userId)
