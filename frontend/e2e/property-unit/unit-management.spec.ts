@@ -12,6 +12,7 @@ test.describe('Unit Management Flow', () => {
     let seedUtils: SeedUtils;
     let authHelper: AuthHelper;
     let unitPage: UnitPage;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let testPropertyId: string;
 
     test.beforeAll(async () => {

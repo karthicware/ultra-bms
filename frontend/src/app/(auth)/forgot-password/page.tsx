@@ -85,13 +85,13 @@ export default function ForgotPasswordPage() {
             <AlertDescription className="text-green-800" data-testid="success-message">
               <strong className="font-semibold">Check your email!</strong>
               <p className="mt-1">
-                We've sent password reset instructions to your email address. The link will expire in 15 minutes.
+                We&apos;ve sent password reset instructions to your email address. The link will expire in 15 minutes.
               </p>
             </AlertDescription>
           </Alert>
 
           <div className="space-y-2 text-sm text-muted-foreground">
-            <p>Didn't receive the email?</p>
+            <p>Didn&apos;t receive the email?</p>
             <ul className="list-inside list-disc space-y-1 text-xs">
               <li>Check your spam or junk folder</li>
               <li>Make sure you entered the correct email address</li>

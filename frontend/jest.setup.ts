@@ -31,7 +31,7 @@ process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8080';
 // Suppress console errors during tests (optional - remove if you want to see them)
 const originalError = console.error;
 beforeAll(() => {
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     // Suppress known React warnings
     if (
       typeof args[0] === 'string' &&

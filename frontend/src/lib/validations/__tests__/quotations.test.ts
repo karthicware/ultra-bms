@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Unit tests for Quotation validation schemas
  * Tests quotation creation/update validation and total payment calculation

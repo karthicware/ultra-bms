@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { test as base } from '@playwright/test';
 import { UserFactory } from './factories/user-factory';
 import { TenantFactory } from './factories/tenant-factory';

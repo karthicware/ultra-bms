@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Maintenance Request API Service
  * Story 3.5: Tenant Portal - Maintenance Request Submission

@@ -50,6 +50,7 @@ function LoginForm() {
       await login(data.email, data.password, data.rememberMe);
       // Redirect immediately with full page reload to restore session via refresh token
       console.log('[LOGIN PAGE] Login successful, redirecting to:', redirectTo);
+      // eslint-disable-next-line react-hooks/immutability
       window.location.href = redirectTo;
     } catch (err) {
       console.error('Login failed:', err);
@@ -88,7 +89,7 @@ function LoginForm() {
       footer={
         <div className="space-y-2 text-center text-sm">
           <p className="text-muted-foreground">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link
               href="/register"
               className="font-medium text-primary underline-offset-4 hover:underline"

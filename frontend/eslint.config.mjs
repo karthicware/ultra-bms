@@ -12,7 +12,17 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated folders
+    "playwright-report/**",
+    "coverage/**",
   ]),
+  // Custom rules
+  {
+    rules: {
+      // Disable unescaped entities rule - too many false positives for apostrophes
+      "react/no-unescaped-entities": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

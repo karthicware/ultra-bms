@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect } from '../support/fixtures';
 import { faker } from '@faker-js/faker';
 

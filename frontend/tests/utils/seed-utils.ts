@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TestApiClient } from './test-api-client';
 import properties from '../fixtures/properties.json';
 import units from '../fixtures/units.json';

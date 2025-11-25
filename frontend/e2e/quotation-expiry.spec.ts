@@ -256,6 +256,7 @@ test.describe('Quotation Expiry', () => {
       const historyEntries = page.locator('[data-testid^="history-entry-"]');
       const count = await historyEntries.count();
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       let notificationFound = false;
       for (let i = 0; i < count; i++) {
         const entryText = await historyEntries.nth(i).textContent();

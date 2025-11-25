@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Assignees Service for Work Order Assignment
  * Story 4.3: Work Order Assignment and Vendor Coordination

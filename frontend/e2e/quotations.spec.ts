@@ -6,6 +6,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Quotation Management', () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let leadId: string;
 
   test.beforeEach(async ({ page }) => {

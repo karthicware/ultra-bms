@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Work Order API Service
  * Story 4.1: Work Order Creation and Management

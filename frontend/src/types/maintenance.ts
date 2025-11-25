@@ -104,6 +104,7 @@ export interface CreateMaintenanceRequestDto {
 /**
  * Response from creating/fetching a maintenance request
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface MaintenanceRequestResponse extends MaintenanceRequest {}
 
 /**

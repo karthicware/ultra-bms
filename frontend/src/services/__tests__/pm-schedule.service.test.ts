@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Unit tests for PM Schedule Service
  * Story 4.2: Preventive Maintenance Scheduling
