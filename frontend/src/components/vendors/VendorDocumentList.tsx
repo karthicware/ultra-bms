@@ -149,14 +149,14 @@ export function VendorDocumentList({
     switch (status) {
       case ExpiryStatus.VALID:
         return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200" data-testid="badge-expiry-status">
             <CheckCircle className="h-3 w-3 mr-1" />
             Valid
           </Badge>
         );
       case ExpiryStatus.EXPIRING_SOON:
         return (
-          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200" data-testid="badge-expiry-status">
             <Clock className="h-3 w-3 mr-1" />
             {daysUntilExpiry !== undefined && daysUntilExpiry >= 0
               ? `Expires in ${daysUntilExpiry} days`
@@ -165,7 +165,7 @@ export function VendorDocumentList({
         );
       case ExpiryStatus.EXPIRED:
         return (
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200" data-testid="badge-expiry-status">
             <AlertTriangle className="h-3 w-3 mr-1" />
             Expired
           </Badge>
@@ -225,7 +225,7 @@ export function VendorDocumentList({
 
   return (
     <>
-      <Card>
+      <Card data-testid="section-vendor-documents">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div>
             <CardTitle>Documents</CardTitle>
@@ -234,7 +234,7 @@ export function VendorDocumentList({
             </CardDescription>
           </div>
           {canManage && (
-            <Button onClick={() => setUploadModalOpen(true)} data-testid="upload-document-btn">
+            <Button onClick={() => setUploadModalOpen(true)} data-testid="btn-upload-document">
               <Upload className="h-4 w-4 mr-2" />
               Upload Document
             </Button>
@@ -266,7 +266,7 @@ export function VendorDocumentList({
           {/* Documents table */}
           {documents && documents.length > 0 ? (
             <div className="rounded-md border">
-              <Table data-testid="documents-table">
+              <Table data-testid="table-vendor-documents">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Document</TableHead>
@@ -321,14 +321,14 @@ export function VendorDocumentList({
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 onClick={() => handleDownload(doc, 'view')}
-                                data-testid={`view-document-${doc.id}`}
+                                data-testid="btn-view-document"
                               >
                                 <Eye className="h-4 w-4 mr-2" />
                                 View
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleDownload(doc, 'download')}
-                                data-testid={`download-document-${doc.id}`}
+                                data-testid="btn-download-document"
                               >
                                 <Download className="h-4 w-4 mr-2" />
                                 Download
@@ -336,7 +336,7 @@ export function VendorDocumentList({
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => setReplaceDocument(doc)}
-                                data-testid={`replace-document-${doc.id}`}
+                                data-testid="btn-replace-document"
                               >
                                 <RefreshCw className="h-4 w-4 mr-2" />
                                 Replace
@@ -344,7 +344,7 @@ export function VendorDocumentList({
                               <DropdownMenuItem
                                 onClick={() => setDeleteDocument(doc)}
                                 className="text-destructive focus:text-destructive"
-                                data-testid={`delete-document-${doc.id}`}
+                                data-testid="btn-delete-document"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete

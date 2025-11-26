@@ -523,10 +523,22 @@ public ResponseEntity<VendorDocumentDto> uploadDocument(
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+gemini-2.0-flash-exp
 
 ### Debug Log References
 
 ### Completion Notes List
 
+**2025-11-26 - data-testid Corrections**
+- Fixed all data-testid attributes to match exact AC specifications
+- VendorDocumentList.tsx: Corrected 9 testid values (section, button, table, badges, action buttons)
+- DocumentUploadModal.tsx: Corrected 6 testid values (modal, select, inputs, submit button)
+- All testids now follow AC-specified naming conventions
+- TypeScript compilation: Zero errors in Story 5.2 components
+- Note: Pre-existing TypeScript errors in VendorForm.tsx (Story 5.1) remain unrelated to this story
+
 ### File List
+
+**Modified:**
+- frontend/src/components/vendors/VendorDocumentList.tsx
+- frontend/src/components/vendors/DocumentUploadModal.tsx
