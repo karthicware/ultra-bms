@@ -115,7 +115,9 @@ export const vendorSchema = z.object({
     .min(1, 'At least one service category is required'),
 
   serviceAreas: z
-    .array(z.string()),
+    .array(z.string())
+    .optional()
+    .default([]),
 
   // Payment Information
   hourlyRate: z

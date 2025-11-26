@@ -82,8 +82,8 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5: Vendor Management (3 technical stories + 3 E2E stories)
-  epic-5: backlog
-  5-1-vendor-registration-and-profile-management: in-progress  # Started 2025-11-26 - Story context created. Full vendor CRUD, profile management, status workflow, work order history. 30 ACs, 21 tasks. Context: docs/sprint-artifacts/epic-5/5-1-vendor-registration-and-profile-management.context.xml
+  epic-5: contexted
+  5-1-vendor-registration-and-profile-management: done  # Completed 2025-11-26 - Full implementation: Vendor CRUD, profile management, status workflow (PENDING_APPROVAL→ACTIVE→SUSPENDED→INACTIVE), work order history, email availability check. Backend: 12 files (Vendor entity, enums, DTOs, repository, service, controller). Frontend: 8 files (types, validation schemas, service). Tests: 26 backend unit tests (VendorServiceTest), 42 frontend validation tests (vendor.test.ts). All 30 ACs met, 21 tasks complete. Build: Backend SUCCESS, Frontend SUCCESS. Context: docs/sprint-artifacts/epic-5/5-1-vendor-registration-and-profile-management.context.xml
   5-2-vendor-document-and-license-management: ready-for-dev  # Ready for Dev 2025-11-26 - 30 ACs, 23 tasks. Story context generated. Document upload/management, expiry tracking, auto-suspension, email notifications. Prerequisites: Story 5.1, Story 1.6 (S3). Context: docs/sprint-artifacts/epic-5/5-2-vendor-document-and-license-management.context.xml
   5-3-vendor-performance-tracking-and-rating: drafted  # Drafted 2025-11-26 - 26 ACs, 25 tasks. Vendor rating after work order completion, performance metrics (rating, jobs completed, on-time rate, avg completion time, total paid), ranking dashboard, vendor comparison, star rating component. Prerequisites: Story 5.1, Story 4.4.
   # E2E Testing Stories (implement after all technical stories complete)
