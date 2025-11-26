@@ -38,7 +38,7 @@ public class VendorDocumentExpiryJob {
      * 5. Finds vendors with expired critical documents
      * 6. Auto-suspends those vendors and sends notification
      */
-    @Scheduled(cron = "${vendor.document.expiry.cron:0 0 6 * * *}")
+    @Scheduled(cron = "${vendor.document.expiry.cron:0 0 9 * * *}")
     public void processDocumentExpiryNotifications() {
         LOGGER.info("Starting vendor document expiry job: Processing notifications and auto-suspension");
 

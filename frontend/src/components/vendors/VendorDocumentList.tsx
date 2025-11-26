@@ -234,7 +234,7 @@ export function VendorDocumentList({
             </CardDescription>
           </div>
           {canManage && (
-            <Button onClick={() => setUploadModalOpen(true)}>
+            <Button onClick={() => setUploadModalOpen(true)} data-testid="upload-document-btn">
               <Upload className="h-4 w-4 mr-2" />
               Upload Document
             </Button>
@@ -245,7 +245,7 @@ export function VendorDocumentList({
           {(hasExpiredCritical || hasMissingCritical) && (
             <div className="mb-4 space-y-2">
               {hasExpiredCritical && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200">
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200" data-testid="expired-documents-alert">
                   <AlertTriangle className="h-4 w-4" />
                   <span className="text-sm">
                     Critical documents have expired. Vendor may be suspended.
@@ -253,7 +253,7 @@ export function VendorDocumentList({
                 </div>
               )}
               {hasMissingCritical && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200">
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200" data-testid="missing-documents-alert">
                   <AlertCircle className="h-4 w-4" />
                   <span className="text-sm">
                     Some critical documents are missing (Trade License, Insurance).
@@ -266,7 +266,7 @@ export function VendorDocumentList({
           {/* Documents table */}
           {documents && documents.length > 0 ? (
             <div className="rounded-md border">
-              <Table>
+              <Table data-testid="documents-table">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Document</TableHead>
@@ -280,7 +280,7 @@ export function VendorDocumentList({
                 </TableHeader>
                 <TableBody>
                   {documents.map((doc) => (
-                    <TableRow key={doc.id}>
+                    <TableRow key={doc.id} data-testid={`document-row-${doc.id}`}>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {getFileIcon(doc.fileType)}
@@ -321,12 +321,14 @@ export function VendorDocumentList({
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 onClick={() => handleDownload(doc, 'view')}
+                                data-testid={`view-document-${doc.id}`}
                               >
                                 <Eye className="h-4 w-4 mr-2" />
                                 View
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleDownload(doc, 'download')}
+                                data-testid={`download-document-${doc.id}`}
                               >
                                 <Download className="h-4 w-4 mr-2" />
                                 Download
@@ -334,6 +336,7 @@ export function VendorDocumentList({
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => setReplaceDocument(doc)}
+                                data-testid={`replace-document-${doc.id}`}
                               >
                                 <RefreshCw className="h-4 w-4 mr-2" />
                                 Replace
@@ -341,6 +344,7 @@ export function VendorDocumentList({
                               <DropdownMenuItem
                                 onClick={() => setDeleteDocument(doc)}
                                 className="text-destructive focus:text-destructive"
+                                data-testid={`delete-document-${doc.id}`}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete
@@ -355,11 +359,11 @@ export function VendorDocumentList({
               </Table>
             </div>
           ) : (
-            <div className="text-center py-10 border rounded-lg border-dashed">
+            <div className="text-center py-10 border rounded-lg border-dashed" data-testid="no-documents-empty-state">
               <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground mb-4">No documents uploaded yet</p>
               {canManage && (
-                <Button variant="outline" onClick={() => setUploadModalOpen(true)}>
+                <Button variant="outline" onClick={() => setUploadModalOpen(true)} data-testid="upload-first-document-btn">
                   <Upload className="h-4 w-4 mr-2" />
                   Upload First Document
                 </Button>
@@ -397,11 +401,12 @@ export function VendorDocumentList({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting} data-testid="delete-dialog-cancel">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="delete-dialog-confirm"
             >
               {isDeleting ? (
                 <>

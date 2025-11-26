@@ -94,7 +94,7 @@ development_status:
 
   # Epic 6: Financial Management (4 technical stories + 4 E2E stories)
   epic-6: backlog
-  6-1-rent-invoicing-and-payment-management: backlog
+  6-1-rent-invoicing-and-payment-management: drafted  # Drafted 2025-11-26 - 31 ACs, 25 tasks. Invoice generation (manual/scheduled), payment recording, PDF receipts, overdue tracking, late fee calculation. Prerequisites: Epic 3 (tenants/leases), Story 1.6 (S3).
   6-2-expense-management-and-vendor-payments: backlog
   6-3-post-dated-cheque-pdc-management: backlog
   6-4-financial-reporting-and-analytics: backlog

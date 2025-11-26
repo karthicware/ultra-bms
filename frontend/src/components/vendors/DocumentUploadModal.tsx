@@ -241,7 +241,7 @@ export function DocumentUploadModal({
                     disabled={isPending}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger data-testid="document-type-select">
                         <SelectValue placeholder="Select document type" />
                       </SelectTrigger>
                     </FormControl>
@@ -272,6 +272,7 @@ export function DocumentUploadModal({
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
+                data-testid="file-upload-dropzone"
               >
                 <input
                   ref={fileInputRef}
@@ -280,6 +281,7 @@ export function DocumentUploadModal({
                   onChange={handleInputChange}
                   className="hidden"
                   disabled={isPending}
+                  data-testid="file-upload-input"
                 />
 
                 {selectedFile ? (
@@ -300,6 +302,7 @@ export function DocumentUploadModal({
                         handleRemoveFile();
                       }}
                       disabled={isPending}
+                      data-testid="remove-file-btn"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -340,6 +343,7 @@ export function DocumentUploadModal({
                       value={field.value || ''}
                       min={new Date().toISOString().split('T')[0]}
                       disabled={isPending}
+                      data-testid="document-expiry-date"
                     />
                   </FormControl>
                   {needsExpiry && (
@@ -366,6 +370,7 @@ export function DocumentUploadModal({
                       rows={2}
                       {...field}
                       disabled={isPending}
+                      data-testid="document-notes"
                     />
                   </FormControl>
                   <FormDescription>
@@ -394,10 +399,11 @@ export function DocumentUploadModal({
                 variant="outline"
                 onClick={handleClose}
                 disabled={isPending}
+                data-testid="upload-modal-cancel"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending || !selectedFile}>
+              <Button type="submit" disabled={isPending || !selectedFile} data-testid="upload-modal-submit">
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

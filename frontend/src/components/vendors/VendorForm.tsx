@@ -98,7 +98,7 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
   const [emailCheckStatus, setEmailCheckStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const [emailCheckTimeout, setEmailCheckTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  const form = useForm({
+  const form = useForm<VendorFormData>({
     resolver: zodResolver(vendorSchema),
     defaultValues: {
       companyName: initialData?.companyName || '',
