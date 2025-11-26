@@ -64,6 +64,7 @@ export function CommentsSection({ workOrderId, comments, onCommentAdded }: Comme
       if (onCommentAdded) {
         onCommentAdded();
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast({
         title: 'Error',

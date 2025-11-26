@@ -102,9 +102,10 @@ public interface WorkOrderProgressRepository extends JpaRepository<WorkOrderProg
      * @param workOrderId Work order UUID
      * @return List of progress updates with non-empty photo arrays
      */
-    @Query("SELECT wp FROM WorkOrderProgress wp WHERE wp.workOrderId = :workOrderId " +
-           "AND jsonb_array_length(CAST(wp.photoUrls AS string)) > 0 " +
-           "ORDER BY wp.createdAt DESC")
+    @Query(value = "SELECT * FROM work_order_progress wp WHERE wp.work_order_id = :workOrderId " +
+           "AND wp.photo_urls IS NOT NULL AND jsonb_array_length(wp.photo_urls) > 0 " +
+           "ORDER BY wp.created_at DESC",
+           nativeQuery = true)
     List<WorkOrderProgress> findByWorkOrderIdWithPhotos(@Param("workOrderId") UUID workOrderId);
 
     // =================================================================

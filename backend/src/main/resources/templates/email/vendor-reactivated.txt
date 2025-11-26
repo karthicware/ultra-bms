@@ -1,0 +1,44 @@
+ACCOUNT REACTIVATED
+===================
+
+Dear [(${contactPersonName})],
+
+Great news! Your vendor account has been reactivated.
+
+COMPANY: [(${vendorName})]
+VENDOR NUMBER: [(${vendorNumber})]
+
+YOUR ACCOUNT IS NOW ACTIVE
+--------------------------
+Your account has been restored to active status because all required documents
+are now current and valid.
+
+WHAT THIS MEANS
+---------------
+- You can now receive new work order assignments
+- Your vendor profile is visible for job matching
+- You're back in our active vendor network
+
+NEXT STEPS
+----------
+1. Log in to check for any pending work orders
+2. Ensure your profile information is up to date
+3. Set calendar reminders for upcoming document renewals
+
+KEEPING YOUR ACCOUNT ACTIVE
+---------------------------
+To avoid future suspensions:
+- Monitor document expiry dates in your vendor portal
+- Renew documents well before they expire
+- Upload new documents promptly after renewal
+
+Thank you for keeping your documentation current. We appreciate your
+partnership and look forward to continued collaboration.
+
+---
+
+Need Help?
+Contact our support team at: [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

@@ -1,0 +1,50 @@
+ACCOUNT SUSPENDED - EXPIRED DOCUMENTS
+======================================
+
+Dear [(${contactPersonName})],
+
+Your vendor account has been automatically suspended due to expired critical documents.
+
+COMPANY: [(${vendorName})]
+VENDOR NUMBER: [(${vendorNumber})]
+
+EXPIRED DOCUMENTS
+-----------------
+The following documents have expired:
+[(${expiredDocuments})]
+
+WHAT THIS MEANS
+---------------
+- You will not receive new work order assignments
+- Your vendor profile is not visible for new assignments
+- Existing incomplete work orders may be reassigned
+
+HOW TO REACTIVATE YOUR ACCOUNT
+------------------------------
+To restore your account to active status:
+
+1. Renew your expired documents with the appropriate authorities
+2. Log in to your vendor portal
+3. Navigate to the documents section
+4. Upload valid, current versions of the expired documents
+5. Your account will be automatically reviewed for reactivation
+
+IMPORTANT NOTE
+--------------
+Please ensure all uploaded documents are:
+- Current and not expired
+- Clearly legible
+- In PDF, JPG, or PNG format
+- Less than 10MB in size
+
+We apologize for any inconvenience this may cause. Maintaining valid documentation
+is essential for compliance and quality assurance.
+
+---
+
+Need Help?
+If you believe this suspension is in error or need assistance,
+please contact our support team at: [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

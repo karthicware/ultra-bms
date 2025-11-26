@@ -277,11 +277,12 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, UUID> {
      * @param status COMPLETED status
      * @return Average days to complete (null if no completed work orders)
      */
-    @Query("SELECT AVG(EXTRACT(EPOCH FROM (wo.completedAt - wo.createdAt)) / 86400.0) " +
-            "FROM WorkOrder wo WHERE wo.pmScheduleId = :pmScheduleId AND wo.status = :status AND wo.completedAt IS NOT NULL")
+    @Query(value = "SELECT AVG(EXTRACT(EPOCH FROM (wo.completed_at - wo.created_at)) / 86400.0) " +
+            "FROM work_orders wo WHERE wo.pm_schedule_id = :pmScheduleId AND wo.status = :status AND wo.completed_at IS NOT NULL",
+            nativeQuery = true)
     Double calculateAverageCompletionDaysByPmScheduleId(
             @Param("pmScheduleId") UUID pmScheduleId,
-            @Param("status") WorkOrderStatus status);
+            @Param("status") String status);
 
     // =================================================================
     // ANALYTICS AND COUNTS

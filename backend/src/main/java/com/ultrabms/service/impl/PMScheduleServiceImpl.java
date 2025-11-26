@@ -321,7 +321,7 @@ public class PMScheduleServiceImpl implements PMScheduleService {
         long overdueCount = workOrderRepository.countOverdueByPmScheduleId(id, now, openStatuses);
 
         Double avgCompletionDays = workOrderRepository.calculateAverageCompletionDaysByPmScheduleId(
-                id, WorkOrderStatus.COMPLETED
+                id, WorkOrderStatus.COMPLETED.name()
         );
 
         return PMScheduleStatisticsDto.builder()

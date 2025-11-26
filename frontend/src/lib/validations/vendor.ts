@@ -116,8 +116,7 @@ export const vendorSchema = z.object({
 
   serviceAreas: z
     .array(z.string())
-    .optional()
-    .default([]),
+    .catch([]),
 
   // Payment Information
   hourlyRate: z

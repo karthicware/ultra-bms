@@ -3,11 +3,13 @@
 /**
  * Vendor Detail Page
  * Story 5.1: Vendor Registration and Profile Management
+ * Story 5.2: Vendor Document and License Management
  *
  * AC #13: Display all vendor information in organized sections
  * AC #14: Status management (activate, deactivate, suspend)
  * AC #18: Display work order history
  * AC #19: Performance metrics placeholder
+ * AC #1 (Story 5.2): Documents tab for managing vendor documents
  */
 
 import { useState, use } from 'react';
@@ -32,6 +34,7 @@ import {
   AlertTriangle,
   ExternalLink,
   History,
+  FileText,
 } from 'lucide-react';
 
 import {
@@ -81,6 +84,7 @@ import {
   getVendorStatusColor,
   getValidStatusTransitions,
 } from '@/types/vendors';
+import { VendorDocumentList } from '@/components/vendors';
 
 // Status action labels
 const STATUS_ACTION_LABELS: Record<VendorStatus, { label: string; icon: React.ReactNode; description: string }> = {
@@ -315,6 +319,10 @@ export default function VendorDetailPage({ params }: PageProps) {
       <Tabs defaultValue="details" className="space-y-6">
         <TabsList>
           <TabsTrigger value="details" data-testid="tab-details">Details</TabsTrigger>
+          <TabsTrigger value="documents" data-testid="tab-documents">
+            <FileText className="h-4 w-4 mr-1" />
+            Documents
+          </TabsTrigger>
           <TabsTrigger value="work-orders" data-testid="tab-work-orders">Work Orders</TabsTrigger>
         </TabsList>
 
@@ -523,6 +531,11 @@ export default function VendorDetailPage({ params }: PageProps) {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Documents Tab (Story 5.2) */}
+        <TabsContent value="documents">
+          <VendorDocumentList vendorId={id} canManage={true} />
         </TabsContent>
 
         {/* Work Orders Tab */}

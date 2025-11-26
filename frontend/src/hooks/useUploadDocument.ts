@@ -17,6 +17,7 @@ export function useUploadDocument() {
 
       toast.success('Document uploaded successfully');
     },
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const message = error.response?.data?.message || 'Failed to upload document';
       toast.error(message);

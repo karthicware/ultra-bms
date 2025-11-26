@@ -836,6 +836,198 @@ public class EmailService {
     }
 
     // ========================================================================
+    // Story 5.2: Vendor Document Expiry Email Notifications
+    // ========================================================================
+
+    /**
+     * Send 30-day document expiry notification to Property Manager asynchronously.
+     * Notifies PM about vendor documents expiring within 30 days.
+     * Story 5.2: Vendor Document and License Management (AC #19)
+     *
+     * @param vendor Vendor entity with expiring document
+     * @param documentType Type of document expiring
+     * @param fileName Name of the document file
+     * @param expiryDate Document expiry date
+     * @param daysUntilExpiry Days remaining until expiry
+     */
+    @Async("emailTaskExecutor")
+    public void sendDocumentExpiry30DayNotification(
+            com.ultrabms.entity.Vendor vendor,
+            String documentType,
+            String fileName,
+            java.time.LocalDate expiryDate,
+            Long daysUntilExpiry
+    ) {
+        try {
+            String vendorUrl = frontendUrl + "/property-manager/vendors/" + vendor.getId();
+
+            Context context = new Context();
+            context.setVariable("vendorName", vendor.getCompanyName());
+            context.setVariable("vendorNumber", vendor.getVendorNumber());
+            context.setVariable("documentType", documentType.replace("_", " "));
+            context.setVariable("fileName", fileName);
+            context.setVariable("expiryDate", expiryDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("daysUntilExpiry", daysUntilExpiry);
+            context.setVariable("vendorUrl", vendorUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String textContent = templateEngine.process("email/vendor-document-expiry-30-day.txt", context);
+
+            sendEmail(
+                supportEmail,  // PM notification goes to support email
+                String.format("Document Expiring Soon: %s - %s (%d days)",
+                        vendor.getCompanyName(), documentType.replace("_", " "), daysUntilExpiry),
+                textContent,
+                textContent
+            );
+
+            log.info("30-day document expiry notification sent for vendor: {} document: {}",
+                    vendor.getVendorNumber(), documentType);
+
+        } catch (Exception e) {
+            log.error("Failed to send 30-day document expiry notification for vendor: {} document: {}",
+                    vendor.getVendorNumber(), documentType, e);
+        }
+    }
+
+    /**
+     * Send 15-day document expiry notification to Vendor asynchronously.
+     * Notifies vendor directly about their expiring documents.
+     * Story 5.2: Vendor Document and License Management (AC #20)
+     *
+     * @param vendor Vendor entity with expiring document
+     * @param documentType Type of document expiring
+     * @param fileName Name of the document file
+     * @param expiryDate Document expiry date
+     * @param daysUntilExpiry Days remaining until expiry
+     */
+    @Async("emailTaskExecutor")
+    public void sendDocumentExpiry15DayNotification(
+            com.ultrabms.entity.Vendor vendor,
+            String documentType,
+            String fileName,
+            java.time.LocalDate expiryDate,
+            Long daysUntilExpiry
+    ) {
+        try {
+            Context context = new Context();
+            context.setVariable("vendorName", vendor.getCompanyName());
+            context.setVariable("contactPersonName", vendor.getContactPersonName());
+            context.setVariable("documentType", documentType.replace("_", " "));
+            context.setVariable("fileName", fileName);
+            context.setVariable("expiryDate", expiryDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("daysUntilExpiry", daysUntilExpiry);
+            context.setVariable("supportEmail", supportEmail);
+
+            String textContent = templateEngine.process("email/vendor-document-expiry-15-day.txt", context);
+
+            sendEmail(
+                vendor.getEmail(),
+                String.format("URGENT: Your %s Expires in %d Days",
+                        documentType.replace("_", " "), daysUntilExpiry),
+                textContent,
+                textContent
+            );
+
+            log.info("15-day document expiry notification sent to vendor: {} for document: {}",
+                    vendor.getEmail(), documentType);
+
+        } catch (Exception e) {
+            log.error("Failed to send 15-day document expiry notification to vendor: {} for document: {}",
+                    vendor.getEmail(), documentType, e);
+        }
+    }
+
+    /**
+     * Send vendor suspension notification due to expired documents asynchronously.
+     * Notifies vendor that their account has been suspended due to expired critical documents.
+     * Story 5.2: Vendor Document and License Management (AC #21)
+     *
+     * @param vendor Vendor entity that has been suspended
+     * @param expiredDocumentTypes List of expired document types
+     */
+    @Async("emailTaskExecutor")
+    public void sendVendorSuspendedDueToExpiredDocuments(
+            com.ultrabms.entity.Vendor vendor,
+            java.util.List<String> expiredDocumentTypes
+    ) {
+        try {
+            String expiredDocsFormatted = expiredDocumentTypes.stream()
+                    .map(type -> type.replace("_", " "))
+                    .collect(java.util.stream.Collectors.joining(", "));
+
+            Context context = new Context();
+            context.setVariable("vendorName", vendor.getCompanyName());
+            context.setVariable("contactPersonName", vendor.getContactPersonName());
+            context.setVariable("vendorNumber", vendor.getVendorNumber());
+            context.setVariable("expiredDocuments", expiredDocsFormatted);
+            context.setVariable("supportEmail", supportEmail);
+
+            String textContent = templateEngine.process("email/vendor-suspended-expired-documents.txt", context);
+
+            // Send to vendor
+            sendEmail(
+                vendor.getEmail(),
+                String.format("Account Suspended: Expired Documents - %s", vendor.getCompanyName()),
+                textContent,
+                textContent
+            );
+
+            // Also notify PM
+            sendEmail(
+                supportEmail,
+                String.format("Vendor Suspended: %s (%s) - Expired Documents",
+                        vendor.getCompanyName(), vendor.getVendorNumber()),
+                textContent,
+                textContent
+            );
+
+            log.info("Vendor suspension notification sent to vendor: {} for expired documents: {}",
+                    vendor.getEmail(), expiredDocsFormatted);
+
+        } catch (Exception e) {
+            log.error("Failed to send vendor suspension notification to vendor: {}",
+                    vendor.getEmail(), e);
+        }
+    }
+
+    /**
+     * Send vendor reactivation notification after document renewal asynchronously.
+     * Notifies vendor that their account has been reactivated after uploading valid documents.
+     * Story 5.2: Vendor Document and License Management (AC #22)
+     *
+     * @param vendor Vendor entity that has been reactivated
+     */
+    @Async("emailTaskExecutor")
+    public void sendVendorReactivatedNotification(
+            com.ultrabms.entity.Vendor vendor
+    ) {
+        try {
+            Context context = new Context();
+            context.setVariable("vendorName", vendor.getCompanyName());
+            context.setVariable("contactPersonName", vendor.getContactPersonName());
+            context.setVariable("vendorNumber", vendor.getVendorNumber());
+            context.setVariable("supportEmail", supportEmail);
+
+            String textContent = templateEngine.process("email/vendor-reactivated.txt", context);
+
+            sendEmail(
+                vendor.getEmail(),
+                String.format("Account Reactivated: %s", vendor.getCompanyName()),
+                textContent,
+                textContent
+            );
+
+            log.info("Vendor reactivation notification sent to vendor: {}",
+                    vendor.getEmail());
+
+        } catch (Exception e) {
+            log.error("Failed to send vendor reactivation notification to vendor: {}",
+                    vendor.getEmail(), e);
+        }
+    }
+
+    // ========================================================================
     // Email Helper Methods
     // ========================================================================
 

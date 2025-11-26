@@ -49,7 +49,7 @@ export function AssignmentHistory({ workOrderId, className }: AssignmentHistoryP
     try {
       const response = await getAssignmentHistory(workOrderId);
       setAssignments(response.data?.assignments || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load assignment history:', err);
       setError('Failed to load assignment history');
       setAssignments([]);

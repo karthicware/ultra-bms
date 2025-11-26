@@ -26,6 +26,7 @@ export function useChangePassword() {
         router.push('/login');
       }, 3000);
     },
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const message = error.response?.data?.message || 'Failed to change password';
       toast.error(message);

@@ -1,0 +1,31 @@
+VENDOR DOCUMENT EXPIRING SOON
+==============================
+
+A vendor document is expiring within the next 30 days and requires attention.
+
+VENDOR INFORMATION
+------------------
+Company Name:   [(${vendorName})]
+Vendor Number:  [(${vendorNumber})]
+
+DOCUMENT DETAILS
+----------------
+Document Type:  [(${documentType})]
+File Name:      [(${fileName})]
+Expiry Date:    [(${expiryDate})]
+Days Until Expiry: [(${daysUntilExpiry})] days
+
+ACTION REQUIRED
+---------------
+Please contact the vendor to request updated documentation before the expiry date.
+Failure to provide valid documentation may result in automatic suspension of the vendor's account.
+
+View Vendor Profile: [(${vendorUrl})]
+
+---
+
+Need Help?
+Contact us at: [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

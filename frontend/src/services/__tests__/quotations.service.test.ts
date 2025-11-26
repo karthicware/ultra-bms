@@ -220,6 +220,7 @@ describe('Quotation Service', () => {
 
     it('should throw error when conversion fails', async () => {
       const error = new Error('Only ACCEPTED quotations can be converted');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (error as any).response = {
         data: { message: 'Only ACCEPTED quotations can be converted' },
       };

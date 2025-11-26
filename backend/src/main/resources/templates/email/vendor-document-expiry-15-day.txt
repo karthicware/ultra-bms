@@ -1,0 +1,42 @@
+URGENT: YOUR DOCUMENT IS EXPIRING SOON
+=======================================
+
+Dear [(${contactPersonName})],
+
+This is an urgent reminder that one of your company documents is expiring soon.
+
+COMPANY: [(${vendorName})]
+
+DOCUMENT DETAILS
+----------------
+Document Type:      [(${documentType})]
+File Name:          [(${fileName})]
+Expiry Date:        [(${expiryDate})]
+Days Until Expiry:  [(${daysUntilExpiry})] DAYS
+
+⚠️ IMPORTANT NOTICE
+-------------------
+Your account may be suspended if this document is not renewed before the expiry date.
+To avoid any disruption to your services, please upload a valid replacement document as soon as possible.
+
+HOW TO RENEW
+------------
+1. Log in to your vendor portal
+2. Navigate to your profile documents section
+3. Upload a new, valid document before the expiry date
+
+WHAT HAPPENS IF NOT RENEWED
+---------------------------
+- Your vendor account will be automatically suspended
+- You will not be able to receive new work orders
+- Existing work orders may be affected
+
+If you have already renewed this document, please upload it to your profile immediately.
+
+---
+
+Need Help?
+Contact our support team at: [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.
