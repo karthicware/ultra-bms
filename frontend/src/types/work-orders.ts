@@ -83,9 +83,19 @@ export interface WorkOrder {
   completionNotes?: string;
   followUpNotes?: string;
 
+  // Story 4.4: Progress Tracking Fields
+  recommendations?: string;
+  followUpRequired?: boolean;
+  followUpDescription?: string;
+  progressUpdateCount?: number;
+
   // Attachments
   attachments: string[]; // Array of file URLs
   completionPhotos: string[]; // Array of file URLs
+
+  // Story 4.4: Before/After Photos
+  beforePhotos?: string[]; // Before photo URLs uploaded when starting work
+  afterPhotos?: string[]; // After photo URLs uploaded on completion
 
   // Audit fields
   createdAt: string;

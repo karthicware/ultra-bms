@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 import {
   Form,
   FormControl,
@@ -36,6 +37,7 @@ import {
 import { CheckCircle, Upload, X, Camera, Loader2, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import type { WorkOrder } from '@/types/work-orders';
+import { compressImages } from '@/lib/utils/image-compression';
 
 const markCompleteSchema = z.object({
   completionNotes: z.string()
@@ -52,7 +54,7 @@ const markCompleteSchema = z.object({
       message: 'Total cost must be a non-negative number',
     }),
   recommendations: z.string().max(1000, 'Recommendations cannot exceed 1000 characters').optional(),
-  followUpRequired: z.boolean().default(false),
+  followUpRequired: z.boolean(),
   followUpDescription: z.string().max(500, 'Follow-up description cannot exceed 500 characters').optional(),
 }).refine((data) => {
   // If follow-up is required, description is mandatory
@@ -97,6 +99,8 @@ export function MarkCompleteDialog({
   const [afterPhotos, setAfterPhotos] = useState<File[]>([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressionProgress, setCompressionProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<MarkCompleteFormData>({
@@ -113,7 +117,7 @@ export function MarkCompleteDialog({
 
   const followUpRequired = form.watch('followUpRequired');
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setPhotoError(null);
 
@@ -135,10 +139,30 @@ export function MarkCompleteDialog({
       }
     }
 
-    // Create preview URLs
-    const newPreviewUrls = files.map((file) => URL.createObjectURL(file));
-    setPhotoPreviewUrls([...photoPreviewUrls, ...newPreviewUrls]);
-    setAfterPhotos([...afterPhotos, ...files]);
+    // Compress images before adding (AC #24)
+    setIsCompressing(true);
+    setCompressionProgress(0);
+
+    try {
+      const { files: compressedFiles } = await compressImages(
+        files,
+        { maxSizeMB: 1, maxWidthOrHeight: 1920, quality: 0.8 },
+        (fileIndex, progress) => {
+          const overallProgress = ((fileIndex + progress / 100) / files.length) * 100;
+          setCompressionProgress(Math.round(overallProgress));
+        }
+      );
+
+      // Create preview URLs from compressed files
+      const newPreviewUrls = compressedFiles.map((file) => URL.createObjectURL(file));
+      setPhotoPreviewUrls([...photoPreviewUrls, ...newPreviewUrls]);
+      setAfterPhotos([...afterPhotos, ...compressedFiles]);
+    } catch (err) {
+      setPhotoError('Failed to process images. Please try again.');
+    } finally {
+      setIsCompressing(false);
+      setCompressionProgress(0);
+    }
   };
 
   const removePhoto = (index: number) => {
@@ -188,7 +212,7 @@ export function MarkCompleteDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="mark-complete-description">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="mark-complete-description" data-testid="dialog-mark-complete">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
@@ -224,14 +248,26 @@ export function MarkCompleteDialog({
                 ref={fileInputRef}
                 type="file"
                 accept="image/jpeg,image/png"
+                capture="environment"
                 multiple
                 onChange={handleFileChange}
                 className="hidden"
                 disabled={afterPhotos.length >= MAX_PHOTOS || isSubmitting}
                 aria-label="Upload after photos"
+                data-testid="input-after-photos"
               />
 
-              {afterPhotos.length < MAX_PHOTOS && (
+              {isCompressing && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Compressing images... {compressionProgress}%
+                  </div>
+                  <Progress value={compressionProgress} className="h-2" />
+                </div>
+              )}
+
+              {!isCompressing && afterPhotos.length < MAX_PHOTOS && (
                 <Button
                   type="button"
                   variant="outline"
@@ -287,6 +323,7 @@ export function MarkCompleteDialog({
                       className="min-h-[100px] resize-none"
                       {...field}
                       disabled={isSubmitting}
+                      data-testid="textarea-completion-notes"
                     />
                   </FormControl>
                   <FormDescription>
@@ -313,6 +350,7 @@ export function MarkCompleteDialog({
                         placeholder="e.g., 2.5"
                         {...field}
                         disabled={isSubmitting}
+                        data-testid="input-hours-spent"
                       />
                     </FormControl>
                     <FormMessage />
@@ -334,6 +372,7 @@ export function MarkCompleteDialog({
                         placeholder="e.g., 350.00"
                         {...field}
                         disabled={isSubmitting}
+                        data-testid="input-total-cost"
                       />
                     </FormControl>
                     <FormMessage />
@@ -355,6 +394,7 @@ export function MarkCompleteDialog({
                       className="min-h-[80px] resize-none"
                       {...field}
                       disabled={isSubmitting}
+                      data-testid="textarea-recommendations"
                     />
                   </FormControl>
                   <FormDescription>
@@ -378,6 +418,7 @@ export function MarkCompleteDialog({
                         onCheckedChange={field.onChange}
                         disabled={isSubmitting}
                         aria-describedby="follow-up-description"
+                        data-testid="checkbox-follow-up-required"
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
@@ -406,6 +447,7 @@ export function MarkCompleteDialog({
                           className="min-h-[80px] resize-none"
                           {...field}
                           disabled={isSubmitting}
+                          data-testid="textarea-follow-up-description"
                         />
                       </FormControl>
                       <FormDescription>
@@ -431,6 +473,7 @@ export function MarkCompleteDialog({
                 type="submit"
                 disabled={isSubmitting}
                 className="bg-green-600 hover:bg-green-700"
+                data-testid="btn-submit-completion"
               >
                 {isSubmitting ? (
                   <>

@@ -81,7 +81,7 @@ export function BeforeAfterGallery({ beforePhotos, afterPhotos }: BeforeAfterGal
 
   return (
     <>
-      <Card>
+      <Card data-testid="gallery-work-order-photos">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">

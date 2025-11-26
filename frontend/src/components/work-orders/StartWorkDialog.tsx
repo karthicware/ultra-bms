@@ -19,9 +19,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { Play, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import type { WorkOrder } from '@/types/work-orders';
+import { compressImages, formatFileSize } from '@/lib/utils/image-compression';
 
 interface StartWorkDialogProps {
   open: boolean;
@@ -44,9 +46,11 @@ export function StartWorkDialog({
   const [beforePhotos, setBeforePhotos] = useState<File[]>([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressionProgress, setCompressionProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setError(null);
 
@@ -68,10 +72,30 @@ export function StartWorkDialog({
       }
     }
 
-    // Create preview URLs
-    const newPreviewUrls = files.map((file) => URL.createObjectURL(file));
-    setPhotoPreviewUrls([...photoPreviewUrls, ...newPreviewUrls]);
-    setBeforePhotos([...beforePhotos, ...files]);
+    // Compress images before adding (AC #24)
+    setIsCompressing(true);
+    setCompressionProgress(0);
+
+    try {
+      const { files: compressedFiles } = await compressImages(
+        files,
+        { maxSizeMB: 1, maxWidthOrHeight: 1920, quality: 0.8 },
+        (fileIndex, progress) => {
+          const overallProgress = ((fileIndex + progress / 100) / files.length) * 100;
+          setCompressionProgress(Math.round(overallProgress));
+        }
+      );
+
+      // Create preview URLs from compressed files
+      const newPreviewUrls = compressedFiles.map((file) => URL.createObjectURL(file));
+      setPhotoPreviewUrls([...photoPreviewUrls, ...newPreviewUrls]);
+      setBeforePhotos([...beforePhotos, ...compressedFiles]);
+    } catch (err) {
+      setError('Failed to process images. Please try again.');
+    } finally {
+      setIsCompressing(false);
+      setCompressionProgress(0);
+    }
   };
 
   const removePhoto = (index: number) => {
@@ -138,6 +162,7 @@ export function StartWorkDialog({
               type="file"
               id="before-photos"
               accept="image/jpeg,image/png"
+              capture="environment"
               multiple
               onChange={handleFileChange}
               className="hidden"
@@ -145,7 +170,17 @@ export function StartWorkDialog({
               aria-label="Upload before photos"
             />
 
-            {beforePhotos.length < MAX_PHOTOS && (
+            {isCompressing && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Compressing images... {compressionProgress}%
+                </div>
+                <Progress value={compressionProgress} className="h-2" />
+              </div>
+            )}
+
+            {!isCompressing && beforePhotos.length < MAX_PHOTOS && (
               <Button
                 type="button"
                 variant="outline"

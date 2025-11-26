@@ -124,7 +124,7 @@ export function ProgressTimeline({ timeline, isLoading, showCost = true }: Progr
   }
 
   return (
-    <Card>
+    <Card data-testid="timeline-work-order-progress">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-5 w-5" />

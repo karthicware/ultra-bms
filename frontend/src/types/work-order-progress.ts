@@ -13,9 +13,11 @@
 export enum TimelineEntryType {
   CREATED = 'CREATED',
   ASSIGNED = 'ASSIGNED',
+  REASSIGNED = 'REASSIGNED',
   STARTED = 'STARTED',
   PROGRESS_UPDATE = 'PROGRESS_UPDATE',
-  COMPLETED = 'COMPLETED'
+  COMPLETED = 'COMPLETED',
+  CLOSED = 'CLOSED'
 }
 
 // ============================================================================
@@ -40,13 +42,31 @@ export interface WorkOrderProgress {
  * Timeline entry for work order events
  */
 export interface TimelineEntry {
+  id: string; // Unique identifier for the timeline entry
   type: TimelineEntryType;
   timestamp: string; // ISO datetime string
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  details: TimelineEntryDetails;
+  actorId?: string; // User who performed the action
+  actorName?: string; // User's display name
+
+  // Common fields used across entry types (flattened for component consumption)
+  notes?: string; // Progress notes, completion notes, etc.
   photoUrls?: string[];
+
+  // Cost/time tracking (for COMPLETED entries)
+  hoursSpent?: number;
+  totalCost?: number;
+
+  // Follow-up fields (for COMPLETED entries)
+  recommendations?: string;
+  followUpRequired?: boolean;
+  followUpDescription?: string;
+
+  // Assignment details (for ASSIGNED/REASSIGNED entries)
+  assigneeName?: string;
+  assigneeType?: string;
+
+  // Estimated completion (for PROGRESS_UPDATE entries)
+  estimatedCompletionDate?: string;
 }
 
 /**

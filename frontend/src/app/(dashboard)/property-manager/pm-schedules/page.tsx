@@ -7,7 +7,7 @@
  * Displays paginated list of PM schedules with filters
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import {
@@ -56,7 +56,7 @@ import {
 import { WorkOrderCategory, WorkOrderPriority } from '@/types/work-orders';
 import { cn } from '@/lib/utils';
 
-export default function PMSchedulesListPage() {
+function PMSchedulesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -375,5 +375,17 @@ export default function PMSchedulesListPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function PMSchedulesListPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    }>
+      <PMSchedulesContent />
+    </Suspense>
   );
 }

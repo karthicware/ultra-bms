@@ -91,10 +91,7 @@ export const markCompleteSchema = z.object({
   afterPhotos: requiredPhotosSchema,
 
   hoursSpent: z
-    .number({
-      required_error: 'Hours spent is required',
-      invalid_type_error: 'Hours spent must be a number'
-    })
+    .number({ message: 'Hours spent must be a number' })
     .min(0.1, 'Hours spent must be at least 0.1')
     .max(999, 'Hours spent cannot exceed 999')
     .multipleOf(0.5, 'Hours spent must be in 0.5 hour increments')
@@ -102,10 +99,7 @@ export const markCompleteSchema = z.object({
     .pipe(z.number().min(0.1).max(999)),
 
   totalCost: z
-    .number({
-      required_error: 'Total cost is required',
-      invalid_type_error: 'Total cost must be a number'
-    })
+    .number({ message: 'Total cost must be a number' })
     .min(0, 'Total cost cannot be negative')
     .max(999999, 'Total cost cannot exceed 999,999')
     .or(z.string().transform((val) => parseFloat(val)))

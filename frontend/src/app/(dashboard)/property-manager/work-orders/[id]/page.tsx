@@ -56,7 +56,7 @@ import {
   startWork,
   addProgressUpdate,
   markComplete,
-  getTimeline,
+  getWorkOrderTimeline,
   reassignWorkOrder,
 } from '@/services/work-orders.service';
 import { AssignmentDialog } from '@/components/work-orders/AssignmentDialog';
@@ -92,7 +92,6 @@ import {
   DollarSign,
   Clock,
   Key,
-  X,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight,
   Droplet,
@@ -111,6 +110,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useUser } from '@/contexts/auth-context';
 
 // Category icons mapping
 const CATEGORY_ICONS: Record<WorkOrderCategory, LucideIcon> = {
@@ -146,12 +146,16 @@ export default function WorkOrderDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
+  const { user } = useUser();
   const workOrderId = params.id as string;
+
+  // AC #25: Cost visibility based on user role (tenants should not see costs)
+  const showCost = user?.role !== 'TENANT';
 
   // State
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const [comments, setComments] = useState<WorkOrderComment[]>([]);
-  const [statusHistory, setStatusHistory] = useState<WorkOrderComment[]>([]);
+  const [_statusHistory, setStatusHistory] = useState<WorkOrderComment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -191,7 +195,7 @@ export default function WorkOrderDetailPage() {
 
         // Story 4.4: Fetch timeline
         try {
-          const timelineData = await getTimeline(workOrderId);
+          const timelineData = await getWorkOrderTimeline(workOrderId);
           setTimeline(timelineData.data?.timeline || []);
         } catch {
           // Timeline not available yet, that's ok
@@ -336,7 +340,7 @@ export default function WorkOrderDetailPage() {
   // Story 4.4: Refresh timeline
   const refreshTimeline = async () => {
     try {
-      const timelineData = await getTimeline(workOrderId);
+      const timelineData = await getWorkOrderTimeline(workOrderId);
       setTimeline(timelineData.data?.timeline || []);
     } catch {
       // Silent fail
@@ -550,7 +554,7 @@ export default function WorkOrderDetailPage() {
             </Button>
           )}
           {/* Story 4.3: AC #10 - Reassign button for already assigned work orders */}
-          {workOrder.assignedTo && (
+          {workOrder.assignedTo && workOrder.status !== WorkOrderStatus.COMPLETED && workOrder.status !== WorkOrderStatus.CLOSED && (
             <Button
               variant="outline"
               onClick={handleReassign}
@@ -559,6 +563,39 @@ export default function WorkOrderDetailPage() {
               <RefreshCw className="mr-2 h-4 w-4" />
               Reassign
             </Button>
+          )}
+          {/* Story 4.4: AC #1 - Start Work button for assigned work orders */}
+          {workOrder.status === WorkOrderStatus.ASSIGNED && workOrder.assignedTo && (
+            <Button
+              onClick={() => setStartWorkDialogOpen(true)}
+              data-testid="btn-start-work"
+              className="bg-green-600 hover:bg-green-700"
+              title="Start working on this job"
+            >
+              <Play className="mr-2 h-4 w-4" />
+              Start Work
+            </Button>
+          )}
+          {/* Story 4.4: AC #3, #11 - Progress Update and Mark Complete buttons for in-progress work orders */}
+          {workOrder.status === WorkOrderStatus.IN_PROGRESS && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setProgressUpdateDialogOpen(true)}
+                data-testid="btn-add-progress-update"
+              >
+                <MessageSquarePlus className="mr-2 h-4 w-4" />
+                Add Progress
+              </Button>
+              <Button
+                onClick={() => setMarkCompleteDialogOpen(true)}
+                data-testid="btn-mark-complete"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Mark Complete
+              </Button>
+            </>
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -685,12 +722,12 @@ export default function WorkOrderDetailPage() {
             </Card>
           )}
 
-          {/* Photo Gallery */}
+          {/* Photo Gallery - Initial attachments */}
           {workOrder.attachments && workOrder.attachments.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Photos</CardTitle>
-                <CardDescription>{workOrder.attachments.length} photo(s) attached</CardDescription>
+                <CardTitle>Initial Photos</CardTitle>
+                <CardDescription>{workOrder.attachments.length} photo(s) attached when created</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -711,6 +748,42 @@ export default function WorkOrderDetailPage() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Story 4.4: AC #21 - Before/After Photo Gallery for completed work orders */}
+          {(workOrder.status === WorkOrderStatus.COMPLETED || workOrder.status === WorkOrderStatus.CLOSED) && (
+            <BeforeAfterGallery
+              beforePhotos={workOrder.beforePhotos || []}
+              afterPhotos={workOrder.afterPhotos || []}
+            />
+          )}
+
+          {/* Story 4.4: AC #30 - Follow-up Required Banner */}
+          {workOrder.followUpRequired && (workOrder.status === WorkOrderStatus.COMPLETED || workOrder.status === WorkOrderStatus.CLOSED) && (
+            <Card className="border-yellow-300 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-950" data-testid="banner-follow-up-required">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">Follow-up Required</h4>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                      {workOrder.followUpDescription || 'Additional follow-up work is needed for this work order.'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Story 4.4: AC #22 - Progress Timeline */}
+          {(workOrder.status === WorkOrderStatus.IN_PROGRESS ||
+            workOrder.status === WorkOrderStatus.COMPLETED ||
+            workOrder.status === WorkOrderStatus.CLOSED) && (
+            <ProgressTimeline
+              timeline={timeline}
+              isLoading={isTimelineLoading}
+              showCost={showCost}
+            />
           )}
 
           {/* Comments Section */}
@@ -862,6 +935,33 @@ export default function WorkOrderDetailPage() {
         workOrder={workOrder}
         onReassign={handleReassignSubmit}
         isSubmitting={isReassigning}
+      />
+
+      {/* Story 4.4: Start Work Dialog */}
+      <StartWorkDialog
+        open={startWorkDialogOpen}
+        onOpenChange={setStartWorkDialogOpen}
+        workOrder={workOrder}
+        onStartWork={handleStartWork}
+        isSubmitting={isStartingWork}
+      />
+
+      {/* Story 4.4: Progress Update Dialog */}
+      <ProgressUpdateDialog
+        open={progressUpdateDialogOpen}
+        onOpenChange={setProgressUpdateDialogOpen}
+        workOrder={workOrder}
+        onSubmit={handleAddProgressUpdate}
+        isSubmitting={isAddingProgress}
+      />
+
+      {/* Story 4.4: Mark Complete Dialog */}
+      <MarkCompleteDialog
+        open={markCompleteDialogOpen}
+        onOpenChange={setMarkCompleteDialogOpen}
+        workOrder={workOrder}
+        onSubmit={handleMarkComplete}
+        isSubmitting={isMarkingComplete}
       />
     </div>
   );

@@ -478,9 +478,9 @@ claude-opus-4-5-20250924
 - Good test coverage (FE + BE)
 - Well-structured email templates
 
-**Minor Issues (Non-blocking):**
-1. `eslint-disable @typescript-eslint/no-explicit-any` in several files
-2. Missing FE tests for AssignmentDialog/ReassignmentDialog
+**Minor Issues (Non-blocking):** ✅ RESOLVED
+1. ~~`eslint-disable @typescript-eslint/no-explicit-any` in several files~~ - Fixed with proper TypeScript types (AxiosError, LucideIcon, AssignmentWorkOrder, ReassignmentWorkOrder)
+2. ~~Missing FE tests for AssignmentDialog/ReassignmentDialog~~ - Added comprehensive tests (12 tests for AssignmentDialog, 10 tests for ReassignmentDialog)
 
 **Security:** No issues found
 - ✅ No SQL injection (JPA repositories)

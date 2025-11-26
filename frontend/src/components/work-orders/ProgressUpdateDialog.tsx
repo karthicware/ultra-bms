@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import {
   Form,
   FormControl,
@@ -35,6 +36,7 @@ import {
 import { MessageSquarePlus, Upload, X, Calendar, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import type { WorkOrder } from '@/types/work-orders';
+import { compressImages } from '@/lib/utils/image-compression';
 
 const progressUpdateSchema = z.object({
   progressNotes: z.string()
@@ -70,6 +72,8 @@ export function ProgressUpdateDialog({
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressionProgress, setCompressionProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<ProgressUpdateFormData>({
@@ -80,7 +84,7 @@ export function ProgressUpdateDialog({
     },
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setPhotoError(null);
 
@@ -102,10 +106,30 @@ export function ProgressUpdateDialog({
       }
     }
 
-    // Create preview URLs
-    const newPreviewUrls = files.map((file) => URL.createObjectURL(file));
-    setPhotoPreviewUrls([...photoPreviewUrls, ...newPreviewUrls]);
-    setPhotos([...photos, ...files]);
+    // Compress images before adding (AC #24)
+    setIsCompressing(true);
+    setCompressionProgress(0);
+
+    try {
+      const { files: compressedFiles } = await compressImages(
+        files,
+        { maxSizeMB: 1, maxWidthOrHeight: 1920, quality: 0.8 },
+        (fileIndex, progress) => {
+          const overallProgress = ((fileIndex + progress / 100) / files.length) * 100;
+          setCompressionProgress(Math.round(overallProgress));
+        }
+      );
+
+      // Create preview URLs from compressed files
+      const newPreviewUrls = compressedFiles.map((file) => URL.createObjectURL(file));
+      setPhotoPreviewUrls([...photoPreviewUrls, ...newPreviewUrls]);
+      setPhotos([...photos, ...compressedFiles]);
+    } catch (err) {
+      setPhotoError('Failed to process images. Please try again.');
+    } finally {
+      setIsCompressing(false);
+      setCompressionProgress(0);
+    }
   };
 
   const removePhoto = (index: number) => {
@@ -147,7 +171,7 @@ export function ProgressUpdateDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg" aria-describedby="progress-update-description">
+      <DialogContent className="sm:max-w-lg" aria-describedby="progress-update-description" data-testid="dialog-add-progress-update">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquarePlus className="h-5 w-5 text-blue-600" />
@@ -174,6 +198,7 @@ export function ProgressUpdateDialog({
                       {...field}
                       disabled={isSubmitting}
                       aria-describedby="progress-notes-count"
+                      data-testid="textarea-progress-notes"
                     />
                   </FormControl>
                   <FormDescription id="progress-notes-count">
@@ -200,6 +225,7 @@ export function ProgressUpdateDialog({
                       {...field}
                       disabled={isSubmitting}
                       min={new Date().toISOString().split('T')[0]}
+                      data-testid="calendar-estimated-completion"
                     />
                   </FormControl>
                   <FormDescription>
@@ -221,14 +247,26 @@ export function ProgressUpdateDialog({
                 ref={fileInputRef}
                 type="file"
                 accept="image/jpeg,image/png"
+                capture="environment"
                 multiple
                 onChange={handleFileChange}
                 className="hidden"
                 disabled={photos.length >= MAX_PHOTOS || isSubmitting}
                 aria-label="Upload progress photos"
+                data-testid="input-progress-photos"
               />
 
-              {photos.length < MAX_PHOTOS && (
+              {isCompressing && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Compressing images... {compressionProgress}%
+                  </div>
+                  <Progress value={compressionProgress} className="h-2" />
+                </div>
+              )}
+
+              {!isCompressing && photos.length < MAX_PHOTOS && (
                 <Button
                   type="button"
                   variant="outline"
@@ -283,6 +321,7 @@ export function ProgressUpdateDialog({
               <Button
                 type="submit"
                 disabled={isSubmitting}
+                data-testid="btn-save-progress-update"
               >
                 {isSubmitting ? (
                   <>

@@ -53,12 +53,15 @@ import {
   getExternalVendorsForAssignment
 } from '@/services/assignees.service';
 
+import { WorkOrderCategory } from '@/types/work-orders';
+
 /**
  * Minimal work order data required for reassignment dialog
  */
 export interface ReassignmentWorkOrder {
   id: string;
   workOrderNumber: string;
+  category?: WorkOrderCategory;
   assignedTo?: string;
   assigneeName?: string;
 }
