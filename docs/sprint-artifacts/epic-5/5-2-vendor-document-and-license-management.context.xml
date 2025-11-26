@@ -1,0 +1,306 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>2</storyId>
+    <title>Vendor Document and License Management</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-26</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-5/5-2-vendor-document-and-license-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>property manager</asA>
+    <iWant>track vendor licenses and insurance documents</iWant>
+    <soThat>I ensure compliance and vendor qualifications are current</soThat>
+    <tasks>
+      <task id="1">Define TypeScript Types and Zod Schemas (AC #27)</task>
+      <task id="2">Create Frontend Document Service (AC #27)</task>
+      <task id="3">Create React Query Hooks for Documents (AC #28)</task>
+      <task id="4">Create Backend VendorDocument Entity and Enum (AC #8)</task>
+      <task id="5">Create Database Migration for Documents (AC #26)</task>
+      <task id="6">Create VendorDocument Repository (AC #26)</task>
+      <task id="7">Create Document DTOs and Mapper (AC #24)</task>
+      <task id="8">Implement VendorDocument Service Layer (AC #25)</task>
+      <task id="9">Integrate with FileStorageService for S3 (AC #9)</task>
+      <task id="10">Implement VendorDocument Controller (AC #23)</task>
+      <task id="11">Create Document Upload Modal Component (AC #2, #3, #4, #5, #6, #7)</task>
+      <task id="12">Create Document List Component (AC #10, #11, #12, #13, #14, #15)</task>
+      <task id="13">Integrate Documents Section into Vendor Detail Page (AC #1)</task>
+      <task id="14">Create Expiring Documents Dashboard Card (AC #16)</task>
+      <task id="15">Create Expiring Documents List Page (AC #17)</task>
+      <task id="16">Implement VendorDocumentExpiryJob (AC #18)</task>
+      <task id="17">Create Email Templates for Notifications (AC #19, #20, #21)</task>
+      <task id="18">Implement Email Notification Logic (AC #19, #20)</task>
+      <task id="19">Implement Auto-Suspension Logic (AC #21)</task>
+      <task id="20">Implement Reactivation Flow (AC #22)</task>
+      <task id="21">Implement Responsive Design (AC #29)</task>
+      <task id="22">Write Backend Unit Tests (AC #30)</task>
+      <task id="23">Write Frontend Unit Tests</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Document Management Section on Vendor Detail Page with data-testid="section-vendor-documents"</criterion>
+    <criterion id="AC2">Upload Document Button and Modal with data-testid="btn-upload-document" and data-testid="modal-upload-document"</criterion>
+    <criterion id="AC3">Document Type Selection dropdown with TRADE_LICENSE, INSURANCE, CERTIFICATION, ID_COPY options</criterion>
+    <criterion id="AC4">File Upload Input accepting PDF/JPG/JPEG/PNG, max 10MB, drag-and-drop support</criterion>
+    <criterion id="AC5">Expiry Date Input - required for TRADE_LICENSE and INSURANCE, must be future date</criterion>
+    <criterion id="AC6">Document Notes Input - optional textarea, max 200 chars</criterion>
+    <criterion id="AC7">Document Upload Submission with progress indicator, POST to /api/v1/vendors/{vendorId}/documents</criterion>
+    <criterion id="AC8">Backend VendorDocument Entity with UUID id, vendorId FK, documentType enum, file metadata, expiryDate, uploadedBy/At</criterion>
+    <criterion id="AC9">Document Storage in S3 at /vendors/{vendorId}/documents/{uuid}-{fileName}, presigned URLs for download</criterion>
+    <criterion id="AC10">Document List Table with columns: Document Type, File Name, Expiry Date, Expiry Status, Upload Date, Actions</criterion>
+    <criterion id="AC11">Expiry Status Badges - Valid (green), Expiring Soon (yellow, within 30 days), Expired (red)</criterion>
+    <criterion id="AC12">Document View Action - presigned S3 URL, opens in new tab</criterion>
+    <criterion id="AC13">Document Download Action - presigned URL with content-disposition: attachment</criterion>
+    <criterion id="AC14">Document Replace Action - upload new file, update record, retain old file in S3</criterion>
+    <criterion id="AC15">Document Delete Action - soft delete pattern, confirm dialog, file retained in S3</criterion>
+    <criterion id="AC16">Dashboard Expiring Documents Alert Card showing documents expiring within 30 days</criterion>
+    <criterion id="AC17">Expiring Documents List Page at /property-manager/vendors/expiring-documents</criterion>
+    <criterion id="AC18">Scheduled Job VendorDocumentExpiryJob running daily at 9:00 AM</criterion>
+    <criterion id="AC19">Email Notification to Property Manager at 30 days before expiry</criterion>
+    <criterion id="AC20">Email Notification to Vendor at 15 days before expiry</criterion>
+    <criterion id="AC21">Auto-Suspension when TRADE_LICENSE or INSURANCE expires</criterion>
+    <criterion id="AC22">Manual Reactivation after valid critical documents uploaded</criterion>
+    <criterion id="AC23">Backend API Endpoints - POST/GET/PUT/DELETE for documents, GET expiring-documents</criterion>
+    <criterion id="AC24">Document DTOs - VendorDocumentUploadDto, VendorDocumentDto, ExpiringDocumentDto, VendorDocumentMapper</criterion>
+    <criterion id="AC25">VendorDocumentService interface and implementation</criterion>
+    <criterion id="AC26">VendorDocumentRepository with custom queries for expiry tracking</criterion>
+    <criterion id="AC27">TypeScript types and Zod validations for frontend</criterion>
+    <criterion id="AC28">React Query hooks for document operations</criterion>
+    <criterion id="AC29">Responsive design - card layout on mobile, touch-friendly</criterion>
+    <criterion id="AC30">Backend Unit Tests with >= 80% code coverage</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>3.5 Vendor Management Module</section>
+        <snippet>Vendor Operations includes job assignment algorithms, performance scoring, document expiry tracking, payment processing, communication portal, and feedback system.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Database Schema - Vendor Management</section>
+        <snippet>Vendors table with status field (ACTIVE, INACTIVE, SUSPENDED), document tracking via vendor_documents table, S3 storage for files, scheduled jobs with @Scheduled annotation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Deployment Architecture - S3 Storage</section>
+        <snippet>Documents stored in AWS S3 bucket at path /vendors/{vendorId}/documents/. LocalStack for development, real S3 for production. Presigned URLs for secure downloads.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Async Processing</section>
+        <snippet>Use Spring @Async and @Scheduled for background jobs. Email notifications sent asynchronously using emailTaskExecutor thread pool.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-5-vendor-management.md</path>
+        <title>Epic 5: Vendor Management</title>
+        <section>Story 5.2: Vendor Document and License Management</section>
+        <snippet>Full story definition with document types (TRADE_LICENSE, INSURANCE, CERTIFICATION, ID_COPY), expiry tracking, auto-suspension logic, and API endpoints.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/FileStorageService.java</path>
+        <kind>interface</kind>
+        <symbol>FileStorageService</symbol>
+        <reason>Existing file storage interface to reuse for vendor document uploads. Provides storeFile(), deleteFile(), getDownloadUrl() methods for S3 operations.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/impl/FileStorageServiceImpl.java</path>
+        <kind>service</kind>
+        <symbol>FileStorageServiceImpl</symbol>
+        <reason>Implementation with S3 integration, presigned URL generation, file validation. Reuse for vendor documents.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/S3Service.java</path>
+        <kind>interface</kind>
+        <symbol>S3Service</symbol>
+        <reason>Low-level S3 operations interface used by FileStorageService.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/EmailService.java</path>
+        <kind>service</kind>
+        <symbol>EmailService</symbol>
+        <reason>Existing email service pattern with @Async methods, Thymeleaf templates. Use as template for vendor document expiry notifications.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/TenantDocument.java</path>
+        <kind>entity</kind>
+        <symbol>TenantDocument</symbol>
+        <reason>Reference entity pattern for document storage. Similar structure needed for VendorDocument (documentType, fileName, filePath, fileSize, uploadedBy).</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/scheduler/PMScheduleJob.java</path>
+        <kind>scheduler</kind>
+        <symbol>PMScheduleJob</symbol>
+        <reason>Reference for @Scheduled job implementation pattern. Use similar pattern for VendorDocumentExpiryJob.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/vendors.ts</path>
+        <kind>types</kind>
+        <symbol>Vendor, VendorStatus</symbol>
+        <reason>Existing vendor types with ACTIVE/INACTIVE/SUSPENDED status. VendorDocument types should follow same patterns.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/resources/templates/email/</path>
+        <kind>templates</kind>
+        <symbol>email templates</symbol>
+        <reason>Directory for Thymeleaf email templates. Create vendor-document-expiring-pm.html, vendor-document-expiring-vendor.html, vendor-suspended-pm.html, vendor-suspended-vendor.html.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/BaseEntity.java</path>
+        <kind>entity</kind>
+        <symbol>BaseEntity</symbol>
+        <reason>Base entity class with id, createdAt, updatedAt. VendorDocument should extend this.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <backend>
+        <dependency name="spring-boot-starter-web" version="3.4.0">REST API</dependency>
+        <dependency name="spring-boot-starter-data-jpa" version="3.4.0">JPA/Hibernate</dependency>
+        <dependency name="spring-boot-starter-validation" version="3.4.0">Bean validation</dependency>
+        <dependency name="spring-boot-starter-mail" version="3.4.0">Email sending</dependency>
+        <dependency name="spring-boot-starter-thymeleaf" version="3.4.0">Email templates</dependency>
+        <dependency name="postgresql" version="runtime">Database driver</dependency>
+        <dependency name="flyway-core" version="latest">Database migrations</dependency>
+        <dependency name="lombok" version="1.18.36">Code generation</dependency>
+        <dependency name="mapstruct" version="1.6.3">DTO mapping</dependency>
+        <dependency name="aws-sdk-s3" version="2.20.26">S3 file storage</dependency>
+      </backend>
+      <frontend>
+        <dependency name="next" version="16.0.2">React framework</dependency>
+        <dependency name="react" version="19.2.0">UI library</dependency>
+        <dependency name="@tanstack/react-query" version="^5.90.9">Server state management</dependency>
+        <dependency name="@tanstack/react-table" version="^8.21.3">Data tables</dependency>
+        <dependency name="react-hook-form" version="^7.66.0">Form handling</dependency>
+        <dependency name="@hookform/resolvers" version="^5.2.2">Form validation</dependency>
+        <dependency name="zod" version="^4.1.12">Schema validation</dependency>
+        <dependency name="date-fns" version="^4.1.0">Date utilities</dependency>
+        <dependency name="react-day-picker" version="^9.11.1">Date picker</dependency>
+        <dependency name="react-dropzone" version="^14.3.8">File upload</dependency>
+        <dependency name="lucide-react" version="^0.553.0">Icons</dependency>
+        <dependency name="sonner" version="^2.0.7">Toast notifications</dependency>
+        <dependency name="axios" version="^1.13.2">HTTP client</dependency>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architecture">Follow layered architecture: Controller -> Service -> Repository -> Entity</constraint>
+    <constraint type="architecture">Use MapStruct for entity-DTO mapping</constraint>
+    <constraint type="architecture">All write operations require @Transactional annotation</constraint>
+    <constraint type="api">REST endpoints at /api/v1/vendors/{vendorId}/documents</constraint>
+    <constraint type="api">Use standard response format: {success, data, message, timestamp}</constraint>
+    <constraint type="api">Multipart form data for file uploads</constraint>
+    <constraint type="database">Table name: vendor_documents (snake_case, plural)</constraint>
+    <constraint type="database">Foreign key to vendors table</constraint>
+    <constraint type="database">Index on vendor_id column</constraint>
+    <constraint type="storage">S3 path: /vendors/{vendorId}/documents/{uuid}-{fileName}</constraint>
+    <constraint type="storage">Presigned URLs with 1-hour expiry for downloads</constraint>
+    <constraint type="storage">File retention on delete (soft delete pattern for audit)</constraint>
+    <constraint type="validation">File types: PDF, JPG, JPEG, PNG only</constraint>
+    <constraint type="validation">Max file size: 10MB</constraint>
+    <constraint type="validation">Expiry date required for TRADE_LICENSE and INSURANCE</constraint>
+    <constraint type="async">Email notifications via @Async("emailTaskExecutor")</constraint>
+    <constraint type="async">Scheduled job via @Scheduled(cron = "0 0 9 * * *")</constraint>
+    <constraint type="security">Endpoints require PROPERTY_MANAGER or MAINTENANCE_SUPERVISOR role</constraint>
+    <constraint type="testing">ALL interactive elements MUST have data-testid attributes</constraint>
+    <constraint type="testing">Convention: {component}-{element}-{action}</constraint>
+    <constraint type="testing">Backend tests: >= 80% code coverage</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>POST /api/v1/vendors/{vendorId}/documents</name>
+      <kind>REST endpoint</kind>
+      <signature>POST multipart/form-data with file and VendorDocumentUploadDto</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorDocumentController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/vendors/{vendorId}/documents</name>
+      <kind>REST endpoint</kind>
+      <signature>GET returns List&lt;VendorDocumentDto&gt; sorted by uploadedAt DESC</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorDocumentController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/vendors/{vendorId}/documents/{id}</name>
+      <kind>REST endpoint</kind>
+      <signature>GET returns presigned download URL</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorDocumentController.java</path>
+    </interface>
+    <interface>
+      <name>PUT /api/v1/vendors/{vendorId}/documents/{id}</name>
+      <kind>REST endpoint</kind>
+      <signature>PUT multipart/form-data to replace document</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorDocumentController.java</path>
+    </interface>
+    <interface>
+      <name>DELETE /api/v1/vendors/{vendorId}/documents/{id}</name>
+      <kind>REST endpoint</kind>
+      <signature>DELETE returns 204 No Content</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorDocumentController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/vendors/expiring-documents</name>
+      <kind>REST endpoint</kind>
+      <signature>GET returns List&lt;ExpiringDocumentDto&gt; with optional days query param</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorDocumentController.java</path>
+    </interface>
+    <interface>
+      <name>FileStorageService.storeFile()</name>
+      <kind>service method</kind>
+      <signature>String storeFile(MultipartFile file, String directory)</signature>
+      <path>backend/src/main/java/com/ultrabms/service/FileStorageService.java</path>
+    </interface>
+    <interface>
+      <name>FileStorageService.getDownloadUrl()</name>
+      <kind>service method</kind>
+      <signature>String getDownloadUrl(String filePath)</signature>
+      <path>backend/src/main/java/com/ultrabms/service/FileStorageService.java</path>
+    </interface>
+    <interface>
+      <name>VendorService.updateVendorStatus()</name>
+      <kind>service method</kind>
+      <signature>void updateVendorStatus(UUID vendorId, VendorStatus status)</signature>
+      <path>backend/src/main/java/com/ultrabms/service/VendorService.java</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend testing uses JUnit 5 with Mockito for unit tests. Tests should mock dependencies (repositories, services) and verify business logic. Use @SpringBootTest for integration tests. JaCoCo enforces minimum 80% line coverage and 70% branch coverage. Frontend testing uses Jest with React Testing Library for component tests. Playwright for E2E tests. All interactive elements require data-testid attributes following convention: {component}-{element}-{action}.
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/ - Backend service tests</location>
+      <location>backend/src/test/java/com/ultrabms/controller/ - Backend controller tests</location>
+      <location>frontend/src/components/**/__tests__/ - Frontend component tests</location>
+      <location>frontend/tests/e2e/ - E2E tests with Playwright</location>
+    </locations>
+    <ideas>
+      <idea ac="AC8">Test VendorDocument entity creation, validation annotations, JPA mappings</idea>
+      <idea ac="AC25">Test VendorDocumentService.uploadDocument() - success, invalid file type, file too large, vendor not found</idea>
+      <idea ac="AC25">Test VendorDocumentService.replaceDocument() - success, document not found</idea>
+      <idea ac="AC25">Test VendorDocumentService.deleteDocument() - success, verify file retained in S3</idea>
+      <idea ac="AC25">Test VendorDocumentService.getExpiringDocuments() - various date scenarios</idea>
+      <idea ac="AC18">Test VendorDocumentExpiryJob execution - 30-day notifications, 15-day notifications, auto-suspension</idea>
+      <idea ac="AC21">Test auto-suspension logic for expired TRADE_LICENSE and INSURANCE</idea>
+      <idea ac="AC23">Test VendorDocumentController multipart upload handling and authorization</idea>
+      <idea ac="AC11">Test DocumentUploadModal file type and size validation display</idea>
+      <idea ac="AC11">Test expiry date required logic based on document type</idea>
+      <idea ac="AC10">Test VendorDocumentList rendering with various document states</idea>
+      <idea ac="AC11">Test expiry status badge colors (green/yellow/red)</idea>
+      <idea ac="AC15">Test delete confirmation dialog flow</idea>
+      <idea ac="AC16">Test ExpiringDocumentsCard rendering and navigation</idea>
+    </ideas>
+  </tests>
+</story-context>

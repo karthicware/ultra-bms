@@ -180,7 +180,8 @@ describe('BeforeAfterGallery', () => {
       />
     );
 
-    const photoButtons = screen.getAllByRole('button', { name: /view photo/i });
+    // Use findAllByRole (async) because Radix UI Tabs may have async rendering
+    const photoButtons = await screen.findAllByRole('button', { name: /view photo/i });
     await user.click(photoButtons[0]);
 
     await waitFor(() => {
@@ -198,7 +199,7 @@ describe('BeforeAfterGallery', () => {
       />
     );
 
-    const photoButtons = screen.getAllByRole('button', { name: /view photo/i });
+    const photoButtons = await screen.findAllByRole('button', { name: /view photo/i });
     await user.click(photoButtons[0]);
 
     await waitFor(() => {
@@ -224,7 +225,7 @@ describe('BeforeAfterGallery', () => {
       />
     );
 
-    const photoButtons = screen.getAllByRole('button', { name: /view photo/i });
+    const photoButtons = await screen.findAllByRole('button', { name: /view photo/i });
     await user.click(photoButtons[0]);
 
     await waitFor(() => {
@@ -243,7 +244,7 @@ describe('BeforeAfterGallery', () => {
       />
     );
 
-    const photoButtons = screen.getAllByRole('button', { name: /view photo/i });
+    const photoButtons = await screen.findAllByRole('button', { name: /view photo/i });
     await user.click(photoButtons[0]);
 
     await waitFor(() => {
@@ -296,7 +297,7 @@ describe('BeforeAfterGallery', () => {
     });
   });
 
-  it('should have proper ARIA labels on photo buttons', () => {
+  it('should have proper ARIA labels on photo buttons', async () => {
     render(
       <BeforeAfterGallery
         beforePhotos={mockBeforePhotos}
@@ -304,7 +305,7 @@ describe('BeforeAfterGallery', () => {
       />
     );
 
-    const photoButtons = screen.getAllByRole('button', { name: /view photo \d+ of \d+/i });
+    const photoButtons = await screen.findAllByRole('button', { name: /view photo \d+ of \d+/i });
     expect(photoButtons.length).toBeGreaterThan(0);
   });
 
@@ -333,7 +334,7 @@ describe('BeforeAfterGallery', () => {
       />
     );
 
-    const photoButtons = screen.getAllByRole('button', { name: /view photo/i });
+    const photoButtons = await screen.findAllByRole('button', { name: /view photo/i });
     await user.click(photoButtons[0]);
 
     await waitFor(() => {

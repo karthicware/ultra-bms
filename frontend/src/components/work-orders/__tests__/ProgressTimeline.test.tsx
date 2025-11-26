@@ -88,8 +88,8 @@ describe('ProgressTimeline', () => {
     );
 
     expect(screen.getByText('Activity Timeline')).toBeInTheDocument();
-    // Skeletons should be present
-    const skeletons = document.querySelectorAll('[class*="skeleton"]');
+    // Skeletons should be present (using data-slot attribute from shadcn Skeleton component)
+    const skeletons = document.querySelectorAll('[data-slot="skeleton"]');
     expect(skeletons.length).toBeGreaterThan(0);
   });
 

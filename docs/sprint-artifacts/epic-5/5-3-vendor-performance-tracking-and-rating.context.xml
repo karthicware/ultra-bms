@@ -1,0 +1,344 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>3</storyId>
+    <title>Vendor Performance Tracking and Rating</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-26</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-5/5-3-vendor-performance-tracking-and-rating.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>property manager</asA>
+    <iWant>track vendor performance and ratings</iWant>
+    <soThat>I can make informed decisions when assigning work orders</soThat>
+    <tasks>
+      <task id="1">Define TypeScript Types and Zod Schemas (AC: #19) - Create vendor-ratings.ts with VendorRating, VendorRatingRequest, VendorPerformance, VendorRatingDistribution, VendorComparison interfaces. Create vendor-rating.ts validation schema.</task>
+      <task id="2">Create Frontend Rating Service (AC: #19) - Create services/vendor-ratings.service.ts with submitRating, getVendorPerformance, getVendorRatings, getTopRatedVendors, getVendorsComparison methods.</task>
+      <task id="3">Create React Query Hooks for Ratings (AC: #20) - Create hooks/useVendorRatings.ts with useVendorPerformance, useVendorRatings, useSubmitRating, useTopRatedVendors, useVendorsComparison hooks.</task>
+      <task id="4">Create Backend VendorRating Entity (AC: #5) - Create VendorRating JPA entity with relationships to WorkOrder, Vendor, User. Add validation annotations.</task>
+      <task id="5">Create Database Migration for Ratings (AC: #17) - Create V34__create_vendor_ratings_table.sql with vendor_ratings table, foreign keys, unique constraint on work_order_id, indexes.</task>
+      <task id="6">Create VendorRating Repository (AC: #17) - Create VendorRatingRepository with findByVendorIdOrderByRatedAtDesc, findByWorkOrderId, existsByWorkOrderId, calculateAverageRatingByVendorId queries.</task>
+      <task id="7">Create Rating and Performance DTOs (AC: #15) - Create VendorRatingRequestDto, VendorRatingDto, VendorPerformanceDto, VendorComparisonDto, VendorRatingMapper.</task>
+      <task id="8">Implement VendorRating Service Layer (AC: #16) - Create VendorRatingService interface and VendorRatingServiceImpl with submitRating, getRatingsByVendorId, getVendorPerformance, getTopRatedVendors, getVendorsComparison methods.</task>
+      <task id="9">Implement Performance Metrics Calculation (AC: #8) - Calculate totalJobsCompleted, averageCompletionTime, onTimeCompletionRate, totalAmountPaid from work order data.</task>
+      <task id="10">Implement VendorRating Controller (AC: #14) - Add POST /api/v1/work-orders/{id}/vendor-rating, GET /api/v1/vendors/{id}/performance, GET /api/v1/vendors/{id}/ratings, GET /api/v1/vendors/top-rated, GET /api/v1/vendors/compare endpoints.</task>
+      <task id="11">Create StarRatingInput Component (AC: #3) - Create reusable star rating component with click, hover, keyboard navigation, accessibility.</task>
+      <task id="12">Create VendorRatingModal Component (AC: #1, #2, #4) - Create rating modal with 4 category inputs, calculated overall score, comments textarea, submit button.</task>
+      <task id="13">Integrate Rating with Work Order Detail Page (AC: #21, #22) - Add "Rate Vendor" button when status=COMPLETED AND vendorId exists AND no rating exists. Handle duplicate prevention.</task>
+      <task id="14">Create VendorPerformanceCard Component (AC: #7) - Display overall rating, total jobs, avg completion time, on-time rate, total amount paid.</task>
+      <task id="15">Create RatingDistributionChart Component (AC: #10) - Create Recharts horizontal bar chart for 5-star through 1-star distribution.</task>
+      <task id="16">Create RatingHistoryList Component (AC: #9) - Display paginated rating history with work order link, scores, comments, rated by.</task>
+      <task id="17">Integrate Performance Section into Vendor Detail Page (AC: #7, #9, #10) - Add VendorPerformanceCard, RatingDistributionChart, RatingHistoryList to vendor detail.</task>
+      <task id="18">Create Vendor Ranking Page (AC: #11) - Create /property-manager/vendors/ranking with DataTable, sort by rating, category filter, date range filter.</task>
+      <task id="19">Create Vendor Comparison Page (AC: #13) - Create /property-manager/vendors/compare with side-by-side comparison table for 2-4 vendors.</task>
+      <task id="20">Add Vendor Selection for Comparison (AC: #13) - Add checkbox column to vendor list, "Compare" button when 2+ selected, limit to 4.</task>
+      <task id="21">Update Vendor List with Rating Display (AC: #23) - Add rating column, rating filter, sort by rating option.</task>
+      <task id="22">Implement VendorRatingRecalculationJob (AC: #18) - Create scheduled job running weekly Sunday 2:00 AM to recalculate all vendor ratings.</task>
+      <task id="23">Implement Responsive Design (AC: #24) - Ensure touch-friendly stars, vertical stacking on mobile, card layouts, dark theme support.</task>
+      <task id="24">Write Backend Unit Tests (AC: #25) - Test VendorRatingService, VendorRatingRecalculationJob, VendorRatingController with >= 80% coverage.</task>
+      <task id="25">Write Frontend Unit Tests (AC: #26) - Test StarRatingInput, VendorRatingModal, VendorPerformanceCard, RatingDistributionChart, RatingHistoryList, ranking and comparison pages.</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Vendor Rating Form After Work Order Completion - "Rate Vendor" button on completed work orders with assigned vendor and no existing rating.</criterion>
+    <criterion id="AC2">Rating Form Structure - Quality, Timeliness, Communication, Professionalism (1-5 stars each), comments textarea, calculated overall rating.</criterion>
+    <criterion id="AC3">Star Rating Input Component - Reusable component with click, hover, keyboard navigation, accessibility, data-testid.</criterion>
+    <criterion id="AC4">Rating Submission - POST /api/v1/work-orders/{id}/vendor-rating, success/error handling, update vendor rating.</criterion>
+    <criterion id="AC5">Backend VendorRating Entity - JPA entity with all required fields, relationships, constraints, indexes.</criterion>
+    <criterion id="AC6">Overall Rating Calculation - vendor.rating = AVG(all VendorRating.overallScore), 2 decimal places.</criterion>
+    <criterion id="AC7">Performance Metrics on Vendor Detail Page - Card with rating, jobs completed, avg completion time, on-time rate, total paid.</criterion>
+    <criterion id="AC8">Performance Metrics Calculation - Calculated from work_orders table, handle division by zero.</criterion>
+    <criterion id="AC9">Rating History Section - Paginated list with work order link, scores, comments, rated by, sorted by date DESC.</criterion>
+    <criterion id="AC10">Rating Distribution Chart - Horizontal bar chart showing 5-star through 1-star counts and percentages.</criterion>
+    <criterion id="AC11">Vendor Ranking Dashboard Page - /property-manager/vendors/ranking with sortable table, filters.</criterion>
+    <criterion id="AC12">Top-Rated Vendors API - GET /api/v1/vendors/top-rated with category filter, limit parameter.</criterion>
+    <criterion id="AC13">Vendor Comparison Feature - Select 2-4 vendors, compare page with side-by-side metrics.</criterion>
+    <criterion id="AC14">Backend API Endpoints - All rating and performance endpoints with PROPERTY_MANAGER/MAINTENANCE_SUPERVISOR role requirement.</criterion>
+    <criterion id="AC15">Performance and Rating DTOs - VendorRatingRequestDto, VendorRatingDto, VendorPerformanceDto, VendorComparisonDto, VendorRatingMapper.</criterion>
+    <criterion id="AC16">VendorRating Service Layer - Interface and implementation with all business logic methods.</criterion>
+    <criterion id="AC17">VendorRating Repository and Migration - Repository with custom queries, Flyway migration V34.</criterion>
+    <criterion id="AC18">Scheduled Job for Rating Recalculation - Weekly job (Sunday 2:00 AM) to ensure rating consistency.</criterion>
+    <criterion id="AC19">TypeScript Types and Frontend Services - types/vendor-ratings.ts, lib/validations/vendor-rating.ts, services/vendor-ratings.service.ts.</criterion>
+    <criterion id="AC20">React Query Hooks for Ratings - hooks/useVendorRatings.ts with query and mutation hooks, cache invalidation.</criterion>
+    <criterion id="AC21">Integration with Work Order Detail Page - "Rate Vendor" button visibility logic, modal integration.</criterion>
+    <criterion id="AC22">Prevent Duplicate Ratings - Unique constraint, 409 Conflict response, allow UPDATE within 7 days.</criterion>
+    <criterion id="AC23">Rating Impact on Vendor List and Assignment - Rating column in list, filter by rating, show in assignment dropdowns.</criterion>
+    <criterion id="AC24">Responsive Design for Rating Components - Touch-friendly, mobile layouts, dark theme support.</criterion>
+    <criterion id="AC25">Backend Unit Tests - >= 80% coverage for new code, test edge cases.</criterion>
+    <criterion id="AC26">Frontend Unit Tests - Test all components with React Testing Library.</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>3.5.3 Performance Management</section>
+        <snippet>SLA compliance monitoring, job completion metrics, quality scores, response time analysis, cost effectiveness tracking, vendor ranking system.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Vendor Performance Scoring</section>
+        <snippet>Overall Rating = (Quality * 0.4) + (Timeliness * 0.3) + (Communication * 0.2) + (Cost * 0.1). Algorithm aggregates vendor ratings across multiple dimensions.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Database Schema - vendor_ratings</section>
+        <snippet>vendor_ratings table with vendor_id, work_order_id, rating, quality_score, timeliness_score, communication_score, comments, rated_by, created_at columns.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>REST API Conventions</section>
+        <snippet>Base URL /api/v1, endpoints use plural nouns kebab-case. Status codes: 201 Created for POST, 409 Conflict for duplicates.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Testing Requirements</section>
+        <snippet>Backend: JUnit 5, Mockito, TestContainers. Frontend: Vitest, React Testing Library. >= 80% coverage target.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-5-vendor-management.md</path>
+        <title>Epic 5: Vendor Management</title>
+        <section>Story 5.3: Vendor Performance Tracking and Rating</section>
+        <snippet>Performance metrics include overall rating (1-5 stars), total jobs completed, average completion time, on-time completion rate, total amount paid.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Vendor.java</path>
+        <kind>entity</kind>
+        <symbol>Vendor</symbol>
+        <lines>1-316</lines>
+        <reason>Vendor entity with rating field (BigDecimal 0-5), totalJobsCompleted counter. Must update rating on new VendorRating submission.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/WorkOrder.java</path>
+        <kind>entity</kind>
+        <symbol>WorkOrder</symbol>
+        <lines>1-355</lines>
+        <reason>WorkOrder entity with status, assignedTo, completedAt, scheduledDate, actualCost fields needed for rating eligibility and metrics calculation.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/enums/VendorStatus.java</path>
+        <kind>enum</kind>
+        <symbol>VendorStatus</symbol>
+        <reason>VendorStatus enum (ACTIVE, INACTIVE, SUSPENDED) - only ACTIVE vendors shown in ranking.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/enums/WorkOrderStatus.java</path>
+        <kind>enum</kind>
+        <symbol>WorkOrderStatus</symbol>
+        <reason>WorkOrderStatus enum - rating only allowed when status is COMPLETED.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/VendorService.java</path>
+        <kind>interface</kind>
+        <symbol>VendorService</symbol>
+        <lines>1-92</lines>
+        <reason>VendorService interface - add methods for updateVendorRating() to be called after rating submission.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/impl/VendorServiceImpl.java</path>
+        <kind>service</kind>
+        <symbol>VendorServiceImpl</symbol>
+        <reason>VendorServiceImpl - implementation patterns to follow for VendorRatingServiceImpl.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/repository/VendorRepository.java</path>
+        <kind>repository</kind>
+        <symbol>VendorRepository</symbol>
+        <reason>VendorRepository - patterns for custom queries, filtering by status.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/repository/WorkOrderRepository.java</path>
+        <kind>repository</kind>
+        <symbol>WorkOrderRepository</symbol>
+        <reason>WorkOrderRepository - need queries for completed work orders by vendor for metrics calculation.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/controller/VendorController.java</path>
+        <kind>controller</kind>
+        <symbol>VendorController</symbol>
+        <reason>VendorController - add GET /performance, GET /ratings, GET /top-rated, GET /compare endpoints.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/controller/WorkOrderController.java</path>
+        <kind>controller</kind>
+        <symbol>WorkOrderController</symbol>
+        <reason>WorkOrderController - add POST /work-orders/{id}/vendor-rating endpoint.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/mapper/VendorMapper.java</path>
+        <kind>mapper</kind>
+        <symbol>VendorMapper</symbol>
+        <reason>VendorMapper - MapStruct pattern to follow for VendorRatingMapper.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/vendors.ts</path>
+        <kind>types</kind>
+        <symbol>Vendor, VendorListItem, VendorDetail</symbol>
+        <lines>1-348</lines>
+        <reason>Existing vendor types. VendorDetail has rating field. Add VendorRating types to new file.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/work-orders.ts</path>
+        <kind>types</kind>
+        <symbol>WorkOrder, WorkOrderStatus</symbol>
+        <lines>1-323</lines>
+        <reason>WorkOrder types - use status to determine rating button visibility.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/vendors.service.ts</path>
+        <kind>service</kind>
+        <symbol>vendorsService</symbol>
+        <lines>1-395</lines>
+        <reason>Pattern for API service methods with apiClient, comprehensive JSDoc, error handling.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/work-orders.service.ts</path>
+        <kind>service</kind>
+        <symbol>workOrdersService</symbol>
+        <reason>Work orders service - add submitVendorRating method, check rating exists method.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/hooks/useVendors.ts</path>
+        <kind>hook</kind>
+        <symbol>useVendors</symbol>
+        <reason>React Query hook pattern to follow for useVendorRatings hooks.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/lib/validations/vendor.ts</path>
+        <kind>validation</kind>
+        <symbol>vendorSchema</symbol>
+        <reason>Zod validation pattern to follow for vendorRatingSchema.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/app/(dashboard)/property-manager/vendors/page.tsx</path>
+        <kind>page</kind>
+        <symbol>VendorsPage</symbol>
+        <reason>Vendor list page - add rating column, filter by rating, checkbox for comparison.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/components/vendors/VendorForm.tsx</path>
+        <kind>component</kind>
+        <symbol>VendorForm</symbol>
+        <reason>Form component pattern to follow for VendorRatingModal.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <backend>
+        <dependency name="spring-boot-starter-web" version="3.4.x">Spring MVC REST</dependency>
+        <dependency name="spring-boot-starter-data-jpa" version="3.4.x">JPA/Hibernate ORM</dependency>
+        <dependency name="spring-boot-starter-validation" version="3.4.x">Bean Validation</dependency>
+        <dependency name="mapstruct" version="1.5.x">DTO mapping</dependency>
+        <dependency name="lombok" version="1.18.x">Boilerplate reduction</dependency>
+        <dependency name="postgresql" version="42.x">PostgreSQL driver</dependency>
+        <dependency name="flyway-core" version="10.x">Database migrations</dependency>
+        <dependency name="junit-jupiter" version="5.x">Unit testing</dependency>
+        <dependency name="mockito" version="5.x">Mocking framework</dependency>
+      </backend>
+      <frontend>
+        <dependency name="react" version="19.x">React framework</dependency>
+        <dependency name="next" version="15.x">Next.js framework</dependency>
+        <dependency name="@tanstack/react-query" version="5.x">Data fetching and caching</dependency>
+        <dependency name="react-hook-form" version="7.x">Form management</dependency>
+        <dependency name="zod" version="3.x">Schema validation</dependency>
+        <dependency name="recharts" version="2.10.x">Charts (rating distribution)</dependency>
+        <dependency name="lucide-react" version="0.263.x">Icons (Star icon for ratings)</dependency>
+        <dependency name="@radix-ui/react-dialog" version="latest">Modal primitives</dependency>
+        <dependency name="date-fns" version="3.x">Date formatting</dependency>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint id="1">Rating Entity: One rating per work order (unique constraint on work_order_id). All 4 category scores required (1-5). Comments optional, max 500 chars.</constraint>
+    <constraint id="2">Rating Eligibility: Can only rate COMPLETED work orders. Can only rate if vendor was assigned. Rating update allowed within 7 days of original rating.</constraint>
+    <constraint id="3">Performance Calculation: totalJobsCompleted = COUNT(work_orders WHERE vendor_id AND status=COMPLETED). averageCompletionTime = AVG(completed_at - created_at). onTimeRate = COUNT(completed_at &lt;= scheduled_date) / total * 100. totalAmountPaid = SUM(actual_cost). Handle division by zero.</constraint>
+    <constraint id="4">Vendor Comparison: Minimum 2 vendors, maximum 4. Only ACTIVE vendors can be compared. Highlight best value in each metric.</constraint>
+    <constraint id="5">API Security: All endpoints require PROPERTY_MANAGER or MAINTENANCE_SUPERVISOR role. Use @PreAuthorize annotations.</constraint>
+    <constraint id="6">Data-testid Convention: All interactive elements MUST have data-testid. Convention: {component}-{element}-{action}. Examples: btn-rate-vendor, form-vendor-rating, input-star-rating-quality.</constraint>
+    <constraint id="7">Mobile Responsiveness: Touch targets >= 44x44px. Stars must be touch-friendly. Performance card stacks vertically on mobile. Tables convert to card layout. Support dark theme.</constraint>
+    <constraint id="8">Database Migration: Next migration is V34__create_vendor_ratings_table.sql. Follow existing naming conventions.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>POST /api/v1/work-orders/{id}/vendor-rating</name>
+      <kind>REST endpoint</kind>
+      <signature>Request: {qualityScore: 1-5, timelinessScore: 1-5, communicationScore: 1-5, professionalismScore: 1-5, comments?: string}. Response: 201 Created with VendorRatingDto. 409 Conflict if rating exists.</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/WorkOrderController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/vendors/{id}/performance</name>
+      <kind>REST endpoint</kind>
+      <signature>Response: VendorPerformanceDto {vendorId, overallRating, totalJobsCompleted, averageCompletionTime, onTimeCompletionRate, totalAmountPaid, ratingDistribution}</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/vendors/{id}/ratings</name>
+      <kind>REST endpoint</kind>
+      <signature>Query: page, size. Response: Page of VendorRatingDto with workOrderNumber, scores, comments, ratedBy, ratedAt.</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/vendors/top-rated</name>
+      <kind>REST endpoint</kind>
+      <signature>Query: category (optional), limit (default 10, max 50). Response: List of VendorListDto sorted by rating DESC.</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/vendors/compare</name>
+      <kind>REST endpoint</kind>
+      <signature>Query: ids=uuid1,uuid2,uuid3. Response: VendorComparisonDto with list of vendors and their performance metrics.</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorController.java</path>
+    </interface>
+    <interface>
+      <name>VendorRatingService</name>
+      <kind>interface</kind>
+      <signature>submitRating(UUID workOrderId, VendorRatingRequestDto dto), getRatingsByVendorId(UUID vendorId, Pageable), getVendorPerformance(UUID vendorId), getTopRatedVendors(ServiceCategory, int), getVendorsComparison(List&lt;UUID&gt;)</signature>
+      <path>backend/src/main/java/com/ultrabms/service/VendorRatingService.java</path>
+    </interface>
+    <interface>
+      <name>VendorRatingRepository</name>
+      <kind>repository</kind>
+      <signature>findByVendorIdOrderByRatedAtDesc(UUID, Pageable), findByWorkOrderId(UUID), existsByWorkOrderId(UUID), @Query calculateAverageRatingByVendorId(UUID)</signature>
+      <path>backend/src/main/java/com/ultrabms/repository/VendorRatingRepository.java</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Backend: JUnit 5 with Mockito for unit tests. Use @WebMvcTest for controller tests, @DataJpaTest for repository tests. Target >= 80% code coverage for new code. Frontend: Vitest with React Testing Library. Test user interactions, form validation, loading/error states, keyboard navigation for star rating. Use data-testid attributes for element selection.</standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/VendorRatingServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/controller/VendorRatingControllerTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/scheduler/VendorRatingRecalculationJobTest.java</location>
+      <location>frontend/src/components/vendors/__tests__/StarRatingInput.test.tsx</location>
+      <location>frontend/src/components/vendors/__tests__/VendorRatingModal.test.tsx</location>
+      <location>frontend/src/components/vendors/__tests__/VendorPerformanceCard.test.tsx</location>
+      <location>frontend/src/components/vendors/__tests__/RatingDistributionChart.test.tsx</location>
+      <location>frontend/src/components/vendors/__tests__/RatingHistoryList.test.tsx</location>
+      <location>frontend/src/app/(dashboard)/property-manager/vendors/__tests__/ranking.test.tsx</location>
+      <location>frontend/src/app/(dashboard)/property-manager/vendors/__tests__/compare.test.tsx</location>
+    </locations>
+    <ideas>
+      <idea acId="AC4">Test submitRating success, test duplicate rating returns 409, test rating for non-COMPLETED work order fails, test rating without vendor assigned fails.</idea>
+      <idea acId="AC6">Test average rating calculation with 0 ratings, 1 rating, multiple ratings. Verify 2 decimal precision.</idea>
+      <idea acId="AC8">Test performance metrics calculation, test division by zero handling (show N/A), verify on-time rate percentage.</idea>
+      <idea acId="AC18">Test scheduled job executes, test vendor ratings are recalculated correctly.</idea>
+      <idea acId="AC3">Test StarRatingInput click selects rating, test hover preview, test keyboard navigation (arrow keys, Enter), test accessibility labels.</idea>
+      <idea acId="AC2">Test VendorRatingModal form validation, test overall score calculation displays average, test comments character limit.</idea>
+      <idea acId="AC21">Test "Rate Vendor" button visible only when conditions met, test button hidden after rating submitted.</idea>
+      <idea acId="AC13">Test vendor selection checkbox, test "Compare" button appears with 2+ selected, test navigation to compare page, test 4 vendor limit.</idea>
+    </ideas>
+  </tests>
+</story-context>

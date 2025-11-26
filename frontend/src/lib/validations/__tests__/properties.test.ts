@@ -31,6 +31,7 @@ describe('Property Validation Schemas', () => {
         address: '123 Main St',
         propertyType: PropertyType.RESIDENTIAL,
         totalUnitsCount: 10,
+        amenities: [],
       };
 
       const result = createPropertySchema.safeParse(invalidData);
@@ -52,6 +53,7 @@ describe('Property Validation Schemas', () => {
         address: 'A'.repeat(501),
         propertyType: PropertyType.RESIDENTIAL,
         totalUnitsCount: 10,
+        amenities: [],
       };
 
       const result = createPropertySchema.safeParse(invalidData);
@@ -73,6 +75,7 @@ describe('Property Validation Schemas', () => {
         address: '123 Main St, Dubai',
         propertyType: PropertyType.RESIDENTIAL,
         totalUnitsCount: 0,
+        amenities: [],
       };
 
       const result = createPropertySchema.safeParse(invalidData);
@@ -95,6 +98,7 @@ describe('Property Validation Schemas', () => {
         propertyType: PropertyType.RESIDENTIAL,
         totalUnitsCount: 10,
         yearBuilt: 1799,
+        amenities: [],
       };
 
       const result = createPropertySchema.safeParse(invalidData);
@@ -118,6 +122,7 @@ describe('Property Validation Schemas', () => {
         propertyType: PropertyType.RESIDENTIAL,
         totalUnitsCount: 10,
         yearBuilt: futureYear,
+        amenities: [],
       };
 
       const result = createPropertySchema.safeParse(invalidData);
@@ -130,6 +135,7 @@ describe('Property Validation Schemas', () => {
         address: '123 Main Street, Dubai',
         propertyType: PropertyType.RESIDENTIAL,
         totalUnitsCount: 10,
+        amenities: [],
       };
 
       const result = createPropertySchema.safeParse(validData);
@@ -142,6 +148,7 @@ describe('Property Validation Schemas', () => {
         address: '123 Main St, Dubai',
         propertyType: PropertyType.RESIDENTIAL,
         totalUnitsCount: 10001,
+        amenities: [],
       };
 
       const result = createPropertySchema.safeParse(invalidData);

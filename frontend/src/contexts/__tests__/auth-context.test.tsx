@@ -278,8 +278,10 @@ describe('AuthContext', () => {
         expect(authApi.register).toHaveBeenCalledWith({
           email: 'new@example.com',
           password: 'password123',
+          confirmPassword: 'password123',
           firstName: 'John',
           lastName: 'Doe',
+          termsAccepted: true,
         });
       });
     });

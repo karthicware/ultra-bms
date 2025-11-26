@@ -14,7 +14,7 @@ import type {
   ExternalVendorAssignee,
   AssigneeOption,
   InternalStaffListResponse,
-  VendorListResponse
+  AssignmentVendorListResponse
 } from '@/types/work-order-assignment';
 
 // ============================================================================
@@ -81,7 +81,7 @@ export async function getExternalVendorsForAssignment(
       params.serviceCategory = serviceCategory;
     }
 
-    const response = await apiClient.get<VendorListResponse>(
+    const response = await apiClient.get<AssignmentVendorListResponse>(
       '/v1/vendors',
       { params }
     );

@@ -78,7 +78,8 @@ describe('StartWorkDialog', () => {
       />
     );
 
-    expect(screen.getByText('Start Work')).toBeInTheDocument();
+    // Title appears in both dialog header and button, so query the heading specifically
+    expect(screen.getByRole('heading', { name: /start work/i })).toBeInTheDocument();
   });
 
   it('should display work order summary with title and property', () => {

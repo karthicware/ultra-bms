@@ -112,7 +112,7 @@ export const updatePropertySchema = z
     managerId: managerIdSchema,
     yearBuilt: yearBuiltSchema,
     totalSquareFootage: squareFootageSchema,
-    amenities: amenitiesSchema,
+    amenities: amenitiesSchema.optional(),
     status: z.nativeEnum(PropertyStatus).optional(),
   })
   .refine(

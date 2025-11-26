@@ -534,7 +534,7 @@ import type {
   InternalStaffAssignee,
   ExternalVendorAssignee,
   InternalStaffListResponse,
-  VendorListResponse,
+  AssignmentVendorListResponse,
   UnassignedWorkOrderFilters
 } from '@/types/work-order-assignment';
 
@@ -680,12 +680,12 @@ export async function getInternalStaffForAssignment(): Promise<InternalStaffList
  */
 export async function getExternalVendorsForAssignment(
   serviceCategory?: string
-): Promise<VendorListResponse> {
+): Promise<AssignmentVendorListResponse> {
   const params: Record<string, any> = { status: 'ACTIVE' };
   if (serviceCategory) {
     params.serviceCategory = serviceCategory;
   }
-  const response = await apiClient.get<VendorListResponse>(
+  const response = await apiClient.get<AssignmentVendorListResponse>(
     '/v1/vendors',
     { params }
   );

@@ -1,0 +1,554 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>1</storyId>
+    <title>Vendor Registration and Profile Management</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-26</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-5/5-1-vendor-registration-and-profile-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>property manager</asA>
+    <iWant>to register and manage vendor profiles</iWant>
+    <soThat>I have a reliable network of service providers for maintenance work</soThat>
+    <tasks>
+      <task id="1" ac="#26">Define TypeScript Types, Enums, and Zod Schemas
+        <subtask>Create types/vendors.ts with Vendor, VendorListItem, VendorRequest, VendorFilter interfaces</subtask>
+        <subtask>Define enums: VendorStatus (ACTIVE, INACTIVE, SUSPENDED), PaymentTerms (NET_15, NET_30, NET_45, NET_60), ServiceCategory (PLUMBING, ELECTRICAL, HVAC, APPLIANCE, CARPENTRY, PEST_CONTROL, CLEANING, PAINTING, LANDSCAPING, OTHER)</subtask>
+        <subtask>Create lib/validations/vendor.ts with vendorSchema, vendorFilterSchema using Zod</subtask>
+        <subtask>Add E.164 phone validation regex, UAE TRN validation regex</subtask>
+        <subtask>Export types from types/index.ts</subtask>
+      </task>
+      <task id="2" ac="#26,#27">Create Frontend Vendor Service
+        <subtask>Create services/vendors.service.ts with API methods</subtask>
+        <subtask>Implement getVendors(filters, pagination) with query params</subtask>
+        <subtask>Implement getVendorById(id), createVendor(data), updateVendor(id, data)</subtask>
+        <subtask>Implement updateVendorStatus(id, status), deleteVendor(id)</subtask>
+        <subtask>Implement getVendorWorkOrders(id, pagination)</subtask>
+        <subtask>Add proper error handling and response typing</subtask>
+      </task>
+      <task id="3" ac="#27">Create React Query Hooks
+        <subtask>Create hooks/useVendors.ts with all vendor hooks</subtask>
+        <subtask>Implement useVendors(filters) with pagination support</subtask>
+        <subtask>Implement useVendor(id) for single vendor detail</subtask>
+        <subtask>Implement mutation hooks: useCreateVendor, useUpdateVendor, useUpdateVendorStatus, useDeleteVendor</subtask>
+        <subtask>Add cache invalidation on mutations</subtask>
+      </task>
+      <task id="4" ac="#20">Create Backend Vendor Entity and Enums
+        <subtask>Create VendorStatus enum (ACTIVE, INACTIVE, SUSPENDED)</subtask>
+        <subtask>Create PaymentTerms enum (NET_15, NET_30, NET_45, NET_60)</subtask>
+        <subtask>Create ServiceCategory enum with all categories</subtask>
+        <subtask>Create Vendor JPA entity with all fields</subtask>
+        <subtask>Add JSON column handling for serviceCategories and serviceAreas arrays</subtask>
+        <subtask>Add audit fields (createdAt, updatedAt, isDeleted, deletedAt, deletedBy)</subtask>
+        <subtask>Add validation annotations (@NotNull, @Size, @Email, etc.)</subtask>
+      </task>
+      <task id="5" ac="#24">Create Database Migration
+        <subtask>Create Flyway migration V33__create_vendors_table.sql</subtask>
+        <subtask>Define vendors table with all columns</subtask>
+        <subtask>Add indexes: idx_vendors_company_name, idx_vendors_email, idx_vendors_status</subtask>
+        <subtask>Add GIN index on service_categories for JSON array searching</subtask>
+        <subtask>Add unique constraint on email (for non-deleted vendors)</subtask>
+        <subtask>Add unique constraint on vendor_number</subtask>
+        <subtask>Create sequence for vendor number generation</subtask>
+      </task>
+      <task id="6" ac="#24">Create Vendor Repository
+        <subtask>Create VendorRepository extending JpaRepository</subtask>
+        <subtask>Add findByEmail(String email) query method</subtask>
+        <subtask>Add findByVendorNumber(String vendorNumber) query method</subtask>
+        <subtask>Add existsByEmailAndIdNot(String email, UUID id) for update validation</subtask>
+        <subtask>Add custom query for filtering by status and service category</subtask>
+        <subtask>Add @Query for vendor search (company name, contact person, vendor number)</subtask>
+      </task>
+      <task id="7" ac="#22">Create Vendor DTOs and Mapper
+        <subtask>Create VendorRequestDto for create/update requests</subtask>
+        <subtask>Create VendorDto for basic vendor info responses</subtask>
+        <subtask>Create VendorListDto for list view (minimal fields)</subtask>
+        <subtask>Create VendorDetailDto with full info + metrics</subtask>
+        <subtask>Create VendorMapper using MapStruct</subtask>
+        <subtask>Add custom mapping for serviceCategories (JSON to List)</subtask>
+      </task>
+      <task id="8" ac="#23">Implement Vendor Service Layer
+        <subtask>Create VendorService interface with all methods</subtask>
+        <subtask>Create VendorServiceImpl with @Service annotation</subtask>
+        <subtask>Implement createVendor with vendor number generation</subtask>
+        <subtask>Implement email uniqueness validation</subtask>
+        <subtask>Implement getVendorById, getAllVendors with filters</subtask>
+        <subtask>Implement updateVendor with validation</subtask>
+        <subtask>Implement updateVendorStatus with transition validation</subtask>
+        <subtask>Implement deleteVendor (soft delete)</subtask>
+        <subtask>Implement getVendorWorkOrders</subtask>
+        <subtask>Add audit logging for status changes</subtask>
+      </task>
+      <task id="9" ac="#12">Implement Vendor Number Generation
+        <subtask>Create generateVendorNumber() method in service</subtask>
+        <subtask>Format: VND-{YYYY}-{NNNN}</subtask>
+        <subtask>Use database sequence or atomic counter</subtask>
+        <subtask>Handle year rollover (reset sequence each year)</subtask>
+        <subtask>Ensure uniqueness under concurrent requests</subtask>
+      </task>
+      <task id="10" ac="#21">Implement Vendor Controller
+        <subtask>Create VendorController with @RestController</subtask>
+        <subtask>Implement POST /api/v1/vendors (create)</subtask>
+        <subtask>Implement GET /api/v1/vendors (list with filters)</subtask>
+        <subtask>Implement GET /api/v1/vendors/{id} (detail)</subtask>
+        <subtask>Implement PUT /api/v1/vendors/{id} (update)</subtask>
+        <subtask>Implement PATCH /api/v1/vendors/{id}/status (status change)</subtask>
+        <subtask>Implement DELETE /api/v1/vendors/{id} (soft delete)</subtask>
+        <subtask>Implement GET /api/v1/vendors/{id}/work-orders (work order history)</subtask>
+        <subtask>Add @PreAuthorize for all endpoints</subtask>
+        <subtask>Add proper response status codes</subtask>
+      </task>
+      <task id="11" ac="#1,#2,#3,#4">Create Vendor List Page
+        <subtask>Create app/(dashboard)/property-manager/vendors/page.tsx</subtask>
+        <subtask>Implement shadcn DataTable with server-side pagination</subtask>
+        <subtask>Add columns: Vendor Number, Company Name, Contact Person, Categories, Rating, Status, Actions</subtask>
+        <subtask>Add search input for company name, contact person, vendor number</subtask>
+        <subtask>Add filter controls: status, service category, rating</subtask>
+        <subtask>Add "Add Vendor" button with navigation</subtask>
+        <subtask>Implement mobile card layout</subtask>
+        <subtask>Add data-testid to all elements</subtask>
+        <subtask>Add to main navigation menu</subtask>
+      </task>
+      <task id="12" ac="#5,#6,#7,#8,#9,#10,#11">Create Vendor Registration Form Component
+        <subtask>Create components/vendors/VendorForm.tsx reusable form component</subtask>
+        <subtask>Implement React Hook Form with vendorSchema</subtask>
+        <subtask>Create Company Information section with fields</subtask>
+        <subtask>Create Contact Information section with fields</subtask>
+        <subtask>Create Service Information section with multi-select</subtask>
+        <subtask>Create Payment Information section with fields</subtask>
+        <subtask>Add inline validation error display</subtask>
+        <subtask>Add submit and cancel buttons</subtask>
+        <subtask>Handle form submission with loading state</subtask>
+        <subtask>Add data-testid to all form elements</subtask>
+      </task>
+      <task id="13" ac="#5,#11">Create Vendor Registration Page
+        <subtask>Create app/(dashboard)/property-manager/vendors/new/page.tsx</subtask>
+        <subtask>Integrate VendorForm component</subtask>
+        <subtask>Add page title and breadcrumb</subtask>
+        <subtask>Handle form submission with useCreateVendor hook</subtask>
+        <subtask>Navigate to detail page on success</subtask>
+        <subtask>Show success/error toasts</subtask>
+        <subtask>Add data-testid="page-vendor-registration"</subtask>
+      </task>
+      <task id="14" ac="#13,#14,#18,#19">Create Vendor Detail Page
+        <subtask>Create app/(dashboard)/property-manager/vendors/[id]/page.tsx</subtask>
+        <subtask>Implement header with vendor number, name, status, actions</subtask>
+        <subtask>Create Company Information card</subtask>
+        <subtask>Create Contact Information card</subtask>
+        <subtask>Create Service Information card with category badges</subtask>
+        <subtask>Create Payment Information card</subtask>
+        <subtask>Create Performance Metrics card</subtask>
+        <subtask>Create Work Order History section with table</subtask>
+        <subtask>Add action buttons: Edit, Change Status, Delete</subtask>
+        <subtask>Implement status change confirmation dialog</subtask>
+        <subtask>Implement delete confirmation dialog</subtask>
+        <subtask>Add data-testid to all elements</subtask>
+      </task>
+      <task id="15" ac="#15">Create Vendor Edit Page
+        <subtask>Create app/(dashboard)/property-manager/vendors/[id]/edit/page.tsx</subtask>
+        <subtask>Pre-populate VendorForm with existing data</subtask>
+        <subtask>Display vendor number as read-only badge</subtask>
+        <subtask>Handle form submission with useUpdateVendor hook</subtask>
+        <subtask>Navigate to detail page on success</subtask>
+        <subtask>Add cancel button returning to detail page</subtask>
+        <subtask>Add data-testid="page-vendor-edit"</subtask>
+      </task>
+      <task id="16" ac="#14,#16">Implement Status Management Flow
+        <subtask>Create status change dropdown with options based on current status</subtask>
+        <subtask>Implement confirmation dialog with consequence message</subtask>
+        <subtask>Call PATCH /api/v1/vendors/{id}/status on confirm</subtask>
+        <subtask>Update UI optimistically</subtask>
+        <subtask>Show success toast</subtask>
+        <subtask>Create audit log entry in backend</subtask>
+      </task>
+      <task id="17" ac="#17">Implement Soft Delete Flow
+        <subtask>Create delete confirmation dialog</subtask>
+        <subtask>Call DELETE /api/v1/vendors/{id} on confirm</subtask>
+        <subtask>Redirect to vendor list on success</subtask>
+        <subtask>Show success toast</subtask>
+        <subtask>Backend sets isDeleted, deletedAt, deletedBy</subtask>
+      </task>
+      <task id="18" ac="#28">Implement Responsive Design
+        <subtask>Test vendor list on mobile: card layout</subtask>
+        <subtask>Test vendor form on mobile: single column, full-width</subtask>
+        <subtask>Test vendor detail on mobile: stacked cards</subtask>
+        <subtask>Ensure touch targets >= 44x44px</subtask>
+        <subtask>Test dark theme support</subtask>
+        <subtask>Test filter drawer on mobile</subtask>
+      </task>
+      <task id="19" ac="#29">Add Accessibility Features
+        <subtask>Add data-testid to all interactive elements</subtask>
+        <subtask>Implement keyboard navigation</subtask>
+        <subtask>Add ARIA labels to icon buttons</subtask>
+        <subtask>Add aria-describedby for form hints</subtask>
+        <subtask>Add aria-live for error announcements</subtask>
+        <subtask>Verify color contrast >= 4.5:1</subtask>
+        <subtask>Add focus indicators</subtask>
+      </task>
+      <task id="20" ac="#30">Write Backend Unit Tests
+        <subtask>Create VendorServiceTest with test cases</subtask>
+        <subtask>Test createVendor: success, duplicate email, validation errors</subtask>
+        <subtask>Test updateVendor: success, validation errors</subtask>
+        <subtask>Test updateVendorStatus: valid transitions, invalid transitions</subtask>
+        <subtask>Test deleteVendor: soft delete verification</subtask>
+        <subtask>Test generateVendorNumber: format, uniqueness</subtask>
+        <subtask>Create VendorControllerTest for endpoints</subtask>
+        <subtask>Achieve >= 80% code coverage</subtask>
+      </task>
+      <task id="21" ac="">Write Frontend Unit Tests
+        <subtask>Test VendorForm component with React Testing Library</subtask>
+        <subtask>Test form validation errors display</subtask>
+        <subtask>Test service category multi-select</subtask>
+        <subtask>Test vendor list table rendering</subtask>
+        <subtask>Test filter controls functionality</subtask>
+        <subtask>Test confirmation dialogs</subtask>
+        <subtask>Test React Query hooks with MSW</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Vendor list page accessible at /property-manager/vendors for users with PROPERTY_MANAGER or MAINTENANCE_SUPERVISOR roles. Page displays searchable and filterable list of all vendors. Main navigation includes "Vendors" menu item. Page has data-testid="page-vendors-list".</ac>
+    <ac id="2">shadcn DataTable displays vendors with columns: Vendor Number (sortable), Company Name (sortable, primary link), Contact Person, Service Categories (badges, max 3 visible), Rating (1-5 stars, sortable), Status (badge: ACTIVE=green, INACTIVE=gray, SUSPENDED=red), Actions (View, Edit, Toggle Status). Server-side pagination (default 20 per page), sorting, and filtering. Mobile view converts to card layout. Table has data-testid="table-vendors".</ac>
+    <ac id="3">Search input searches across: company name, contact person name, vendor number. Filter controls: Status dropdown (ALL, ACTIVE, INACTIVE, SUSPENDED), Service Category multi-select, Rating filter (Any, 4+ stars, 3+ stars). Clear filters button resets all filters. Filters persist in URL query params.</ac>
+    <ac id="4">"Add Vendor" button (shadcn Button, primary variant, Plus icon) displayed prominently on vendor list page. Button navigates to /property-manager/vendors/new registration page. Button disabled if user lacks PROPERTY_MANAGER role. Button has data-testid="btn-add-vendor".</ac>
+    <ac id="5">Registration page at /property-manager/vendors/new with form sections: (1) Company Information, (2) Contact Information, (3) Service Information, (4) Payment Information. Page title: "Register New Vendor". Breadcrumb: Vendors > New Vendor. Form uses React Hook Form with vendorSchema validation. Page has data-testid="page-vendor-registration".</ac>
+    <ac id="6">Company Information Section - Form fields: Company Name (required, max 200 chars), Contact Person Name (required, max 100 chars), Emirates ID or Trade License Number (required, max 50 chars), TRN - Tax Registration Number (optional, 15-digit UAE TRN format). All required fields marked with asterisk (*).</ac>
+    <ac id="7">Contact Information Section - Form fields: Email Address (required, RFC 5322 compliant, validated for uniqueness), Phone Number (required, E.164 format, placeholder "+971XXXXXXXXX"), Secondary Phone Number (optional, E.164 format), Company Address (optional, max 500 chars, textarea). Email duplicate check shows inline error.</ac>
+    <ac id="8">Service Information Section - Form fields: Service Categories (required, multi-select with checkboxes, min 1 selection): PLUMBING, ELECTRICAL, HVAC, APPLIANCE, CARPENTRY, PEST_CONTROL, CLEANING, PAINTING, LANDSCAPING, OTHER. Service Areas (optional, multi-select, populated from properties API).</ac>
+    <ac id="9">Payment Information Section - Form fields: Hourly Rate (required, decimal input, AED currency, min 0, precision 2 decimals), Emergency Callout Fee (optional, decimal input, AED currency), Payment Terms (required, dropdown: NET_15, NET_30, NET_45, NET_60 days, default NET_30). Currency displayed as "AED" prefix or suffix.</ac>
+    <ac id="10">Zod validation schema vendorSchema with all validation rules including E.164 phone regex, UAE TRN format regex. Form shows inline validation errors in red.</ac>
+    <ac id="11">On form submit: validate all fields, disable submit button, show loading spinner. Call POST /api/v1/vendors. On success: redirect to /property-manager/vendors/{id}, show toast "Vendor {companyName} registered successfully!". On error: show toast with error message, keep form data intact.</ac>
+    <ac id="12">Backend generates unique vendor number on creation with format: VND-{YYYY}-{NNNN} where YYYY is current year, NNNN is zero-padded 4-digit sequence (0001-9999). Sequence resets each year. Handle race conditions with database sequence or atomic increment.</ac>
+    <ac id="13">Vendor detail page at /property-manager/vendors/{id} displays all vendor information. Page sections: Header with vendor number, company name, status badge, action buttons; Company/Contact/Service/Payment Information cards; Performance Metrics summary; Work Order History table; Document Status section (placeholder for Story 5.2).</ac>
+    <ac id="14">Action buttons in header: "Edit" button opens edit page, "Change Status" dropdown with options: Activate, Deactivate, Suspend. Status change shows confirmation dialog. "Delete" button soft deletes vendor with confirmation.</ac>
+    <ac id="15">Edit page at /property-manager/vendors/{id}/edit pre-populates form with current vendor data. Vendor number displayed as read-only badge. On submit: call PUT /api/v1/vendors/{id}. On success: redirect to detail page, show toast.</ac>
+    <ac id="16">Status transitions: ACTIVE → INACTIVE (deactivated), ACTIVE → SUSPENDED (compliance issue), INACTIVE → ACTIVE (reactivated), SUSPENDED → ACTIVE (after resolution). Status change creates audit log entry. Suspended vendors cannot be assigned to work orders.</ac>
+    <ac id="17">DELETE /api/v1/vendors/{id} performs soft delete: set isDeleted = true, deletedAt = now(), deletedBy = current user. Soft-deleted vendors excluded from list queries and cannot be assigned to work orders.</ac>
+    <ac id="18">Vendor detail page includes "Work Order History" section showing all completed work orders assigned to this vendor. Query: GET /api/v1/vendors/{id}/work-orders returns paginated list. Table columns: Work Order #, Property/Unit, Title, Category, Status, Completed Date, Cost. Sort by completedDate DESC.</ac>
+    <ac id="19">Vendor detail page displays performance metrics card: Overall Rating (1-5 stars, numeric value), Total Jobs Completed (integer counter), Average Completion Time (days, placeholder for Story 5.3). Metrics calculated from work order data.</ac>
+    <ac id="20">Create Vendor JPA entity with all specified fields including JSON columns for serviceCategories and serviceAreas, audit fields, validation annotations. Create indexes on companyName, email, status, serviceCategories (GIN index for JSON).</ac>
+    <ac id="21">Implement REST endpoints: POST /api/v1/vendors, GET /api/v1/vendors (list with filters), GET /api/v1/vendors/{id}, PUT /api/v1/vendors/{id}, PATCH /api/v1/vendors/{id}/status, GET /api/v1/vendors/{id}/work-orders, DELETE /api/v1/vendors/{id}. All endpoints require PROPERTY_MANAGER or MAINTENANCE_SUPERVISOR role.</ac>
+    <ac id="22">Create DTOs: VendorRequestDto, VendorDto, VendorListDto, VendorDetailDto. Create VendorMapper using MapStruct for entity-DTO conversion.</ac>
+    <ac id="23">Create VendorService interface and VendorServiceImpl with all required methods. Service handles validation, vendor number generation, email uniqueness check, status transitions, audit logging. Use @Transactional for write operations.</ac>
+    <ac id="24">Create VendorRepository with custom queries. Create Flyway migration V33__create_vendors_table.sql with table DDL, indexes, enum types, constraints, sequence for vendor number generation.</ac>
+    <ac id="25">Email uniqueness validation: check if email already exists (excluding current vendor on update). If duplicate found: return 400 Bad Request. Allow same email for soft-deleted vendors.</ac>
+    <ac id="26">Create TypeScript types/vendors.ts with interfaces and enums. Create lib/validations/vendor.ts with Zod schemas. Create services/vendors.service.ts with all API methods.</ac>
+    <ac id="27">Create React Query hooks in hooks/useVendors.ts: useVendors(filters), useVendor(id), useCreateVendor(), useUpdateVendor(), useUpdateVendorStatus(), useDeleteVendor(). Invalidate ['vendors'] cache on mutations.</ac>
+    <ac id="28">Responsive design: table converts to card layout on mobile, touch targets >= 44x44px, filters collapse into drawer on mobile, single column forms on mobile, dark theme support.</ac>
+    <ac id="29">Accessibility: data-testid attributes on all interactive elements, keyboard navigation, ARIA labels, aria-describedby for hints, aria-live for errors, color contrast >= 4.5:1, focus indicators.</ac>
+    <ac id="30">Backend unit tests: VendorServiceTest covering createVendor, updateVendor, updateVendorStatus, deleteVendor, generateVendorNumber. VendorControllerTest for endpoints. Achieve >= 80% code coverage.</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>3.5 Vendor Management Module</section>
+        <snippet>Vendor onboarding includes company information, service categories, certifications and licenses, insurance documentation, banking details, SLA agreements, and rate cards.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Epic to Architecture Mapping - Vendor Management</section>
+        <snippet>VendorController, VendorService, PerformanceService map to /vendors routes. Database tables: vendors, vendor_services, vendor_certifications, vendor_ratings. External services: Email, SMS.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Implementation Patterns</section>
+        <snippet>Use Spring Data JPA with repository pattern, MapStruct for entity-DTO mapping, Bean Validation annotations. Frontend: React Hook Form + Zod, shadcn/ui components, React Query for data fetching.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Consistency Rules - REST API Conventions</section>
+        <snippet>Base URL: /api/v1, Endpoints: Plural nouns, kebab-case. HTTP Methods: GET retrieve, POST create, PUT full update, PATCH partial update, DELETE remove. Status codes: 200 OK, 201 Created, 204 No Content, 400 Bad Request, 404 Not Found.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Data Architecture - Vendor Management Schema</section>
+        <snippet>vendors table with id, company_name, contact_person, email, phone, trade_license, license_expiry, insurance_number, insurance_expiry, bank_name, account_number, iban, status, rating, timestamps.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-5-vendor-management.md</path>
+        <title>Epic 5: Vendor Management</title>
+        <section>Story 5.1: Vendor Registration and Profile Management</section>
+        <snippet>Vendor entity with UUID id, vendorNumber (VND-2025-0001 format), companyName, contactPersonName, email, phone, serviceCategories (JSON array), status enum, rating decimal, totalJobsCompleted counter.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>frontend/src/types/work-order-assignment.ts</path>
+        <kind>types</kind>
+        <symbol>ExternalVendorAssignee</symbol>
+        <lines>78-89</lines>
+        <reason>Existing vendor type interface for work order assignment - pattern for VendorListItem type. Includes companyName, serviceCategories, rating, contactPerson, status fields.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/work-orders.service.ts</path>
+        <kind>service</kind>
+        <symbol>WorkOrdersService</symbol>
+        <lines>all</lines>
+        <reason>Pattern for vendor service implementation - API client methods, error handling, response typing with axios.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/lib/validations/work-order-assignment.ts</path>
+        <kind>validation</kind>
+        <symbol>assignWorkOrderSchema</symbol>
+        <lines>all</lines>
+        <reason>Pattern for Zod validation schema - form validation with React Hook Form integration.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/components/work-orders/AssignmentDialog.tsx</path>
+        <kind>component</kind>
+        <symbol>AssignmentDialog</symbol>
+        <lines>all</lines>
+        <reason>Pattern for dialog components - shadcn Dialog, form handling, loading states, error display, confirmation flow.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/WorkOrder.java</path>
+        <kind>entity</kind>
+        <symbol>WorkOrder</symbol>
+        <lines>1-356</lines>
+        <reason>Pattern for JPA entity - UUID id, auto-generated number (WO-YYYY-NNNN), JSON columns with @Type(JsonType.class), validation annotations, indexes, BaseEntity extension.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/enums/WorkOrderStatus.java</path>
+        <kind>enum</kind>
+        <symbol>WorkOrderStatus</symbol>
+        <lines>all</lines>
+        <reason>Pattern for status enum - use for VendorStatus enum (ACTIVE, INACTIVE, SUSPENDED).</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/enums/WorkOrderCategory.java</path>
+        <kind>enum</kind>
+        <symbol>WorkOrderCategory</symbol>
+        <lines>all</lines>
+        <reason>Pattern for category enum - use for ServiceCategory enum with same categories.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/controller/WorkOrderController.java</path>
+        <kind>controller</kind>
+        <symbol>WorkOrderController</symbol>
+        <lines>all</lines>
+        <reason>Pattern for REST controller - @RestController, @RequestMapping, @PreAuthorize annotations, response format, exception handling.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/impl/WorkOrderServiceImpl.java</path>
+        <kind>service</kind>
+        <symbol>WorkOrderServiceImpl</symbol>
+        <lines>all</lines>
+        <reason>Pattern for service implementation - @Service, @Transactional, business logic, validation, repository usage.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/repository/WorkOrderRepository.java</path>
+        <kind>repository</kind>
+        <symbol>WorkOrderRepository</symbol>
+        <lines>all</lines>
+        <reason>Pattern for JPA repository - JpaRepository extension, custom @Query annotations, pagination, filtering.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/resources/db/migration/V27__create_work_orders_table.sql</path>
+        <kind>migration</kind>
+        <symbol>V27__create_work_orders_table</symbol>
+        <lines>all</lines>
+        <reason>Pattern for Flyway migration - table creation, indexes, constraints, JSONB columns. Next vendor migration: V33__create_vendors_table.sql</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/dto/workorders/WorkOrderResponseDto.java</path>
+        <kind>dto</kind>
+        <symbol>WorkOrderResponseDto</symbol>
+        <lines>all</lines>
+        <reason>Pattern for response DTO - Java record, @Schema annotations for OpenAPI docs.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/test/java/com/ultrabms/service/WorkOrderServiceTest.java</path>
+        <kind>test</kind>
+        <symbol>WorkOrderServiceTest</symbol>
+        <lines>all</lines>
+        <reason>Pattern for service unit tests - @ExtendWith(MockitoExtension.class), @Mock, @InjectMocks, test methods, assertions.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/app/(dashboard)/property-manager/work-orders/[id]/page.tsx</path>
+        <kind>page</kind>
+        <symbol>WorkOrderDetailPage</symbol>
+        <lines>all</lines>
+        <reason>Pattern for detail page - server component data fetching, layout with cards, action buttons, status badges.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/app/(dashboard)/property-manager/work-orders/unassigned/page.tsx</path>
+        <kind>page</kind>
+        <symbol>UnassignedWorkOrdersPage</symbol>
+        <lines>all</lines>
+        <reason>Pattern for list page - DataTable, filters, search, pagination, mobile responsiveness.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <backend>
+        <framework>Spring Boot 3.4.0</framework>
+        <java>Java 17</java>
+        <orm>Spring Data JPA + Hibernate</orm>
+        <database>PostgreSQL with Flyway migrations</database>
+        <mapper>MapStruct 1.6.3</mapper>
+        <validation>Bean Validation (jakarta.validation)</validation>
+        <json>Hypersistence Utils 3.8.2 for JSONB column support</json>
+        <security>Spring Security with JWT (jjwt 0.12.6)</security>
+        <logging>SLF4J + Logback</logging>
+        <lombok>Lombok 1.18.36</lombok>
+        <testing>JUnit 5, Mockito, Spring Test, JaCoCo (80% coverage)</testing>
+        <email>Spring Mail + Thymeleaf templates</email>
+        <storage>AWS S3 SDK 2.20.26</storage>
+      </backend>
+      <frontend>
+        <framework>Next.js 16.0.2</framework>
+        <react>React 19.2.0</react>
+        <language>TypeScript 5.x</language>
+        <ui>shadcn/ui (Radix UI primitives)</ui>
+        <styling>Tailwind CSS 4.0</styling>
+        <forms>React Hook Form 7.66.0 + @hookform/resolvers 5.2.2</forms>
+        <validation>Zod 4.1.12</validation>
+        <dataFetching>@tanstack/react-query 5.90.9</dataFetching>
+        <table>@tanstack/react-table 8.21.3</table>
+        <http>axios 1.13.2</http>
+        <dates>date-fns 4.1.0</dates>
+        <icons>lucide-react 0.553.0</icons>
+        <toast>sonner 2.0.7</toast>
+        <testing>Jest 30.2.0, React Testing Library 16.3.0, Playwright 1.49.1</testing>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="validation">Email must be RFC 5322 compliant and unique per vendor (excluding soft-deleted vendors)</constraint>
+    <constraint type="validation">Phone numbers must be E.164 format (+971XXXXXXXXX)</constraint>
+    <constraint type="validation">UAE TRN format: 15-digit number (optional field)</constraint>
+    <constraint type="validation">Company name max 200 chars, Contact person max 100 chars, Address max 500 chars</constraint>
+    <constraint type="validation">Hourly rate: decimal, min 0, precision 2 decimals</constraint>
+    <constraint type="validation">Service categories: minimum 1 selection required</constraint>
+    <constraint type="business">Status transitions: ACTIVE↔INACTIVE allowed, ACTIVE↔SUSPENDED allowed, INACTIVE→SUSPENDED not allowed</constraint>
+    <constraint type="business">Suspended vendors cannot be assigned to work orders (enforced in assignment flow)</constraint>
+    <constraint type="business">Soft delete: isDeleted=true, deletedAt=timestamp, deletedBy=userId - excluded from list queries</constraint>
+    <constraint type="business">Vendor number format: VND-{YYYY}-{NNNN} - auto-generated, read-only after creation</constraint>
+    <constraint type="security">Endpoints require PROPERTY_MANAGER or MAINTENANCE_SUPERVISOR role via @PreAuthorize</constraint>
+    <constraint type="testing">Backend tests: minimum 80% code coverage per JaCoCo configuration</constraint>
+    <constraint type="accessibility">All interactive elements must have data-testid attributes</constraint>
+    <constraint type="accessibility">Color contrast minimum 4.5:1, keyboard navigation required</constraint>
+    <constraint type="pattern">Follow existing WorkOrder entity pattern for JPA entity with indexes, JSON columns</constraint>
+    <constraint type="pattern">Use MapStruct for entity-DTO mapping, avoid manual conversion</constraint>
+    <constraint type="pattern">API response format: { success, data, message, timestamp } for success, { success, error: { code, message, field }, timestamp } for errors</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>POST /api/v1/vendors</name>
+      <kind>REST endpoint</kind>
+      <signature>@PostMapping VendorDto createVendor(@Valid @RequestBody VendorRequestDto request)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/vendors</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping Page&lt;VendorListDto&gt; getAllVendors(VendorFilterDto filters, Pageable pageable)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/vendors/{id}</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping("/{id}") VendorDetailDto getVendorById(@PathVariable UUID id)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorController.java</path>
+    </interface>
+    <interface>
+      <name>PUT /api/v1/vendors/{id}</name>
+      <kind>REST endpoint</kind>
+      <signature>@PutMapping("/{id}") VendorDto updateVendor(@PathVariable UUID id, @Valid @RequestBody VendorRequestDto request)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorController.java</path>
+    </interface>
+    <interface>
+      <name>PATCH /api/v1/vendors/{id}/status</name>
+      <kind>REST endpoint</kind>
+      <signature>@PatchMapping("/{id}/status") VendorStatusResponseDto updateVendorStatus(@PathVariable UUID id, @RequestBody UpdateVendorStatusDto request)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorController.java</path>
+    </interface>
+    <interface>
+      <name>DELETE /api/v1/vendors/{id}</name>
+      <kind>REST endpoint</kind>
+      <signature>@DeleteMapping("/{id}") ResponseEntity&lt;Void&gt; deleteVendor(@PathVariable UUID id)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/vendors/{id}/work-orders</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping("/{id}/work-orders") Page&lt;WorkOrderListDto&gt; getVendorWorkOrders(@PathVariable UUID id, Pageable pageable)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/VendorController.java</path>
+    </interface>
+    <interface>
+      <name>VendorService</name>
+      <kind>Java interface</kind>
+      <signature>interface VendorService { VendorDto createVendor(VendorRequestDto); VendorDetailDto getVendorById(UUID); Page&lt;VendorListDto&gt; getAllVendors(VendorFilterDto, Pageable); VendorDto updateVendor(UUID, VendorRequestDto); VendorStatusResponseDto updateVendorStatus(UUID, VendorStatus); void deleteVendor(UUID); Page&lt;WorkOrderListDto&gt; getVendorWorkOrders(UUID, Pageable); }</signature>
+      <path>backend/src/main/java/com/ultrabms/service/VendorService.java</path>
+    </interface>
+    <interface>
+      <name>VendorRepository</name>
+      <kind>JPA Repository</kind>
+      <signature>interface VendorRepository extends JpaRepository&lt;Vendor, UUID&gt; { Optional&lt;Vendor&gt; findByEmail(String); Optional&lt;Vendor&gt; findByVendorNumber(String); boolean existsByEmailAndIdNot(String, UUID); Page&lt;Vendor&gt; findByFilters(VendorFilterDto, Pageable); }</signature>
+      <path>backend/src/main/java/com/ultrabms/repository/VendorRepository.java</path>
+    </interface>
+    <interface>
+      <name>useVendors hook</name>
+      <kind>React Query hook</kind>
+      <signature>function useVendors(filters?: VendorFilter): UseQueryResult&lt;PaginatedResponse&lt;VendorListItem&gt;&gt;</signature>
+      <path>frontend/src/hooks/useVendors.ts</path>
+    </interface>
+    <interface>
+      <name>useCreateVendor hook</name>
+      <kind>React Query mutation</kind>
+      <signature>function useCreateVendor(): UseMutationResult&lt;Vendor, Error, VendorRequest&gt;</signature>
+      <path>frontend/src/hooks/useVendors.ts</path>
+    </interface>
+    <interface>
+      <name>vendorsService</name>
+      <kind>Frontend service</kind>
+      <signature>const vendorsService = { getVendors(filters, pagination): Promise&lt;PaginatedResponse&lt;VendorListItem&gt;&gt;; getVendorById(id): Promise&lt;Vendor&gt;; createVendor(data): Promise&lt;Vendor&gt;; updateVendor(id, data): Promise&lt;Vendor&gt;; updateVendorStatus(id, status): Promise&lt;VendorStatusResponse&gt;; deleteVendor(id): Promise&lt;void&gt;; getVendorWorkOrders(id, pagination): Promise&lt;PaginatedResponse&lt;WorkOrderListItem&gt;&gt;; }</signature>
+      <path>frontend/src/services/vendors.service.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 with Mockito for unit tests, Spring Test for integration tests. Use @ExtendWith(MockitoExtension.class), @Mock for dependencies, @InjectMocks for service under test. Follow Arrange-Act-Assert pattern. JaCoCo enforces minimum 80% line coverage and 70% branch coverage.
+
+      Frontend: Jest 30 with React Testing Library for component tests. Use @testing-library/user-event for user interactions. Test form validation, error states, loading states, and user flows. Playwright 1.49.1 for E2E tests with page object pattern.
+
+      All interactive elements MUST have data-testid attributes following convention: {component}-{element}-{action}. Example: btn-add-vendor, form-vendor-registration, dialog-confirm-delete.
+    </standards>
+    <locations>
+      <backend>backend/src/test/java/com/ultrabms/service/VendorServiceTest.java</backend>
+      <backend>backend/src/test/java/com/ultrabms/controller/VendorControllerTest.java</backend>
+      <frontend>frontend/src/components/vendors/__tests__/VendorForm.test.tsx</frontend>
+      <frontend>frontend/src/components/vendors/__tests__/VendorList.test.tsx</frontend>
+      <frontend>frontend/src/hooks/__tests__/useVendors.test.tsx</frontend>
+      <e2e>frontend/e2e/vendor-management/vendor-registration.spec.ts</e2e>
+    </locations>
+    <ideas>
+      <idea ac="11">Test vendor creation success flow - form submission, API call, redirect, toast notification</idea>
+      <idea ac="11">Test duplicate email validation - inline error display when email already exists</idea>
+      <idea ac="10">Test form validation errors - all required fields, email format, phone format, TRN format</idea>
+      <idea ac="12">Test vendor number generation - format VND-YYYY-NNNN, uniqueness under concurrent requests</idea>
+      <idea ac="16">Test status transitions - valid transitions succeed, invalid transitions fail with error</idea>
+      <idea ac="17">Test soft delete - isDeleted flag set, excluded from queries, cannot be assigned</idea>
+      <idea ac="25">Test email uniqueness on update - allow same email for current vendor, reject for others</idea>
+      <idea ac="3">Test search functionality - search by company name, contact person, vendor number</idea>
+      <idea ac="3">Test filter functionality - filter by status, service category, rating</idea>
+      <idea ac="28">Test responsive layout - table to card view on mobile, touch targets size</idea>
+      <idea ac="29">Test keyboard navigation - Tab through form fields, Enter to submit, Escape to cancel</idea>
+      <idea ac="23">Test service layer - createVendor, updateVendor, updateVendorStatus, deleteVendor methods</idea>
+      <idea ac="21">Test controller authorization - PROPERTY_MANAGER and MAINTENANCE_SUPERVISOR roles allowed</idea>
+    </ideas>
+  </tests>
+</story-context>

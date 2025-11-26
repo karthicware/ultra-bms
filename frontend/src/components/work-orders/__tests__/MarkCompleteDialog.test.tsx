@@ -121,7 +121,8 @@ describe('MarkCompleteDialog', () => {
       />
     );
 
-    expect(screen.getByText(/After Photos/i)).toBeInTheDocument();
+    // Use getByText with exact text to avoid matching multiple elements
+    expect(screen.getByText('After Photos *')).toBeInTheDocument();
     const fileInput = screen.getByLabelText(/upload after photos/i);
     expect(fileInput).toBeInTheDocument();
   });

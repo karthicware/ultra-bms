@@ -41,6 +41,14 @@ public interface WorkOrderAssignmentRepository extends JpaRepository<WorkOrderAs
     List<WorkOrderAssignment> findByWorkOrderIdOrderByAssignedDateDesc(UUID workOrderId);
 
     /**
+     * Find all assignments for a work order, ordered by date ascending (oldest first)
+     *
+     * @param workOrderId Work order UUID
+     * @return List of all assignments ordered by date ascending
+     */
+    List<WorkOrderAssignment> findByWorkOrderIdOrderByAssignedDateAsc(UUID workOrderId);
+
+    /**
      * Find the most recent assignment for a work order
      *
      * @param workOrderId Work order UUID

@@ -194,9 +194,9 @@ export interface InternalStaffListResponse {
 }
 
 /**
- * Response from vendor list endpoint
+ * Response from vendor list endpoint for assignment purposes
  */
-export interface VendorListResponse {
+export interface AssignmentVendorListResponse {
   success: boolean;
   message: string;
   data: ExternalVendorAssignee[];

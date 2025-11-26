@@ -256,13 +256,12 @@ function PhotoGrid({
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3" role="list" aria-label="Photo gallery">
       {photos.map((photo, index) => (
-        <button
-          key={index}
-          onClick={() => onPhotoClick(index)}
-          className="group relative aspect-square rounded-lg border overflow-hidden hover:ring-2 hover:ring-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary"
-          aria-label={`View photo ${index + 1} of ${photos.length}`}
-          role="listitem"
-        >
+        <div key={index} role="listitem">
+          <button
+            onClick={() => onPhotoClick(index)}
+            className="group relative aspect-square rounded-lg border overflow-hidden hover:ring-2 hover:ring-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary w-full"
+            aria-label={`View photo ${index + 1} of ${photos.length}`}
+          >
           <Image
             src={photo}
             alt={`Photo ${index + 1}`}
@@ -272,7 +271,8 @@ function PhotoGrid({
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
             <Maximize2 className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
-        </button>
+          </button>
+        </div>
       ))}
     </div>
   );

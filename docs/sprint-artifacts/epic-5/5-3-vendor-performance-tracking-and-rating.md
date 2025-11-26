@@ -1,0 +1,543 @@
+# Story 5.3: Vendor Performance Tracking and Rating
+
+Status: drafted
+
+## Story
+
+As a property manager,
+I want to track vendor performance and ratings,
+So that I can make informed decisions when assigning work orders.
+
+## Acceptance Criteria
+
+1. **AC1 - Vendor Rating Form After Work Order Completion:** When work order status changes to COMPLETED, property manager sees "Rate Vendor" button on work order detail page. Button opens rating modal/form. Button visible only if work order has assigned vendor and no rating exists. Button has data-testid="btn-rate-vendor". [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+2. **AC2 - Rating Form Structure:** Rating form includes: Quality of work (1-5 stars, required), Timeliness (1-5 stars, required), Communication (1-5 stars, required), Professionalism (1-5 stars, required), Comments textarea (optional, max 500 chars). Form calculates and displays average of 4 categories as overall rating. Form has data-testid="form-vendor-rating". [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+3. **AC3 - Star Rating Input Component:** Create reusable StarRatingInput component with: 5 clickable/tappable stars, hover preview on desktop, selected stars filled/highlighted, supports half-star increments (display only), accessible with keyboard navigation, aria-label for each star. Component has data-testid="input-star-rating-{category}". [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+4. **AC4 - Rating Submission:** On form submit: validate all required fields, disable submit button, show loading state. Call POST /api/v1/work-orders/{id}/vendor-rating with rating data. On success: close modal, show toast "Thank you for rating {vendorName}!", update vendor's overall rating. On error: show error toast, keep form open. Submit button has data-testid="btn-submit-rating". [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+5. **AC5 - Backend VendorRating Entity:** Create VendorRating JPA entity with fields: id (UUID, @Id), workOrderId (UUID, foreign key to work_orders, unique), vendorId (UUID, foreign key to vendors), qualityScore (Integer, 1-5), timelinessScore (Integer, 1-5), communicationScore (Integer, 1-5), professionalismScore (Integer, 1-5), overallScore (BigDecimal, calculated average, scale 2), comments (String, nullable, max 500), ratedBy (UUID, foreign key to users), ratedAt (LocalDateTime, default now). Create indexes on vendorId, workOrderId. [Source: docs/epics/epic-5-vendor-management.md#story-53, docs/architecture.md#database-naming]
+
+6. **AC6 - Overall Rating Calculation:** Vendor's overall rating = average of all VendorRating.overallScore for that vendor. When new rating submitted: recalculate vendor.rating = AVG(all ratings). Update vendor.rating field (cached for performance). Rating displayed with 2 decimal places (e.g., 4.25). [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+7. **AC7 - Performance Metrics on Vendor Detail Page:** Vendor detail page displays performance metrics card with: Overall Rating (1-5 stars with numeric value), Total Jobs Completed (integer counter), Average Completion Time (days, calculated from work orders), On-time Completion Rate (percentage of jobs completed by scheduled date), Total Amount Paid (sum of all work order actual_cost). Metrics card has data-testid="card-performance-metrics". [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+8. **AC8 - Performance Metrics Calculation:** Calculate metrics from work order data: totalJobsCompleted = COUNT(work_orders WHERE vendor_id = X AND status = COMPLETED), averageCompletionTime = AVG(DATEDIFF(completed_date, created_at)) in days, onTimeRate = COUNT(completed_date <= scheduled_date) / totalJobsCompleted * 100, totalAmountPaid = SUM(actual_cost WHERE status = COMPLETED). Handle division by zero (show "N/A" if no completed jobs). [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+9. **AC9 - Rating History Section on Vendor Detail:** Vendor detail page includes "Rating History" section showing all ratings for this vendor. List displays: Work Order # (link to work order), Date rated, Individual scores (Quality, Timeliness, Communication, Professionalism), Overall score (stars), Comments (truncated, expand on click), Rated by (user name). Sort by ratedAt DESC (newest first). Pagination: 10 per page. Empty state: "No ratings yet." Section has data-testid="section-rating-history". [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+10. **AC10 - Rating Distribution Chart:** Vendor detail page displays rating distribution chart showing: 5-star count and percentage, 4-star count and percentage, 3-star count and percentage, 2-star count and percentage, 1-star count and percentage. Use horizontal bar chart (Recharts BarChart). Percentages sum to 100%. Chart has data-testid="chart-rating-distribution". [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+11. **AC11 - Vendor Ranking Dashboard Page:** Create vendor ranking page at /property-manager/vendors/ranking. Page displays DataTable with columns: Rank (#), Vendor Name (link), Rating (stars + numeric), Jobs Completed, On-time Rate (%), Hourly Rate (AED). Sort by rating DESC by default. Filter by: Service Category (multi-select), Date Range (date picker for work order completion dates). Page has data-testid="page-vendor-ranking". [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+12. **AC12 - Top-Rated Vendors API:** GET /api/v1/vendors/top-rated returns top vendors by overall rating. Query params: category (optional, filter by service category), limit (default 10, max 50). Response includes: id, vendorNumber, companyName, rating, totalJobsCompleted, onTimeRate. Vendors with rating = 0 (no ratings) sorted last. Only ACTIVE vendors included. [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+13. **AC13 - Vendor Comparison Feature:** Allow selection of 2-4 vendors from vendor list (checkbox selection). Display "Compare" button when 2+ vendors selected. Click navigates to /property-manager/vendors/compare?ids=uuid1,uuid2,uuid3. Comparison page shows side-by-side table: Company Name, Overall Rating, Total Jobs, On-time Rate, Average Completion Time, Hourly Rate, Service Categories. Page has data-testid="page-vendor-comparison". [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+14. **AC14 - Backend API Endpoints for Performance:** Implement REST endpoints: POST /api/v1/work-orders/{id}/vendor-rating (submit rating, returns 201), GET /api/v1/vendors/{id}/performance (returns VendorPerformanceDto), GET /api/v1/vendors/{id}/ratings (paginated rating history, returns List<VendorRatingDto>), GET /api/v1/vendors/top-rated (top vendors by category), GET /api/v1/vendors/compare?ids=uuid1,uuid2 (comparison data). All endpoints require PROPERTY_MANAGER or MAINTENANCE_SUPERVISOR role. [Source: docs/epics/epic-5-vendor-management.md#story-53, docs/architecture.md#rest-api-conventions]
+
+15. **AC15 - Performance and Rating DTOs:** Create DTOs: VendorRatingRequestDto (workOrderId, qualityScore, timelinessScore, communicationScore, professionalismScore, comments), VendorRatingDto (id, workOrderId, workOrderNumber, scores, overallScore, comments, ratedBy, ratedByName, ratedAt), VendorPerformanceDto (vendorId, overallRating, totalJobsCompleted, averageCompletionTime, onTimeCompletionRate, totalAmountPaid, ratingDistribution), VendorComparisonDto (list of vendors with performance metrics). Create VendorRatingMapper using MapStruct. [Source: docs/architecture.md#dto-pattern]
+
+16. **AC16 - VendorRating Service Layer:** Create VendorRatingService interface and VendorRatingServiceImpl with methods: submitRating(UUID workOrderId, VendorRatingRequestDto dto), getRatingsByVendorId(UUID vendorId, Pageable pageable), getVendorPerformance(UUID vendorId), getTopRatedVendors(ServiceCategory category, int limit), getVendorsComparison(List<UUID> vendorIds). Service handles: validation (work order completed, vendor assigned, no duplicate rating), rating calculation, vendor.rating update. Use @Transactional for write operations. [Source: docs/architecture.md#service-pattern]
+
+17. **AC17 - VendorRating Repository and Migration:** Create VendorRatingRepository extending JpaRepository with queries: findByVendorIdOrderByRatedAtDesc(UUID vendorId, Pageable pageable), findByWorkOrderId(UUID workOrderId), existsByWorkOrderId(UUID workOrderId), calculateAverageRatingByVendorId(UUID vendorId). Create Flyway migration V{X}__create_vendor_ratings_table.sql with: vendor_ratings table, foreign keys to work_orders, vendors, users, indexes. Add unique constraint on work_order_id. [Source: docs/architecture.md#repository-pattern]
+
+18. **AC18 - Scheduled Job for Rating Recalculation:** Create VendorRatingRecalculationJob scheduled task running weekly (Sunday 2:00 AM). Job recalculates all vendor ratings from vendor_ratings table. Updates vendor.rating field for all vendors with at least one rating. Use @Scheduled with cron expression. Log job execution start/end, vendors updated count. Ensures rating consistency if manual database changes occur. [Source: docs/epics/epic-5-vendor-management.md#story-53, docs/architecture.md#async-processing]
+
+19. **AC19 - TypeScript Types and Frontend Services:** Create types/vendor-ratings.ts with interfaces: VendorRating, VendorRatingRequest, VendorPerformance, VendorRatingDistribution (fiveStarCount, fourStarCount, etc.), VendorComparison. Create lib/validations/vendor-rating.ts with vendorRatingSchema using Zod (all scores 1-5, comments max 500). Create services/vendor-ratings.service.ts with methods: submitRating(workOrderId, data), getVendorPerformance(vendorId), getVendorRatings(vendorId, pagination), getTopRatedVendors(category?, limit?), getVendorsComparison(vendorIds). [Source: docs/architecture.md#typescript-strict-mode]
+
+20. **AC20 - React Query Hooks for Ratings:** Create hooks/useVendorRatings.ts: useVendorPerformance(vendorId) returns performance metrics, useVendorRatings(vendorId, pagination) returns rating history, useSubmitRating() mutation hook, useTopRatedVendors(category?, limit?) returns top vendors, useVendorsComparison(vendorIds) returns comparison data. Invalidate ['vendors', vendorId] and ['vendor-ratings', vendorId] cache on rating submission. [Source: docs/architecture.md#custom-hook-pattern]
+
+21. **AC21 - Integration with Work Order Detail Page:** On work order detail page (/property-manager/work-orders/{id}): Show "Rate Vendor" button only if status = COMPLETED AND assignedVendorId exists AND no rating exists for this work order. Button click opens VendorRatingModal. After successful rating: button changes to "View Rating" showing submitted rating. Check rating existence via GET /api/v1/work-orders/{id}/vendor-rating (returns 404 if not exists). [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+22. **AC22 - Prevent Duplicate Ratings:** Backend validates: one rating per work order (unique constraint on work_order_id). If rating already exists: return 409 Conflict with message "A rating already exists for this work order". Frontend: disable "Rate Vendor" button if rating exists, show "View Rating" instead. Allow rating UPDATE via PUT /api/v1/work-orders/{id}/vendor-rating (if within 7 days of original rating). [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+23. **AC23 - Rating Impact on Vendor List and Assignment:** Vendor list page shows rating column with stars and numeric value. Vendor assignment dropdowns (in work order forms) show vendor rating next to name. Filter vendors by minimum rating (e.g., "4+ stars only"). Sort vendors by rating descending option. Rating displayed prominently to help informed decisions. [Source: docs/epics/epic-5-vendor-management.md#story-53]
+
+24. **AC24 - Responsive Design for Rating Components:** Rating form: star inputs touch-friendly (min 44x44px touch target). Performance metrics card: stacks vertically on mobile. Rating history table: converts to card layout on mobile. Vendor ranking table: responsive with horizontal scroll or card view. Vendor comparison page: single vendor per row on mobile with expandable details. All components support dark theme. [Source: docs/architecture.md#styling-conventions]
+
+25. **AC25 - Backend Unit Tests for Ratings:** Write comprehensive tests: VendorRatingServiceTest with test cases for submitRating (success, duplicate rating, work order not completed, vendor not assigned), getVendorPerformance calculation accuracy, getTopRatedVendors filtering and sorting. Test VendorRatingRecalculationJob execution. Test average rating calculation with various scenarios (0 ratings, 1 rating, multiple ratings). VendorRatingControllerTest for endpoint authorization. Achieve >= 80% code coverage for new code. [Source: docs/architecture.md#testing-backend]
+
+26. **AC26 - Frontend Unit Tests for Ratings:** Write tests with React Testing Library: StarRatingInput component (click, hover, keyboard navigation), VendorRatingModal form validation, VendorPerformanceCard rendering with various data states, RatingHistoryList with empty/populated states, VendorRankingTable sorting and filtering, VendorComparisonPage side-by-side display. [Source: docs/architecture.md#testing-frontend]
+
+## Component Mapping
+
+### shadcn/ui Components to Use
+
+**Rating Form Components:**
+- dialog (rating modal container)
+- form (React Hook Form integration)
+- textarea (comments field)
+- button (submit, cancel buttons)
+- label (form field labels)
+- tooltip (help text for rating categories)
+
+**Data Display:**
+- card (performance metrics, rating summary)
+- table (rating history, vendor ranking)
+- badge (rating badges, category badges)
+- avatar (vendor logo placeholder)
+- skeleton (loading states)
+- progress (rating distribution bars)
+
+**Charts:**
+- Recharts BarChart (rating distribution)
+
+**Feedback Components:**
+- toast/sonner (success/error notifications)
+- alert (validation errors)
+
+**Navigation:**
+- breadcrumb (ranking page, comparison page)
+- checkbox (vendor selection for comparison)
+- tabs (if organizing vendor detail sections)
+
+### Installation Command
+
+Verify and add if missing:
+
+```bash
+npx shadcn@latest add checkbox tabs
+```
+
+### Additional Dependencies
+
+```json
+{
+  "dependencies": {
+    "recharts": "^2.10.0",
+    "date-fns": "^3.0.0",
+    "@tanstack/react-query": "^5.0.0",
+    "lucide-react": "^0.263.1"
+  }
+}
+```
+
+Note: Star rating component will be custom-built using lucide-react Star icons.
+
+## Tasks / Subtasks
+
+- [ ] **Task 1: Define TypeScript Types and Zod Schemas** (AC: #19)
+  - [ ] Create types/vendor-ratings.ts with VendorRating, VendorRatingRequest, VendorPerformance interfaces
+  - [ ] Define VendorRatingDistribution interface (fiveStarCount, fourStarCount, etc.)
+  - [ ] Define VendorComparison interface
+  - [ ] Create lib/validations/vendor-rating.ts with vendorRatingSchema using Zod
+  - [ ] Add validation: all scores 1-5, comments max 500 chars
+  - [ ] Export types from types/index.ts
+
+- [ ] **Task 2: Create Frontend Rating Service** (AC: #19)
+  - [ ] Create services/vendor-ratings.service.ts
+  - [ ] Implement submitRating(workOrderId, data) with POST /api/v1/work-orders/{id}/vendor-rating
+  - [ ] Implement getVendorPerformance(vendorId) with GET /api/v1/vendors/{id}/performance
+  - [ ] Implement getVendorRatings(vendorId, pagination) with GET /api/v1/vendors/{id}/ratings
+  - [ ] Implement getTopRatedVendors(category?, limit?)
+  - [ ] Implement getVendorsComparison(vendorIds)
+  - [ ] Handle 409 Conflict for duplicate ratings
+
+- [ ] **Task 3: Create React Query Hooks for Ratings** (AC: #20)
+  - [ ] Create hooks/useVendorRatings.ts
+  - [ ] Implement useVendorPerformance(vendorId) query hook
+  - [ ] Implement useVendorRatings(vendorId, pagination) query hook
+  - [ ] Implement useSubmitRating() mutation hook
+  - [ ] Implement useTopRatedVendors(category?, limit?) query hook
+  - [ ] Implement useVendorsComparison(vendorIds) query hook
+  - [ ] Add cache invalidation on rating submission
+
+- [ ] **Task 4: Create Backend VendorRating Entity** (AC: #5)
+  - [ ] Create VendorRating JPA entity with all fields
+  - [ ] Add @ManyToOne relationships to WorkOrder, Vendor, User
+  - [ ] Add validation annotations (@Min(1), @Max(5), @Size)
+  - [ ] Add unique constraint on workOrderId
+  - [ ] Add audit field (ratedAt with default)
+
+- [ ] **Task 5: Create Database Migration for Ratings** (AC: #17)
+  - [ ] Create Flyway migration V{X}__create_vendor_ratings_table.sql
+  - [ ] Define vendor_ratings table with all columns
+  - [ ] Add foreign key constraints to work_orders, vendors, users
+  - [ ] Add unique constraint on work_order_id
+  - [ ] Add indexes on vendor_id, work_order_id
+
+- [ ] **Task 6: Create VendorRating Repository** (AC: #17)
+  - [ ] Create VendorRatingRepository extending JpaRepository<VendorRating, UUID>
+  - [ ] Add findByVendorIdOrderByRatedAtDesc(UUID vendorId, Pageable pageable)
+  - [ ] Add findByWorkOrderId(UUID workOrderId) for duplicate check
+  - [ ] Add existsByWorkOrderId(UUID workOrderId) for existence check
+  - [ ] Add @Query for calculateAverageRatingByVendorId
+
+- [ ] **Task 7: Create Rating and Performance DTOs** (AC: #15)
+  - [ ] Create VendorRatingRequestDto for rating submission
+  - [ ] Create VendorRatingDto for rating responses with ratedByName
+  - [ ] Create VendorPerformanceDto with all metrics + ratingDistribution
+  - [ ] Create VendorComparisonDto for comparison endpoint
+  - [ ] Create VendorRatingMapper using MapStruct
+
+- [ ] **Task 8: Implement VendorRating Service Layer** (AC: #16)
+  - [ ] Create VendorRatingService interface with all methods
+  - [ ] Create VendorRatingServiceImpl with @Service annotation
+  - [ ] Implement submitRating with validation (work order completed, vendor assigned, no duplicate)
+  - [ ] Implement vendor.rating update on new rating
+  - [ ] Implement getRatingsByVendorId with pagination
+  - [ ] Implement getVendorPerformance with all metrics calculation
+  - [ ] Implement getTopRatedVendors with category filter
+  - [ ] Implement getVendorsComparison
+
+- [ ] **Task 9: Implement Performance Metrics Calculation** (AC: #8)
+  - [ ] Calculate totalJobsCompleted from work_orders
+  - [ ] Calculate averageCompletionTime in days
+  - [ ] Calculate onTimeCompletionRate as percentage
+  - [ ] Calculate totalAmountPaid from actual_cost
+  - [ ] Handle edge cases (no completed jobs = N/A)
+  - [ ] Add method to VendorService: calculatePerformanceMetrics(UUID vendorId)
+
+- [ ] **Task 10: Implement VendorRating Controller** (AC: #14)
+  - [ ] Create endpoint in WorkOrderController: POST /api/v1/work-orders/{id}/vendor-rating
+  - [ ] Add endpoints to VendorController: GET /api/v1/vendors/{id}/performance
+  - [ ] Add GET /api/v1/vendors/{id}/ratings with pagination
+  - [ ] Add GET /api/v1/vendors/top-rated with query params
+  - [ ] Add GET /api/v1/vendors/compare with ids query param
+  - [ ] Add @PreAuthorize for all endpoints
+  - [ ] Return proper status codes (201, 409 for duplicate)
+
+- [ ] **Task 11: Create StarRatingInput Component** (AC: #3)
+  - [ ] Create components/ui/StarRatingInput.tsx
+  - [ ] Implement 5 clickable Star icons (lucide-react)
+  - [ ] Add hover preview effect on desktop
+  - [ ] Implement filled/outlined state for selected stars
+  - [ ] Add keyboard navigation (arrow keys, Enter)
+  - [ ] Add aria-label for accessibility
+  - [ ] Add data-testid="input-star-rating-{category}"
+
+- [ ] **Task 12: Create VendorRatingModal Component** (AC: #1, #2, #4)
+  - [ ] Create components/vendors/VendorRatingModal.tsx
+  - [ ] Implement React Hook Form with vendorRatingSchema
+  - [ ] Add 4 StarRatingInput components for each category
+  - [ ] Display calculated overall score (average of 4)
+  - [ ] Add comments textarea with character counter
+  - [ ] Add submit button with loading state
+  - [ ] Handle success/error with toasts
+  - [ ] Add data-testid to all elements
+
+- [ ] **Task 13: Integrate Rating with Work Order Detail Page** (AC: #21, #22)
+  - [ ] Add "Rate Vendor" button to work order detail page
+  - [ ] Show button only if: status=COMPLETED AND vendorId exists AND no rating exists
+  - [ ] Integrate VendorRatingModal opening on button click
+  - [ ] After rating: change button to "View Rating"
+  - [ ] Show submitted rating in expandable section
+
+- [ ] **Task 14: Create VendorPerformanceCard Component** (AC: #7)
+  - [ ] Create components/vendors/VendorPerformanceCard.tsx
+  - [ ] Display overall rating with stars and numeric value
+  - [ ] Display total jobs completed counter
+  - [ ] Display average completion time in days
+  - [ ] Display on-time completion rate as percentage
+  - [ ] Display total amount paid (AED formatted)
+  - [ ] Handle loading and empty states
+  - [ ] Add data-testid="card-performance-metrics"
+
+- [ ] **Task 15: Create RatingDistributionChart Component** (AC: #10)
+  - [ ] Create components/vendors/RatingDistributionChart.tsx
+  - [ ] Use Recharts BarChart for horizontal bars
+  - [ ] Display 5-star through 1-star bars with counts/percentages
+  - [ ] Color bars appropriately (5-star green, decreasing to red)
+  - [ ] Add labels showing count and percentage
+  - [ ] Add data-testid="chart-rating-distribution"
+
+- [ ] **Task 16: Create RatingHistoryList Component** (AC: #9)
+  - [ ] Create components/vendors/RatingHistoryList.tsx
+  - [ ] Display list of ratings with work order link
+  - [ ] Show date, individual scores, overall score
+  - [ ] Show comments (truncated, expand on click)
+  - [ ] Show rated by user name
+  - [ ] Add pagination (10 per page)
+  - [ ] Add empty state message
+  - [ ] Add data-testid="section-rating-history"
+
+- [ ] **Task 17: Integrate Performance Section into Vendor Detail Page** (AC: #7, #9, #10)
+  - [ ] Add VendorPerformanceCard to vendor detail page
+  - [ ] Add RatingDistributionChart below performance card
+  - [ ] Add RatingHistoryList section
+  - [ ] Fetch data using useVendorPerformance and useVendorRatings hooks
+
+- [ ] **Task 18: Create Vendor Ranking Page** (AC: #11)
+  - [ ] Create app/(dashboard)/property-manager/vendors/ranking/page.tsx
+  - [ ] Implement DataTable with columns: Rank, Vendor Name, Rating, Jobs, On-time Rate, Hourly Rate
+  - [ ] Sort by rating descending by default
+  - [ ] Add service category multi-select filter
+  - [ ] Add date range picker for work order completion dates
+  - [ ] Click vendor navigates to detail page
+  - [ ] Add breadcrumb: Vendors > Ranking
+  - [ ] Add data-testid="page-vendor-ranking"
+
+- [ ] **Task 19: Create Vendor Comparison Page** (AC: #13)
+  - [ ] Create app/(dashboard)/property-manager/vendors/compare/page.tsx
+  - [ ] Parse vendor IDs from query params
+  - [ ] Display side-by-side comparison table
+  - [ ] Show: Company Name, Rating, Total Jobs, On-time Rate, Avg Completion Time, Hourly Rate, Categories
+  - [ ] Highlight best value in each row (highest rating, lowest rate, etc.)
+  - [ ] Handle 2-4 vendors comparison
+  - [ ] Add breadcrumb: Vendors > Compare
+  - [ ] Add data-testid="page-vendor-comparison"
+
+- [ ] **Task 20: Add Vendor Selection for Comparison** (AC: #13)
+  - [ ] Add checkbox column to vendor list table
+  - [ ] Show "Compare ({n})" button when 2+ vendors selected
+  - [ ] Navigate to comparison page with selected vendor IDs
+  - [ ] Limit selection to 4 vendors (show message if exceeded)
+
+- [ ] **Task 21: Update Vendor List with Rating Display** (AC: #23)
+  - [ ] Update vendor list table to show rating column (stars + numeric)
+  - [ ] Add "Rating" filter (4+ stars, 3+ stars, Any)
+  - [ ] Add sort by rating option
+  - [ ] Ensure rating visible in work order assignment dropdowns
+
+- [ ] **Task 22: Implement VendorRatingRecalculationJob** (AC: #18)
+  - [ ] Create VendorRatingRecalculationJob with @Scheduled
+  - [ ] Schedule weekly: Sunday 2:00 AM (cron = "0 0 2 * * SUN")
+  - [ ] Query all vendors with at least one rating
+  - [ ] Recalculate average rating for each
+  - [ ] Update vendor.rating field
+  - [ ] Log job execution details
+
+- [ ] **Task 23: Implement Responsive Design** (AC: #24)
+  - [ ] Test star rating inputs on mobile: touch-friendly
+  - [ ] Test performance card on mobile: vertical stack
+  - [ ] Test rating history on mobile: card layout
+  - [ ] Test ranking table on mobile: responsive or cards
+  - [ ] Test comparison page on mobile: single vendor per row
+  - [ ] Ensure touch targets >= 44x44px
+  - [ ] Test dark theme support
+
+- [ ] **Task 24: Write Backend Unit Tests** (AC: #25)
+  - [ ] Create VendorRatingServiceTest
+  - [ ] Test submitRating: success, duplicate rating (409), work order not completed, vendor not assigned
+  - [ ] Test getVendorPerformance: calculation accuracy
+  - [ ] Test getTopRatedVendors: category filtering, sorting
+  - [ ] Test average rating calculation with 0, 1, multiple ratings
+  - [ ] Create VendorRatingRecalculationJobTest
+  - [ ] Create VendorRatingControllerTest for endpoints
+  - [ ] Achieve >= 80% code coverage
+
+- [ ] **Task 25: Write Frontend Unit Tests** (AC: #26)
+  - [ ] Test StarRatingInput: click, hover, keyboard
+  - [ ] Test VendorRatingModal: form validation, submission
+  - [ ] Test VendorPerformanceCard: rendering, edge cases
+  - [ ] Test RatingDistributionChart: bar display, percentages
+  - [ ] Test RatingHistoryList: empty and populated states
+  - [ ] Test VendorRankingPage: sorting, filtering
+  - [ ] Test VendorComparisonPage: side-by-side display
+
+## Dev Notes
+
+### Learnings from Previous Story
+
+**From Story 5.2 (Vendor Document and License Management - Status: ready-for-dev):**
+
+Story 5.2 has not been implemented yet (status: ready-for-dev), but contains important patterns to follow:
+
+- **Vendor Entity Fields**: Use existing Vendor entity with id, vendorNumber, rating, totalJobsCompleted fields
+- **Scheduled Job Pattern**: Follow VendorDocumentExpiryJob pattern for VendorRatingRecalculationJob
+- **Service Layer Pattern**: Follow VendorDocumentService structure for VendorRatingService
+- **Frontend Hook Pattern**: Follow useVendorDocuments pattern for useVendorRatings
+- **Modal Pattern**: Follow DocumentUploadModal for VendorRatingModal
+- **Data-testid Convention**: {component}-{element}-{action}
+
+[Source: stories/5-2-vendor-document-and-license-management.md]
+
+**From Story 5.1 (Vendor Registration - Status: ready-for-dev):**
+
+Vendor entity structure to extend:
+- rating (BigDecimal, default 0.0, scale 2) - will be updated by this story
+- totalJobsCompleted (Integer, default 0) - counter updated on work order completion
+- VendorService.updateVendorRating() method to be added
+
+[Source: stories/5-1-vendor-registration-and-profile-management.md]
+
+**From Story 4.4 (Job Progress Tracking and Completion - Status: in-progress):**
+
+Work order completion patterns:
+- Work order status = COMPLETED triggers rating eligibility
+- completed_date field used for on-time calculation
+- actual_cost field used for total amount paid calculation
+
+**Dependencies from Previous Stories:**
+- Vendor entity must exist (Story 5.1)
+- Work order must be completable (Story 4.4)
+- VendorService must support rating updates
+
+### Architecture Patterns
+
+**Rating Entity Pattern:**
+- VendorRating linked to WorkOrder, Vendor, User
+- One rating per work order (unique constraint)
+- 4 category scores (1-5) + calculated overall score
+- Overall score = AVG(quality, timeliness, communication, professionalism)
+
+**Vendor Rating Calculation:**
+```java
+public BigDecimal calculateVendorRating(UUID vendorId) {
+    Double avgRating = vendorRatingRepository.calculateAverageRatingByVendorId(vendorId);
+    return avgRating != null ? BigDecimal.valueOf(avgRating).setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+}
+```
+
+**Performance Metrics Calculation:**
+```java
+public VendorPerformanceDto calculatePerformanceMetrics(UUID vendorId) {
+    List<WorkOrder> completedOrders = workOrderRepository.findByAssignedVendorIdAndStatus(vendorId, WorkOrderStatus.COMPLETED);
+
+    int totalJobs = completedOrders.size();
+    if (totalJobs == 0) {
+        return VendorPerformanceDto.empty(vendorId);
+    }
+
+    // Average completion time
+    double avgCompletionDays = completedOrders.stream()
+        .mapToLong(wo -> ChronoUnit.DAYS.between(wo.getCreatedAt().toLocalDate(), wo.getCompletedDate().toLocalDate()))
+        .average().orElse(0.0);
+
+    // On-time rate
+    long onTimeCount = completedOrders.stream()
+        .filter(wo -> wo.getScheduledDate() != null && !wo.getCompletedDate().toLocalDate().isAfter(wo.getScheduledDate()))
+        .count();
+    double onTimeRate = (double) onTimeCount / totalJobs * 100;
+
+    // Total amount paid
+    BigDecimal totalPaid = completedOrders.stream()
+        .map(wo -> wo.getActualCost() != null ? wo.getActualCost() : BigDecimal.ZERO)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    return new VendorPerformanceDto(vendorId, rating, totalJobs, avgCompletionDays, onTimeRate, totalPaid, ratingDistribution);
+}
+```
+
+**Star Rating Component Pattern:**
+```typescript
+function StarRatingInput({ value, onChange, name }: StarRatingInputProps) {
+  const [hoverValue, setHoverValue] = useState(0);
+
+  return (
+    <div className="flex gap-1" role="radiogroup" aria-label={`${name} rating`}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          onMouseEnter={() => setHoverValue(star)}
+          onMouseLeave={() => setHoverValue(0)}
+          className="p-1"
+          aria-label={`${star} star${star > 1 ? 's' : ''}`}
+          data-testid={`input-star-rating-${name}-${star}`}
+        >
+          <Star
+            className={cn(
+              "h-6 w-6 transition-colors",
+              (hoverValue || value) >= star
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-gray-300"
+            )}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+### Constraints
+
+**Rating Rules:**
+- All 4 category scores required (1-5)
+- Comments optional, max 500 chars
+- One rating per work order (unique constraint)
+- Can only rate COMPLETED work orders
+- Can only rate if vendor was assigned
+- Rating update allowed within 7 days of original rating
+
+**Performance Calculation Rules:**
+- totalJobsCompleted = work orders with status COMPLETED
+- averageCompletionTime = days from created_at to completed_date
+- onTimeRate = completed on or before scheduled_date
+- totalAmountPaid = sum of actual_cost (not estimated_cost)
+- Handle division by zero gracefully
+
+**Vendor Comparison Rules:**
+- Minimum 2 vendors, maximum 4
+- Only ACTIVE vendors can be compared
+- Highlight best value in each metric
+
+### Testing Standards
+
+From retrospective action items:
+- ALL interactive elements MUST have data-testid attributes
+- Convention: {component}-{element}-{action}
+- Backend tests: >= 80% coverage
+- Test star rating keyboard navigation
+- Test rating calculations with edge cases
+- Test scheduled job execution
+
+### Integration Points
+
+**With Work Order Module (Epic 4):**
+- Rating submitted after work order completion (Story 4.4)
+- Work order detail page shows "Rate Vendor" button
+- Uses completed_date and scheduled_date for metrics
+- Uses actual_cost for total amount paid
+
+**With Vendor Module (Stories 5.1, 5.2):**
+- Updates vendor.rating field on new rating
+- Performance metrics displayed on vendor detail page
+- Rating shown in vendor list and assignment dropdowns
+- Rating affects vendor ranking
+
+**With Dashboard:**
+- Top-rated vendors widget
+- Performance trends (future enhancement)
+
+### Backend Implementation Notes
+
+**Unique Constraint:**
+```java
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = "work_order_id"))
+public class VendorRating {
+    // ...
+}
+```
+
+**Average Rating Query:**
+```java
+@Query("SELECT AVG(vr.overallScore) FROM VendorRating vr WHERE vr.vendorId = :vendorId")
+Double calculateAverageRatingByVendorId(@Param("vendorId") UUID vendorId);
+```
+
+**Rating Distribution Query:**
+```java
+@Query("SELECT vr.overallScore, COUNT(vr) FROM VendorRating vr WHERE vr.vendorId = :vendorId GROUP BY vr.overallScore")
+List<Object[]> getRatingDistribution(@Param("vendorId") UUID vendorId);
+```
+
+### References
+
+- [Source: docs/epics/epic-5-vendor-management.md#story-53-vendor-performance-tracking-and-rating]
+- [Source: docs/prd.md#3.5.3-performance-management]
+- [Source: docs/architecture.md#vendor-performance-scoring]
+- [Source: docs/architecture.md#frontend-implementation-patterns]
+- [Source: docs/sprint-artifacts/epic-5/5-2-vendor-document-and-license-management.md]
+- [Source: docs/sprint-artifacts/epic-5/5-1-vendor-registration-and-profile-management.md]
+
+## Dev Agent Record
+
+### Context Reference
+
+<!-- Path(s) to story context XML will be added here by context workflow -->
+
+### Agent Model Used
+
+{{agent_model_name_version}}
+
+### Debug Log References
+
+### Completion Notes List
+
+### File List

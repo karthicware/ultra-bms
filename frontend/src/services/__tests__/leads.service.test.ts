@@ -155,7 +155,7 @@ describe('Lead Service', () => {
 
       expect(mockedApiClient.get).toHaveBeenCalledWith('/v1/leads', {
         params: expect.objectContaining({
-          searchTerm: 'Ahmed',
+          search: 'Ahmed',
         }),
       });
     });
@@ -225,7 +225,11 @@ describe('Lead Service', () => {
   describe('downloadDocument', () => {
     it('should download document as blob', async () => {
       const mockBlob = new Blob(['file content'], { type: 'application/pdf' });
-      mockedApiClient.get.mockResolvedValueOnce({ data: mockBlob });
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: mockBlob,
+        status: 200,
+        headers: { 'content-type': 'application/pdf' },
+      });
 
       const result = await downloadDocument('lead-123', 'doc-123');
 
@@ -249,7 +253,7 @@ describe('Lead Service', () => {
       ];
 
       mockedApiClient.get.mockResolvedValueOnce({
-        data: { success: true, data: { history: mockHistory } },
+        data: { success: true, data: { content: mockHistory } },
       });
 
       const result = await getLeadHistory('lead-123');
