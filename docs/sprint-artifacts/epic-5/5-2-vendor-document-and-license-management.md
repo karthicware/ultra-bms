@@ -1,6 +1,6 @@
 # Story 5.2: Vendor Document and License Management
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
