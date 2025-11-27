@@ -101,7 +101,9 @@ public class VendorRatingMapper {
                 .overallScore(entity.getOverallScore())
                 .comments(entity.getComments())
                 .ratedBy(entity.getRatedBy() != null ? entity.getRatedBy().getId() : null)
-                .ratedByName(entity.getRatedBy() != null ? entity.getRatedBy().getFullName() : null)
+                .ratedByName(entity.getRatedBy() != null
+                        ? entity.getRatedBy().getFirstName() + " " + entity.getRatedBy().getLastName()
+                        : null)
                 .ratedAt(entity.getRatedAt())
                 .canUpdate(entity.isUpdateAllowed())
                 .build();

@@ -78,10 +78,12 @@ public class VendorRatingServiceImpl implements VendorRatingService {
         }
 
         // Get assigned vendor from work order
-        Vendor vendor = workOrder.getAssignedTo();
-        if (vendor == null) {
+        UUID vendorId = workOrder.getAssignedTo();
+        if (vendorId == null) {
             throw new IllegalStateException("Work order has no assigned vendor");
         }
+        Vendor vendor = vendorRepository.findById(vendorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found: " + vendorId));
 
         // Get user
         User user = userRepository.findById(userId)
@@ -375,7 +377,7 @@ public class VendorRatingServiceImpl implements VendorRatingService {
 
         long onTime = completedOrders.stream()
                 .filter(wo -> wo.getCompletedAt() != null && wo.getScheduledDate() != null)
-                .filter(wo -> !wo.getCompletedAt().toLocalDate().isAfter(wo.getScheduledDate()))
+                .filter(wo -> !wo.getCompletedAt().toLocalDate().isAfter(wo.getScheduledDate().toLocalDate()))
                 .count();
 
         return Math.round((onTime * 100.0) / completedOrders.size() * 100.0) / 100.0;

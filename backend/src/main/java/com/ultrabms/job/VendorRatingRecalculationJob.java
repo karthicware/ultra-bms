@@ -11,9 +11,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.PageRequest;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Scheduled Job: Vendor Rating Recalculation
@@ -43,8 +46,9 @@ public class VendorRatingRecalculationJob {
         int vendorsUpdated = 0;
 
         try {
-            // Get all active vendors
-            List<Vendor> vendors = vendorRepository.findByStatus(VendorStatus.ACTIVE);
+            // Get all active vendors (use large page to get all)
+            List<Vendor> vendors = vendorRepository.findByStatusAndIsDeletedFalse(
+                    VendorStatus.ACTIVE, PageRequest.of(0, 10000)).getContent();
             log.info("Found {} active vendors to process", vendors.size());
 
             for (Vendor vendor : vendors) {
@@ -122,7 +126,7 @@ public class VendorRatingRecalculationJob {
      * @param vendorId The vendor ID
      */
     @Transactional
-    public void recalculateSingleVendor(String vendorId) {
+    public void recalculateSingleVendor(UUID vendorId) {
         log.info("Manual rating recalculation triggered for vendor: {}", vendorId);
         vendorRepository.findById(vendorId).ifPresentOrElse(
                 vendor -> {

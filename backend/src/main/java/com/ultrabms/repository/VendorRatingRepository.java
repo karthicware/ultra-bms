@@ -4,6 +4,7 @@ import com.ultrabms.entity.VendorRating;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -36,7 +37,8 @@ public interface VendorRatingRepository extends JpaRepository<VendorRating, UUID
      * @param workOrderId UUID of the work order
      * @return Optional containing the rating if exists
      */
-    Optional<VendorRating> findByWorkOrderId(UUID workOrderId);
+    @Query("SELECT vr FROM VendorRating vr WHERE vr.workOrder.id = :workOrderId")
+    Optional<VendorRating> findByWorkOrderId(@Param("workOrderId") UUID workOrderId);
 
     /**
      * Check if a rating exists for a work order.
@@ -44,7 +46,8 @@ public interface VendorRatingRepository extends JpaRepository<VendorRating, UUID
      * @param workOrderId UUID of the work order
      * @return true if rating exists
      */
-    boolean existsByWorkOrderId(UUID workOrderId);
+    @Query("SELECT CASE WHEN COUNT(vr) > 0 THEN true ELSE false END FROM VendorRating vr WHERE vr.workOrder.id = :workOrderId")
+    boolean existsByWorkOrderId(@Param("workOrderId") UUID workOrderId);
 
     // =================================================================
     // FIND BY VENDOR
@@ -66,7 +69,8 @@ public interface VendorRatingRepository extends JpaRepository<VendorRating, UUID
      * @param vendorId UUID of the vendor
      * @return List of vendor ratings
      */
-    List<VendorRating> findByVendorIdOrderByRatedAtDesc(UUID vendorId);
+    @Query("SELECT vr FROM VendorRating vr WHERE vr.vendor.id = :vendorId ORDER BY vr.ratedAt DESC")
+    List<VendorRating> findByVendorIdOrderByRatedAtDesc(@Param("vendorId") UUID vendorId);
 
     /**
      * Count total ratings for a vendor.
@@ -74,7 +78,8 @@ public interface VendorRatingRepository extends JpaRepository<VendorRating, UUID
      * @param vendorId UUID of the vendor
      * @return count of ratings
      */
-    long countByVendorId(UUID vendorId);
+    @Query("SELECT COUNT(vr) FROM VendorRating vr WHERE vr.vendor.id = :vendorId")
+    long countByVendorId(@Param("vendorId") UUID vendorId);
 
     // =================================================================
     // RATING CALCULATIONS
@@ -193,5 +198,7 @@ public interface VendorRatingRepository extends JpaRepository<VendorRating, UUID
      *
      * @param vendorId UUID of the vendor
      */
-    void deleteByVendorId(UUID vendorId);
+    @Modifying
+    @Query("DELETE FROM VendorRating vr WHERE vr.vendor.id = :vendorId")
+    void deleteByVendorId(@Param("vendorId") UUID vendorId);
 }
