@@ -11,6 +11,7 @@ import com.ultrabms.entity.User;
 import com.ultrabms.entity.enums.VendorStatus;
 import com.ultrabms.entity.enums.WorkOrderCategory;
 import com.ultrabms.repository.UserRepository;
+import com.ultrabms.service.VendorRatingService;
 import com.ultrabms.service.VendorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -60,10 +61,15 @@ public class VendorController {
     private static final Logger LOGGER = LoggerFactory.getLogger(VendorController.class);
 
     private final VendorService vendorService;
+    private final VendorRatingService vendorRatingService;
     private final UserRepository userRepository;
 
-    public VendorController(VendorService vendorService, UserRepository userRepository) {
+    public VendorController(
+            VendorService vendorService,
+            VendorRatingService vendorRatingService,
+            UserRepository userRepository) {
         this.vendorService = vendorService;
+        this.vendorRatingService = vendorRatingService;
         this.userRepository = userRepository;
     }
 
@@ -298,6 +304,74 @@ public class VendorController {
         responseBody.put("timestamp", LocalDateTime.now().toString());
 
         return ResponseEntity.ok(responseBody);
+    }
+
+    // =================================================================
+    // VENDOR PERFORMANCE AND RATINGS (Story 5.3)
+    // =================================================================
+
+    /**
+     * Get vendor performance metrics
+     *
+     * GET /api/v1/vendors/{id}/performance
+     */
+    @Operation(summary = "Get vendor performance metrics")
+    @GetMapping("/{id}/performance")
+    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    public ResponseEntity<Map<String, Object>> getVendorPerformance(@PathVariable UUID id) {
+        LOGGER.info("Getting performance metrics for vendor: {}", id);
+        var performance = vendorRatingService.getVendorPerformance(id);
+        return ResponseEntity.ok(buildSuccessResponse(performance, "Vendor performance retrieved successfully"));
+    }
+
+    /**
+     * Get paginated ratings for a vendor
+     *
+     * GET /api/v1/vendors/{id}/ratings
+     */
+    @Operation(summary = "Get vendor ratings")
+    @GetMapping("/{id}/ratings")
+    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    public ResponseEntity<Map<String, Object>> getVendorRatings(
+            @PathVariable UUID id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        LOGGER.info("Getting ratings for vendor: {}, page: {}, size: {}", id, page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "ratedAt"));
+        var ratings = vendorRatingService.getVendorRatings(id, pageable);
+        return ResponseEntity.ok(buildPaginatedResponse(ratings, "Vendor ratings retrieved successfully"));
+    }
+
+    /**
+     * Get top-rated vendors
+     *
+     * GET /api/v1/vendors/top-rated
+     */
+    @Operation(summary = "Get top-rated vendors")
+    @GetMapping("/top-rated")
+    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    public ResponseEntity<Map<String, Object>> getTopRatedVendors(
+            @RequestParam(required = false) WorkOrderCategory category,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        LOGGER.info("Getting top {} rated vendors for category: {}", limit, category);
+        var topVendors = vendorRatingService.getTopRatedVendors(category, limit);
+        return ResponseEntity.ok(buildSuccessResponse(topVendors, "Top-rated vendors retrieved successfully"));
+    }
+
+    /**
+     * Compare multiple vendors
+     *
+     * GET /api/v1/vendors/compare?ids=uuid1,uuid2,uuid3
+     */
+    @Operation(summary = "Compare vendors")
+    @GetMapping("/compare")
+    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    public ResponseEntity<Map<String, Object>> compareVendors(@RequestParam List<UUID> ids) {
+        LOGGER.info("Comparing vendors: {}", ids);
+        var comparison = vendorRatingService.getVendorsComparison(ids);
+        return ResponseEntity.ok(buildSuccessResponse(comparison, "Vendor comparison retrieved successfully"));
     }
 
     // =================================================================

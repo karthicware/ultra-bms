@@ -266,4 +266,38 @@ public interface VendorRepository extends JpaRepository<Vendor, UUID> {
      */
     @Query(value = "SELECT setval('vendor_number_seq', :newValue, false)", nativeQuery = true)
     void resetVendorNumberSequence(@Param("newValue") Long newValue);
+
+    // =================================================================
+    // VENDOR RANKING QUERIES (Story 5.3)
+    // =================================================================
+
+    /**
+     * Find vendors by status with pagination
+     *
+     * @param status   Vendor status
+     * @param pageable Pagination and sorting
+     * @return Page of vendors
+     */
+    @Query("SELECT v FROM Vendor v WHERE v.isDeleted = false AND v.status = :status")
+    Page<Vendor> findByStatus(@Param("status") VendorStatus status, Pageable pageable);
+
+    /**
+     * Find vendors by status and service category containing a specific category
+     *
+     * @param status   Vendor status
+     * @param category Service category to match
+     * @param pageable Pagination and sorting
+     * @return Page of vendors
+     */
+    @Query(value = "SELECT * FROM vendors v WHERE v.is_deleted = false AND " +
+            "v.status = :#{#status.name()} AND " +
+            "v.service_categories @> :categoryJson::jsonb",
+            countQuery = "SELECT COUNT(*) FROM vendors v WHERE v.is_deleted = false AND " +
+                    "v.status = :#{#status.name()} AND " +
+                    "v.service_categories @> :categoryJson::jsonb",
+            nativeQuery = true)
+    Page<Vendor> findByStatusAndServiceCategoriesContaining(
+            @Param("status") VendorStatus status,
+            @Param("categoryJson") String categoryJson,
+            Pageable pageable);
 }

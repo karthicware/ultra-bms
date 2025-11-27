@@ -40,3 +40,4 @@ export * from './pm-schedule';
 export * from './work-order-progress';
 export * from './vendors';
 export * from './vendor-documents';
+export * from './vendor-ratings';

@@ -22,7 +22,10 @@ import com.ultrabms.entity.User;
 import com.ultrabms.entity.enums.WorkOrderCategory;
 import com.ultrabms.entity.enums.WorkOrderPriority;
 import com.ultrabms.entity.enums.WorkOrderStatus;
+import com.ultrabms.dto.vendor.VendorRatingDto;
+import com.ultrabms.dto.vendor.VendorRatingRequestDto;
 import com.ultrabms.repository.UserRepository;
+import com.ultrabms.service.VendorRatingService;
 import com.ultrabms.service.WorkOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -76,13 +79,16 @@ public class WorkOrderController {
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkOrderController.class);
 
     private final WorkOrderService workOrderService;
+    private final VendorRatingService vendorRatingService;
     private final UserRepository userRepository;
 
     public WorkOrderController(
             WorkOrderService workOrderService,
+            VendorRatingService vendorRatingService,
             UserRepository userRepository
     ) {
         this.workOrderService = workOrderService;
+        this.vendorRatingService = vendorRatingService;
         this.userRepository = userRepository;
     }
 
@@ -651,6 +657,96 @@ public class WorkOrderController {
 
         Map<String, Object> responseBody = buildPagedResponse(workOrders, "Follow-up work orders retrieved successfully");
         return ResponseEntity.ok(responseBody);
+    }
+
+    // ====================================================================
+    // VENDOR RATING ENDPOINTS (Story 5.3)
+    // ====================================================================
+
+    /**
+     * Submit vendor rating for a completed work order
+     * POST /api/v1/work-orders/{id}/vendor-rating
+     */
+    @PostMapping("/{id}/vendor-rating")
+    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    @Operation(
+            summary = "Submit vendor rating",
+            description = "Rate the vendor after work order completion"
+    )
+    public ResponseEntity<Map<String, Object>> submitVendorRating(
+            @PathVariable UUID id,
+            @Valid @RequestBody VendorRatingRequestDto ratingDto,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        LOGGER.info("Submitting vendor rating for work order: {}", id);
+        UUID userId = getUserId(userDetails);
+        VendorRatingDto rating = vendorRatingService.submitRating(id, ratingDto, userId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(buildSuccessResponse(rating, "Vendor rating submitted successfully"));
+    }
+
+    /**
+     * Get vendor rating for a work order
+     * GET /api/v1/work-orders/{id}/vendor-rating
+     */
+    @GetMapping("/{id}/vendor-rating")
+    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT')")
+    @Operation(
+            summary = "Get vendor rating",
+            description = "Get the vendor rating for a work order"
+    )
+    public ResponseEntity<Map<String, Object>> getVendorRating(@PathVariable UUID id) {
+        LOGGER.info("Fetching vendor rating for work order: {}", id);
+        VendorRatingDto rating = vendorRatingService.getRatingByWorkOrderId(id);
+        if (rating == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "No rating found for this work order");
+            response.put("data", null);
+            response.put("timestamp", LocalDateTime.now());
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.ok(buildSuccessResponse(rating, "Vendor rating retrieved successfully"));
+    }
+
+    /**
+     * Update vendor rating for a work order (within 7-day window)
+     * PUT /api/v1/work-orders/{id}/vendor-rating
+     */
+    @PutMapping("/{id}/vendor-rating")
+    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    @Operation(
+            summary = "Update vendor rating",
+            description = "Update vendor rating within 7 days of initial submission"
+    )
+    public ResponseEntity<Map<String, Object>> updateVendorRating(
+            @PathVariable UUID id,
+            @Valid @RequestBody VendorRatingRequestDto ratingDto,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        LOGGER.info("Updating vendor rating for work order: {}", id);
+        UUID userId = getUserId(userDetails);
+        VendorRatingDto rating = vendorRatingService.updateRating(id, ratingDto, userId);
+        return ResponseEntity.ok(buildSuccessResponse(rating, "Vendor rating updated successfully"));
+    }
+
+    /**
+     * Check if rating exists for a work order
+     * GET /api/v1/work-orders/{id}/vendor-rating/exists
+     */
+    @GetMapping("/{id}/vendor-rating/exists")
+    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT')")
+    @Operation(
+            summary = "Check if rating exists",
+            description = "Check if a vendor rating exists for this work order"
+    )
+    public ResponseEntity<Map<String, Object>> checkRatingExists(@PathVariable UUID id) {
+        boolean exists = vendorRatingService.ratingExistsForWorkOrder(id);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", Map.of("exists", exists));
+        response.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.ok(response);
     }
 
     // ====================================================================

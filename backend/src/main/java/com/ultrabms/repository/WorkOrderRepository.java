@@ -367,4 +367,26 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, UUID> {
      * @return True if property has open work orders
      */
     boolean existsByPropertyIdAndStatus(UUID propertyId, WorkOrderStatus status);
+
+    // =================================================================
+    // VENDOR PERFORMANCE QUERIES (Story 5.3)
+    // =================================================================
+
+    /**
+     * Find all completed work orders for a specific vendor (assignee)
+     *
+     * @param vendorId Vendor UUID (assignedTo value)
+     * @return List of completed work orders
+     */
+    @Query("SELECT wo FROM WorkOrder wo WHERE wo.assignedTo = :vendorId AND wo.status = 'COMPLETED'")
+    List<WorkOrder> findCompletedByVendorId(@Param("vendorId") UUID vendorId);
+
+    /**
+     * Count completed work orders for a vendor
+     *
+     * @param vendorId Vendor UUID
+     * @return Count of completed work orders
+     */
+    @Query("SELECT COUNT(wo) FROM WorkOrder wo WHERE wo.assignedTo = :vendorId AND wo.status = 'COMPLETED'")
+    long countCompletedByVendorId(@Param("vendorId") UUID vendorId);
 }

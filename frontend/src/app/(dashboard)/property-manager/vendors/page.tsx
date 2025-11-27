@@ -27,6 +27,8 @@ import {
   Eye,
   Pencil,
   Trash2,
+  Trophy,
+  Scale,
 } from 'lucide-react';
 
 import {
@@ -243,6 +245,22 @@ export default function VendorsPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => router.push('/property-manager/vendors/ranking')}
+            data-testid="view-rankings-button"
+          >
+            <Trophy className="mr-2 h-4 w-4 text-yellow-500" />
+            Rankings
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => router.push('/property-manager/vendors/compare')}
+            data-testid="compare-vendors-button"
+          >
+            <Scale className="mr-2 h-4 w-4" />
+            Compare
+          </Button>
           <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
             <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh

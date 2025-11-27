@@ -1,0 +1,1201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Story Context: 6-1-rent-invoicing-and-payment-management
+  Generated: 2025-11-27
+  Purpose: Developer-ready context for implementing rent invoicing and payment management
+-->
+<story-context story-id="6.1" epic-id="6">
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 1: STORY OVERVIEW -->
+  <!-- ============================================================================== -->
+  <story-overview>
+    <title>Rent Invoicing and Payment Management</title>
+    <epic>Epic 6: Financial Management</epic>
+    <status>ready-for-dev</status>
+    <user-story>
+      <as-a>finance manager</as-a>
+      <i-want>to generate rent invoices and track payments</i-want>
+      <so-that>rental income is collected efficiently and accurately</so-that>
+    </user-story>
+    <scope-summary>
+      This story implements the core rent invoicing and payment tracking functionality.
+      It includes automatic invoice generation based on tenant payment schedules, manual
+      invoice creation, payment recording, partial payment support, late fee calculation,
+      invoice PDF generation with email delivery, and a comprehensive tenant portal for
+      payment history. The system integrates with existing tenant, unit, and property
+      entities while following established patterns for entities, services, and UI components.
+    </scope-summary>
+  </story-overview>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 2: ARCHITECTURE CONTEXT -->
+  <!-- ============================================================================== -->
+  <architecture-context>
+    <tech-stack>
+      <backend>
+        <framework>Spring Boot 3.x with Spring Security</framework>
+        <database>PostgreSQL with JPA/Hibernate</database>
+        <messaging>Async email via Spring @Async with ThreadPoolTaskExecutor</messaging>
+        <storage>AWS S3 (LocalStack for dev) for invoice PDF storage</storage>
+        <pdf>iText Core library (already in pom.xml)</pdf>
+        <scheduling>Spring @Scheduled for automatic invoice generation</scheduling>
+      </backend>
+      <frontend>
+        <framework>Next.js 14 with App Router</framework>
+        <ui>shadcn/ui components with Tailwind CSS</ui>
+        <state>TanStack React Query for server state</state>
+        <forms>React Hook Form with Zod validation</forms>
+        <notifications>Sonner toast notifications</notifications>
+      </frontend>
+    </tech-stack>
+
+    <api-conventions>
+      <base-path>/api/v1</base-path>
+      <response-format>
+        Wrapped responses: { success: boolean, data: T, message?: string }
+        Paginated: { success: boolean, data: { content: T[], totalElements, totalPages, number, size } }
+      </response-format>
+      <error-format>
+        { success: false, error: { code: string, message: string, details?: object } }
+      </error-format>
+      <authentication>JWT Bearer token in Authorization header</authentication>
+      <roles-required>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN for management; TENANT for portal</roles-required>
+    </api-conventions>
+
+    <database-conventions>
+      <naming>snake_case for tables and columns</naming>
+      <primary-key>UUID with @GeneratedValue(strategy = UUID)</primary-key>
+      <audit-fields>created_at, updated_at (from BaseEntity), created_by</audit-fields>
+      <soft-delete>active boolean field, is_deleted + deleted_at for some entities</soft-delete>
+      <amounts>BigDecimal with precision 12, scale 2</amounts>
+    </database-conventions>
+  </architecture-context>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 3: EXISTING CODE PATTERNS -->
+  <!-- ============================================================================== -->
+  <code-patterns>
+
+    <pattern name="Entity Pattern" source="backend/src/main/java/com/ultrabms/entity/Tenant.java">
+      <description>
+        Entities extend BaseEntity for audit fields. Use Lombok annotations (@Data, @Builder,
+        @NoArgsConstructor, @AllArgsConstructor, @EqualsAndHashCode). Define @Table with
+        unique constraints and indexes. Use @NotNull, @NotBlank, @Size, @DecimalMin for
+        validation. BigDecimal for monetary amounts with precision=12, scale=2.
+      </description>
+      <example>
+```java
+@Entity
+@Table(
+    name = "invoices",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_invoice_number", columnNames = {"invoice_number"})
+    },
+    indexes = {
+        @Index(name = "idx_invoices_tenant_id", columnList = "tenant_id"),
+        @Index(name = "idx_invoices_status", columnList = "status"),
+        @Index(name = "idx_invoices_due_date", columnList = "due_date")
+    }
+)
+@Data
+@Builder
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+@AllArgsConstructor
+public class Invoice extends BaseEntity {
+    // fields...
+}
+```
+      </example>
+    </pattern>
+
+    <pattern name="Scheduled Job Pattern" source="backend/src/main/java/com/ultrabms/scheduler/PMScheduleJob.java">
+      <description>
+        Use @Component and @Scheduled(cron = "${...}") with configurable cron expressions.
+        Delegate to service layer. Use SLF4J logging. Wrap in try-catch for fault tolerance.
+      </description>
+      <example>
+```java
+@Component
+public class InvoiceGenerationJob {
+    private static final Logger LOGGER = LoggerFactory.getLogger(InvoiceGenerationJob.class);
+    private final InvoiceService invoiceService;
+
+    @Scheduled(cron = "${invoice.generation.cron:0 0 1 * * *}")
+    public void generateScheduledInvoices() {
+        LOGGER.info("Starting invoice generation job");
+        try {
+            int count = invoiceService.generateScheduledInvoices();
+            LOGGER.info("Invoice generation completed: {} invoices created", count);
+        } catch (Exception e) {
+            LOGGER.error("Invoice generation job failed: {}", e.getMessage(), e);
+        }
+    }
+}
+```
+      </example>
+    </pattern>
+
+    <pattern name="Email Service Pattern" source="backend/src/main/java/com/ultrabms/service/EmailService.java">
+      <description>
+        Use @Async("emailTaskExecutor") for non-blocking email. Thymeleaf templates in
+        resources/templates/email/. Create both .html and .txt versions. Use Context for
+        template variables. Fail silently (log error only) to avoid blocking API calls.
+      </description>
+      <example>
+```java
+@Async("emailTaskExecutor")
+public void sendInvoiceEmail(Tenant tenant, Invoice invoice, byte[] pdfContent) {
+    try {
+        Context context = new Context();
+        context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+        context.setVariable("invoiceNumber", invoice.getInvoiceNumber());
+        context.setVariable("amount", invoice.getTotalAmount());
+        context.setVariable("dueDate", invoice.getDueDate().format(...));
+        // ... more variables
+
+        String htmlContent = templateEngine.process("email/invoice-generated", context);
+        String textContent = templateEngine.process("email/invoice-generated.txt", context);
+
+        sendEmailWithAttachment(tenant.getEmail(), "Your Rent Invoice", textContent, htmlContent,
+            pdfContent, "invoice-" + invoice.getInvoiceNumber() + ".pdf");
+
+        log.info("Invoice email sent to tenant: {}", tenant.getEmail());
+    } catch (Exception e) {
+        log.error("Failed to send invoice email to tenant: {}", tenant.getEmail(), e);
+    }
+}
+```
+      </example>
+    </pattern>
+
+    <pattern name="Frontend Service Pattern" source="frontend/src/services/vendors.service.ts">
+      <description>
+        Use apiClient from @/lib/api. Define types in @/types/. Export named functions with
+        comprehensive JSDoc. Use TypeScript generics for response types. Handle params for
+        filtering/pagination.
+      </description>
+      <example>
+```typescript
+const INVOICES_BASE_PATH = '/v1/invoices';
+
+export async function getInvoices(filters?: InvoiceFilter): Promise&lt;InvoiceListResponse&gt; {
+  const params: Record&lt;string, any&gt; = {
+    page: filters?.page ?? 0,
+    size: filters?.size ?? 20,
+    sortBy: filters?.sortBy ?? 'dueDate',
+    sortDirection: filters?.sortDirection ?? 'DESC'
+  };
+  if (filters?.status) params.status = filters.status;
+  if (filters?.tenantId) params.tenantId = filters.tenantId;
+
+  const response = await apiClient.get&lt;InvoiceListResponse&gt;(INVOICES_BASE_PATH, { params });
+  return response.data;
+}
+```
+      </example>
+    </pattern>
+
+    <pattern name="React Query Hook Pattern" source="frontend/src/hooks/useVendors.ts">
+      <description>
+        Define query keys factory. Use useQuery for reads with staleTime. Use useMutation for
+        writes with onSuccess cache invalidation and toast notifications. Use queryClient for
+        cache management.
+      </description>
+      <example>
+```typescript
+export const invoiceKeys = {
+  all: ['invoices'] as const,
+  lists: () => [...invoiceKeys.all, 'list'] as const,
+  list: (filters: InvoiceFilter) => [...invoiceKeys.lists(), filters] as const,
+  details: () => [...invoiceKeys.all, 'detail'] as const,
+  detail: (id: string) => [...invoiceKeys.details(), id] as const,
+};
+
+export function useInvoices(filters?: InvoiceFilter, enabled = true) {
+  return useQuery&lt;InvoiceListResponse&gt;({
+    queryKey: invoiceKeys.list(filters ?? {}),
+    queryFn: () => getInvoices(filters),
+    staleTime: 5 * 60 * 1000,
+    enabled
+  });
+}
+```
+      </example>
+    </pattern>
+
+    <pattern name="File Storage Pattern" source="backend/src/main/java/com/ultrabms/service/FileStorageService.java">
+      <description>
+        Use FileStorageService interface for S3 operations. storeFile() returns S3 key.
+        getDownloadUrl() returns presigned URL (5-minute expiration). Store PDFs with
+        directory structure like "invoices/{tenantId}/{invoiceNumber}.pdf".
+      </description>
+    </pattern>
+
+  </code-patterns>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 4: RELATED ENTITIES REFERENCE -->
+  <!-- ============================================================================== -->
+  <existing-entities>
+
+    <entity name="Tenant" path="backend/src/main/java/com/ultrabms/entity/Tenant.java">
+      <key-fields>
+        <field name="id" type="UUID" description="Primary key"/>
+        <field name="userId" type="UUID" description="Associated User account"/>
+        <field name="tenantNumber" type="String" description="Unique tenant number (TNT-YYYY-NNNN)"/>
+        <field name="firstName" type="String"/>
+        <field name="lastName" type="String"/>
+        <field name="email" type="String" description="For invoice delivery"/>
+        <field name="phone" type="String"/>
+        <field name="property" type="Property" description="ManyToOne relationship"/>
+        <field name="unit" type="Unit" description="ManyToOne relationship"/>
+        <field name="leaseStartDate" type="LocalDate"/>
+        <field name="leaseEndDate" type="LocalDate"/>
+        <field name="baseRent" type="BigDecimal" description="Monthly base rent"/>
+        <field name="serviceCharge" type="BigDecimal" description="Monthly service charge"/>
+        <field name="totalMonthlyRent" type="BigDecimal" description="Total monthly amount"/>
+        <field name="paymentFrequency" type="PaymentFrequency" description="MONTHLY, QUARTERLY, YEARLY"/>
+        <field name="paymentDueDate" type="Integer" description="Day of month (1-31)"/>
+        <field name="paymentMethod" type="PaymentMethod" description="BANK_TRANSFER, CHEQUE, PDC, CASH, ONLINE"/>
+        <field name="status" type="TenantStatus" description="PENDING, ACTIVE, EXPIRED, TERMINATED"/>
+        <field name="active" type="Boolean" description="Soft delete flag"/>
+      </key-fields>
+    </entity>
+
+    <entity name="Property" path="backend/src/main/java/com/ultrabms/entity/Property.java">
+      <key-fields>
+        <field name="id" type="UUID"/>
+        <field name="name" type="String"/>
+        <field name="address" type="String"/>
+      </key-fields>
+    </entity>
+
+    <entity name="Unit" path="backend/src/main/java/com/ultrabms/entity/Unit.java">
+      <key-fields>
+        <field name="id" type="UUID"/>
+        <field name="unitNumber" type="String"/>
+        <field name="property" type="Property"/>
+      </key-fields>
+    </entity>
+
+    <enum name="PaymentFrequency" path="backend/src/main/java/com/ultrabms/entity/enums/PaymentFrequency.java">
+      <values>MONTHLY, QUARTERLY, YEARLY</values>
+    </enum>
+
+    <enum name="PaymentMethod" path="backend/src/main/java/com/ultrabms/entity/enums/PaymentMethod.java">
+      <values>BANK_TRANSFER, CHEQUE, PDC, CASH, ONLINE</values>
+    </enum>
+
+    <enum name="TenantStatus" path="backend/src/main/java/com/ultrabms/entity/enums/TenantStatus.java">
+      <values>PENDING, ACTIVE, EXPIRED, TERMINATED</values>
+    </enum>
+
+  </existing-entities>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 5: NEW ENTITIES TO CREATE -->
+  <!-- ============================================================================== -->
+  <new-entities>
+
+    <entity name="Invoice" path="backend/src/main/java/com/ultrabms/entity/Invoice.java">
+      <description>Core invoice entity for rent billing</description>
+      <fields>
+        <field name="id" type="UUID" constraints="PK, auto-generated"/>
+        <field name="invoiceNumber" type="String" constraints="Unique, format: INV-YYYY-NNNNNN"/>
+        <field name="tenant" type="Tenant" constraints="ManyToOne, NotNull, indexed"/>
+        <field name="property" type="Property" constraints="ManyToOne, NotNull, denormalized for reporting"/>
+        <field name="unit" type="Unit" constraints="ManyToOne, NotNull, denormalized"/>
+        <field name="invoiceType" type="InvoiceType" constraints="NotNull (RENT, LATE_FEE, ADJUSTMENT, OTHER)"/>
+        <field name="billingPeriodStart" type="LocalDate" constraints="NotNull"/>
+        <field name="billingPeriodEnd" type="LocalDate" constraints="NotNull"/>
+        <field name="issueDate" type="LocalDate" constraints="NotNull, indexed"/>
+        <field name="dueDate" type="LocalDate" constraints="NotNull, indexed"/>
+        <field name="baseRentAmount" type="BigDecimal" constraints="NotNull, precision=12, scale=2"/>
+        <field name="serviceChargeAmount" type="BigDecimal" constraints="precision=12, scale=2, default=0"/>
+        <field name="parkingFeeAmount" type="BigDecimal" constraints="precision=12, scale=2, default=0"/>
+        <field name="lateFeeAmount" type="BigDecimal" constraints="precision=12, scale=2, default=0"/>
+        <field name="adjustmentAmount" type="BigDecimal" constraints="precision=12, scale=2, default=0"/>
+        <field name="adjustmentReason" type="String" constraints="length=500"/>
+        <field name="totalAmount" type="BigDecimal" constraints="NotNull, precision=12, scale=2, computed"/>
+        <field name="paidAmount" type="BigDecimal" constraints="precision=12, scale=2, default=0"/>
+        <field name="balanceDue" type="BigDecimal" constraints="precision=12, scale=2, computed"/>
+        <field name="status" type="InvoiceStatus" constraints="NotNull, indexed (DRAFT, SENT, PAID, PARTIALLY_PAID, OVERDUE, CANCELLED, VOID)"/>
+        <field name="pdfPath" type="String" constraints="S3 key for generated PDF"/>
+        <field name="notes" type="String" constraints="length=1000, internal notes"/>
+        <field name="createdBy" type="UUID" constraints="User who created"/>
+        <field name="sentAt" type="LocalDateTime" constraints="When email was sent"/>
+        <field name="paidAt" type="LocalDateTime" constraints="When fully paid"/>
+        <field name="active" type="Boolean" constraints="Soft delete, default=true"/>
+      </fields>
+      <indexes>
+        <index columns="tenant_id, billing_period_start" name="idx_invoice_tenant_period"/>
+        <index columns="status, due_date" name="idx_invoice_status_due"/>
+        <index columns="property_id, issue_date" name="idx_invoice_property_date"/>
+      </indexes>
+    </entity>
+
+    <entity name="Payment" path="backend/src/main/java/com/ultrabms/entity/Payment.java">
+      <description>Payment record entity for tracking rent payments</description>
+      <fields>
+        <field name="id" type="UUID" constraints="PK, auto-generated"/>
+        <field name="paymentNumber" type="String" constraints="Unique, format: PAY-YYYY-NNNNNN"/>
+        <field name="invoice" type="Invoice" constraints="ManyToOne, NotNull, indexed"/>
+        <field name="tenant" type="Tenant" constraints="ManyToOne, NotNull, denormalized"/>
+        <field name="amount" type="BigDecimal" constraints="NotNull, precision=12, scale=2"/>
+        <field name="paymentDate" type="LocalDate" constraints="NotNull, indexed"/>
+        <field name="paymentMethod" type="PaymentMethod" constraints="NotNull"/>
+        <field name="referenceNumber" type="String" constraints="Cheque number, transaction ID, etc."/>
+        <field name="notes" type="String" constraints="length=500"/>
+        <field name="status" type="PaymentStatus" constraints="NotNull (PENDING, CONFIRMED, REJECTED, REFUNDED)"/>
+        <field name="receiptPath" type="String" constraints="S3 key for uploaded receipt"/>
+        <field name="recordedBy" type="UUID" constraints="User who recorded payment"/>
+        <field name="confirmedBy" type="UUID" constraints="User who confirmed payment"/>
+        <field name="confirmedAt" type="LocalDateTime"/>
+        <field name="active" type="Boolean" constraints="Soft delete, default=true"/>
+      </fields>
+    </entity>
+
+    <enum name="InvoiceType" path="backend/src/main/java/com/ultrabms/entity/enums/InvoiceType.java">
+      <values>RENT, LATE_FEE, ADJUSTMENT, UTILITY, OTHER</values>
+    </enum>
+
+    <enum name="InvoiceStatus" path="backend/src/main/java/com/ultrabms/entity/enums/InvoiceStatus.java">
+      <values>DRAFT, SENT, PAID, PARTIALLY_PAID, OVERDUE, CANCELLED, VOID</values>
+    </enum>
+
+    <enum name="PaymentStatus" path="backend/src/main/java/com/ultrabms/entity/enums/PaymentStatus.java">
+      <values>PENDING, CONFIRMED, REJECTED, REFUNDED</values>
+    </enum>
+
+  </new-entities>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 6: API ENDPOINTS -->
+  <!-- ============================================================================== -->
+  <api-endpoints>
+
+    <endpoint-group name="Invoice Management">
+      <endpoint method="POST" path="/v1/invoices">
+        <description>Create a new invoice (manual creation)</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <request-body>
+          tenantId: UUID (required)
+          invoiceType: InvoiceType (required)
+          billingPeriodStart: LocalDate (required)
+          billingPeriodEnd: LocalDate (required)
+          dueDate: LocalDate (required)
+          baseRentAmount: BigDecimal (required)
+          serviceChargeAmount: BigDecimal (optional)
+          parkingFeeAmount: BigDecimal (optional)
+          adjustmentAmount: BigDecimal (optional)
+          adjustmentReason: String (required if adjustment != 0)
+          notes: String (optional)
+        </request-body>
+        <response>Created Invoice with generated invoiceNumber</response>
+      </endpoint>
+
+      <endpoint method="GET" path="/v1/invoices">
+        <description>List invoices with filtering and pagination</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <query-params>
+          page: int (default 0)
+          size: int (default 20)
+          sortBy: String (default "dueDate")
+          sortDirection: ASC|DESC (default DESC)
+          status: InvoiceStatus (optional, filter)
+          tenantId: UUID (optional, filter)
+          propertyId: UUID (optional, filter)
+          fromDate: LocalDate (optional, issue date from)
+          toDate: LocalDate (optional, issue date to)
+          search: String (optional, search invoiceNumber, tenantName)
+          overdueOnly: boolean (optional, filter overdue invoices)
+        </query-params>
+        <response>Paginated list of InvoiceListItem</response>
+      </endpoint>
+
+      <endpoint method="GET" path="/v1/invoices/{id}">
+        <description>Get invoice details by ID</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN, TENANT (own invoices only)</roles>
+        <response>InvoiceDetail with tenant info, payments, amounts breakdown</response>
+      </endpoint>
+
+      <endpoint method="PUT" path="/v1/invoices/{id}">
+        <description>Update invoice (only DRAFT status)</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <request-body>Same as create, all fields optional</request-body>
+        <response>Updated Invoice</response>
+        <error>400 if invoice not in DRAFT status</error>
+      </endpoint>
+
+      <endpoint method="POST" path="/v1/invoices/{id}/send">
+        <description>Send invoice to tenant (generates PDF, sends email, updates status to SENT)</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <response>{ success: true, message: "Invoice sent", sentAt: DateTime }</response>
+      </endpoint>
+
+      <endpoint method="POST" path="/v1/invoices/{id}/cancel">
+        <description>Cancel invoice (only if no payments recorded)</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <request-body>reason: String (required)</request-body>
+        <response>Cancelled Invoice</response>
+        <error>400 if payments exist</error>
+      </endpoint>
+
+      <endpoint method="GET" path="/v1/invoices/{id}/pdf">
+        <description>Get presigned URL for invoice PDF download</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN, TENANT (own invoices only)</roles>
+        <response>{ url: String (presigned S3 URL, 5-min expiry) }</response>
+      </endpoint>
+
+      <endpoint method="POST" path="/v1/invoices/generate">
+        <description>Manually trigger invoice generation for a tenant or all due tenants</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <request-body>tenantId: UUID (optional, if null generates for all due tenants)</request-body>
+        <response>{ generatedCount: int, invoices: Invoice[] }</response>
+      </endpoint>
+
+      <endpoint method="POST" path="/v1/invoices/{id}/apply-late-fee">
+        <description>Manually apply late fee to overdue invoice</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <request-body>amount: BigDecimal (required), reason: String (optional)</request-body>
+        <response>Updated Invoice with late fee</response>
+      </endpoint>
+    </endpoint-group>
+
+    <endpoint-group name="Payment Management">
+      <endpoint method="POST" path="/v1/payments">
+        <description>Record a payment against an invoice</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <request-body>
+          invoiceId: UUID (required)
+          amount: BigDecimal (required)
+          paymentDate: LocalDate (required)
+          paymentMethod: PaymentMethod (required)
+          referenceNumber: String (optional)
+          notes: String (optional)
+        </request-body>
+        <response>Created Payment with generated paymentNumber</response>
+        <side-effects>Updates invoice.paidAmount and status (PARTIALLY_PAID or PAID)</side-effects>
+      </endpoint>
+
+      <endpoint method="GET" path="/v1/payments">
+        <description>List payments with filtering</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <query-params>
+          page, size, sortBy, sortDirection
+          invoiceId: UUID (optional)
+          tenantId: UUID (optional)
+          fromDate, toDate: LocalDate (optional)
+          status: PaymentStatus (optional)
+          paymentMethod: PaymentMethod (optional)
+        </query-params>
+        <response>Paginated list of PaymentListItem</response>
+      </endpoint>
+
+      <endpoint method="GET" path="/v1/payments/{id}">
+        <description>Get payment details</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN, TENANT (own payments only)</roles>
+        <response>PaymentDetail with invoice info</response>
+      </endpoint>
+
+      <endpoint method="PATCH" path="/v1/payments/{id}/confirm">
+        <description>Confirm a pending payment</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <response>Confirmed Payment</response>
+      </endpoint>
+
+      <endpoint method="PATCH" path="/v1/payments/{id}/reject">
+        <description>Reject a payment (e.g., bounced cheque)</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <request-body>reason: String (required)</request-body>
+        <response>Rejected Payment</response>
+        <side-effects>Reverts invoice.paidAmount, updates status</side-effects>
+      </endpoint>
+    </endpoint-group>
+
+    <endpoint-group name="Tenant Portal - Invoices">
+      <endpoint method="GET" path="/v1/tenant-portal/invoices">
+        <description>Get current tenant's invoices</description>
+        <roles>TENANT</roles>
+        <query-params>page, size, status (optional)</query-params>
+        <response>Paginated list of tenant's invoices</response>
+      </endpoint>
+
+      <endpoint method="GET" path="/v1/tenant-portal/invoices/{id}">
+        <description>Get invoice detail (own invoice only)</description>
+        <roles>TENANT</roles>
+        <response>InvoiceDetail for tenant view</response>
+      </endpoint>
+
+      <endpoint method="GET" path="/v1/tenant-portal/invoices/{id}/pdf">
+        <description>Download invoice PDF (own invoice only)</description>
+        <roles>TENANT</roles>
+        <response>{ url: String }</response>
+      </endpoint>
+
+      <endpoint method="GET" path="/v1/tenant-portal/payments">
+        <description>Get current tenant's payment history</description>
+        <roles>TENANT</roles>
+        <query-params>page, size</query-params>
+        <response>Paginated list of tenant's payments</response>
+      </endpoint>
+
+      <endpoint method="GET" path="/v1/tenant-portal/financial-summary">
+        <description>Get tenant's financial summary (total due, upcoming, paid this year)</description>
+        <roles>TENANT</roles>
+        <response>
+          {
+            totalOutstanding: BigDecimal,
+            nextDueDate: LocalDate,
+            nextDueAmount: BigDecimal,
+            totalPaidThisYear: BigDecimal,
+            overdueCount: int
+          }
+        </response>
+      </endpoint>
+    </endpoint-group>
+
+    <endpoint-group name="Reports and Dashboard">
+      <endpoint method="GET" path="/v1/invoices/summary">
+        <description>Get invoice summary stats for dashboard</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <query-params>propertyId (optional), month (optional), year (optional)</query-params>
+        <response>
+          {
+            totalInvoiced: BigDecimal,
+            totalCollected: BigDecimal,
+            totalOutstanding: BigDecimal,
+            overdueAmount: BigDecimal,
+            overdueCount: int,
+            collectionRate: BigDecimal (percentage)
+          }
+        </response>
+      </endpoint>
+
+      <endpoint method="GET" path="/v1/invoices/aging">
+        <description>Get aging report for outstanding invoices</description>
+        <roles>PROPERTY_MANAGER, FINANCE_MANAGER, ADMIN</roles>
+        <query-params>propertyId (optional)</query-params>
+        <response>
+          {
+            current: BigDecimal (0-30 days),
+            days30to60: BigDecimal,
+            days60to90: BigDecimal,
+            over90: BigDecimal
+          }
+        </response>
+      </endpoint>
+    </endpoint-group>
+
+  </api-endpoints>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 7: SCHEDULED JOBS -->
+  <!-- ============================================================================== -->
+  <scheduled-jobs>
+
+    <job name="InvoiceGenerationJob">
+      <description>
+        Automatically generates rent invoices for tenants based on their payment frequency
+        and due date. Runs daily at 1:00 AM to check for tenants whose next invoice is due.
+      </description>
+      <cron>0 0 1 * * * (configurable via invoice.generation.cron)</cron>
+      <logic>
+        1. Find all ACTIVE tenants where:
+           - leaseStartDate &lt;= today
+           - leaseEndDate >= current billing period
+           - No invoice exists for the upcoming billing period
+           - Next invoice generation date &lt;= today (based on paymentFrequency)
+        2. For each tenant:
+           a. Calculate billing period based on paymentFrequency
+           b. Calculate due date (paymentDueDate of billing month)
+           c. Create Invoice with status=DRAFT
+           d. Generate PDF
+           e. Send email notification
+           f. Update status to SENT
+        3. Log summary: X invoices generated, Y failures
+      </logic>
+      <config-properties>
+        invoice.generation.cron=0 0 1 * * *
+        invoice.generation.enabled=true
+        invoice.generation.days-before-due=7 (generate X days before due date)
+      </config-properties>
+    </job>
+
+    <job name="OverdueInvoiceJob">
+      <description>
+        Marks invoices as OVERDUE when past due date and applies late fees if configured.
+        Runs daily at 2:00 AM.
+      </description>
+      <cron>0 0 2 * * * (configurable via invoice.overdue.cron)</cron>
+      <logic>
+        1. Find all invoices where:
+           - status IN (SENT, PARTIALLY_PAID)
+           - dueDate &lt; today
+           - balanceDue > 0
+        2. For each invoice:
+           a. Update status to OVERDUE
+           b. If late fee policy enabled and not already applied:
+              - Calculate late fee (fixed amount or percentage)
+              - Add to lateFeeAmount
+              - Recalculate totalAmount and balanceDue
+           c. Send overdue reminder email to tenant
+        3. Log summary
+      </logic>
+      <config-properties>
+        invoice.overdue.cron=0 0 2 * * *
+        invoice.late-fee.enabled=true
+        invoice.late-fee.type=PERCENTAGE|FIXED
+        invoice.late-fee.amount=5 (5% or 5 AED depending on type)
+        invoice.late-fee.grace-period-days=3
+      </config-properties>
+    </job>
+
+    <job name="PaymentReminderJob">
+      <description>
+        Sends payment reminders X days before invoice due date.
+        Runs daily at 9:00 AM.
+      </description>
+      <cron>0 0 9 * * *</cron>
+      <logic>
+        1. Find invoices where:
+           - status = SENT
+           - dueDate = today + reminder_days
+           - balanceDue > 0
+        2. Send reminder email to tenant
+        3. Log summary
+      </logic>
+      <config-properties>
+        invoice.reminder.days-before=3,7 (send reminders 3 and 7 days before)
+      </config-properties>
+    </job>
+
+  </scheduled-jobs>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 8: EMAIL TEMPLATES -->
+  <!-- ============================================================================== -->
+  <email-templates>
+
+    <template name="invoice-generated">
+      <purpose>Sent when invoice is generated and sent to tenant</purpose>
+      <files>
+        - resources/templates/email/invoice-generated.html
+        - resources/templates/email/invoice-generated.txt
+      </files>
+      <variables>
+        tenantName, invoiceNumber, billingPeriod, dueDate, totalAmount,
+        breakdownItems (baseRent, serviceCharge, parking, adjustments),
+        paymentInstructions, portalUrl, supportEmail
+      </variables>
+      <attachment>Invoice PDF</attachment>
+    </template>
+
+    <template name="payment-confirmation">
+      <purpose>Sent when payment is recorded and confirmed</purpose>
+      <files>
+        - resources/templates/email/payment-confirmation.html
+        - resources/templates/email/payment-confirmation.txt
+      </files>
+      <variables>
+        tenantName, paymentNumber, invoiceNumber, amount, paymentDate,
+        paymentMethod, remainingBalance, portalUrl, supportEmail
+      </variables>
+    </template>
+
+    <template name="payment-reminder">
+      <purpose>Sent X days before invoice due date</purpose>
+      <files>
+        - resources/templates/email/payment-reminder.html
+        - resources/templates/email/payment-reminder.txt
+      </files>
+      <variables>
+        tenantName, invoiceNumber, dueDate, daysUntilDue, totalAmount,
+        balanceDue, paymentInstructions, portalUrl, supportEmail
+      </variables>
+    </template>
+
+    <template name="overdue-notice">
+      <purpose>Sent when invoice becomes overdue</purpose>
+      <files>
+        - resources/templates/email/overdue-notice.html
+        - resources/templates/email/overdue-notice.txt
+      </files>
+      <variables>
+        tenantName, invoiceNumber, originalDueDate, daysOverdue, balanceDue,
+        lateFeeApplied, lateFeeAmount, newTotalDue, urgentContactInfo, portalUrl
+      </variables>
+    </template>
+
+  </email-templates>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 9: PDF GENERATION -->
+  <!-- ============================================================================== -->
+  <pdf-generation>
+    <library>iText Core (already in pom.xml)</library>
+    <service>InvoicePdfService</service>
+    <storage>S3 at invoices/{tenantId}/{invoiceNumber}.pdf</storage>
+    <template-elements>
+      <header>Company logo, company name, address, contact info</header>
+      <invoice-info>Invoice number, issue date, due date, billing period</invoice-info>
+      <tenant-info>Tenant name, unit number, property name, address</tenant-info>
+      <line-items>
+        Table with: Description, Quantity, Unit Price, Amount
+        - Base Rent
+        - Service Charge
+        - Parking Fee
+        - Late Fee (if applicable)
+        - Adjustment (if applicable)
+      </line-items>
+      <totals>Subtotal, Late Fees, Total Due, Amount Paid, Balance Due</totals>
+      <payment-info>Bank details, payment instructions, reference to use</payment-info>
+      <footer>Terms and conditions, contact info for queries</footer>
+    </template-elements>
+  </pdf-generation>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 10: FRONTEND PAGES -->
+  <!-- ============================================================================== -->
+  <frontend-pages>
+
+    <page path="/property-manager/invoices">
+      <description>Invoice list page with filtering, search, bulk actions</description>
+      <components>
+        - InvoiceListPage (page.tsx)
+        - InvoiceTable (data table with columns, sorting, pagination)
+        - InvoiceFilters (status, property, date range, overdue toggle)
+        - InvoiceActions (send, cancel, download PDF)
+        - InvoiceSummaryCards (total invoiced, collected, outstanding, overdue)
+      </components>
+      <features>
+        - Filter by status, property, date range
+        - Search by invoice number, tenant name
+        - Sort by due date, amount, status
+        - Bulk send invoices
+        - Quick actions: view, send, cancel, download
+        - Summary cards at top
+      </features>
+    </page>
+
+    <page path="/property-manager/invoices/new">
+      <description>Create new invoice form</description>
+      <components>
+        - CreateInvoicePage (page.tsx)
+        - InvoiceForm (form with tenant select, amounts, dates)
+        - TenantSearchSelect (searchable tenant dropdown)
+      </components>
+      <features>
+        - Tenant selection with auto-fill of rent amounts
+        - Custom billing period
+        - Adjustment with reason
+        - Preview before save
+      </features>
+    </page>
+
+    <page path="/property-manager/invoices/[id]">
+      <description>Invoice detail page</description>
+      <components>
+        - InvoiceDetailPage (page.tsx)
+        - InvoiceHeader (status badge, invoice number, actions)
+        - InvoiceAmountsCard (breakdown of all amounts)
+        - PaymentHistoryTable (list of payments against this invoice)
+        - RecordPaymentModal (quick payment recording)
+        - InvoiceActivityTimeline (sent, payments, status changes)
+      </components>
+      <features>
+        - Full invoice details
+        - Payment recording
+        - Payment history
+        - Send/resend invoice
+        - Apply late fee
+        - Cancel invoice
+        - Download PDF
+      </features>
+    </page>
+
+    <page path="/property-manager/payments">
+      <description>Payment list page</description>
+      <components>
+        - PaymentListPage (page.tsx)
+        - PaymentTable (data table)
+        - PaymentFilters (date range, method, status, tenant)
+      </components>
+      <features>
+        - Filter by date range, payment method, status
+        - Search by reference number, tenant
+        - Confirm/reject pending payments
+        - Export to CSV
+      </features>
+    </page>
+
+    <page path="/tenant/invoices">
+      <description>Tenant portal - Invoice history</description>
+      <components>
+        - TenantInvoicesPage (page.tsx)
+        - TenantInvoiceTable (simplified table)
+        - TenantFinancialSummaryCard
+      </components>
+      <features>
+        - View all invoices
+        - Download PDF
+        - See payment status
+        - Financial summary (outstanding, next due)
+      </features>
+    </page>
+
+    <page path="/tenant/invoices/[id]">
+      <description>Tenant portal - Invoice detail</description>
+      <components>
+        - TenantInvoiceDetailPage (page.tsx)
+        - InvoiceViewCard (read-only invoice view)
+        - PaymentHistoryList
+      </components>
+      <features>
+        - View invoice details
+        - Download PDF
+        - View payment history
+      </features>
+    </page>
+
+    <page path="/tenant/payments">
+      <description>Tenant portal - Payment history</description>
+      <components>
+        - TenantPaymentsPage (page.tsx)
+        - TenantPaymentTable
+      </components>
+      <features>
+        - View all payments
+        - Filter by date range
+      </features>
+    </page>
+
+  </frontend-pages>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 11: ACCEPTANCE CRITERIA MAPPING -->
+  <!-- ============================================================================== -->
+  <acceptance-criteria-mapping>
+
+    <group name="Invoice Generation">
+      <ac number="1" description="System automatically generates rent invoices based on tenant payment schedule">
+        <implementation>InvoiceGenerationJob scheduled task + InvoiceService.generateScheduledInvoices()</implementation>
+      </ac>
+      <ac number="2" description="Invoice includes base rent, service charges, parking fees">
+        <implementation>Invoice entity with separate amount fields, InvoicePdfService includes all</implementation>
+      </ac>
+      <ac number="3" description="Invoice number generated in sequential format INV-YYYY-NNNNNN">
+        <implementation>InvoiceService.generateInvoiceNumber() using SequenceGenerator or DB sequence</implementation>
+      </ac>
+      <ac number="4" description="Invoice PDF generated and stored in S3">
+        <implementation>InvoicePdfService.generatePdf() + FileStorageService.storeFile()</implementation>
+      </ac>
+      <ac number="5" description="Invoice emailed to tenant with PDF attachment">
+        <implementation>EmailService.sendInvoiceEmail() with PDF attachment</implementation>
+      </ac>
+    </group>
+
+    <group name="Manual Invoice Management">
+      <ac number="6" description="Finance manager can create manual invoices">
+        <implementation>POST /v1/invoices endpoint + CreateInvoicePage</implementation>
+      </ac>
+      <ac number="7" description="Finance manager can edit draft invoices">
+        <implementation>PUT /v1/invoices/{id} with DRAFT status check</implementation>
+      </ac>
+      <ac number="8" description="Finance manager can cancel invoices without payments">
+        <implementation>POST /v1/invoices/{id}/cancel with payment check</implementation>
+      </ac>
+      <ac number="9" description="Finance manager can apply adjustments with reason">
+        <implementation>adjustmentAmount + adjustmentReason fields on Invoice</implementation>
+      </ac>
+    </group>
+
+    <group name="Payment Recording">
+      <ac number="10" description="Record payments against invoices">
+        <implementation>POST /v1/payments + PaymentService.recordPayment()</implementation>
+      </ac>
+      <ac number="11" description="Support partial payments with balance tracking">
+        <implementation>Invoice.paidAmount, balanceDue calculation, PARTIALLY_PAID status</implementation>
+      </ac>
+      <ac number="12" description="Support multiple payment methods">
+        <implementation>PaymentMethod enum, Payment.paymentMethod field</implementation>
+      </ac>
+      <ac number="13" description="Payment confirmation/rejection workflow">
+        <implementation>PATCH /v1/payments/{id}/confirm|reject, PaymentStatus enum</implementation>
+      </ac>
+      <ac number="14" description="Payment confirmation email sent to tenant">
+        <implementation>EmailService.sendPaymentConfirmation()</implementation>
+      </ac>
+    </group>
+
+    <group name="Late Fee Management">
+      <ac number="15" description="Automatically mark invoices as overdue after due date">
+        <implementation>OverdueInvoiceJob scheduled task</implementation>
+      </ac>
+      <ac number="16" description="Automatically apply late fees based on configuration">
+        <implementation>OverdueInvoiceJob with configurable late fee calculation</implementation>
+      </ac>
+      <ac number="17" description="Manual late fee application option">
+        <implementation>POST /v1/invoices/{id}/apply-late-fee endpoint</implementation>
+      </ac>
+      <ac number="18" description="Grace period before late fee application">
+        <implementation>invoice.late-fee.grace-period-days config property</implementation>
+      </ac>
+    </group>
+
+    <group name="Payment Reminders">
+      <ac number="19" description="Send payment reminders before due date">
+        <implementation>PaymentReminderJob scheduled task</implementation>
+      </ac>
+      <ac number="20" description="Send overdue notices for past-due invoices">
+        <implementation>OverdueInvoiceJob sends overdue-notice email</implementation>
+      </ac>
+      <ac number="21" description="Configurable reminder schedule">
+        <implementation>invoice.reminder.days-before config property</implementation>
+      </ac>
+    </group>
+
+    <group name="Tenant Portal">
+      <ac number="22" description="Tenant can view all their invoices">
+        <implementation>GET /v1/tenant-portal/invoices + TenantInvoicesPage</implementation>
+      </ac>
+      <ac number="23" description="Tenant can download invoice PDFs">
+        <implementation>GET /v1/tenant-portal/invoices/{id}/pdf</implementation>
+      </ac>
+      <ac number="24" description="Tenant can view payment history">
+        <implementation>GET /v1/tenant-portal/payments + TenantPaymentsPage</implementation>
+      </ac>
+      <ac number="25" description="Tenant can see financial summary">
+        <implementation>GET /v1/tenant-portal/financial-summary + TenantFinancialSummaryCard</implementation>
+      </ac>
+    </group>
+
+    <group name="Reporting">
+      <ac number="26" description="Dashboard shows invoice summary statistics">
+        <implementation>GET /v1/invoices/summary + InvoiceSummaryCards</implementation>
+      </ac>
+      <ac number="27" description="Aging report for outstanding invoices">
+        <implementation>GET /v1/invoices/aging endpoint</implementation>
+      </ac>
+      <ac number="28" description="Filter invoices by property, status, date range">
+        <implementation>Query params on GET /v1/invoices + InvoiceFilters component</implementation>
+      </ac>
+    </group>
+
+    <group name="Invoice Display">
+      <ac number="29" description="Invoice shows all line items with amounts">
+        <implementation>InvoiceAmountsCard component</implementation>
+      </ac>
+      <ac number="30" description="Invoice shows payment history">
+        <implementation>PaymentHistoryTable component on InvoiceDetailPage</implementation>
+      </ac>
+      <ac number="31" description="Invoice shows tenant and property details">
+        <implementation>Invoice entity denormalizes tenant/property info for display</implementation>
+      </ac>
+    </group>
+
+  </acceptance-criteria-mapping>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 12: IMPLEMENTATION SEQUENCE -->
+  <!-- ============================================================================== -->
+  <implementation-sequence>
+
+    <phase number="1" name="Backend Foundation">
+      <tasks>
+        <task>Create InvoiceType, InvoiceStatus, PaymentStatus enums</task>
+        <task>Create Invoice entity with all fields, constraints, indexes</task>
+        <task>Create Payment entity with all fields</task>
+        <task>Create InvoiceRepository with custom queries</task>
+        <task>Create PaymentRepository with custom queries</task>
+        <task>Run Flyway migration for new tables</task>
+      </tasks>
+    </phase>
+
+    <phase number="2" name="Core Invoice Service">
+      <tasks>
+        <task>Create InvoiceService with CRUD operations</task>
+        <task>Implement invoice number generation (INV-YYYY-NNNNNN)</task>
+        <task>Implement invoice amount calculations</task>
+        <task>Create InvoiceDTO, InvoiceRequest, InvoiceResponse classes</task>
+        <task>Create InvoiceController with management endpoints</task>
+        <task>Add unit tests for InvoiceService</task>
+      </tasks>
+    </phase>
+
+    <phase number="3" name="Payment Service">
+      <tasks>
+        <task>Create PaymentService with CRUD operations</task>
+        <task>Implement payment recording with invoice update</task>
+        <task>Implement payment confirmation/rejection</task>
+        <task>Create PaymentDTO, PaymentRequest, PaymentResponse classes</task>
+        <task>Create PaymentController with endpoints</task>
+        <task>Add unit tests for PaymentService</task>
+      </tasks>
+    </phase>
+
+    <phase number="4" name="PDF Generation">
+      <tasks>
+        <task>Create InvoicePdfService using iText</task>
+        <task>Design PDF template with company branding</task>
+        <task>Implement PDF generation with all invoice details</task>
+        <task>Integrate with FileStorageService for S3 storage</task>
+        <task>Add PDF download endpoint</task>
+      </tasks>
+    </phase>
+
+    <phase number="5" name="Email Notifications">
+      <tasks>
+        <task>Create invoice-generated email templates (HTML + TXT)</task>
+        <task>Create payment-confirmation email templates</task>
+        <task>Create payment-reminder email templates</task>
+        <task>Create overdue-notice email templates</task>
+        <task>Add EmailService methods for each notification type</task>
+      </tasks>
+    </phase>
+
+    <phase number="6" name="Scheduled Jobs">
+      <tasks>
+        <task>Create InvoiceGenerationJob with cron scheduling</task>
+        <task>Create OverdueInvoiceJob with late fee logic</task>
+        <task>Create PaymentReminderJob</task>
+        <task>Add configuration properties for all jobs</task>
+        <task>Add logging and error handling</task>
+      </tasks>
+    </phase>
+
+    <phase number="7" name="Tenant Portal API">
+      <tasks>
+        <task>Create TenantInvoiceController for tenant portal endpoints</task>
+        <task>Implement tenant-scoped invoice/payment queries</task>
+        <task>Implement financial summary endpoint</task>
+        <task>Add security checks for tenant-owned resources only</task>
+      </tasks>
+    </phase>
+
+    <phase number="8" name="Frontend Types and Services">
+      <tasks>
+        <task>Add Invoice and Payment types to frontend/src/types/</task>
+        <task>Create invoices.service.ts with all API calls</task>
+        <task>Create payments.service.ts with all API calls</task>
+        <task>Create tenant-invoices.service.ts for portal</task>
+      </tasks>
+    </phase>
+
+    <phase number="9" name="Frontend Hooks">
+      <tasks>
+        <task>Create useInvoices.ts with React Query hooks</task>
+        <task>Create usePayments.ts with React Query hooks</task>
+        <task>Create useTenantInvoices.ts for tenant portal</task>
+      </tasks>
+    </phase>
+
+    <phase number="10" name="Invoice Management UI">
+      <tasks>
+        <task>Create InvoiceListPage with table, filters, pagination</task>
+        <task>Create CreateInvoicePage with form</task>
+        <task>Create InvoiceDetailPage with payments, actions</task>
+        <task>Create RecordPaymentModal component</task>
+        <task>Create InvoiceSummaryCards component</task>
+      </tasks>
+    </phase>
+
+    <phase number="11" name="Payment Management UI">
+      <tasks>
+        <task>Create PaymentListPage with table, filters</task>
+        <task>Add payment confirmation/rejection actions</task>
+      </tasks>
+    </phase>
+
+    <phase number="12" name="Tenant Portal UI">
+      <tasks>
+        <task>Create TenantInvoicesPage</task>
+        <task>Create TenantInvoiceDetailPage</task>
+        <task>Create TenantPaymentsPage</task>
+        <task>Create TenantFinancialSummaryCard</task>
+        <task>Add navigation links to tenant portal</task>
+      </tasks>
+    </phase>
+
+    <phase number="13" name="Testing and Polish">
+      <tasks>
+        <task>Integration tests for invoice generation flow</task>
+        <task>Integration tests for payment recording flow</task>
+        <task>E2E tests for critical user flows</task>
+        <task>Manual QA testing</task>
+        <task>Performance testing for scheduled jobs</task>
+      </tasks>
+    </phase>
+
+  </implementation-sequence>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 13: CONFIGURATION PROPERTIES -->
+  <!-- ============================================================================== -->
+  <configuration>
+    <backend-properties>
+      # Invoice Generation
+      invoice.generation.enabled=true
+      invoice.generation.cron=0 0 1 * * *
+      invoice.generation.days-before-due=7
+
+      # Overdue Processing
+      invoice.overdue.cron=0 0 2 * * *
+      invoice.late-fee.enabled=true
+      invoice.late-fee.type=PERCENTAGE
+      invoice.late-fee.amount=5
+      invoice.late-fee.grace-period-days=3
+
+      # Payment Reminders
+      invoice.reminder.days-before=3,7
+
+      # PDF Storage
+      invoice.pdf.s3-prefix=invoices
+    </backend-properties>
+  </configuration>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 14: SECURITY CONSIDERATIONS -->
+  <!-- ============================================================================== -->
+  <security>
+    <access-control>
+      <rule>Invoice management endpoints require PROPERTY_MANAGER, FINANCE_MANAGER, or ADMIN role</rule>
+      <rule>Tenant portal endpoints require TENANT role and can only access own invoices/payments</rule>
+      <rule>PDF download URLs use presigned S3 URLs with 5-minute expiration</rule>
+      <rule>Payment recording requires audit trail (recordedBy, confirmedBy fields)</rule>
+    </access-control>
+    <data-protection>
+      <rule>Invoice amounts and tenant financial data are sensitive - no external logging</rule>
+      <rule>Payment reference numbers may contain partial bank/card info - mask in logs</rule>
+    </data-protection>
+  </security>
+
+  <!-- ============================================================================== -->
+  <!-- SECTION 15: TESTING GUIDANCE -->
+  <!-- ============================================================================== -->
+  <testing>
+    <unit-tests>
+      <test>InvoiceService.generateScheduledInvoices() - various tenant scenarios</test>
+      <test>InvoiceService.calculateTotalAmount() - all fee combinations</test>
+      <test>PaymentService.recordPayment() - partial and full payments</test>
+      <test>PaymentService.rejectPayment() - balance reversion</test>
+      <test>InvoicePdfService.generatePdf() - verify PDF content</test>
+    </unit-tests>
+    <integration-tests>
+      <test>Invoice generation job creates correct invoices for active tenants</test>
+      <test>Payment recording updates invoice status correctly</test>
+      <test>Late fee application after grace period</test>
+      <test>Email sending with PDF attachment</test>
+    </integration-tests>
+    <edge-cases>
+      <case>Tenant with QUARTERLY payment frequency</case>
+      <case>Invoice spanning year boundary (Dec billing period)</case>
+      <case>Multiple partial payments totaling exact balance</case>
+      <case>Payment rejection after invoice marked PAID</case>
+      <case>Invoice generation for tenant with lease ending mid-month</case>
+    </edge-cases>
+  </testing>
+
+</story-context>
