@@ -101,7 +101,7 @@ public class WorkOrderController {
      * - files: MultipartFile[] (optional, max 5, JPG/PNG, max 5MB each)
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Create work order",
             description = "Create a new work order with optional photo attachments (max 5, JPG/PNG, max 5MB each)"
@@ -125,7 +125,7 @@ public class WorkOrderController {
      * GET /api/v1/work-orders?propertyId=...&status=OPEN,ASSIGNED&category=PLUMBING&priority=HIGH&page=0&size=20
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN', 'TENANT')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT')")
     @Operation(
             summary = "List work orders",
             description = "Get paginated list of work orders with optional filters"
@@ -189,7 +189,7 @@ public class WorkOrderController {
      * GET /api/v1/work-orders/{id}
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN', 'TENANT', 'VENDOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT', 'VENDOR')")
     @Operation(
             summary = "Get work order by ID",
             description = "Retrieve full work order details by ID"
@@ -213,7 +213,7 @@ public class WorkOrderController {
      * GET /api/v1/work-orders/number/{workOrderNumber}
      */
     @GetMapping("/number/{workOrderNumber}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN', 'TENANT', 'VENDOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT', 'VENDOR')")
     @Operation(
             summary = "Get work order by number",
             description = "Retrieve full work order details by work order number (e.g., WO-2025-0001)"
@@ -237,7 +237,7 @@ public class WorkOrderController {
      * PUT /api/v1/work-orders/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Update work order",
             description = "Update work order details (partial updates supported)"
@@ -261,7 +261,7 @@ public class WorkOrderController {
      * PATCH /api/v1/work-orders/{id}/status
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN', 'VENDOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'VENDOR')")
     @Operation(
             summary = "Update work order status",
             description = "Update work order status (OPEN -> ASSIGNED -> IN_PROGRESS -> COMPLETED -> CLOSED)"
@@ -286,7 +286,7 @@ public class WorkOrderController {
      * Story 4.3: Enhanced with assignee type and assignment history tracking
      */
     @PostMapping("/{id}/assign")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Assign work order",
             description = "Assign work order to internal staff or external vendor with assignment history tracking"
@@ -312,7 +312,7 @@ public class WorkOrderController {
      * Story 4.3: Work Order Assignment and Vendor Coordination
      */
     @PostMapping("/{id}/reassign")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Reassign work order",
             description = "Reassign work order to a different assignee with required reason"
@@ -338,7 +338,7 @@ public class WorkOrderController {
      * Story 4.3: Work Order Assignment and Vendor Coordination
      */
     @GetMapping("/{id}/assignment-history")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Get assignment history",
             description = "Get paginated assignment history showing all assignments and reassignments"
@@ -363,7 +363,7 @@ public class WorkOrderController {
      * POST /api/v1/work-orders/{id}/comments
      */
     @PostMapping("/{id}/comments")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN', 'TENANT', 'VENDOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT', 'VENDOR')")
     @Operation(
             summary = "Add comment",
             description = "Add a comment to a work order"
@@ -387,7 +387,7 @@ public class WorkOrderController {
      * GET /api/v1/work-orders/{id}/comments
      */
     @GetMapping("/{id}/comments")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN', 'TENANT', 'VENDOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT', 'VENDOR')")
     @Operation(
             summary = "Get comments",
             description = "Get all comments for a work order"
@@ -409,7 +409,7 @@ public class WorkOrderController {
      * GET /api/v1/work-orders/{id}/status-history
      */
     @GetMapping("/{id}/status-history")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN', 'TENANT', 'VENDOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT', 'VENDOR')")
     @Operation(
             summary = "Get status history",
             description = "Get status change history for a work order"
@@ -431,7 +431,7 @@ public class WorkOrderController {
      * POST /api/v1/work-orders/{id}/completion-photos
      */
     @PostMapping(value = "/{id}/completion-photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN', 'VENDOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'VENDOR')")
     @Operation(
             summary = "Upload completion photos",
             description = "Upload completion photos (before/after) for a work order"
@@ -455,7 +455,7 @@ public class WorkOrderController {
      * GET /api/v1/work-orders/unassigned?propertyId=...&page=0&size=20
      */
     @GetMapping("/unassigned")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Get unassigned work orders",
             description = "Get paginated list of unassigned work orders (status = OPEN)"
@@ -480,7 +480,7 @@ public class WorkOrderController {
      * DELETE /api/v1/work-orders/{id}
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Cancel work order",
             description = "Cancel a work order (soft delete by setting status to CLOSED)"
@@ -508,7 +508,7 @@ public class WorkOrderController {
      * Story 4.4: Job Progress Tracking and Completion (AC #2)
      */
     @PatchMapping(value = "/{id}/start", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('MAINTENANCE_SUPERVISOR', 'VENDOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MAINTENANCE_SUPERVISOR', 'VENDOR')")
     @Operation(
             summary = "Start work",
             description = "Start work on an assigned work order. Changes status from ASSIGNED to IN_PROGRESS. " +
@@ -534,7 +534,7 @@ public class WorkOrderController {
      * Story 4.4: Job Progress Tracking and Completion (AC #9)
      */
     @PostMapping(value = "/{id}/progress", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('MAINTENANCE_SUPERVISOR', 'VENDOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MAINTENANCE_SUPERVISOR', 'VENDOR')")
     @Operation(
             summary = "Add progress update",
             description = "Add a progress update to a work order in IN_PROGRESS status. " +
@@ -561,7 +561,7 @@ public class WorkOrderController {
      * Story 4.4: Job Progress Tracking and Completion (AC #19)
      */
     @PatchMapping(value = "/{id}/complete", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('MAINTENANCE_SUPERVISOR', 'VENDOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MAINTENANCE_SUPERVISOR', 'VENDOR')")
     @Operation(
             summary = "Mark complete",
             description = "Mark a work order as complete. Changes status from IN_PROGRESS to COMPLETED. " +
@@ -588,7 +588,7 @@ public class WorkOrderController {
      * Story 4.4: Job Progress Tracking and Completion (AC #26)
      */
     @GetMapping("/{id}/timeline")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN', 'TENANT', 'VENDOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT', 'VENDOR')")
     @Operation(
             summary = "Get timeline",
             description = "Get complete timeline of work order events (created, assigned, started, progress updates, completed). " +
@@ -617,7 +617,7 @@ public class WorkOrderController {
      * Story 4.4: Job Progress Tracking and Completion (AC #26)
      */
     @GetMapping("/{id}/progress")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN', 'TENANT', 'VENDOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT', 'VENDOR')")
     @Operation(
             summary = "Get progress updates",
             description = "Get all progress updates for a work order ordered by timestamp descending"
@@ -640,7 +640,7 @@ public class WorkOrderController {
      * Story 4.4: Job Progress Tracking and Completion (AC #30)
      */
     @GetMapping("/follow-up")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Get follow-up work orders",
             description = "Get paginated list of completed work orders that require follow-up"
@@ -668,7 +668,7 @@ public class WorkOrderController {
      * POST /api/v1/work-orders/{id}/vendor-rating
      */
     @PostMapping("/{id}/vendor-rating")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Submit vendor rating",
             description = "Rate the vendor after work order completion"
@@ -690,7 +690,7 @@ public class WorkOrderController {
      * GET /api/v1/work-orders/{id}/vendor-rating
      */
     @GetMapping("/{id}/vendor-rating")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT')")
     @Operation(
             summary = "Get vendor rating",
             description = "Get the vendor rating for a work order"
@@ -714,7 +714,7 @@ public class WorkOrderController {
      * PUT /api/v1/work-orders/{id}/vendor-rating
      */
     @PutMapping("/{id}/vendor-rating")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Update vendor rating",
             description = "Update vendor rating within 7 days of initial submission"
@@ -735,7 +735,7 @@ public class WorkOrderController {
      * GET /api/v1/work-orders/{id}/vendor-rating/exists
      */
     @GetMapping("/{id}/vendor-rating/exists")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'TENANT')")
     @Operation(
             summary = "Check if rating exists",
             description = "Check if a vendor rating exists for this work order"

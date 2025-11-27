@@ -40,6 +40,18 @@
         </resources>
     </cache>
 
+    <!-- User Permissions Cache Configuration -->
+    <cache alias="userPermissions">
+        <key-type>java.lang.String</key-type>
+        <value-type>org.springframework.security.core.userdetails.UserDetails</value-type>
+        <expiry>
+            <ttl unit="minutes">10</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">10000</heap>
+        </resources>
+    </cache>
+
     <!-- Login Attempts Cache Configuration -->
     <cache alias="loginAttemptsCache">
         <key-type>java.lang.String</key-type>

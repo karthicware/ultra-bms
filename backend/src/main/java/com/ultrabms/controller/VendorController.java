@@ -82,7 +82,7 @@ public class VendorController {
      * POST /api/v1/vendors
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Create vendor",
             description = "Register a new vendor with company, contact, service, and payment information"
@@ -108,7 +108,7 @@ public class VendorController {
      * GET /api/v1/vendors?search=...&status=ACTIVE&serviceCategories=PLUMBING,ELECTRICAL&minRating=3&page=0&size=20
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "List vendors",
             description = "Get paginated list of vendors with optional filters"
@@ -154,7 +154,7 @@ public class VendorController {
      * GET /api/v1/vendors/{id}
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Get vendor details",
             description = "Get complete vendor information including performance metrics"
@@ -177,7 +177,7 @@ public class VendorController {
      * PUT /api/v1/vendors/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Update vendor",
             description = "Update vendor company, contact, service, and payment information"
@@ -204,7 +204,7 @@ public class VendorController {
      * PATCH /api/v1/vendors/{id}/status
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Update vendor status",
             description = "Change vendor status: ACTIVE, INACTIVE, or SUSPENDED"
@@ -232,7 +232,7 @@ public class VendorController {
      * DELETE /api/v1/vendors/{id}
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Delete vendor",
             description = "Soft delete a vendor (sets isDeleted flag)"
@@ -259,7 +259,7 @@ public class VendorController {
      * GET /api/v1/vendors/{id}/work-orders
      */
     @GetMapping("/{id}/work-orders")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Get vendor work orders",
             description = "Get paginated work order history for a vendor"
@@ -287,7 +287,7 @@ public class VendorController {
      * GET /api/v1/vendors/check-email?email=...&excludeId=...
      */
     @GetMapping("/check-email")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Check email availability",
             description = "Check if an email address is available for vendor registration"
@@ -317,7 +317,7 @@ public class VendorController {
      */
     @Operation(summary = "Get vendor performance metrics")
     @GetMapping("/{id}/performance")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     public ResponseEntity<Map<String, Object>> getVendorPerformance(@PathVariable UUID id) {
         LOGGER.info("Getting performance metrics for vendor: {}", id);
         var performance = vendorRatingService.getVendorPerformance(id);
@@ -331,7 +331,7 @@ public class VendorController {
      */
     @Operation(summary = "Get vendor ratings")
     @GetMapping("/{id}/ratings")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     public ResponseEntity<Map<String, Object>> getVendorRatings(
             @PathVariable UUID id,
             @RequestParam(defaultValue = "0") int page,
@@ -350,7 +350,7 @@ public class VendorController {
      */
     @Operation(summary = "Get top-rated vendors")
     @GetMapping("/top-rated")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     public ResponseEntity<Map<String, Object>> getTopRatedVendors(
             @RequestParam(required = false) WorkOrderCategory category,
             @RequestParam(defaultValue = "10") int limit) {
@@ -367,7 +367,7 @@ public class VendorController {
      */
     @Operation(summary = "Compare vendors")
     @GetMapping("/compare")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     public ResponseEntity<Map<String, Object>> compareVendors(@RequestParam List<UUID> ids) {
         LOGGER.info("Comparing vendors: {}", ids);
         var comparison = vendorRatingService.getVendorsComparison(ids);

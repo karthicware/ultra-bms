@@ -15,19 +15,38 @@ import type {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Storage key for access token
+const ACCESS_TOKEN_KEY = 'ultra_bms_access_token';
+
+// Helper to safely access sessionStorage (handles SSR)
+const getStoredToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return sessionStorage.getItem(ACCESS_TOKEN_KEY);
+};
+
+const setStoredToken = (token: string | null) => {
+  if (typeof window === 'undefined') return;
+  if (token) {
+    sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
+  } else {
+    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  }
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(() => getStoredToken());
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   // Use a ref to store the latest access token value
   // This prevents race conditions where the token changes but the interceptor hasn't been updated yet
-  const accessTokenRef = useRef<string | null>(null);
+  const accessTokenRef = useRef<string | null>(getStoredToken());
 
-  // Update ref whenever access token changes
+  // Update ref and sessionStorage whenever access token changes
   useEffect(() => {
     accessTokenRef.current = accessToken;
+    setStoredToken(accessToken);
   }, [accessToken]);
 
   // Setup API interceptors once on mount
@@ -46,12 +65,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Try to restore session on mount
   useEffect(() => {
     const restoreSession = async () => {
+      // First, check if we have a stored token
+      const storedToken = getStoredToken();
+      if (storedToken) {
+        // Check if token is still valid (not expired)
+        const { isTokenExpired } = await import('@/lib/jwt-utils');
+        if (!isTokenExpired(storedToken)) {
+          // Token is valid, restore user from it
+          const userData = getUserFromToken(storedToken);
+          if (userData) {
+            setAccessToken(storedToken);
+            accessTokenRef.current = storedToken;
+            setUser(userData);
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+
+      // No valid stored token, try to refresh via cookie
       try {
-        // Try to refresh token to restore session
         const response = await authApi.refreshAccessToken();
         if (response.success && response.data.accessToken) {
           const token = response.data.accessToken;
           setAccessToken(token);
+          accessTokenRef.current = token;
 
           // Extract user information from JWT token
           const userData = getUserFromToken(token);
@@ -62,6 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         // Session restoration failed - user needs to login
         console.log('Session restoration failed:', error);
+        // Clear any stale stored token
+        setStoredToken(null);
       } finally {
         setIsLoading(false);
       }
@@ -135,6 +175,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       // Clear local state regardless of API call success
       setAccessToken(null);
+      accessTokenRef.current = null;
+      setStoredToken(null);
       setUser(null);
       setIsLoading(false);
       router.push('/login');

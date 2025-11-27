@@ -81,7 +81,7 @@ public class PMScheduleController {
      * POST /api/v1/pm-schedules
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Create PM schedule",
             description = "Create a new preventive maintenance schedule with recurrence settings"
@@ -113,7 +113,7 @@ public class PMScheduleController {
      * GET /api/v1/pm-schedules
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "List PM schedules",
             description = "Get paginated list of PM schedules with optional filters"
@@ -170,7 +170,7 @@ public class PMScheduleController {
      * GET /api/v1/pm-schedules/{id}
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Get PM schedule",
             description = "Get PM schedule details by ID with statistics"
@@ -198,7 +198,7 @@ public class PMScheduleController {
      * PUT /api/v1/pm-schedules/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Update PM schedule",
             description = "Update PM schedule details (propertyId, recurrenceType, startDate cannot be changed)"
@@ -229,7 +229,7 @@ public class PMScheduleController {
      * PATCH /api/v1/pm-schedules/{id}/status
      */
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Update PM schedule status",
             description = "Update PM schedule status: ACTIVE->PAUSED, PAUSED->ACTIVE, or any->COMPLETED"
@@ -260,7 +260,7 @@ public class PMScheduleController {
      * POST /api/v1/pm-schedules/{id}/generate-now
      */
     @PostMapping("/{id}/generate-now")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Generate work order now",
             description = "Manually generate a work order from PM schedule (does not affect nextGenerationDate)"
@@ -292,7 +292,7 @@ public class PMScheduleController {
      * GET /api/v1/pm-schedules/{id}/history
      */
     @GetMapping("/{id}/history")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Get PM schedule history",
             description = "Get paginated history of work orders generated from this PM schedule"
@@ -332,7 +332,7 @@ public class PMScheduleController {
      * DELETE /api/v1/pm-schedules/{id}
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Delete PM schedule",
             description = "Soft delete PM schedule (only if no work orders generated)"

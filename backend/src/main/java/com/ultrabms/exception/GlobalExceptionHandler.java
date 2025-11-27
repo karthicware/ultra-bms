@@ -13,436 +13,493 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.ultrabms.service.AuditLogService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
  * Global exception handler for all REST API endpoints.
  *
- * <p>This class provides centralized exception handling using Spring's
+ * <p>
+ * This class provides centralized exception handling using Spring's
  * {@code @RestControllerAdvice} annotation. It maps exceptions to appropriate
- * HTTP status codes and returns standardized error responses with correlation IDs.</p>
+ * HTTP status codes and returns standardized error responses with correlation
+ * IDs.
+ * </p>
  *
- * <p>Handled exceptions:</p>
+ * <p>
+ * Handled exceptions:
+ * </p>
  * <ul>
- *   <li>{@link EntityNotFoundException} → 404 Not Found</li>
- *   <li>{@link DuplicateResourceException} → 409 Conflict</li>
- *   <li>{@link ValidationException} → 400 Bad Request</li>
- *   <li>{@link MethodArgumentNotValidException} → 400 Bad Request (with field errors)</li>
- *   <li>{@link ConstraintViolationException} → 400 Bad Request</li>
- *   <li>{@link UnauthorizedException} → 403 Forbidden</li>
- *   <li>{@link AccessDeniedException} → 403 Forbidden</li>
- *   <li>{@link AuthenticationException} → 401 Unauthorized</li>
- *   <li>{@link Exception} → 500 Internal Server Error</li>
+ * <li>{@link EntityNotFoundException} → 404 Not Found</li>
+ * <li>{@link DuplicateResourceException} → 409 Conflict</li>
+ * <li>{@link ValidationException} → 400 Bad Request</li>
+ * <li>{@link MethodArgumentNotValidException} → 400 Bad Request (with field
+ * errors)</li>
+ * <li>{@link ConstraintViolationException} → 400 Bad Request</li>
+ * <li>{@link UnauthorizedException} → 403 Forbidden</li>
+ * <li>{@link AccessDeniedException} → 403 Forbidden</li>
+ * <li>{@link AuthenticationException} → 401 Unauthorized</li>
+ * <li>{@link Exception} → 500 Internal Server Error</li>
  * </ul>
  *
  * @see ErrorResponse
  */
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+        private static final Logger LOG = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+        private final AuditLogService auditLogService;
 
-    /**
-     * Handles EntityNotFoundException (404 Not Found).
-     *
-     * @param ex the exception
-     * @param request the HTTP request
-     * @return 404 response with error details
-     */
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleEntityNotFoundException(
-            EntityNotFoundException ex,
-            HttpServletRequest request) {
+        /**
+         * Handles EntityNotFoundException (404 Not Found).
+         *
+         * @param ex      the exception
+         * @param request the HTTP request
+         * @return 404 response with error details
+         */
+        @ExceptionHandler(EntityNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleEntityNotFoundException(
+                        EntityNotFoundException ex,
+                        HttpServletRequest request) {
 
-        String requestId = generateRequestId();
-        LOG.warn("Entity not found [requestId={}]: {}", requestId, ex.getMessage());
+                String requestId = generateRequestId();
+                LOG.warn("Entity not found [requestId={}]: {}", requestId, ex.getMessage());
 
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.NOT_FOUND.value(),
-                HttpStatus.NOT_FOUND.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                requestId
-        );
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                HttpStatus.NOT_FOUND.value(),
+                                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getRequestURI(),
+                                requestId);
 
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(errorResponse);
-    }
-
-    /**
-     * Handles DuplicateResourceException (409 Conflict).
-     *
-     * @param ex the exception
-     * @param request the HTTP request
-     * @return 409 response with error details
-     */
-    @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
-            DuplicateResourceException ex,
-            HttpServletRequest request) {
-
-        String requestId = generateRequestId();
-        LOG.warn("Duplicate resource [requestId={}]: {}", requestId, ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.CONFLICT.value(),
-                HttpStatus.CONFLICT.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                requestId
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(errorResponse);
-    }
-
-    /**
-     * Handles ValidationException (400 Bad Request).
-     *
-     * @param ex the exception
-     * @param request the HTTP request
-     * @return 400 response with error details
-     */
-    @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(
-            ValidationException ex,
-            HttpServletRequest request) {
-
-        String requestId = generateRequestId();
-        LOG.warn("Validation failed [requestId={}]: {}", requestId, ex.getMessage());
-
-        List<ErrorResponse.FieldError> fieldErrors = null;
-        if (ex.getField() != null) {
-            fieldErrors = List.of(ErrorResponse.FieldError.of(ex.getField(), ex.getMessage()));
+                return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body(errorResponse);
         }
 
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                requestId,
-                fieldErrors
-        );
+        /**
+         * Handles DuplicateResourceException (409 Conflict).
+         *
+         * @param ex      the exception
+         * @param request the HTTP request
+         * @return 409 response with error details
+         */
+        @ExceptionHandler(DuplicateResourceException.class)
+        public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
+                        DuplicateResourceException ex,
+                        HttpServletRequest request) {
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
-    }
+                String requestId = generateRequestId();
+                LOG.warn("Duplicate resource [requestId={}]: {}", requestId, ex.getMessage());
 
-    /**
-     * Handles MethodArgumentNotValidException (400 Bad Request with field-level errors).
-     *
-     * <p>This exception is thrown when {@code @Valid} annotation triggers validation failures
-     * on request body objects.</p>
-     *
-     * @param ex the exception
-     * @param request the HTTP request
-     * @return 400 response with field-level validation errors
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request) {
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                HttpStatus.CONFLICT.value(),
+                                HttpStatus.CONFLICT.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getRequestURI(),
+                                requestId);
 
-        String requestId = generateRequestId();
-        LOG.warn("Request validation failed [requestId={}]: {} validation errors",
-                requestId, ex.getBindingResult().getErrorCount());
+                return ResponseEntity
+                                .status(HttpStatus.CONFLICT)
+                                .body(errorResponse);
+        }
 
-        List<ErrorResponse.FieldError> fieldErrors = ex.getBindingResult()
-                .getAllErrors()
-                .stream()
-                .map(error -> {
-                    String fieldName = ((FieldError) error).getField();
-                    String errorMessage = error.getDefaultMessage();
-                    Object rejectedValue = ((FieldError) error).getRejectedValue();
-                    return new ErrorResponse.FieldError(fieldName, errorMessage, rejectedValue);
-                })
-                .collect(Collectors.toList());
+        /**
+         * Handles ValidationException (400 Bad Request).
+         *
+         * @param ex      the exception
+         * @param request the HTTP request
+         * @return 400 response with error details
+         */
+        @ExceptionHandler(ValidationException.class)
+        public ResponseEntity<ErrorResponse> handleValidationException(
+                        ValidationException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                "Validation failed for request body",
-                request.getRequestURI(),
-                requestId,
-                fieldErrors
-        );
+                String requestId = generateRequestId();
+                LOG.warn("Validation failed [requestId={}]: {}", requestId, ex.getMessage());
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
-    }
+                List<ErrorResponse.FieldError> fieldErrors = null;
+                if (ex.getField() != null) {
+                        fieldErrors = List.of(ErrorResponse.FieldError.of(ex.getField(), ex.getMessage()));
+                }
 
-    /**
-     * Handles ConstraintViolationException (400 Bad Request).
-     *
-     * <p>This exception is thrown when Bean Validation constraints are violated
-     * on method parameters (e.g., {@code @PathVariable}, {@code @RequestParam}).</p>
-     *
-     * @param ex the exception
-     * @param request the HTTP request
-     * @return 400 response with validation errors
-     */
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> handleConstraintViolationException(
-            ConstraintViolationException ex,
-            HttpServletRequest request) {
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getRequestURI(),
+                                requestId,
+                                fieldErrors);
 
-        String requestId = generateRequestId();
-        LOG.warn("Constraint violation [requestId={}]: {}", requestId, ex.getMessage());
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(errorResponse);
+        }
 
-        List<ErrorResponse.FieldError> fieldErrors = ex.getConstraintViolations()
-                .stream()
-                .map(violation -> ErrorResponse.FieldError.of(
-                        violation.getPropertyPath().toString(),
-                        violation.getMessage()
-                ))
-                .collect(Collectors.toList());
+        /**
+         * Handles MethodArgumentNotValidException (400 Bad Request with field-level
+         * errors).
+         *
+         * <p>
+         * This exception is thrown when {@code @Valid} annotation triggers validation
+         * failures
+         * on request body objects.
+         * </p>
+         *
+         * @param ex      the exception
+         * @param request the HTTP request
+         * @return 400 response with field-level validation errors
+         */
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
+                        MethodArgumentNotValidException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                "Constraint violation on request parameters",
-                request.getRequestURI(),
-                requestId,
-                fieldErrors
-        );
+                String requestId = generateRequestId();
+                LOG.warn("Request validation failed [requestId={}]: {} validation errors",
+                                requestId, ex.getBindingResult().getErrorCount());
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
-    }
+                List<ErrorResponse.FieldError> fieldErrors = ex.getBindingResult()
+                                .getAllErrors()
+                                .stream()
+                                .map(error -> {
+                                        String fieldName = ((FieldError) error).getField();
+                                        String errorMessage = error.getDefaultMessage();
+                                        Object rejectedValue = ((FieldError) error).getRejectedValue();
+                                        return new ErrorResponse.FieldError(fieldName, errorMessage, rejectedValue);
+                                })
+                                .collect(Collectors.toList());
 
-    /**
-     * Handles UnauthorizedException (403 Forbidden).
-     *
-     * <p>This exception is thrown when a user attempts to access a resource
-     * they don't have permission to access (e.g., tenant accessing another tenant's data).</p>
-     *
-     * @param ex the exception
-     * @param request the HTTP request
-     * @return 403 response with error details
-     */
-    @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<ErrorResponse> handleUnauthorizedException(
-            UnauthorizedException ex,
-            HttpServletRequest request) {
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                "Validation failed for request body",
+                                request.getRequestURI(),
+                                requestId,
+                                fieldErrors);
 
-        String requestId = generateRequestId();
-        LOG.warn("Unauthorized access attempt [requestId={}]: {}", requestId, ex.getMessage());
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(errorResponse);
+        }
 
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.FORBIDDEN.value(),
-                HttpStatus.FORBIDDEN.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                requestId
-        );
+        /**
+         * Handles ConstraintViolationException (400 Bad Request).
+         *
+         * <p>
+         * This exception is thrown when Bean Validation constraints are violated
+         * on method parameters (e.g., {@code @PathVariable}, {@code @RequestParam}).
+         * </p>
+         *
+         * @param ex      the exception
+         * @param request the HTTP request
+         * @return 400 response with validation errors
+         */
+        @ExceptionHandler(ConstraintViolationException.class)
+        public ResponseEntity<ErrorResponse> handleConstraintViolationException(
+                        ConstraintViolationException ex,
+                        HttpServletRequest request) {
 
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(errorResponse);
-    }
+                String requestId = generateRequestId();
+                LOG.warn("Constraint violation [requestId={}]: {}", requestId, ex.getMessage());
 
-    /**
-     * Handles AccessDeniedException (403 Forbidden).
-     *
-     * <p>This exception is thrown when a user attempts to access a resource
-     * they don't have permission to access.</p>
-     *
-     * @param ex the exception
-     * @param request the HTTP request
-     * @return 403 response with error details
-     */
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
-            AccessDeniedException ex,
-            HttpServletRequest request) {
+                List<ErrorResponse.FieldError> fieldErrors = ex.getConstraintViolations()
+                                .stream()
+                                .map(violation -> ErrorResponse.FieldError.of(
+                                                violation.getPropertyPath().toString(),
+                                                violation.getMessage()))
+                                .collect(Collectors.toList());
 
-        String requestId = generateRequestId();
-        LOG.warn("Access denied [requestId={}]: {}", requestId, ex.getMessage());
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                "Constraint violation on request parameters",
+                                request.getRequestURI(),
+                                requestId,
+                                fieldErrors);
 
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.FORBIDDEN.value(),
-                HttpStatus.FORBIDDEN.getReasonPhrase(),
-                "Access denied. You do not have permission to access this resource.",
-                request.getRequestURI(),
-                requestId
-        );
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(errorResponse);
+        }
 
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(errorResponse);
-    }
+        /**
+         * Handles UnauthorizedException (403 Forbidden).
+         *
+         * <p>
+         * This exception is thrown when a user attempts to access a resource
+         * they don't have permission to access (e.g., tenant accessing another tenant's
+         * data).
+         * </p>
+         *
+         * @param ex      the exception
+         * @param request the HTTP request
+         * @return 403 response with error details
+         */
+        @ExceptionHandler(UnauthorizedException.class)
+        public ResponseEntity<ErrorResponse> handleUnauthorizedException(
+                        UnauthorizedException ex,
+                        HttpServletRequest request) {
 
-    /**
-     * Handles AuthenticationException (401 Unauthorized).
-     *
-     * <p>This exception is thrown when authentication credentials are invalid
-     * or missing.</p>
-     *
-     * @param ex the exception
-     * @param request the HTTP request
-     * @return 401 response with error details
-     */
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ErrorResponse> handleAuthenticationException(
-            AuthenticationException ex,
-            HttpServletRequest request) {
+                String requestId = generateRequestId();
+                LOG.warn("Unauthorized access attempt [requestId={}]: {}", requestId, ex.getMessage());
 
-        String requestId = generateRequestId();
-        LOG.warn("Authentication failed [requestId={}]: {}", requestId, ex.getMessage());
+                // Log to audit logs
+                logAuthorizationFailure(request, "UNAUTHORIZED_ACCESS", ex.getMessage());
 
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.UNAUTHORIZED.value(),
-                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
-                "Authentication required. Please provide valid credentials.",
-                request.getRequestURI(),
-                requestId
-        );
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                HttpStatus.FORBIDDEN.value(),
+                                HttpStatus.FORBIDDEN.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getRequestURI(),
+                                requestId);
 
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(errorResponse);
-    }
+                return ResponseEntity
+                                .status(HttpStatus.FORBIDDEN)
+                                .body(errorResponse);
+        }
 
-    /**
-     * Handles AccountLockedException (423 Locked).
-     *
-     * <p>This exception is thrown when a user attempts to login with an account
-     * that has been locked due to too many failed login attempts.</p>
-     *
-     * @param ex the exception
-     * @param request the HTTP request
-     * @return 423 response with error details
-     */
-    @ExceptionHandler(AccountLockedException.class)
-    public ResponseEntity<ErrorResponse> handleAccountLockedException(
-            AccountLockedException ex,
-            HttpServletRequest request) {
+        /**
+         * Handles AccessDeniedException (403 Forbidden).
+         *
+         * <p>
+         * This exception is thrown when a user attempts to access a resource
+         * they don't have permission to access.
+         * </p>
+         *
+         * @param ex      the exception
+         * @param request the HTTP request
+         * @return 403 response with error details
+         */
+        @ExceptionHandler(AccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+                        AccessDeniedException ex,
+                        HttpServletRequest request) {
 
-        String requestId = generateRequestId();
-        LOG.warn("Account locked [requestId={}]: {}", requestId, ex.getMessage());
+                String requestId = generateRequestId();
+                LOG.warn("Access denied [requestId={}]: {}", requestId, ex.getMessage());
 
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.LOCKED.value(),
-                HttpStatus.LOCKED.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                requestId
-        );
+                // Log to audit logs
+                logAuthorizationFailure(request, "ACCESS_DENIED", ex.getMessage());
 
-        return ResponseEntity
-                .status(HttpStatus.LOCKED)
-                .body(errorResponse);
-    }
+                // Try to extract required permission from message if possible, otherwise
+                // generic
+                String message = "Access denied. You do not have permission to access this resource.";
 
-    /**
-     * Handles RateLimitExceededException (429 Too Many Requests).
-     *
-     * <p>This exception is thrown when rate limiting is exceeded for operations
-     * such as password reset requests (max 3 per hour per email).</p>
-     *
-     * @param ex the exception
-     * @param request the HTTP request
-     * @return 429 response with error details and retry-after header
-     */
-    @ExceptionHandler(RateLimitExceededException.class)
-    public ResponseEntity<ErrorResponse> handleRateLimitExceededException(
-            RateLimitExceededException ex,
-            HttpServletRequest request) {
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                HttpStatus.FORBIDDEN.value(),
+                                HttpStatus.FORBIDDEN.getReasonPhrase(),
+                                message,
+                                request.getRequestURI(),
+                                requestId);
 
-        String requestId = generateRequestId();
-        LOG.warn("Rate limit exceeded [requestId={}]: {}", requestId, ex.getMessage());
+                return ResponseEntity
+                                .status(HttpStatus.FORBIDDEN)
+                                .body(errorResponse);
+        }
 
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.TOO_MANY_REQUESTS.value(),
-                HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                requestId
-        );
+        private void logAuthorizationFailure(HttpServletRequest request, String action, String errorMessage) {
+                try {
+                        UUID userId = null;
+                        var authentication = SecurityContextHolder.getContext().getAuthentication();
+                        if (authentication != null && authentication.getPrincipal() instanceof UUID) {
+                                userId = (UUID) authentication.getPrincipal();
+                        }
 
-        return ResponseEntity
-                .status(HttpStatus.TOO_MANY_REQUESTS)
-                .body(errorResponse);
-    }
+                        Map<String, Object> details = Map.of(
+                                        "error", errorMessage,
+                                        "uri", request.getRequestURI(),
+                                        "method", request.getMethod());
 
-    /**
-     * Handles InvalidTokenException (400 Bad Request).
-     *
-     * <p>This exception is thrown when a password reset token is invalid,
-     * expired, or already used.</p>
-     *
-     * @param ex the exception
-     * @param request the HTTP request
-     * @return 400 response with error details
-     */
-    @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidTokenException(
-            InvalidTokenException ex,
-            HttpServletRequest request) {
+                        auditLogService.logAuthorizationFailure(
+                                        userId,
+                                        request.getRequestURI(),
+                                        action,
+                                        request.getRemoteAddr(),
+                                        details);
+                } catch (Exception e) {
+                        LOG.error("Failed to log authorization failure", e);
+                }
+        }
 
-        String requestId = generateRequestId();
-        LOG.warn("Invalid token [requestId={}]: {}", requestId, ex.getMessage());
+        /**
+         * Handles AuthenticationException (401 Unauthorized).
+         *
+         * <p>
+         * This exception is thrown when authentication credentials are invalid
+         * or missing.
+         * </p>
+         *
+         * @param ex      the exception
+         * @param request the HTTP request
+         * @return 401 response with error details
+         */
+        @ExceptionHandler(AuthenticationException.class)
+        public ResponseEntity<ErrorResponse> handleAuthenticationException(
+                        AuthenticationException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                requestId
-        );
+                String requestId = generateRequestId();
+                LOG.warn("Authentication failed [requestId={}]: {}", requestId, ex.getMessage());
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
-    }
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                HttpStatus.UNAUTHORIZED.value(),
+                                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                                "Authentication required. Please provide valid credentials.",
+                                request.getRequestURI(),
+                                requestId);
 
-    /**
-     * Handles all unhandled exceptions (500 Internal Server Error).
-     *
-     * <p>This is the catch-all handler for unexpected errors. Stack traces are
-     * logged but NOT exposed to clients to prevent information leakage.</p>
-     *
-     * @param ex the exception
-     * @param request the HTTP request
-     * @return 500 response with generic error message
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(
-            Exception ex,
-            HttpServletRequest request) {
+                return ResponseEntity
+                                .status(HttpStatus.UNAUTHORIZED)
+                                .body(errorResponse);
+        }
 
-        String requestId = generateRequestId();
-        LOG.error("Unhandled exception [requestId={}]: {}", requestId, ex.getMessage(), ex);
+        /**
+         * Handles AccountLockedException (423 Locked).
+         *
+         * <p>
+         * This exception is thrown when a user attempts to login with an account
+         * that has been locked due to too many failed login attempts.
+         * </p>
+         *
+         * @param ex      the exception
+         * @param request the HTTP request
+         * @return 423 response with error details
+         */
+        @ExceptionHandler(AccountLockedException.class)
+        public ResponseEntity<ErrorResponse> handleAccountLockedException(
+                        AccountLockedException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.of(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                "An unexpected error occurred. Please contact support with request ID: " + requestId,
-                request.getRequestURI(),
-                requestId
-        );
+                String requestId = generateRequestId();
+                LOG.warn("Account locked [requestId={}]: {}", requestId, ex.getMessage());
 
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(errorResponse);
-    }
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                HttpStatus.LOCKED.value(),
+                                HttpStatus.LOCKED.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getRequestURI(),
+                                requestId);
 
-    /**
-     * Generates a unique correlation ID for request tracing.
-     *
-     * <p>This UUID can be used to trace the request across logs and debugging tools.</p>
-     *
-     * @return a UUID string
-     */
-    private String generateRequestId() {
-        return UUID.randomUUID().toString();
-    }
+                return ResponseEntity
+                                .status(HttpStatus.LOCKED)
+                                .body(errorResponse);
+        }
+
+        /**
+         * Handles RateLimitExceededException (429 Too Many Requests).
+         *
+         * <p>
+         * This exception is thrown when rate limiting is exceeded for operations
+         * such as password reset requests (max 3 per hour per email).
+         * </p>
+         *
+         * @param ex      the exception
+         * @param request the HTTP request
+         * @return 429 response with error details and retry-after header
+         */
+        @ExceptionHandler(RateLimitExceededException.class)
+        public ResponseEntity<ErrorResponse> handleRateLimitExceededException(
+                        RateLimitExceededException ex,
+                        HttpServletRequest request) {
+
+                String requestId = generateRequestId();
+                LOG.warn("Rate limit exceeded [requestId={}]: {}", requestId, ex.getMessage());
+
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                HttpStatus.TOO_MANY_REQUESTS.value(),
+                                HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getRequestURI(),
+                                requestId);
+
+                return ResponseEntity
+                                .status(HttpStatus.TOO_MANY_REQUESTS)
+                                .body(errorResponse);
+        }
+
+        /**
+         * Handles InvalidTokenException (400 Bad Request).
+         *
+         * <p>
+         * This exception is thrown when a password reset token is invalid,
+         * expired, or already used.
+         * </p>
+         *
+         * @param ex      the exception
+         * @param request the HTTP request
+         * @return 400 response with error details
+         */
+        @ExceptionHandler(InvalidTokenException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidTokenException(
+                        InvalidTokenException ex,
+                        HttpServletRequest request) {
+
+                String requestId = generateRequestId();
+                LOG.warn("Invalid token [requestId={}]: {}", requestId, ex.getMessage());
+
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getRequestURI(),
+                                requestId);
+
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(errorResponse);
+        }
+
+        /**
+         * Handles all unhandled exceptions (500 Internal Server Error).
+         *
+         * <p>
+         * This is the catch-all handler for unexpected errors. Stack traces are
+         * logged but NOT exposed to clients to prevent information leakage.
+         * </p>
+         *
+         * @param ex      the exception
+         * @param request the HTTP request
+         * @return 500 response with generic error message
+         */
+        @ExceptionHandler(Exception.class)
+        public ResponseEntity<ErrorResponse> handleGenericException(
+                        Exception ex,
+                        HttpServletRequest request) {
+
+                String requestId = generateRequestId();
+                LOG.error("Unhandled exception [requestId={}]: {}", requestId, ex.getMessage(), ex);
+
+                ErrorResponse errorResponse = ErrorResponse.of(
+                                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                                "An unexpected error occurred. Please contact support with request ID: " + requestId,
+                                request.getRequestURI(),
+                                requestId);
+
+                return ResponseEntity
+                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(errorResponse);
+        }
+
+        /**
+         * Generates a unique correlation ID for request tracing.
+         *
+         * <p>
+         * This UUID can be used to trace the request across logs and debugging tools.
+         * </p>
+         *
+         * @return a UUID string
+         */
+        private String generateRequestId() {
+                return UUID.randomUUID().toString();
+        }
 }

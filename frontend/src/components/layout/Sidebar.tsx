@@ -25,47 +25,70 @@ interface NavItem {
   role?: string;
 }
 
-const navigationItems: NavItem[] = [
+interface NavSection {
+  title?: string;
+  items: NavItem[];
+}
+
+const navigationSections: NavSection[] = [
   {
-    name: 'Dashboard',
-    href: '/dashboard',
-    icon: LayoutDashboard,
+    items: [
+      {
+        name: 'Dashboard',
+        href: '/dashboard',
+        icon: LayoutDashboard,
+      },
+    ],
   },
   {
-    name: 'Leads & Quotes',
-    href: '/leads',
-    icon: UserPlus,
-    permission: 'leads:read',
+    title: 'Main',
+    items: [
+      {
+        name: 'Leads & Quotes',
+        href: '/leads',
+        icon: UserPlus,
+        permission: 'leads:read',
+      },
+      {
+        name: 'Properties',
+        href: '/properties',
+        icon: Building2,
+        permission: 'properties:read',
+      },
+      {
+        name: 'Tenants',
+        href: '/tenants',
+        icon: Users,
+        permission: 'tenants:read',
+      },
+      {
+        name: 'Work Orders',
+        href: '/property-manager/work-orders',
+        icon: Wrench,
+        permission: 'work-orders:read',
+      },
+    ],
   },
   {
-    name: 'Properties',
-    href: '/properties',
-    icon: Building2,
-    permission: 'properties:read',
+    title: 'Documents',
+    items: [
+      {
+        name: 'Reports',
+        href: '/reports',
+        icon: FileText,
+        permission: 'reports:read',
+      },
+    ],
   },
   {
-    name: 'Tenants',
-    href: '/tenants',
-    icon: Users,
-    permission: 'tenants:read',
-  },
-  {
-    name: 'Work Orders',
-    href: '/property-manager/work-orders',
-    icon: Wrench,
-    permission: 'work-orders:read',
-  },
-  {
-    name: 'Reports',
-    href: '/reports',
-    icon: FileText,
-    permission: 'reports:read',
-  },
-  {
-    name: 'Settings',
-    href: '/settings',
-    icon: Settings,
-    role: 'SUPER_ADMIN',
+    items: [
+      {
+        name: 'Settings',
+        href: '/settings',
+        icon: Settings,
+        role: 'SUPER_ADMIN',
+      },
+    ],
   },
 ];
 
@@ -74,14 +97,16 @@ export function Sidebar() {
   const { hasPermission, hasRole } = usePermission();
   const { user, logout } = useAuth();
 
-  const filteredItems = navigationItems.filter((item) => {
-    if (item.role && !hasRole(item.role)) return false;
-    if (item.permission && !hasPermission(item.permission)) return false;
-    return true;
-  });
+  const filterItems = (items: NavItem[]) => {
+    return items.filter((item) => {
+      if (item.role && !hasRole(item.role)) return false;
+      if (item.permission && !hasPermission(item.permission)) return false;
+      return true;
+    });
+  };
 
   return (
-    <div className="flex h-full w-64 flex-col border-r bg-background">
+    <div className="flex h-full w-56 flex-col border-r border-gray-200 bg-background">
       {/* Logo/Brand */}
       <div className="flex h-16 items-center border-b px-6">
         <h1 className="text-xl font-bold">Ultra BMS</h1>
@@ -89,25 +114,41 @@ export function Sidebar() {
 
       {/* Navigation Items */}
       <ScrollArea className="flex-1 px-3 py-4">
-        <nav className="flex flex-col gap-1">
-          {filteredItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+        <nav className="flex flex-col gap-6">
+          {navigationSections.map((section, sectionIdx) => {
+            const filteredItems = filterItems(section.items);
+            if (filteredItems.length === 0) return null;
 
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              <div key={sectionIdx}>
+                {section.title && (
+                  <h2 className="mb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    {section.title}
+                  </h2>
                 )}
-              >
-                <Icon className="h-5 w-5" />
-                {item.name}
-              </Link>
+                <div className="flex flex-col gap-1">
+                  {filteredItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                          isActive
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                        )}
+                      >
+                        <Icon className="h-5 w-5" />
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </nav>
@@ -127,6 +168,11 @@ export function Sidebar() {
               {user?.firstName} {user?.lastName}
             </p>
             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            {user?.role && (
+              <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary">
+                {user.role}
+              </span>
+            )}
           </div>
         </div>
         <Button

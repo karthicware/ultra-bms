@@ -127,6 +127,14 @@ public class UserServiceImpl implements UserService {
         log.info("User soft deleted successfully: {}", id);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserDto> findByRole(String role, Pageable pageable) {
+        log.debug("Finding users by role: {} with pagination: {}", role, pageable);
+        return userRepository.findByRole_Name(role, pageable)
+                .map(this::toDto);
+    }
+
     /**
      * Converts User entity to UserDto.
      *

@@ -136,11 +136,13 @@ export async function logoutAllDevices(): Promise<ApiResponse<{ message: string 
   return response.data;
 }
 
+const SESSIONS_BASE_PATH = '/v1/sessions';
+
 /**
  * Get all active sessions for current user
  */
 export async function getActiveSessions(): Promise<ActiveSessionsResponse> {
-  const response = await apiClient.get<ActiveSessionsResponse>(`${AUTH_BASE_PATH}/sessions`);
+  const response = await apiClient.get<ActiveSessionsResponse>(SESSIONS_BASE_PATH);
   return response.data;
 }
 
@@ -149,7 +151,7 @@ export async function getActiveSessions(): Promise<ActiveSessionsResponse> {
  */
 export async function revokeSession(sessionId: string): Promise<ApiResponse<{ message: string }>> {
   const response = await apiClient.delete<ApiResponse<{ message: string }>>(
-    `${AUTH_BASE_PATH}/sessions/${sessionId}`
+    `${SESSIONS_BASE_PATH}/${sessionId}`
   );
   return response.data;
 }

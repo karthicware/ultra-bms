@@ -5,6 +5,9 @@ import com.ultrabms.entity.enums.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,6 +36,15 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * @return list of users with the specified role
      */
     List<User> findByRole(UserRole role);
+
+    /**
+     * Find all users with a specific role with pagination.
+     *
+     * @param role the user role to filter by
+     * @param pageable pagination parameters
+     * @return page of users with the specified role
+     */
+    Page<User> findByRole_Name(String role, Pageable pageable);
 
     /**
      * Find all active users (where active = true).

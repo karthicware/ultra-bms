@@ -74,4 +74,13 @@ public interface UserService {
      * @throws com.ultrabms.exception.EntityNotFoundException if user not found
      */
     void delete(UUID id);
+
+    /**
+     * Retrieves all users with a specific role.
+     *
+     * @param role the role to filter by (e.g., "PROPERTY_MANAGER")
+     * @param pageable pagination information
+     * @return page of UserDto objects with the specified role
+     */
+    Page<UserDto> findByRole(String role, Pageable pageable);
 }

@@ -87,7 +87,7 @@ class UserControllerAuthorizationTest {
         }
 
         @Test
-        @DisplayName("Should deny PROPERTY_MANAGER without user:read permission")
+        @DisplayName("Should deny PROPERTY_MANAGER without users:read permission")
         @WithMockUser(username = "pm@test.com", roles = {"PROPERTY_MANAGER"})
         void shouldDenyPropertyManagerWithoutPermission() throws Exception {
             mockMvc.perform(get("/api/v1/users"))

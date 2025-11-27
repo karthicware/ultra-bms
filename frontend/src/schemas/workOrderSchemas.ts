@@ -34,7 +34,12 @@ const positiveNumberSchema = z
 export const createWorkOrderSchema = z.object({
   propertyId: uuidSchema,
   unitId: uuidSchema.optional().or(z.literal('')),
-  category: z.nativeEnum(WorkOrderCategory),
+  category: z.union([
+    z.nativeEnum(WorkOrderCategory),
+    z.literal('')
+  ]).refine((val) => val !== '', {
+    message: 'Please select a category',
+  }),
   priority: z.nativeEnum(WorkOrderPriority),
   title: z
     .string()

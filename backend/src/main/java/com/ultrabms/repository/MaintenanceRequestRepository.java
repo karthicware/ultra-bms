@@ -117,9 +117,9 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
      * @return Page of matching maintenance requests
      */
     @Query("SELECT mr FROM MaintenanceRequest mr WHERE mr.tenantId = :tenantId " +
-            "AND (:statuses IS NULL OR mr.status IN :statuses) " +
-            "AND (:categories IS NULL OR mr.category IN :categories) " +
-            "AND (:searchTerm IS NULL OR " +
+            "AND (:#{#statuses == null || #statuses.isEmpty()} = true OR mr.status IN :statuses) " +
+            "AND (:#{#categories == null || #categories.isEmpty()} = true OR mr.category IN :categories) " +
+            "AND (:#{#searchTerm == null} = true OR " +
             "LOWER(mr.title) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
             "LOWER(mr.description) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
             "LOWER(mr.requestNumber) LIKE LOWER(CAST(:searchTerm AS string)))")

@@ -119,9 +119,10 @@ export default function WorkOrdersPage() {
     const fetchProperties = async () => {
       try {
         const response = await getProperties({ page: 0, size: 100 });
-        setProperties(response.content);
+        setProperties(response?.content || []);
       } catch (error) {
         console.error('Failed to load properties:', error);
+        setProperties([]);
       }
     };
     fetchProperties();
@@ -164,6 +165,7 @@ export default function WorkOrdersPage() {
     } finally {
       setIsLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     currentPage,
     pageSize,
@@ -174,7 +176,6 @@ export default function WorkOrdersPage() {
     propertyFilter,
     sortField,
     sortDirection,
-    toast,
   ]);
 
   // Debounced search
@@ -313,7 +314,7 @@ export default function WorkOrdersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Properties</SelectItem>
-                {properties.map((property) => (
+                {(properties || []).map((property) => (
                   <SelectItem key={property.id} value={property.id}>
                     {property.name}
                   </SelectItem>

@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,10 +19,14 @@ import java.util.List;
 
 /**
  * Custom UserDetailsService implementation for Spring Security.
- * Loads user details from the database with roles and permissions eagerly fetched.
+ * Loads user details from the database with roles and permissions eagerly
+ * fetched.
  *
- * <p>This service integrates with the database-driven RBAC system, loading permissions
- * from the roles and role_permissions tables.</p>
+ * <p>
+ * This service integrates with the database-driven RBAC system, loading
+ * permissions
+ * from the roles and role_permissions tables.
+ * </p>
  */
 @Slf4j
 @Service
@@ -32,19 +37,22 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     /**
      * Loads user details from database by email address.
-     * Role and permissions are eagerly loaded due to @ManyToOne(fetch = FetchType.EAGER) in User entity.
+     * Role and permissions are eagerly loaded due to @ManyToOne(fetch =
+     * FetchType.EAGER) in User entity.
      *
      * @param email the user's email address
-     * @return UserDetails object with authorities populated from database permissions
+     * @return UserDetails object with authorities populated from database
+     *         permissions
      * @throws UsernameNotFoundException if user not found or inactive
      */
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "userPermissions", key = "#email")
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         log.debug("Loading user by username (email): {}", email);
 
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         if (!user.getActive()) {
             log.warn("Attempted to load inactive user: {}", email);
@@ -61,19 +69,20 @@ public class CustomUserDetailsService implements UserDetailsService {
         log.debug("User {} loaded with {} authorities", email, authorities.size());
 
         return new org.springframework.security.core.userdetails.User(
-            user.getEmail(),
-            user.getPasswordHash(),
-            user.getActive(),
-            true, // accountNonExpired
-            true, // credentialsNonExpired
-            accountNonLocked,
-            authorities
-        );
+                user.getEmail(),
+                user.getPasswordHash(),
+                user.getActive(),
+                true, // accountNonExpired
+                true, // credentialsNonExpired
+                accountNonLocked,
+                authorities);
     }
 
     /**
-     * Builds authorities for a user based on their role and associated permissions from database.
-     * Permissions are loaded from role_permissions table via User -> Role -> Permissions relationship.
+     * Builds authorities for a user based on their role and associated permissions
+     * from database.
+     * Permissions are loaded from role_permissions table via User -> Role ->
+     * Permissions relationship.
      *
      * @param user the user entity (with role and permissions eagerly loaded)
      * @return collection of granted authorities

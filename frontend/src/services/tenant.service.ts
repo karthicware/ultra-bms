@@ -13,6 +13,20 @@ import type {
   LeadConversionData,
 } from '@/types';
 
+/**
+ * Spring Page response structure for tenant list
+ */
+export interface TenantListResponse {
+  content: TenantResponse[];
+  totalElements: number;
+  totalPages: number;
+  number: number; // current page (0-indexed)
+  size: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
 const TENANTS_BASE_PATH = '/v1/tenants';
 const PROPERTIES_BASE_PATH = '/v1/properties';
 
@@ -60,6 +74,63 @@ export async function createTenant(formData: FormData): Promise<CreateTenantResp
     }
   );
   return response.data.data;
+}
+
+/**
+ * Get all tenants with pagination
+ *
+ * @param page - Page number (0-indexed)
+ * @param size - Number of items per page
+ * @param sort - Sort field and direction (e.g., 'createdAt,desc')
+ *
+ * @returns Promise that resolves to paginated tenant list
+ *
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ *
+ * @example
+ * ```typescript
+ * const tenants = await getAllTenants(0, 20, 'createdAt,desc');
+ * ```
+ */
+export async function getAllTenants(
+  page: number = 0,
+  size: number = 20,
+  sort: string = 'createdAt,desc'
+): Promise<TenantListResponse> {
+  const response = await apiClient.get<TenantListResponse>(TENANTS_BASE_PATH, {
+    params: { page, size, sort },
+  });
+  return response.data;
+}
+
+/**
+ * Search tenants by name, email, or tenant number
+ *
+ * @param searchTerm - Search query string
+ * @param page - Page number (0-indexed)
+ * @param size - Number of items per page
+ *
+ * @returns Promise that resolves to paginated search results
+ *
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ *
+ * @example
+ * ```typescript
+ * const results = await searchTenants('john', 0, 20);
+ * ```
+ */
+export async function searchTenants(
+  searchTerm: string,
+  page: number = 0,
+  size: number = 20
+): Promise<TenantListResponse> {
+  const response = await apiClient.get<TenantListResponse>(
+    `${TENANTS_BASE_PATH}/search`,
+    {
+      params: { q: searchTerm, page, size },
+    }
+  );
+  return response.data;
 }
 
 /**

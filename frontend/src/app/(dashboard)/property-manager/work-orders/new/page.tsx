@@ -66,15 +66,16 @@ export default function CreateWorkOrderPage() {
     defaultValues: {
       propertyId: '',
       unitId: '',
-      category: undefined,
+      category: '',
       priority: WorkOrderPriority.MEDIUM,
       title: '',
       description: '',
       scheduledDate: '',
       accessInstructions: '',
-      estimatedCost: undefined,
       maintenanceRequestId: '',
     },
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
   });
 
   const watchedPropertyId = form.watch('propertyId');
@@ -87,20 +88,17 @@ export default function CreateWorkOrderPage() {
       try {
         setLoadingProperties(true);
         const response = await getProperties({ page: 0, size: 100 });
-        setProperties(response.content);
+        setProperties(response?.content || []);
       } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to load properties',
-          variant: 'destructive',
-        });
+        console.error('Failed to load properties:', error);
+        setProperties([]);
       } finally {
         setLoadingProperties(false);
       }
     };
 
     fetchProperties();
-  }, [toast]);
+  }, []);
 
   // Load units when property changes
   useEffect(() => {
@@ -114,20 +112,18 @@ export default function CreateWorkOrderPage() {
       try {
         setLoadingUnits(true);
         const response = await getUnits({ propertyId: watchedPropertyId });
-        setUnits(response.units);
+        setUnits(response?.units || []);
       } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to load units',
-          variant: 'destructive',
-        });
+        console.error('Failed to load units:', error);
+        setUnits([]);
       } finally {
         setLoadingUnits(false);
       }
     };
 
     fetchUnits();
-  }, [watchedPropertyId, form, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedPropertyId]);
 
   // Handle photo selection
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -300,7 +296,7 @@ export default function CreateWorkOrderPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Category *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
                         <FormControl>
                           <SelectTrigger data-testid="select-category">
                             <SelectValue placeholder="Select category" />

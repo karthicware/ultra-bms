@@ -60,7 +60,7 @@ public class TenantController {
      * - additionalFiles[] (optional, multiple files)
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'PROPERTY_MANAGER', 'ADMIN')")
     @Operation(summary = "Create new tenant", description = "Register a new tenant with user account creation and document uploads")
     public ResponseEntity<Map<String, Object>> createTenant(
             @Valid @ModelAttribute CreateTenantRequest request,
@@ -97,7 +97,7 @@ public class TenantController {
      * GET /api/v1/tenants/{id}
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN', 'TENANT')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'PROPERTY_MANAGER', 'ADMIN', 'TENANT')")
     @Operation(summary = "Get tenant by ID", description = "Retrieve full tenant details including documents")
     public ResponseEntity<Map<String, Object>> getTenantById(@PathVariable UUID id) {
         LOGGER.info("Getting tenant by ID: {}", id);
@@ -117,7 +117,7 @@ public class TenantController {
      * GET /api/v1/tenants?page=0&size=20&sort=createdAt,desc
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'PROPERTY_MANAGER', 'ADMIN')")
     @Operation(summary = "Get all tenants", description = "Retrieve paginated list of all active tenants")
     public ResponseEntity<Page<TenantResponse>> getAllTenants(Pageable pageable) {
         LOGGER.info("Getting all tenants with pagination: {}", pageable);
@@ -132,7 +132,7 @@ public class TenantController {
      * GET /api/v1/tenants/search?q=john&page=0&size=20
      */
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'PROPERTY_MANAGER', 'ADMIN')")
     @Operation(summary = "Search tenants", description = "Search tenants by name, email, or tenant number")
     public ResponseEntity<Page<TenantResponse>> searchTenants(
             @RequestParam("q") String searchTerm,
@@ -150,7 +150,7 @@ public class TenantController {
      * GET /api/v1/tenants/check-email/{email}
      */
     @GetMapping("/check-email/{email}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'PROPERTY_MANAGER', 'ADMIN')")
     @Operation(summary = "Check email availability", description = "Check if email is available for new tenant registration")
     public ResponseEntity<Map<String, Object>> checkEmailAvailability(@PathVariable String email) {
         LOGGER.info("Checking email availability: {}", email);

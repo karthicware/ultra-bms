@@ -113,7 +113,7 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, UUID> {
      * @return Page of matching work orders
      */
     @Query("SELECT wo FROM WorkOrder wo WHERE " +
-            "(:propertyId IS NULL OR wo.propertyId = :propertyId) AND " +
+            "(:#{#propertyId == null} = true OR wo.propertyId = :propertyId) AND " +
             "(LOWER(wo.workOrderNumber) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
             "LOWER(wo.title) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
             "LOWER(wo.description) LIKE LOWER(CAST(:searchTerm AS string)))")
@@ -136,13 +136,13 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, UUID> {
      * @return Page of matching work orders
      */
     @Query("SELECT wo FROM WorkOrder wo WHERE " +
-            "(:propertyId IS NULL OR wo.propertyId = :propertyId) AND " +
-            "(:statuses IS NULL OR wo.status IN :statuses) AND " +
-            "(:categories IS NULL OR wo.category IN :categories) AND " +
-            "(:priorities IS NULL OR wo.priority IN :priorities) AND " +
-            "(:startDate IS NULL OR wo.scheduledDate >= :startDate) AND " +
-            "(:endDate IS NULL OR wo.scheduledDate <= :endDate) AND " +
-            "(:searchTerm IS NULL OR " +
+            "(:#{#propertyId == null} = true OR wo.propertyId = :propertyId) AND " +
+            "(:#{#statuses == null || #statuses.isEmpty()} = true OR wo.status IN :statuses) AND " +
+            "(:#{#categories == null || #categories.isEmpty()} = true OR wo.category IN :categories) AND " +
+            "(:#{#priorities == null || #priorities.isEmpty()} = true OR wo.priority IN :priorities) AND " +
+            "(:#{#startDate == null} = true OR wo.scheduledDate >= :startDate) AND " +
+            "(:#{#endDate == null} = true OR wo.scheduledDate <= :endDate) AND " +
+            "(:#{#searchTerm == null} = true OR " +
             "LOWER(wo.workOrderNumber) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
             "LOWER(wo.title) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
             "LOWER(wo.description) LIKE LOWER(CAST(:searchTerm AS string)))")

@@ -131,11 +131,11 @@ public interface PMScheduleRepository extends JpaRepository<PMSchedule, UUID> {
      * @return Page of matching PM schedules
      */
     @Query("SELECT ps FROM PMSchedule ps WHERE " +
-            "(:propertyId IS NULL OR ps.propertyId = :propertyId OR ps.propertyId IS NULL) AND " +
-            "(:statuses IS NULL OR ps.status IN :statuses) AND " +
-            "(:categories IS NULL OR ps.category IN :categories) AND " +
-            "(:recurrenceTypes IS NULL OR ps.recurrenceType IN :recurrenceTypes) AND " +
-            "(:searchTerm IS NULL OR LOWER(ps.scheduleName) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+            "(:#{#propertyId == null} = true OR ps.propertyId = :propertyId OR ps.propertyId IS NULL) AND " +
+            "(:#{#statuses == null || #statuses.isEmpty()} = true OR ps.status IN :statuses) AND " +
+            "(:#{#categories == null || #categories.isEmpty()} = true OR ps.category IN :categories) AND " +
+            "(:#{#recurrenceTypes == null || #recurrenceTypes.isEmpty()} = true OR ps.recurrenceType IN :recurrenceTypes) AND " +
+            "(:#{#searchTerm == null} = true OR LOWER(ps.scheduleName) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
     Page<PMSchedule> searchWithFilters(
             @Param("propertyId") UUID propertyId,
             @Param("statuses") List<PMScheduleStatus> statuses,

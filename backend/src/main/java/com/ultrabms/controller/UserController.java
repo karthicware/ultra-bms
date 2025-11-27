@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
@@ -56,8 +57,9 @@ public class UserController {
     private final UserService userService;
 
     /**
-     * Retrieves all users with pagination support.
+     * Retrieves all users with pagination support and optional role filtering.
      *
+     * @param role optional role to filter by (e.g., PROPERTY_MANAGER)
      * @param pageable pagination parameters (page, size, sort)
      * @return page of users
      */
@@ -66,7 +68,7 @@ public class UserController {
     @Operation(
             summary = "List all users",
             description = "Retrieves all users with pagination and sorting support. " +
-                    "Default page size is 20. Maximum page size is 100."
+                    "Optionally filter by role. Default page size is 20. Maximum page size is 100."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -76,10 +78,14 @@ public class UserController {
             )
     })
     public ResponseEntity<Page<UserDto>> getAllUsers(
+            @Parameter(description = "Filter by user role (e.g., PROPERTY_MANAGER, SUPER_ADMIN)")
+            @RequestParam(required = false) String role,
             @Parameter(description = "Pagination parameters (page, size, sort)")
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable
     ) {
-        Page<UserDto> users = userService.findAll(pageable);
+        Page<UserDto> users = role != null
+                ? userService.findByRole(role, pageable)
+                : userService.findAll(pageable);
         return ResponseEntity.ok(users);
     }
 

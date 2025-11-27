@@ -1,7 +1,11 @@
 package com.ultrabms.controller;
 
 import com.ultrabms.dto.SessionDto;
+import com.ultrabms.entity.User;
+import com.ultrabms.repository.UserRepository;
+import com.ultrabms.repository.UserSessionRepository;
 import com.ultrabms.service.SessionService;
+import com.ultrabms.util.TokenHashUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,8 +17,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,12 +41,14 @@ import java.util.UUID;
 public class SessionController {
 
     private final SessionService sessionService;
-    private final com.ultrabms.repository.UserSessionRepository userSessionRepository;
+    private final UserSessionRepository userSessionRepository;
+    private final UserRepository userRepository;
 
     /**
      * Gets all active sessions for the current user.
      *
      * @param httpRequest HTTP servlet request for extracting current session ID
+     * @param userDetails authenticated user details
      * @return 200 OK with list of active sessions
      */
     @GetMapping
@@ -52,16 +58,18 @@ public class SessionController {
                     content = @Content(schema = @Schema(implementation = SessionDto.class))),
             @ApiResponse(responseCode = "401", description = "Authentication required")
     })
-    public ResponseEntity<List<SessionDto>> getActiveSessions(HttpServletRequest httpRequest) {
-        // Get authenticated user ID from SecurityContext
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UUID userId = (UUID) authentication.getPrincipal();
+    public ResponseEntity<java.util.Map<String, Object>> getActiveSessions(
+            HttpServletRequest httpRequest,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        // Get user ID from email
+        UUID userId = getUserId(userDetails);
 
         // Extract current session ID from access token
         String accessToken = extractAccessToken(httpRequest);
         String currentSessionId = null;
         if (accessToken != null) {
-            String tokenHash = com.ultrabms.util.TokenHashUtil.hashToken(accessToken);
+            String tokenHash = TokenHashUtil.hashToken(accessToken);
             currentSessionId = userSessionRepository.findByAccessTokenHash(tokenHash)
                     .map(com.ultrabms.entity.UserSession::getSessionId)
                     .orElse(null);
@@ -70,13 +78,21 @@ public class SessionController {
         List<SessionDto> sessions = sessionService.getUserActiveSessions(userId, currentSessionId);
 
         log.info("Retrieved {} active sessions for user {}", sessions.size(), userId);
-        return ResponseEntity.ok(sessions);
+
+        // Return wrapped response matching frontend expectations
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("success", true);
+        response.put("data", java.util.Map.of("sessions", sessions));
+        response.put("timestamp", java.time.LocalDateTime.now().toString());
+
+        return ResponseEntity.ok(response);
     }
 
     /**
      * Revokes a specific user session.
      *
      * @param sessionId the session ID to revoke
+     * @param userDetails authenticated user details
      * @return 204 No Content on success
      */
     @DeleteMapping("/{sessionId}")
@@ -87,10 +103,11 @@ public class SessionController {
             @ApiResponse(responseCode = "403", description = "Session does not belong to user"),
             @ApiResponse(responseCode = "404", description = "Session not found")
     })
-    public ResponseEntity<Void> revokeSession(@PathVariable String sessionId) {
-        // Get authenticated user ID from SecurityContext
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UUID userId = (UUID) authentication.getPrincipal();
+    public ResponseEntity<Void> revokeSession(
+            @PathVariable String sessionId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        UUID userId = getUserId(userDetails);
 
         try {
             sessionService.revokeSession(userId, sessionId);
@@ -100,6 +117,16 @@ public class SessionController {
             log.warn("Failed to revoke session {}: {}", sessionId, e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+    }
+
+    /**
+     * Get user ID from authenticated user details.
+     */
+    private UUID getUserId(UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+        return user.getId();
     }
 
     /**

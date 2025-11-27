@@ -71,7 +71,7 @@ public class VendorDocumentController {
      * POST /api/v1/vendors/{vendorId}/documents
      */
     @PostMapping(value = "/{vendorId}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Upload vendor document",
             description = "Upload a new document for a vendor (PDF, JPG, PNG, max 10MB)"
@@ -110,7 +110,7 @@ public class VendorDocumentController {
      * GET /api/v1/vendors/{vendorId}/documents
      */
     @GetMapping("/{vendorId}/documents")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "List vendor documents",
             description = "Get all documents for a vendor sorted by upload date descending"
@@ -135,7 +135,7 @@ public class VendorDocumentController {
      * GET /api/v1/vendors/{vendorId}/documents/{documentId}
      */
     @GetMapping("/{vendorId}/documents/{documentId}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Get document details",
             description = "Get document details with presigned download URL (valid for 1 hour)"
@@ -161,7 +161,7 @@ public class VendorDocumentController {
      * PUT /api/v1/vendors/{vendorId}/documents/{documentId}
      */
     @PutMapping(value = "/{vendorId}/documents/{documentId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Replace vendor document",
             description = "Replace an existing document with a new file (previous version retained)"
@@ -199,7 +199,7 @@ public class VendorDocumentController {
      * DELETE /api/v1/vendors/{vendorId}/documents/{documentId}
      */
     @DeleteMapping("/{vendorId}/documents/{documentId}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Delete vendor document",
             description = "Soft delete a document (file retained in S3 for audit)"
@@ -228,7 +228,7 @@ public class VendorDocumentController {
      * GET /api/v1/vendors/expiring-documents?days=30
      */
     @GetMapping("/expiring-documents")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Get expiring documents",
             description = "Get all vendor documents expiring within specified days (default 30)"
@@ -255,7 +255,7 @@ public class VendorDocumentController {
      * GET /api/v1/vendors/expiring-documents/count?days=30
      */
     @GetMapping("/expiring-documents/count")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Count expiring documents",
             description = "Get count of documents expiring within specified days"
@@ -278,7 +278,7 @@ public class VendorDocumentController {
      * GET /api/v1/vendors/{vendorId}/documents/status
      */
     @GetMapping("/{vendorId}/documents/status")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
     @Operation(
             summary = "Get vendor document status",
             description = "Check if vendor has valid critical documents (trade license, insurance)"

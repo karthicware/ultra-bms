@@ -90,9 +90,10 @@ export default function PropertiesPage() {
     const fetchManagers = async () => {
       try {
         const response = await getPropertyManagers();
-        setManagers(response.content);
+        setManagers(response?.content || []);
       } catch (error) {
         console.error('Failed to load property managers:', error);
+        setManagers([]);
       }
     };
     fetchManagers();
@@ -114,9 +115,9 @@ export default function PropertiesPage() {
         direction: sortDirection,
       });
 
-      setProperties(response.content);
-      setTotalPages(response.totalPages);
-      setTotalElements(response.totalElements);
+      setProperties(response.content || []);
+      setTotalPages(response.totalPages || 0);
+      setTotalElements(response.totalElements || 0);
     } catch (error) {
       toast({
         title: 'Error',

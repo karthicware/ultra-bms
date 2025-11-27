@@ -65,6 +65,7 @@ public class RolePermissionService {
 
         // PROPERTY_MANAGER: Manage assigned properties, tenants, work orders
         ROLE_PERMISSIONS.put(UserRole.PROPERTY_MANAGER, Set.of(
+            Permission.USER_READ,
             Permission.PROPERTY_READ_ASSIGNED,
             Permission.PROPERTY_UPDATE,
             Permission.TENANT_CREATE,
