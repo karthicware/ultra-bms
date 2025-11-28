@@ -1,0 +1,41 @@
+Unit Inspection Scheduled
+=========================
+
+Hi [(${tenantName})],
+
+Your unit inspection has been scheduled as part of your checkout process. Please ensure you or an authorized representative is present during the inspection.
+
+INSPECTION DATE & TIME
+----------------------
+Date: [(${inspectionDate})]
+Time: [(${inspectionTime})]
+
+INSPECTION DETAILS
+------------------
+Checkout Reference: [(${checkoutNumber})]
+Property: [(${propertyName})]
+Unit: [(${unitNumber})]
+Inspector: [(${inspectorName})]
+
+PREPARE YOUR UNIT
+-----------------
+- Remove all personal belongings
+- Clean all rooms, kitchen, and bathrooms
+- Ensure all appliances are clean and functional
+- Remove any wall fixtures or decorations
+- Patch any holes in walls
+- Ensure all lights and fixtures are working
+- Have all keys and access cards ready to return
+
+IMPORTANT: Any damages or issues identified during the inspection may result in deductions from your security deposit. Please address any repairs before the inspection date.
+
+If you need to reschedule the inspection, please contact us at least 24 hours in advance.
+
+View checkout details: [(${checkoutUrl})]
+
+---
+Need to reschedule?
+Contact us at [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

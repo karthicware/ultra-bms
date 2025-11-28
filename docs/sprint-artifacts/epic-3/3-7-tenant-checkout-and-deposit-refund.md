@@ -1,6 +1,6 @@
 # Story 3.7: Tenant Checkout and Deposit Refund Processing
 
-Status: drafted
+Status: done
 
 ## Story
 
@@ -267,10 +267,66 @@ Claude Opus 4.5
 
 ### Completion Notes List
 
+**Completed: 2025-11-28**
+
+**Summary:** All 20 ACs met, 15 tasks complete. Full tenant checkout and deposit refund processing implementation.
+
+**Frontend Implementation:**
+- TypeScript types/enums: `frontend/src/types/checkout.ts` (~900 lines)
+- Zod validation schemas: `frontend/src/lib/validations/checkout.ts` (~550 lines)
+- Checkout service: `frontend/src/services/checkout.service.ts` (~670 lines)
+- 4-step wizard components:
+  - `NoticeDetailsStep.tsx` - Checkout initiation with tenant summary
+  - `InspectionStep.tsx` - Inspection scheduling and checklist
+  - `DepositCalculationStep.tsx` - Deposit deductions calculator
+  - `FinalSettlementStep.tsx` - Final settlement and refund processing
+- Checkouts management page: `frontend/src/app/(dashboard)/checkouts/page.tsx`
+- Tenant checkout page: `frontend/src/app/(dashboard)/checkouts/[tenantId]/page.tsx`
+
+**Backend Implementation:**
+- Entities: TenantCheckout, DepositRefund, CheckoutInspection
+- Services: TenantCheckoutService, DepositRefundService
+- Controllers: TenantCheckoutController
+- Email templates: checkout-complete-tenant, checkout-complete-manager, deposit-refund
+
+**Key Features:**
+- Multi-step checkout wizard with step navigation
+- Inspection checklist with photo upload support
+- Deposit calculation with auto-populated deductions
+- Refund processing (bank transfer, cheque, cash)
+- Document generation (inspection report, deposit statement, final settlement)
+- Email notifications to tenant and property manager
+
+**Test Results:**
+- Frontend tests: 535/536 passed (1 skipped)
+- Frontend build: SUCCESS
+- Fixed pre-existing auth-context test by clearing sessionStorage between tests
+
+**TypeScript Fixes Applied During Build:**
+- Aligned type interfaces between Zod schemas and TypeScript types
+- Updated Zod v4 error message syntax (removed deprecated required_error/invalid_type_error)
+- Fixed enum value references (LEASE_END, ItemCondition, RefundStatus)
+- Added null handling for form field values
+- Resolved export conflict for formatCurrency
+
 ### File List
+
+**Frontend Files Created/Modified:**
+- `frontend/src/types/checkout.ts` - TypeScript types and enums
+- `frontend/src/lib/validations/checkout.ts` - Zod validation schemas
+- `frontend/src/services/checkout.service.ts` - API service layer
+- `frontend/src/components/checkout/NoticeDetailsStep.tsx`
+- `frontend/src/components/checkout/InspectionStep.tsx`
+- `frontend/src/components/checkout/DepositCalculationStep.tsx`
+- `frontend/src/components/checkout/FinalSettlementStep.tsx`
+- `frontend/src/components/checkout/index.ts`
+- `frontend/src/app/(dashboard)/checkouts/page.tsx`
+- `frontend/src/app/(dashboard)/checkouts/[tenantId]/page.tsx`
+- `frontend/src/contexts/__tests__/auth-context.test.tsx` - Fixed test
 
 ## Change Log
 
 | Date | Change | Author |
 |------|--------|--------|
 | 2025-11-28 | Story drafted via correct-course workflow | SM Agent (Bob) |
+| 2025-11-28 | Story implemented - All 20 ACs complete, 535/536 tests pass | Dev Agent (Claude Opus 4.5) |

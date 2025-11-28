@@ -1,0 +1,55 @@
+Security Deposit Statement
+==========================
+
+Hi [(${tenantName})],
+
+Your security deposit calculation has been completed following the unit inspection. Please review the statement below.
+
+CHECKOUT INFORMATION
+--------------------
+Checkout Reference: [(${checkoutNumber})]
+Property: [(${propertyName})]
+Unit: [(${unitNumber})]
+Inspection Date: [(${inspectionDate})]
+
+DEPOSIT CALCULATION
+-------------------
+Original Security Deposit: [(${originalDeposit})]
+Total Deductions: - [(${totalDeductions})]
+----------------------------
+Net Amount: [(${netRefund})]
+
+[# th:if="${hasDeductions}"]
+DEDUCTION DETAILS
+-----------------
+[# th:each="deduction : ${deductions}"]
+- [(${deduction.description})]: [(${deduction.amount})]
+[/]
+[/]
+
+[# th:if="${netRefund != null and netRefund != 'AED 0.00'}"]
+REFUND AMOUNT DUE TO YOU: [(${netRefund})]
+
+What's Next?
+We will process your refund within 14 business days. You'll receive a separate notification once the refund has been issued.
+[/]
+
+[# th:if="${amountOwed != null and amountOwed != 'AED 0.00'}"]
+AMOUNT OWED BY YOU: [(${amountOwed})]
+
+What's Next?
+Please settle the outstanding amount within 7 days to complete your checkout process.
+[/]
+
+A detailed deposit statement PDF is attached to this email for your records.
+
+View full statement: [(${checkoutUrl})]
+
+If you have any questions about the deductions or wish to dispute any charges, please contact us within 14 days of receiving this statement.
+
+---
+Questions about this statement?
+Contact us at [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

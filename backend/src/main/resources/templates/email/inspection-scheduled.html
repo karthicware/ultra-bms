@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Inspection Scheduled</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .date-time-box {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .date-time-box .date {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .date-time-box .time {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 40%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .checklist-box {
+            background-color: #faf5ff;
+            border: 1px solid #8b5cf6;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        .checklist-box h3 {
+            margin: 0 0 15px 0;
+            color: #6d28d9;
+        }
+        .checklist-box ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .checklist-box li {
+            margin: 10px 0;
+            color: #7c3aed;
+        }
+        .warning-box {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #8b5cf6;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">&#128197;</div>
+            <h1>Inspection Scheduled</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${tenantName}">Tenant</span>,
+            </div>
+
+            <p>Your unit inspection has been scheduled as part of your checkout process. Please ensure you or an authorized representative is present during the inspection.</p>
+
+            <div class="date-time-box">
+                <div class="date" th:text="${inspectionDate}">February 14, 2025</div>
+                <div class="time" th:text="${inspectionTime}">10:00 AM - 12:00 PM</div>
+            </div>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Inspection Details</h3>
+            <table class="details-table">
+                <tr>
+                    <th>Checkout Reference</th>
+                    <td th:text="${checkoutNumber}">CHK-2025-0001</td>
+                </tr>
+                <tr>
+                    <th>Property</th>
+                    <td th:text="${propertyName}">Property Name</td>
+                </tr>
+                <tr>
+                    <th>Unit</th>
+                    <td th:text="${unitNumber}">Unit 101</td>
+                </tr>
+                <tr>
+                    <th>Inspector</th>
+                    <td th:text="${inspectorName}">John Smith</td>
+                </tr>
+            </table>
+
+            <div class="checklist-box">
+                <h3>&#9989; Prepare Your Unit</h3>
+                <ul>
+                    <li>Remove all personal belongings</li>
+                    <li>Clean all rooms, kitchen, and bathrooms</li>
+                    <li>Ensure all appliances are clean and functional</li>
+                    <li>Remove any wall fixtures or decorations</li>
+                    <li>Patch any holes in walls</li>
+                    <li>Ensure all lights and fixtures are working</li>
+                    <li>Have all keys and access cards ready to return</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <strong>&#9888; Important:</strong> Any damages or issues identified during the inspection may result in deductions from your security deposit. Please address any repairs before the inspection date.
+            </div>
+
+            <p style="color: #666; font-size: 14px;">
+                If you need to reschedule the inspection, please contact us at least 24 hours in advance.
+            </p>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${checkoutUrl}" class="button">View Checkout Details</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Need to reschedule?</strong></p>
+            <p>
+                Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

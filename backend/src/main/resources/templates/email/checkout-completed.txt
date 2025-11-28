@@ -1,0 +1,57 @@
+Checkout Complete
+=================
+
+Hi [(${tenantName})],
+
+YOUR CHECKOUT IS COMPLETE!
+All formalities have been finalized successfully.
+
+Checkout Reference: [(${checkoutNumber})]
+
+CHECKOUT SUMMARY
+----------------
+Property: [(${propertyName})]
+Unit: [(${unitNumber})]
+Move-out Date: [(${moveOutDate})]
+Completed On: [(${completedDate})]
+Settlement Type: [(${settlementType})]
+
+FINANCIAL SUMMARY
+-----------------
+Original Security Deposit: [(${securityDeposit})]
+Total Deductions: - [(${totalDeductions})]
+[# th:if="${refundAmount != null}"]
+Refund Issued: [(${refundAmount})]
+[/]
+[# th:if="${amountOwed != null}"]
+Amount Settled: [(${amountOwed})]
+[/]
+
+YOUR DOCUMENTS
+--------------
+The following documents have been generated for your records:
+- Inspection Report
+- Deposit Statement
+[# th:if="${refundAmount != null}"]
+- Refund Receipt
+[/]
+- Final Settlement Summary
+
+These documents are attached to this email and available in your tenant portal.
+
+---
+
+THANK YOU!
+
+It has been a pleasure having you as our tenant. We wish you all the best in your new home and future endeavors!
+
+View complete details: [(${checkoutUrl})]
+
+If you ever need property management services in the future, we'd be delighted to welcome you back.
+
+---
+Need further assistance?
+Contact us at [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

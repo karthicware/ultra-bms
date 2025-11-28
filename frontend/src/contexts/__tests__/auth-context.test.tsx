@@ -78,6 +78,8 @@ describe('AuthContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPush.mockClear();
+    // Clear sessionStorage to prevent state leakage between tests
+    sessionStorage.clear();
   });
 
   describe('Initial State', () => {

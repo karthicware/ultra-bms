@@ -411,4 +411,158 @@ export function middleware(request: NextRequest) {
 - Add E2E tests for authentication flows (Playwright/Cypress)
 - Document authentication flow diagrams for developers
 
+## Story 2.6: Admin User Management
+
+As a Super Admin or Admin,
+I want to create, view, update, and deactivate user accounts,
+So that I can onboard property managers and other staff members who won't self-register.
+
+**Status:** DONE (Completed 2025-11-28)
+
+**Note:** Full story details in sprint-change-proposal-2025-11-28.md
+
+**Prerequisites:** Story 2.1, Story 2.2
+
+---
+
+## Story 2.7: Admin Theme Settings & System Theme Support
+
+As an Admin or Super Admin,
+I want to configure the application theme (dark/light mode),
+So that users can customize their viewing experience.
+
+**Acceptance Criteria:**
+
+**Given** a user is logged in as ADMIN or SUPER_ADMIN
+**When** they access Settings > Appearance
+**Then** the appearance settings page includes:
+
+**Theme Selection:**
+- Theme mode toggle: System (default) / Light / Dark
+- Live preview of theme change
+- Immediate application of theme on selection
+- Persist preference to user profile or system settings
+
+**And** backend storage:
+- User preference stored in `users.theme_preference` column (enum: SYSTEM, LIGHT, DARK)
+- System default stored in `system_settings` table
+- API: GET/PUT /api/v1/settings/appearance
+
+**And** frontend implementation:
+- ThemeProvider component wrapping the application
+- useTheme hook for accessing/setting theme
+- CSS variables for theme colors (Tailwind dark: variant)
+- LocalStorage fallback for non-authenticated users
+- System preference detection (prefers-color-scheme)
+
+**And** theme application:
+- Tailwind CSS dark mode class strategy ('class' mode)
+- Smooth transition between themes (200ms)
+- All existing components must support both themes
+- shadcn/ui components already support dark mode
+
+**And** RBAC restrictions:
+- ADMIN and SUPER_ADMIN can set system-wide theme defaults
+- All authenticated users can set personal theme preference
+
+**Prerequisites:** Story 2.6 (Admin User Management)
+
+**Technical Notes:**
+- Use next-themes library for Next.js theme management
+- Store user preference: theme_preference enum (SYSTEM, LIGHT, DARK)
+- Flyway migration for new column
+- Reference: docs/archive/stitch_building_maintenance_software/settings_page_1/
+
+---
+
+## Story 2.8: Company Profile Settings
+
+As an Admin or Super Admin,
+I want to manage company profile details,
+So that official documents display accurate company information.
+
+**Acceptance Criteria:**
+
+**Given** a user is logged in as ADMIN or SUPER_ADMIN
+**When** they access Settings > Company Profile
+**Then** the company profile page includes:
+
+**Company Profile Form:**
+- Info banner: "This page is only accessible to users with the 'Admin' role."
+- Company Information section:
+  - Legal Company Name (required, text, max 255 chars)
+  - Company Address (required, text, max 500 chars)
+  - City (required, text, max 100 chars)
+  - Country (required, dropdown with UAE as default)
+  - TRN - Tax Registration Number (required, validated 15-digit UAE format)
+- Official Contact Information section:
+  - Phone Number (required, validated UAE format +971 X XXX XXXX)
+  - Email Address (required, validated email format)
+- Company Logo section:
+  - Current logo preview (square display)
+  - "Upload Logo" button
+  - Accepts: PNG, JPG (max 2MB)
+  - Recommendation text: "We recommend a square image (e.g., PNG or JPG)."
+  - "Remove" link to delete logo
+- "Save Changes" button
+
+**And** company_profile entity:
+- id (UUID, single record design)
+- legalCompanyName (VARCHAR 255, NOT NULL)
+- companyAddress (VARCHAR 500, NOT NULL)
+- city (VARCHAR 100, NOT NULL)
+- country (VARCHAR 100, NOT NULL, default: "United Arab Emirates")
+- trn (VARCHAR 15, NOT NULL, unique)
+- phoneNumber (VARCHAR 20, NOT NULL)
+- emailAddress (VARCHAR 255, NOT NULL)
+- logoFilePath (VARCHAR 500, nullable, S3 key)
+- updatedBy (UUID, foreign key to users)
+- updatedAt (timestamp)
+
+**And** logo management:
+- Upload logo via S3 (existing FileStorageService)
+- Store at: `/uploads/company/logo.{ext}`
+- Generate presigned URL for display
+- Delete old logo when new one uploaded
+- Handle "Remove" action to clear logo
+
+**And** API endpoints:
+- GET /api/v1/company-profile: Get company profile (returns 404 if not set)
+- PUT /api/v1/company-profile: Create or update company profile (upsert)
+- POST /api/v1/company-profile/logo: Upload company logo (multipart)
+- DELETE /api/v1/company-profile/logo: Remove company logo
+
+**And** integration points:
+- PdfGenerationService: Include logo and company details in invoice/receipt headers
+- PDC Management: Company name as "Holder" field on cheque details
+- Email templates: Include company name in footer signature
+- Documents: Use company address in official documents
+
+**And** RBAC restrictions:
+- ADMIN/SUPER_ADMIN: Full create/update access
+- FINANCE_MANAGER, PROPERTY_MANAGER: Read-only access (for document generation)
+- Other roles: No access
+
+**And** validation rules:
+- TRN format: 15 digits (UAE VAT number format: 100XXXXXXXXXXX)
+- Phone: +971 followed by 9 digits
+- Email: RFC 5322 compliant
+- Logo: Max 2MB, PNG/JPG only
+- All text fields: Trim whitespace, no empty strings
+
+**And** single record constraint:
+- Only one company profile record allowed
+- PUT endpoint performs upsert (create if not exists, update if exists)
+- Frontend shows "Set Up" state if no profile exists yet
+
+**Prerequisites:** Story 1.6 (S3 Integration), Story 2.6 (Admin User Management)
+
+**Technical Notes:**
+- Single record design (not multi-tenant)
+- Use existing S3 integration for logo upload (FileStorageService)
+- Cache company profile in Ehcache (frequently read for document generation)
+- Flyway migration V42__create_company_profile_table.sql
+- Frontend: Add "Company Profile" link in Settings page under Security/Profile section
+- Reference: docs/archive/stitch_building_maintenance_software/settings_page_2/
+
 ---

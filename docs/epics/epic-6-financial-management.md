@@ -298,7 +298,7 @@ So that I can track cheque deposits and handle bounced cheques.
 - GET /api/v1/pdcs/dashboard: Get PDC dashboard data
 - GET /api/v1/tenants/{id}/pdcs: Get tenant's PDC history
 
-**Prerequisites:** Story 6.1 (Invoicing), Story 3.2 (Tenant onboarding)
+**Prerequisites:** Story 6.1 (Invoicing), Story 3.2 (Tenant onboarding), Story 2.8 (Company Profile), Story 6.5 (Bank Account Management)
 
 **Technical Notes:**
 - Scheduled job runs daily to check for PDCs becoming due (chequeDate within 7 days)
@@ -309,6 +309,56 @@ So that I can track cheque deposits and handle bounced cheques.
 - Frontend: Use shadcn/ui Calendar for cheque date visualization
 - Display PDC calendar view showing all upcoming cheque dates
 - Implement bulk deposit action (mark multiple PDCs as deposited)
+
+**Additional Enhancements (from Stitch Designs):**
+
+**Cheque Withdrawal History Page:**
+- New page: `/finance/pdc/withdrawals`
+- Table columns: Original Cheque No, Tenant Name, Withdrawal Date, Amount (AED), Reason for Withdrawal, New Payment Method, Associated PDC ID
+- Filters: Reason (All, Cheque Bounced, Replacement Requested, Early Contract Termination), Date Range
+- Search by Cheque Number or Tenant name
+- Export to PDF/Excel button
+- Pagination with "Showing X to Y of Z results"
+- Reference: docs/archive/stitch_building_maintenance_software/cheque_withdrawal_history_page/
+
+**PDC Holder Field:**
+- Display company name from `company_profile` as "Holder" on PDC details page
+- Example: "Emirates Property Care FZ-LLC"
+- Fetched from Company Profile (Story 2.8)
+- Reference: docs/archive/stitch_building_maintenance_software/pdc_details_page_2/
+
+**Beneficiary Bank Account Selection:**
+- When marking PDC as Deposited or Credited, select bank account from dropdown
+- Dropdown populated from `bank_accounts` table (Story 6.5)
+- Display format: "Bank Name - **** **** **** XXXX" (masked account number)
+- Store selected bankAccountId on PDC record
+- Reference: docs/archive/stitch_building_maintenance_software/pdc_details_page_2/
+
+**Withdraw PDC Modal:**
+- Modal title: "Withdraw Post-Dated Cheque: {chequeNumber}"
+- PDC Information section (read-only): Tenant Name, Cheque Amount, Bank Name, Property, Cheque Date, Status
+- Withdrawal Details section:
+  - Withdrawal Date (required, date picker)
+  - Reason for Withdrawal (required, textarea)
+- New Payment Method section (optional):
+  - Payment Method dropdown: Bank Transfer, Cash Payment, New Cheque
+  - If Bank Transfer: Amount Transferred, Transaction ID, Beneficiary Bank Account (dropdown)
+  - If New Cheque: Link to new PDC registration
+- Cancel and "Confirm Withdrawal" buttons
+- Reference: docs/archive/stitch_building_maintenance_software/withdraw_pdc_modal/
+
+**Resolve Bounced Cheque:**
+- Red alert card on PDC Details when status = BOUNCED
+- Message: "This cheque has been marked as bounced. Please take the necessary action to resolve this issue with the tenant."
+- "Resolve Bounced Cheque" button opens resolution flow
+- Reference: docs/archive/stitch_building_maintenance_software/pdc_details_page_3/
+
+**Stitch Design References:**
+- docs/archive/stitch_building_maintenance_software/pdc_management_dashboard/
+- docs/archive/stitch_building_maintenance_software/pdc_details_page_2/
+- docs/archive/stitch_building_maintenance_software/pdc_details_page_3/
+- docs/archive/stitch_building_maintenance_software/withdraw_pdc_modal/
+- docs/archive/stitch_building_maintenance_software/cheque_withdrawal_history_page/
 
 ## Story 6.4: Financial Reporting and Analytics
 
@@ -413,6 +463,67 @@ So that I can understand income, expenses, and profitability.
 - Export Excel using Apache POI library
 - Add comparative reporting (current vs. previous period)
 - Support custom date range selection
+
+---
+
+## Story 6.5: Bank Account Management
+
+As an Admin or Super Admin,
+I want to manage company bank accounts,
+So that financial operations can be linked to specific bank accounts.
+
+**Acceptance Criteria:**
+
+**Given** a user is logged in as ADMIN or SUPER_ADMIN
+**When** they access Settings > Bank Accounts (or Finance > Bank Accounts)
+**Then** the bank account management page includes:
+
+**Bank Account List:**
+- Table columns: Bank Name, Account Name, Account Number (masked ****1234), IBAN, SWIFT/BIC Code, Actions
+- Search by bank name or account name
+- Edit and Delete actions per row
+- "Add New Bank Account" button (top right)
+
+**And** Add/Edit Bank Account form:
+- Bank Name (required, text, max 100 chars)
+- Account Name (required, text, max 255 chars)
+- Account Number (required, encrypted at rest, masked on display)
+- IBAN (required, validated format AE + 21 digits for UAE)
+- SWIFT/BIC Code (required, 8 or 11 chars)
+- Is Primary (boolean, only one can be primary)
+- Status (ACTIVE/INACTIVE)
+
+**And** bank_accounts entity:
+- id (UUID), bankName, accountName
+- accountNumber (encrypted), iban (encrypted)
+- swiftCode, isPrimary, status
+- createdBy (userId), createdAt, updatedAt
+
+**And** validation rules:
+- IBAN validation (checksum + country format)
+- SWIFT/BIC format validation
+- Prevent duplicate account numbers
+- At least one bank account must remain active
+
+**And** API endpoints:
+- POST /api/v1/bank-accounts: Create bank account
+- GET /api/v1/bank-accounts: List all bank accounts
+- GET /api/v1/bank-accounts/{id}: Get bank account details
+- PUT /api/v1/bank-accounts/{id}: Update bank account
+- DELETE /api/v1/bank-accounts/{id}: Soft delete bank account
+- PATCH /api/v1/bank-accounts/{id}/primary: Set as primary
+
+**And** RBAC restrictions:
+- Only ADMIN and SUPER_ADMIN can manage bank accounts
+- View access for FINANCE_MANAGER (read-only)
+
+**Prerequisites:** Story 6.2 (Expense Management)
+
+**Technical Notes:**
+- Encrypt sensitive fields (account number, IBAN) using AES-256
+- Flyway migration V41__create_bank_accounts_table.sql
+- Frontend: Add link in Settings sidebar and Finance module
+- Reference: docs/archive/stitch_building_maintenance_software/bank_account_management_page/
 
 ---
 

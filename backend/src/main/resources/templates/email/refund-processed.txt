@@ -1,0 +1,55 @@
+Deposit Refund Processed
+========================
+
+Hi [(${tenantName})],
+
+Great news! Your security deposit refund has been processed successfully.
+
+REFUND COMPLETED!
+-----------------
+Your deposit refund has been sent.
+
+REFUND AMOUNT: [(${refundAmount})]
+
+Receipt Reference: [(${receiptNumber})]
+
+REFUND DETAILS
+--------------
+Checkout Reference: [(${checkoutNumber})]
+Refund Date: [(${refundDate})]
+Payment Method: [(${refundMethod})]
+[# th:if="${transactionId != null}"]
+Transaction ID: [(${transactionId})]
+[/]
+
+[# th:if="${refundMethod == 'Bank Transfer'}"]
+BANK TRANSFER DETAILS
+---------------------
+Bank Name: [(${bankName})]
+Account Holder: [(${accountHolder})]
+Account (Masked): [(${maskedIban})]
+
+Please allow 2-3 business days for the funds to reflect in your account, depending on your bank's processing time.
+[/]
+
+[# th:if="${refundMethod == 'Cheque'}"]
+CHEQUE DETAILS
+--------------
+Cheque Number: [(${chequeNumber})]
+Cheque Date: [(${chequeDate})]
+
+Please collect your cheque from the property management office.
+[/]
+
+A refund receipt PDF is attached to this email for your records.
+
+View receipt online: [(${receiptUrl})]
+
+Thank you for being our tenant. We wish you all the best in your new journey!
+
+---
+Questions about this refund?
+Contact us at [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

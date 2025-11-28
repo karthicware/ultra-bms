@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Completed</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .complete-box {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .complete-box .checkmark {
+            font-size: 64px;
+            margin-bottom: 10px;
+        }
+        .complete-box h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .complete-box p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        .checkout-number {
+            background-color: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .checkout-number strong {
+            color: #16a34a;
+            font-size: 20px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 50%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: right;
+        }
+        .summary-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        .summary-item.highlight {
+            font-weight: 700;
+            font-size: 16px;
+            color: #16a34a;
+        }
+        .documents-box {
+            background-color: #eff6ff;
+            border: 1px solid #3b82f6;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        .documents-box h4 {
+            margin: 0 0 15px 0;
+            color: #1d4ed8;
+        }
+        .document-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+        }
+        .document-item .icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        .thank-you-box {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px solid #22c55e;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .thank-you-box h3 {
+            margin: 0 0 10px 0;
+            color: #166534;
+        }
+        .thank-you-box p {
+            margin: 0;
+            color: #15803d;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #22c55e;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">&#127881;</div>
+            <h1>Checkout Complete</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${tenantName}">Tenant</span>,
+            </div>
+
+            <div class="complete-box">
+                <div class="checkmark">&#9989;</div>
+                <h2>Your Checkout is Complete!</h2>
+                <p>All formalities have been finalized successfully.</p>
+            </div>
+
+            <div class="checkout-number">
+                <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Checkout Reference</div>
+                <strong th:text="${checkoutNumber}">CHK-2025-0001</strong>
+            </div>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Checkout Summary</h3>
+            <table class="details-table">
+                <tr>
+                    <th>Property</th>
+                    <td th:text="${propertyName}">Property Name</td>
+                </tr>
+                <tr>
+                    <th>Unit</th>
+                    <td th:text="${unitNumber}">Unit 101</td>
+                </tr>
+                <tr>
+                    <th>Move-out Date</th>
+                    <td th:text="${moveOutDate}">Feb 15, 2025</td>
+                </tr>
+                <tr>
+                    <th>Completed On</th>
+                    <td th:text="${completedDate}">Feb 16, 2025</td>
+                </tr>
+                <tr>
+                    <th>Settlement Type</th>
+                    <td th:text="${settlementType}">Full Settlement</td>
+                </tr>
+            </table>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Financial Summary</h3>
+            <div class="summary-box">
+                <div class="summary-item">
+                    <span>Original Security Deposit</span>
+                    <span th:text="${securityDeposit}">AED 10,000.00</span>
+                </div>
+                <div class="summary-item">
+                    <span>Total Deductions</span>
+                    <span th:text="'- ' + ${totalDeductions}">- AED 2,500.00</span>
+                </div>
+                <div th:if="${refundAmount != null}" class="summary-item highlight">
+                    <span>Refund Issued</span>
+                    <span th:text="${refundAmount}">AED 7,500.00</span>
+                </div>
+                <div th:if="${amountOwed != null}" class="summary-item" style="color: #dc2626;">
+                    <span>Amount Settled</span>
+                    <span th:text="${amountOwed}">AED 500.00</span>
+                </div>
+            </div>
+
+            <div class="documents-box">
+                <h4>&#128196; Your Documents</h4>
+                <p style="margin: 0 0 15px 0; color: #666; font-size: 14px;">
+                    The following documents have been generated for your records:
+                </p>
+                <div class="document-item">
+                    <span class="icon">&#128203;</span>
+                    <span>Inspection Report</span>
+                </div>
+                <div class="document-item">
+                    <span class="icon">&#128179;</span>
+                    <span>Deposit Statement</span>
+                </div>
+                <div th:if="${refundAmount != null}" class="document-item">
+                    <span class="icon">&#129534;</span>
+                    <span>Refund Receipt</span>
+                </div>
+                <div class="document-item">
+                    <span class="icon">&#128196;</span>
+                    <span>Final Settlement Summary</span>
+                </div>
+                <p style="margin: 15px 0 0 0; color: #666; font-size: 14px;">
+                    These documents are attached to this email and available in your tenant portal.
+                </p>
+            </div>
+
+            <div class="thank-you-box">
+                <h3>&#128150; Thank You!</h3>
+                <p>
+                    It has been a pleasure having you as our tenant. We wish you all the best in your new home and future endeavors!
+                </p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${checkoutUrl}" class="button">View Complete Details</a>
+            </div>
+
+            <p style="color: #666; font-size: 14px; text-align: center;">
+                If you ever need property management services in the future, we'd be delighted to welcome you back.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Need further assistance?</strong></p>
+            <p>
+                Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

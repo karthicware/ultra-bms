@@ -1018,3 +1018,168 @@ So that I can ensure tenants can report and track maintenance issues.
 - Mock vendor assignment (property manager action)
 
 ---
+
+## Story 3.8: Parking Spot Inventory Management
+
+As a property manager,
+I want to manage parking spot inventory for each building,
+So that I can track available spots and allocate them to tenants.
+
+**Acceptance Criteria:**
+
+**Given** I am managing property parking spots
+**When** I access the parking spot inventory
+**Then** the parking management includes:
+
+**Parking Spot List Page (/property-management/parking):**
+- Table columns: Checkbox, Spot Number, Building, Default Fee (AED), Status, Assigned To, Actions
+- Status badges with color coding:
+  - Available (green)
+  - Assigned (blue) — clickable tenant name link
+  - Under Maintenance (orange)
+- Search by Spot Number or Tenant name
+- Filters: Building (dropdown), Status (dropdown)
+- Pagination (10/20/50 per page)
+- "Add New Parking Spot" button (top right, primary style)
+- Bulk actions: Delete selected, Change status
+- Sorting by Spot Number, Building, Fee
+
+**And** Add New Parking Spot modal:
+- Building (required, dropdown of properties)
+- Spot Number (required, text, max 20 chars, e.g., "P2-115", "A-101", "G-12")
+- Default Fee (AED) (required, decimal, min 0)
+- Validation: Spot number unique within building
+- Buttons: Cancel, Save Spot
+
+**And** Edit Parking Spot:
+- Same form as Add, pre-populated with existing values
+- Cannot change building if spot is currently ASSIGNED
+- Can update fee (affects future allocations only, not existing tenant agreements)
+
+**And** Delete Parking Spot:
+- Confirmation dialog with spot details
+- Cannot delete if status = ASSIGNED (show error message)
+- Soft delete (active = false)
+- Show success toast on deletion
+
+**And** Change Status actions:
+- Available → Under Maintenance (from Actions dropdown menu)
+- Under Maintenance → Available (from Actions dropdown menu)
+- Assigned → Available (only via tenant checkout process, not manual)
+
+**And** ParkingSpot entity:
+- id (UUID)
+- spotNumber (required, unique within property, max 20 chars)
+- propertyId (foreign key to Property)
+- defaultFee (BigDecimal, min 0)
+- status (enum: AVAILABLE, ASSIGNED, UNDER_MAINTENANCE)
+- assignedTenantId (nullable, foreign key to Tenant)
+- assignedAt (timestamp, when assigned to tenant)
+- notes (text, optional, max 500 chars)
+- createdAt, updatedAt timestamps
+- active (boolean, default true, for soft delete)
+
+**And** database migration:
+- V43__create_parking_spots_table.sql
+- Indexes on: propertyId, status, spotNumber
+- Unique constraint: (propertyId, spotNumber) WHERE active = true
+
+**And** API endpoints:
+- POST /api/v1/parking-spots: Create parking spot
+- GET /api/v1/parking-spots: List with filters (propertyId, status, search, pagination)
+- GET /api/v1/parking-spots/{id}: Get spot details
+- PUT /api/v1/parking-spots/{id}: Update spot
+- PATCH /api/v1/parking-spots/{id}/status: Change status (AVAILABLE ↔ UNDER_MAINTENANCE only)
+- DELETE /api/v1/parking-spots/{id}: Soft delete (returns 400 if ASSIGNED)
+- GET /api/v1/properties/{id}/parking-spots: List spots for specific property
+- GET /api/v1/parking-spots/available: List available spots (for allocation dropdowns)
+
+**And** integration with Tenant Onboarding (Story 3.3):
+- Update parking allocation to select from ParkingSpot entity dropdown
+- When tenant allocated parking: Update spot status to ASSIGNED, set assignedTenantId, set assignedAt
+- Display allocated spots in tenant profile
+
+**And** integration with Tenant Checkout (Story 3.7):
+- When tenant checkout completes: Update spot status to AVAILABLE, clear assignedTenantId and assignedAt
+- Release all parking spots assigned to tenant
+
+**And** RBAC:
+- SUPER_ADMIN, ADMIN, PROPERTY_MANAGER: Full CRUD access
+- FINANCE_MANAGER: Read-only access
+- MAINTENANCE_SUPERVISOR: Read-only access
+- TENANT, VENDOR: No access (403)
+
+**And** Sidebar Navigation:
+- Add "Parking Spots" menu item under Property Management section
+- Icon: `local_parking` (Material Symbols Outlined)
+- Route: /property-management/parking
+
+**And** tests:
+- Backend: ParkingSpotServiceTest (CRUD operations, status transitions, uniqueness validation)
+- Backend: ParkingSpotControllerTest (API endpoints, RBAC)
+- Frontend: Validation schema tests (parking.test.ts)
+- Frontend: Component tests (ParkingSpotList, AddParkingSpotModal)
+- All existing tests must continue to pass
+
+**Prerequisites:** Story 3.2 (Property & Unit Management), Story 3.3 (Tenant Onboarding)
+
+**Technical Notes:**
+- Use existing Property dropdown component from Story 3.2
+- Status color coding matches Stitch design exactly
+- Spot number format is flexible (alphanumeric with hyphens)
+- Fee is per-month default; can be overridden at tenant allocation
+- Reference design: docs/archive/stitch_building_maintenance_software/parking_spot_inventory/
+- Reference design: docs/archive/stitch_building_maintenance_software/add/edit_parking_spot_form/
+- Follow existing patterns from PropertyService/UnitService for CRUD implementation
+- Use React Query for data fetching with proper cache invalidation
+- Add data-testid attributes to all interactive elements per conventions
+
+---
+
+## Story 3.8.e2e: E2E Tests for Parking Spot Inventory Management
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for parking spot inventory management,
+So that I can ensure parking spot CRUD and status management work correctly.
+
+**Acceptance Criteria:**
+
+**Given** Story 3.8 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**Parking Spot CRUD:**
+- Create new parking spot → verify appears in list with correct data
+- Edit parking spot fee → verify update saved
+- Attempt to edit building of assigned spot → verify validation error
+- Delete available spot → verify soft deleted (not in list)
+- Attempt to delete assigned spot → verify error message
+
+**Status Management:**
+- Change status Available → Under Maintenance → verify badge updates
+- Change status Under Maintenance → Available → verify badge updates
+- Verify Assigned status cannot be manually changed
+
+**Search and Filters:**
+- Search by spot number → verify correct results
+- Search by tenant name → verify correct results
+- Filter by building → verify filtered list
+- Filter by status → verify filtered list
+- Combine filters → verify intersection
+
+**Pagination:**
+- Navigate through pages → verify correct data
+- Change page size → verify updates
+
+**Integration with Tenant Management:**
+- Allocate parking spot to tenant (via tenant onboarding) → verify status changes to Assigned
+- Complete tenant checkout → verify status changes to Available
+
+**Prerequisites:** Story 3.8 (status: done)
+
+**Technical Notes:**
+- Test RBAC: Property Manager can CRUD, Finance Manager read-only
+- Clean up test parking spots after tests
+- Use test fixtures for properties and tenants
+
+---

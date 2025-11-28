@@ -12,7 +12,11 @@ import {
   Settings,
   LogOut,
   Truck,
-  UserCog
+  UserCog,
+  LogOut as LogOutIcon,
+  Receipt,
+  DollarSign,
+  RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -64,6 +68,18 @@ const navigationSections: NavSection[] = [
         permission: 'tenants:read',
       },
       {
+        name: 'Checkouts',
+        href: '/checkouts',
+        icon: LogOutIcon,
+        permission: 'tenants:read',
+      },
+      {
+        name: 'Lease Extensions',
+        href: '/leases/extensions',
+        icon: RefreshCw,
+        permission: 'tenants:read',
+      },
+      {
         name: 'Work Orders',
         href: '/property-manager/work-orders',
         icon: Wrench,
@@ -74,6 +90,23 @@ const navigationSections: NavSection[] = [
         href: '/property-manager/vendors',
         icon: Truck,
         permission: 'vendor:read',
+      },
+    ],
+  },
+  {
+    title: 'Finance',
+    items: [
+      {
+        name: 'Invoices',
+        href: '/invoices',
+        icon: Receipt,
+        permission: 'invoices:read',
+      },
+      {
+        name: 'Expenses',
+        href: '/expenses',
+        icon: DollarSign,
+        permission: 'expenses:read',
       },
     ],
   },

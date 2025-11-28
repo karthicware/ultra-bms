@@ -1,0 +1,40 @@
+Checkout Notice Received
+========================
+
+Hi [(${tenantName})],
+
+We have received your checkout notice for your rental unit. This email confirms the initiation of your checkout process.
+
+Checkout Reference: [(${checkoutNumber})]
+
+CHECKOUT DETAILS
+----------------
+Property: [(${propertyName})]
+Unit: [(${unitNumber})]
+Notice Date: [(${noticeDate})]
+Expected Move-out Date: [(${moveOutDate})]
+Reason: [(${checkoutReason})]
+
+IMPORTANT: Please ensure all outstanding payments are cleared before your move-out date.
+
+NEXT STEPS
+----------
+1. Schedule your unit inspection (we will contact you shortly)
+2. Clear all outstanding invoices and utility bills
+3. Prepare the unit for inspection
+4. Return all keys and access cards on checkout day
+
+SECURITY DEPOSIT
+----------------
+Security Deposit Held: [(${securityDeposit})]
+
+Your security deposit will be calculated after the unit inspection. Any deductions for damages, outstanding payments, or cleaning will be itemized in a deposit statement.
+
+View your checkout status: [(${checkoutUrl})]
+
+---
+Questions about your checkout?
+Contact us at [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

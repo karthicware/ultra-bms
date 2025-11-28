@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deposit Refund Processed</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .success-box {
+            background-color: #ecfdf5;
+            border: 2px solid #10b981;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .success-box .checkmark {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .amount-box {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .amount-box .label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        .amount-box .amount {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .receipt-number {
+            background-color: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .receipt-number strong {
+            color: #059669;
+            font-size: 20px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 50%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: right;
+        }
+        .bank-details {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .bank-details h4 {
+            margin: 0 0 15px 0;
+            color: #0A2342;
+        }
+        .bank-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .bank-item:last-child {
+            border-bottom: none;
+        }
+        .info-box {
+            background-color: #eff6ff;
+            border: 1px solid #3b82f6;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">&#128176;</div>
+            <h1>Refund Processed</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${tenantName}">Tenant</span>,
+            </div>
+
+            <p>Great news! Your security deposit refund has been processed successfully.</p>
+
+            <div class="success-box">
+                <div class="checkmark">&#9989;</div>
+                <h3 style="margin: 0; color: #059669;">Refund Completed!</h3>
+                <p style="margin: 10px 0 0 0; color: #666;">Your deposit refund has been sent.</p>
+            </div>
+
+            <div class="amount-box">
+                <div class="label">Refund Amount</div>
+                <div class="amount" th:text="${refundAmount}">AED 7,500.00</div>
+            </div>
+
+            <div class="receipt-number">
+                <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Receipt Reference</div>
+                <strong th:text="${receiptNumber}">REF-2025-0001</strong>
+            </div>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Refund Details</h3>
+            <table class="details-table">
+                <tr>
+                    <th>Checkout Reference</th>
+                    <td th:text="${checkoutNumber}">CHK-2025-0001</td>
+                </tr>
+                <tr>
+                    <th>Refund Date</th>
+                    <td th:text="${refundDate}">Feb 20, 2025</td>
+                </tr>
+                <tr>
+                    <th>Payment Method</th>
+                    <td th:text="${refundMethod}">Bank Transfer</td>
+                </tr>
+                <tr th:if="${transactionId != null}">
+                    <th>Transaction ID</th>
+                    <td th:text="${transactionId}">TXN123456789</td>
+                </tr>
+            </table>
+
+            <div th:if="${refundMethod == 'Bank Transfer'}" class="bank-details">
+                <h4>&#127974; Bank Transfer Details</h4>
+                <div class="bank-item">
+                    <span>Bank Name</span>
+                    <span th:text="${bankName}">Emirates NBD</span>
+                </div>
+                <div class="bank-item">
+                    <span>Account Holder</span>
+                    <span th:text="${accountHolder}">John Doe</span>
+                </div>
+                <div class="bank-item">
+                    <span>Account (Masked)</span>
+                    <span th:text="${maskedIban}">AE****1234</span>
+                </div>
+            </div>
+
+            <div th:if="${refundMethod == 'Cheque'}" class="bank-details">
+                <h4>&#128179; Cheque Details</h4>
+                <div class="bank-item">
+                    <span>Cheque Number</span>
+                    <span th:text="${chequeNumber}">123456</span>
+                </div>
+                <div class="bank-item">
+                    <span>Cheque Date</span>
+                    <span th:text="${chequeDate}">Feb 20, 2025</span>
+                </div>
+                <p style="color: #666; font-size: 14px; margin: 10px 0 0 0;">
+                    Please collect your cheque from the property management office.
+                </p>
+            </div>
+
+            <div class="info-box">
+                <strong>&#128712; For Bank Transfers:</strong>
+                <p style="margin: 10px 0 0 0;">
+                    Please allow 2-3 business days for the funds to reflect in your account, depending on your bank's processing time.
+                </p>
+            </div>
+
+            <p style="color: #666; font-size: 14px;">
+                A refund receipt PDF is attached to this email for your records.
+            </p>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${receiptUrl}" class="button">View Receipt Online</a>
+            </div>
+
+            <p style="color: #666; text-align: center;">
+                Thank you for being our tenant. We wish you all the best in your new journey!
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Questions about this refund?</strong></p>
+            <p>
+                Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
