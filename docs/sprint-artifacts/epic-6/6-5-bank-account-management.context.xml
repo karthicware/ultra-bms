@@ -1,0 +1,313 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>5</storyId>
+    <title>Bank Account Management</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-6/6-5-bank-account-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>Admin or Super Admin</asA>
+    <iWant>to manage company bank accounts</iWant>
+    <soThat>financial operations can be linked to specific bank accounts for PDC deposits and payment processing</soThat>
+    <tasks>
+      <task id="1">Create Backend Entity and Migration (AC: #11, #13) - BankAccount entity, Flyway V43</task>
+      <task id="2">Implement AES-256 Encryption Converter (AC: #12) - EncryptionConverter for accountNumber, iban</task>
+      <task id="3">Create Backend DTOs (AC: #14-16) - BankAccountRequest, BankAccountResponse with masking</task>
+      <task id="4">Implement IBAN/SWIFT Validators (AC: #7, #8) - Custom constraint validators</task>
+      <task id="5">Create BankAccountService (AC: #14-19) - CRUD operations with encryption</task>
+      <task id="6">Implement Business Validations (AC: #9, #10) - Unique checks, active account validation</task>
+      <task id="7">Create BankAccountController (AC: #14-19, #20) - REST endpoints with RBAC</task>
+      <task id="8">Create Frontend Types and Validation (AC: #21, #22) - TypeScript types, Zod schemas</task>
+      <task id="9">Create Frontend Service (AC: #23) - bank-account.service.ts</task>
+      <task id="10">Create React Query Hooks (AC: #24) - useBankAccounts.ts</task>
+      <task id="11">Create Bank Accounts List Page (AC: #1, #2, #25) - finance/bank-accounts/page.tsx</task>
+      <task id="12">Create Bank Account Form Modal (AC: #3, #4, #26) - BankAccountFormModal.tsx</task>
+      <task id="13">Implement Delete Confirmation (AC: #5) - AlertDialog component</task>
+      <task id="14">Implement Set Primary Flow (AC: #6) - Primary account toggle</task>
+      <task id="15">Add Sidebar Navigation (AC: #1) - Finance module link</task>
+      <task id="16">Implement Responsive Design (AC: #27) - Mobile card layout</task>
+      <task id="17">Write Backend Unit Tests (AC: #28) - BankAccountServiceTest, BankAccountControllerTest</task>
+      <task id="18">Write Frontend Unit Tests (AC: #29) - Validation and component tests</task>
+      <task id="19">Mandatory Test Execution and Build Verification (AC: #30, #31)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="1">Bank Account List Page Access - Finance > Bank Accounts accessible to ADMIN/SUPER_ADMIN, FINANCE_MANAGER read-only, data-testid="page-bank-accounts"</ac>
+    <ac id="2">Bank Account List Table - Columns: Bank Name, Account Name, Account Number (masked), IBAN (masked), SWIFT/BIC, Status badge, Actions</ac>
+    <ac id="3">Add Bank Account Form - Modal with: Bank Name, Account Name, Account Number, IBAN (UAE format), SWIFT/BIC, Is Primary, Status</ac>
+    <ac id="4">Edit Bank Account Form - Pre-populated form with masked values, reveal/edit option</ac>
+    <ac id="5">Delete Bank Account - Confirmation dialog, soft delete, validation for linked PDCs</ac>
+    <ac id="6">Primary Account Toggle - Only one primary, auto-demote previous primary</ac>
+    <ac id="7">IBAN Validation - UAE format AE + 21 digits, mod 97 checksum validation</ac>
+    <ac id="8">SWIFT/BIC Validation - 8 or 11 alphanumeric characters</ac>
+    <ac id="9">Duplicate Prevention - Unique account numbers and IBANs</ac>
+    <ac id="10">At Least One Active Account - Cannot deactivate last active account</ac>
+    <ac id="11">BankAccount Entity - UUID id, encrypted accountNumber/iban, bankName, accountName, swiftCode, isPrimary, status</ac>
+    <ac id="12">AES-256 Encryption - @Convert with AttributeConverter for transparent encryption/decryption</ac>
+    <ac id="13">Flyway Migration - V43__create_bank_accounts_table.sql</ac>
+    <ac id="14">GET List API - GET /api/v1/bank-accounts with masked fields, search param</ac>
+    <ac id="15">GET Single API - GET /api/v1/bank-accounts/{id}</ac>
+    <ac id="16">POST Create API - POST /api/v1/bank-accounts with validation and encryption</ac>
+    <ac id="17">PUT Update API - PUT /api/v1/bank-accounts/{id}</ac>
+    <ac id="18">DELETE API - DELETE /api/v1/bank-accounts/{id} soft delete</ac>
+    <ac id="19">PATCH Primary API - PATCH /api/v1/bank-accounts/{id}/primary</ac>
+    <ac id="20">RBAC Restrictions - ADMIN/SUPER_ADMIN full CRUD, FINANCE_MANAGER read-only, others 403</ac>
+    <ac id="21">TypeScript Types - BankAccount, BankAccountRequest, BankAccountStatus enum</ac>
+    <ac id="22">Zod Validation Schemas - IBAN regex ^AE\d{21}$, SWIFT regex validation</ac>
+    <ac id="23">Frontend Service - bank-account.service.ts with all CRUD methods</ac>
+    <ac id="24">React Query Hooks - useBankAccounts.ts with queries and mutations</ac>
+    <ac id="25">Loading and Error States - Skeleton loaders, empty state, error alerts</ac>
+    <ac id="26">Toast Notifications - Success/error toasts for all operations</ac>
+    <ac id="27">Responsive Design - Card layout on mobile, responsive modal</ac>
+    <ac id="28">Unit Tests (Backend) - BankAccountServiceTest, BankAccountControllerTest, >= 80% coverage</ac>
+    <ac id="29">Unit Tests (Frontend) - Validation tests, component tests, data-testid verification</ac>
+    <ac id="30">Mandatory Test Execution - mvn test and npm test must pass</ac>
+    <ac id="31">Build Verification - mvn compile, npm run build, npm run lint must pass</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics/epic-6-financial-management.md</path>
+        <title>Epic 6: Financial Management</title>
+        <section>Story 6.5: Bank Account Management</section>
+        <snippet>Bank account management for Admin/Super Admin with encrypted storage, IBAN/SWIFT validation, and integration with PDC management.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Security Architecture - Data Encryption</section>
+        <snippet>AES-256 encryption for sensitive fields using Spring JPA @Convert with AttributeConverter. Encryption key stored in environment variable.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Backend Implementation Patterns - Controller Pattern</section>
+        <snippet>@RestController, @RequestMapping, @PreAuthorize for RBAC. Service layer with @Transactional for write operations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Frontend Implementation Patterns - Form Pattern</section>
+        <snippet>React Hook Form + Zod for form validation. zodResolver for schema validation. TypeScript strict mode required.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic-2/2-8-company-profile-settings.md</path>
+        <title>Story 2.8: Company Profile Settings</title>
+        <section>Similar Settings Page Pattern</section>
+        <snippet>RBAC pattern: ADMIN/SUPER_ADMIN write, FINANCE_MANAGER/PROPERTY_MANAGER read-only. Single record vs multi-record difference.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/controller/ExpenseController.java</path>
+        <kind>controller</kind>
+        <symbol>ExpenseController</symbol>
+        <lines>1-80</lines>
+        <reason>Reference pattern for finance module controller with RBAC (@PreAuthorize), response format, and service injection</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/controller/CompanyProfileController.java</path>
+        <kind>controller</kind>
+        <symbol>CompanyProfileController</symbol>
+        <lines>1-100</lines>
+        <reason>Reference pattern for settings controller with ADMIN/SUPER_ADMIN write access, FINANCE_MANAGER read-only</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/ExpenseService.java</path>
+        <kind>interface</kind>
+        <symbol>ExpenseService</symbol>
+        <reason>Reference pattern for finance module service interface</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/CompanyProfileService.java</path>
+        <kind>interface</kind>
+        <symbol>CompanyProfileService</symbol>
+        <reason>Reference pattern for settings service with caching</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/expense.service.ts</path>
+        <kind>service</kind>
+        <symbol>ExpenseService</symbol>
+        <lines>1-100</lines>
+        <reason>Reference pattern for frontend API service with comprehensive JSDoc documentation</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/lib/validations/company-profile.ts</path>
+        <kind>validation</kind>
+        <symbol>companyProfileSchema</symbol>
+        <lines>1-100</lines>
+        <reason>Reference pattern for Zod validation schemas with regex patterns (TRN, UAE phone)</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/resources/db/migration/V42__create_company_profile_table.sql</path>
+        <kind>migration</kind>
+        <reason>Latest migration - next version is V43 for bank_accounts table</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/test/java/com/ultrabms/service/ExpenseServiceTest.java</path>
+        <kind>test</kind>
+        <symbol>ExpenseServiceTest</symbol>
+        <reason>Reference pattern for backend unit tests with Mockito</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/test/java/com/ultrabms/service/CompanyProfileServiceTest.java</path>
+        <kind>test</kind>
+        <symbol>CompanyProfileServiceTest</symbol>
+        <reason>Reference pattern for service tests with caching validation</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <backend>
+        <framework>Spring Boot 3.4.0</framework>
+        <dependency>spring-boot-starter-data-jpa</dependency>
+        <dependency>spring-boot-starter-security</dependency>
+        <dependency>spring-boot-starter-validation</dependency>
+        <dependency>spring-boot-starter-web</dependency>
+        <dependency>spring-boot-starter-cache</dependency>
+        <dependency>ehcache 3.10.8</dependency>
+        <dependency>postgresql</dependency>
+        <dependency>flyway-core</dependency>
+        <dependency>lombok 1.18.36</dependency>
+        <dependency>springdoc-openapi-starter-webmvc-ui 2.8.4</dependency>
+        <dependency>jjwt-api 0.12.6</dependency>
+        <dependency>spring-boot-starter-test</dependency>
+        <dependency>spring-security-test</dependency>
+        <note>For AES-256 encryption: Use Java's javax.crypto with AES/GCM/NoPadding</note>
+      </backend>
+      <frontend>
+        <framework>Next.js 16.0.2</framework>
+        <framework>React 19.2.0</framework>
+        <dependency>@tanstack/react-query ^5.90.9</dependency>
+        <dependency>react-hook-form ^7.66.0</dependency>
+        <dependency>@hookform/resolvers ^5.2.2</dependency>
+        <dependency>zod ^4.1.12</dependency>
+        <dependency>axios ^1.13.2</dependency>
+        <dependency>lucide-react ^0.553.0</dependency>
+        <dependency>sonner ^2.0.7</dependency>
+        <dependency>date-fns ^4.1.0</dependency>
+        <dependency>@radix-ui/react-dialog</dependency>
+        <dependency>@radix-ui/react-alert-dialog</dependency>
+        <dependency>@radix-ui/react-select</dependency>
+        <dependency>@radix-ui/react-checkbox</dependency>
+        <dependency>@radix-ui/react-dropdown-menu</dependency>
+        <testing>jest ^30.2.0</testing>
+        <testing>@testing-library/react ^16.3.0</testing>
+        <testing>@testing-library/jest-dom ^6.9.1</testing>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="security">AES-256 encryption for accountNumber and iban fields using Spring JPA @Convert</constraint>
+    <constraint type="security">Encryption key stored in environment variable ENCRYPTION_KEY, not in code</constraint>
+    <constraint type="security">RBAC: ADMIN/SUPER_ADMIN full CRUD, FINANCE_MANAGER read-only, others 403</constraint>
+    <constraint type="validation">UAE IBAN format: AE + 21 digits (23 chars total), mod 97 checksum</constraint>
+    <constraint type="validation">SWIFT/BIC format: 8 or 11 uppercase alphanumeric characters</constraint>
+    <constraint type="business">Only one bank account can be primary at a time</constraint>
+    <constraint type="business">Cannot delete/deactivate last active bank account</constraint>
+    <constraint type="business">Cannot delete bank account linked to active PDCs</constraint>
+    <constraint type="database">Unique constraint on iban column</constraint>
+    <constraint type="database">Index on status column</constraint>
+    <constraint type="display">Account numbers masked as ****XXXX (last 4 digits)</constraint>
+    <constraint type="display">IBAN masked showing first 4 and last 4 characters</constraint>
+    <constraint type="testing">All interactive elements must have data-testid attributes</constraint>
+    <constraint type="testing">Backend tests >= 80% coverage</constraint>
+    <constraint type="build">mvn test, npm test, npm run build, npm run lint must all pass</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>BankAccountController</name>
+      <kind>REST Controller</kind>
+      <signature>@RestController @RequestMapping("/api/v1/bank-accounts")</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/BankAccountController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/bank-accounts</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/bank-accounts?search={query} -> List[BankAccountResponse] (masked)</signature>
+      <path>BankAccountController.getAllBankAccounts()</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/bank-accounts/{id}</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/bank-accounts/{id} -> BankAccountResponse</signature>
+      <path>BankAccountController.getBankAccountById()</path>
+    </interface>
+    <interface>
+      <name>POST /api/v1/bank-accounts</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/bank-accounts (BankAccountRequest) -> BankAccountResponse</signature>
+      <path>BankAccountController.createBankAccount()</path>
+    </interface>
+    <interface>
+      <name>PUT /api/v1/bank-accounts/{id}</name>
+      <kind>REST endpoint</kind>
+      <signature>PUT /api/v1/bank-accounts/{id} (BankAccountRequest) -> BankAccountResponse</signature>
+      <path>BankAccountController.updateBankAccount()</path>
+    </interface>
+    <interface>
+      <name>DELETE /api/v1/bank-accounts/{id}</name>
+      <kind>REST endpoint</kind>
+      <signature>DELETE /api/v1/bank-accounts/{id} -> 204 No Content</signature>
+      <path>BankAccountController.deleteBankAccount()</path>
+    </interface>
+    <interface>
+      <name>PATCH /api/v1/bank-accounts/{id}/primary</name>
+      <kind>REST endpoint</kind>
+      <signature>PATCH /api/v1/bank-accounts/{id}/primary -> BankAccountResponse</signature>
+      <path>BankAccountController.setPrimaryBankAccount()</path>
+    </interface>
+    <interface>
+      <name>BankAccountService</name>
+      <kind>Service interface</kind>
+      <signature>findAll(search), findById(id), create(request), update(id, request), delete(id), setPrimary(id)</signature>
+      <path>backend/src/main/java/com/ultrabms/service/BankAccountService.java</path>
+    </interface>
+    <interface>
+      <name>EncryptionConverter</name>
+      <kind>JPA AttributeConverter</kind>
+      <signature>@Converter class EncryptionConverter implements AttributeConverter[String, String]</signature>
+      <path>backend/src/main/java/com/ultrabms/config/EncryptionConverter.java</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 + Mockito for unit tests, @WebMvcTest for controller tests, @SpringBootTest for integration tests.
+      Frontend: Jest + React Testing Library for component tests, Zod schema testing for validation.
+      All interactive elements must have data-testid attributes for E2E testing.
+      Backend coverage target: >= 80% line coverage.
+      Test commands: mvn test (backend), npm test (frontend).
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/</location>
+      <location>backend/src/test/java/com/ultrabms/controller/</location>
+      <location>frontend/src/lib/validations/__tests__/</location>
+      <location>frontend/src/app/(dashboard)/finance/bank-accounts/__tests__/</location>
+      <location>frontend/src/components/finance/__tests__/</location>
+    </locations>
+    <ideas>
+      <idea ac="12">Test EncryptionConverter encrypts/decrypts correctly, handles null values</idea>
+      <idea ac="7">Test IBAN validation: valid UAE IBAN, invalid country code, wrong length, failed checksum</idea>
+      <idea ac="8">Test SWIFT validation: valid 8-char, valid 11-char, invalid chars, wrong length</idea>
+      <idea ac="9">Test duplicate prevention: same account number, same IBAN</idea>
+      <idea ac="10">Test last active account validation: cannot deactivate/delete last active</idea>
+      <idea ac="6">Test primary toggle: setting new primary demotes old primary</idea>
+      <idea ac="5">Test delete validation: cannot delete if linked to PDCs</idea>
+      <idea ac="20">Test RBAC: ADMIN success, FINANCE_MANAGER read-only, TENANT 403</idea>
+      <idea ac="14">Test masked response: account numbers show ****XXXX, IBAN shows AE12****5678</idea>
+      <idea ac="22">Test frontend Zod schemas: valid/invalid IBAN patterns, SWIFT patterns</idea>
+      <idea ac="25">Test loading states, empty states, error states render correctly</idea>
+      <idea ac="26">Test toast notifications appear on success/error</idea>
+    </ideas>
+  </tests>
+</story-context>

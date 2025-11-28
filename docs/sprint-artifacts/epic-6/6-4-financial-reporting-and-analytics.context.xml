@@ -1,0 +1,356 @@
+<story-context id="6-4-financial-reporting-and-analytics" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>4</storyId>
+    <title>Financial Reporting and Analytics</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-6/6-4-financial-reporting-and-analytics.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>finance manager</asA>
+    <iWant>to view financial reports and analytics</iWant>
+    <soThat>I can understand income, expenses, and profitability to make informed business decisions</soThat>
+    <tasks>
+      <task id="1">Create Report TypeScript Types (AC#18)</task>
+      <task id="2">Create Report Frontend Service (AC#19)</task>
+      <task id="3">Create Report React Query Hooks (AC#20)</task>
+      <task id="4">Create Report DTOs - Backend (AC#23)</task>
+      <task id="5">Create Repository Aggregation Queries (AC#24)</task>
+      <task id="6">Implement Report Service Layer (AC#21)</task>
+      <task id="7">Implement PDF Export Service (AC#16, #30)</task>
+      <task id="8">Implement Excel Export Service (AC#17, #30)</task>
+      <task id="9">Implement Report Controller (AC#22)</task>
+      <task id="10">Create Date Range Selector Component (AC#26)</task>
+      <task id="11">Create Property Filter Component (AC#27)</task>
+      <task id="12">Create Financial Dashboard Page (AC#6)</task>
+      <task id="13">Create Income Statement Page (AC#1)</task>
+      <task id="14">Create Cash Flow Page (AC#2)</task>
+      <task id="15">Create AR Aging Page (AC#3)</task>
+      <task id="16">Create Revenue Breakdown Page (AC#4)</task>
+      <task id="17">Create Expense Breakdown Page (AC#5)</task>
+      <task id="18">Implement Chart Components (AC#25)</task>
+      <task id="19">Implement Export Functionality - Frontend (AC#7, #8)</task>
+      <task id="20">Implement Email Report Modal (AC#9)</task>
+      <task id="21">Implement Drill-Down Navigation (AC#28)</task>
+      <task id="22">Implement Comparative Reporting (AC#31)</task>
+      <task id="23">Implement Responsive Design (AC#32)</task>
+      <task id="24">Implement Loading States (AC#33)</task>
+      <task id="25">Write Backend Unit Tests (AC#34)</task>
+      <task id="26">Write Frontend Unit Tests (AC#35)</task>
+      <task id="27">Mandatory Test Execution and Build Verification (AC#36, #37)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Income Statement (P&amp;L) Report Page at /finance/reports/income-statement</criterion>
+    <criterion id="AC2">Cash Flow Summary Report at /finance/reports/cash-flow</criterion>
+    <criterion id="AC3">Accounts Receivable Aging Report at /finance/reports/receivables-aging</criterion>
+    <criterion id="AC4">Revenue Breakdown Charts at /finance/reports/revenue</criterion>
+    <criterion id="AC5">Expense Breakdown Charts at /finance/reports/expenses</criterion>
+    <criterion id="AC6">Financial Dashboard Page at /finance/reports</criterion>
+    <criterion id="AC7">Export to PDF for all reports</criterion>
+    <criterion id="AC8">Export to Excel for all reports</criterion>
+    <criterion id="AC9">Email Reports functionality</criterion>
+    <criterion id="AC10-AC15">Backend APIs for all report types</criterion>
+    <criterion id="AC16-AC17">PDF and Excel Export APIs</criterion>
+    <criterion id="AC18-AC20">Frontend types, services, hooks</criterion>
+    <criterion id="AC21-AC24">Backend service layer, controller, DTOs, repository queries</criterion>
+    <criterion id="AC25">Recharts integration for all charts</criterion>
+    <criterion id="AC26-AC27">Reusable DateRangeSelector and PropertyFilter components</criterion>
+    <criterion id="AC28">Drill-down navigation from charts</criterion>
+    <criterion id="AC29">Dashboard caching with @Cacheable (1 hour TTL)</criterion>
+    <criterion id="AC30">Export file generation with company header</criterion>
+    <criterion id="AC31">Comparative reporting with previous period toggle</criterion>
+    <criterion id="AC32">Responsive design (mobile, tablet, desktop)</criterion>
+    <criterion id="AC33">Loading states with skeleton loaders</criterion>
+    <criterion id="AC34-AC35">Backend and frontend unit tests (&gt;=80% coverage)</criterion>
+    <criterion id="AC36-AC37">Mandatory test execution and build verification</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics/epic-6-financial-management.md</path>
+        <title>Epic 6: Financial Management</title>
+        <section>Story 6.4: Financial Reporting and Analytics</section>
+        <snippet>Comprehensive requirements for P&amp;L reports, cash flow, AR aging, revenue/expense breakdown charts, KPI dashboard, PDF/Excel exports, and email capabilities.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Ultra BMS Architecture</title>
+        <section>Implementation Patterns, Performance Considerations</section>
+        <snippet>Controller pattern, Service pattern, Repository pattern, DTO pattern, @Cacheable usage, Spring Cache with Caffeine, React Query caching, Recharts for charts.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>3.10 Reporting &amp; Analytics Module</section>
+        <snippet>Standard reports (maintenance cost, vendor performance, occupancy, asset utilization, compliance), financial reports (income statements, cash flow, aged receivables, budget variance), custom report builder.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <!-- Backend - Existing Entities -->
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Invoice.java</path>
+        <kind>entity</kind>
+        <symbol>Invoice</symbol>
+        <lines>1-449</lines>
+        <reason>Source of revenue data. Fields: invoiceNumber, tenant, unit, property, invoiceDate, dueDate, baseRent, serviceCharges, parkingFees, lateFee, totalAmount, paidAmount, balanceAmount, status (DRAFT/SENT/PARTIALLY_PAID/PAID/OVERDUE/CANCELLED). Has calculateTotals(), recordPayment(), isOverdue() methods.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Expense.java</path>
+        <kind>entity</kind>
+        <symbol>Expense</symbol>
+        <reason>Source of expense data. Fields: expenseNumber, category (MAINTENANCE/UTILITIES/SALARIES/SUPPLIES/INSURANCE/TAXES/OTHER), property, vendor, workOrder, amount, expenseDate, paymentStatus (PENDING/PAID), paymentDate, description.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Payment.java</path>
+        <kind>entity</kind>
+        <symbol>Payment</symbol>
+        <reason>Source of cash inflow data. Fields: paymentNumber, invoice, tenant, amount, paymentMethod, paymentDate, transactionReference. Links invoices to payments.</reason>
+      </artifact>
+
+      <!-- Backend - Existing Repositories with Aggregation Queries -->
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/repository/InvoiceRepository.java</path>
+        <kind>repository</kind>
+        <symbol>InvoiceRepository</symbol>
+        <lines>1-390</lines>
+        <reason>Has aggregation methods: getTotalInvoicedInPeriod(), getTotalCollectedInPeriod(), getTotalOverdueAmount(), countOverdueInvoices(), getTotalOutstandingByTenant(), getTotalOutstandingByProperty(). Extend for: sumByInvoiceTypeAndDateRange, getAgingBuckets.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/repository/ExpenseRepository.java</path>
+        <kind>repository</kind>
+        <symbol>ExpenseRepository</symbol>
+        <lines>1-378</lines>
+        <reason>Has aggregation methods: getTotalAmountByCategoryInPeriod(), getTotalAmountInPeriod(), getTotalPaidAmountInPeriod(), getCategoryBreakdown(), getMonthlyTrend(). Extend for: getTopVendorsByPayment, getMaintenanceCostByProperty.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/repository/PaymentRepository.java</path>
+        <kind>repository</kind>
+        <symbol>PaymentRepository</symbol>
+        <reason>Source for cash inflow aggregations. Extend for: sumByDateRange(startDate, endDate, propertyId).</reason>
+      </artifact>
+
+      <!-- Backend - Existing Services -->
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/impl/ExpenseServiceImpl.java</path>
+        <kind>service</kind>
+        <symbol>ExpenseServiceImpl</symbol>
+        <reason>Reference for service implementation patterns. Uses @Service, @Transactional, constructor injection, repository calls.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/EmailService.java</path>
+        <kind>service</kind>
+        <symbol>EmailService</symbol>
+        <reason>Existing email service for sending report emails with PDF attachments.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/PdfGenerationService.java</path>
+        <kind>service</kind>
+        <symbol>PdfGenerationService</symbol>
+        <reason>Existing PDF service using iTextPDF. Extend or reference for report PDF generation.</reason>
+      </artifact>
+
+      <!-- Frontend - Existing Chart Pattern -->
+      <artifact>
+        <path>frontend/src/components/expenses/ExpenseSummaryCharts.tsx</path>
+        <kind>component</kind>
+        <symbol>ExpenseSummaryCharts</symbol>
+        <lines>1-261</lines>
+        <reason>CRITICAL PATTERN for Recharts implementation. Uses PieChart, LineChart, ResponsiveContainer, custom tooltips, loading skeletons, dark theme support. Category colors, line colors defined. Follow this pattern for all report charts.</reason>
+      </artifact>
+
+      <!-- Frontend - Existing Type Patterns -->
+      <artifact>
+        <path>frontend/src/types/expense.ts</path>
+        <kind>types</kind>
+        <symbol>ExpenseCategory, ExpenseSummary</symbol>
+        <reason>Pattern for TypeScript types with enums, interfaces, and helper functions like formatExpenseCurrency.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/invoice.ts</path>
+        <kind>types</kind>
+        <symbol>Invoice, InvoiceStatus</symbol>
+        <reason>Invoice type definitions for revenue calculations.</reason>
+      </artifact>
+
+      <!-- Frontend - Existing Service/Hook Patterns -->
+      <artifact>
+        <path>frontend/src/services/expense.service.ts</path>
+        <kind>service</kind>
+        <symbol>expenseService</symbol>
+        <reason>Pattern for frontend API service with CRUD methods, query parameters, error handling.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/hooks/useExpenses.ts</path>
+        <kind>hooks</kind>
+        <symbol>useExpenses, useExpenseSummary</symbol>
+        <reason>Pattern for React Query hooks with queries and mutations, staleTime configuration.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <backend>
+        <dependency name="spring-boot-starter-web" version="3.4.x">REST API framework</dependency>
+        <dependency name="spring-boot-starter-data-jpa" version="3.4.x">Database access</dependency>
+        <dependency name="spring-boot-starter-cache" version="3.4.x">Caching with @Cacheable</dependency>
+        <dependency name="spring-boot-starter-mail" version="3.4.x">Email sending</dependency>
+        <dependency name="itext-core" version="8.0.x">PDF generation - ADD TO pom.xml if not present</dependency>
+        <dependency name="poi-ooxml" version="5.2.x">Excel generation - ADD TO pom.xml if not present</dependency>
+        <dependency name="lombok" version="latest">Code generation</dependency>
+      </backend>
+      <frontend>
+        <dependency name="recharts" version="^2.10.0">Chart library - VERIFY INSTALLED</dependency>
+        <dependency name="@tanstack/react-query" version="^5.0.0">Data fetching and caching</dependency>
+        <dependency name="date-fns" version="^3.0.0">Date manipulation</dependency>
+        <dependency name="zod" version="^3.x">Schema validation</dependency>
+        <dependency name="react-hook-form" version="^7.x">Form management</dependency>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint category="architecture">
+      <rule>Follow existing Controller → Service → Repository pattern from ExpenseServiceImpl</rule>
+      <rule>Use @Cacheable for dashboard endpoint with 1 hour TTL (cache name: "financialDashboard")</rule>
+      <rule>All calculations must be server-side using database aggregation queries for performance</rule>
+      <rule>Use native SQL queries with GROUP BY for complex aggregations</rule>
+    </constraint>
+    <constraint category="api">
+      <rule>All endpoints under /api/v1/reports/</rule>
+      <rule>Require ADMIN, PROPERTY_MANAGER, or FINANCE_MANAGER role via @PreAuthorize</rule>
+      <rule>Use @RequestParam for query parameters (startDate, endDate, propertyId)</rule>
+      <rule>Return PDF as application/pdf with Content-Disposition header</rule>
+      <rule>Return Excel as application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</rule>
+    </constraint>
+    <constraint category="frontend">
+      <rule>Use Recharts for all charts following ExpenseSummaryCharts.tsx pattern</rule>
+      <rule>Use ResponsiveContainer for all charts</rule>
+      <rule>Use shadcn/ui Card, Table, Skeleton, Button, Select, Calendar components</rule>
+      <rule>All interactive elements must have data-testid attributes</rule>
+      <rule>Currency format: AED using formatCurrency() utility</rule>
+    </constraint>
+    <constraint category="testing">
+      <rule>Backend tests: ReportServiceTest, ReportControllerTest with mocked repositories</rule>
+      <rule>Frontend tests: Component rendering, hook behavior, chart rendering</rule>
+      <rule>Minimum 80% code coverage for new code</rule>
+      <rule>All tests must pass before story completion</rule>
+    </constraint>
+    <constraint category="patterns">
+      <rule>Chart colors: Use Airbnb-inspired palette from ExpenseSummaryCharts</rule>
+      <rule>Loading states: Skeleton components for all data-dependent UI</rule>
+      <rule>Error states: Alert component with retry button</rule>
+      <rule>Empty states: Centered message with icon</rule>
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <!-- Backend APIs to Implement -->
+    <interface>
+      <name>GET /api/v1/reports/income-statement</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping("/income-statement") ResponseEntity&lt;IncomeStatementDto&gt; getIncomeStatement(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate, @RequestParam(required = false) UUID propertyId)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ReportController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/reports/cash-flow</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping("/cash-flow") ResponseEntity&lt;CashFlowSummaryDto&gt; getCashFlow(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate, @RequestParam(required = false) UUID propertyId)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ReportController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/reports/receivables-aging</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping("/receivables-aging") ResponseEntity&lt;ARAgingDto&gt; getARAging(@RequestParam(required = false) LocalDate asOfDate, @RequestParam(required = false) UUID propertyId)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ReportController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/reports/revenue-breakdown</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping("/revenue-breakdown") ResponseEntity&lt;RevenueBreakdownDto&gt; getRevenueBreakdown(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate, @RequestParam(required = false) UUID propertyId)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ReportController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/reports/expense-breakdown</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping("/expense-breakdown") ResponseEntity&lt;ExpenseBreakdownDto&gt; getExpenseBreakdown(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate, @RequestParam(required = false) UUID propertyId)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ReportController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/reports/financial-dashboard</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping("/financial-dashboard") @Cacheable(value = "financialDashboard", key = "#propertyId") ResponseEntity&lt;FinancialDashboardDto&gt; getFinancialDashboard(@RequestParam(required = false) UUID propertyId)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ReportController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/reports/export/pdf</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping("/export/pdf") ResponseEntity&lt;byte[]&gt; exportPdf(@RequestParam String reportType, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate, @RequestParam(required = false) UUID propertyId)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ReportController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/reports/export/excel</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping("/export/excel") ResponseEntity&lt;byte[]&gt; exportExcel(@RequestParam String reportType, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate, @RequestParam(required = false) UUID propertyId)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ReportController.java</path>
+    </interface>
+    <interface>
+      <name>POST /api/v1/reports/email</name>
+      <kind>REST endpoint</kind>
+      <signature>@PostMapping("/email") ResponseEntity&lt;Void&gt; emailReport(@RequestBody EmailReportDto request)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ReportController.java</path>
+    </interface>
+    <interface>
+      <name>POST /api/v1/reports/financial-dashboard/refresh</name>
+      <kind>REST endpoint</kind>
+      <signature>@PostMapping("/financial-dashboard/refresh") @CacheEvict(value = "financialDashboard", allEntries = true) ResponseEntity&lt;Void&gt; refreshDashboard()</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ReportController.java</path>
+    </interface>
+
+    <!-- Existing Interfaces to Reuse -->
+    <interface>
+      <name>InvoiceRepository aggregations</name>
+      <kind>repository</kind>
+      <signature>getTotalInvoicedInPeriod(fromDate, toDate), getTotalCollectedInPeriod(fromDate, toDate), getTotalOverdueAmount()</signature>
+      <path>backend/src/main/java/com/ultrabms/repository/InvoiceRepository.java</path>
+    </interface>
+    <interface>
+      <name>ExpenseRepository aggregations</name>
+      <kind>repository</kind>
+      <signature>getCategoryBreakdown(fromDate, toDate), getMonthlyTrend(fromDate, toDate), getTotalAmountByCategoryInPeriod()</signature>
+      <path>backend/src/main/java/com/ultrabms/repository/ExpenseRepository.java</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 with Mockito for unit tests. Use @MockBean for repository dependencies. Test calculation logic, caching behavior, authorization. Frontend: Vitest with React Testing Library. Test component rendering, hook behavior, user interactions. All tests must pass before story completion. Follow existing test patterns in ExpenseServiceTest and frontend/__tests__.
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/ReportServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/controller/ReportControllerTest.java</location>
+      <location>frontend/src/components/reports/__tests__/</location>
+      <location>frontend/src/hooks/__tests__/useReports.test.ts</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC10">Test income statement calculation with mixed invoice types</idea>
+      <idea acRef="AC11">Test cash flow inflows/outflows aggregation</idea>
+      <idea acRef="AC12">Test AR aging bucket calculations with various overdue periods</idea>
+      <idea acRef="AC13">Test revenue breakdown by property and type</idea>
+      <idea acRef="AC14">Test expense breakdown by category</idea>
+      <idea acRef="AC15">Test dashboard KPIs and caching behavior</idea>
+      <idea acRef="AC16">Test PDF generation with all data types</idea>
+      <idea acRef="AC17">Test Excel export with multiple sheets</idea>
+      <idea acRef="AC25">Test chart rendering with empty data</idea>
+      <idea acRef="AC26">Test DateRangeSelector preset selection and custom range</idea>
+      <idea acRef="AC27">Test PropertyFilter dropdown selection</idea>
+      <idea acRef="AC28">Test drill-down navigation from chart clicks</idea>
+      <idea acRef="AC31">Test comparative reporting toggle and variance calculations</idea>
+    </ideas>
+  </tests>
+</story-context>

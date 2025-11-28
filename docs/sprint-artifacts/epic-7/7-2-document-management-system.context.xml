@@ -1,0 +1,197 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>2</storyId>
+    <title>Document Management System</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-7/7-2-document-management-system.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>property manager</asA>
+    <iWant>a centralized document repository</iWant>
+    <soThat>all property-related documents are organized and easily accessible</soThat>
+    <tasks>
+      <task id="1">Create Document TypeScript Types (AC: #29) - Document interface, DocumentEntityType enum, DocumentAccessLevel enum, DocumentUpload/Update/Replace interfaces, DocumentVersion interface, ExpiryStatus type</task>
+      <task id="2">Create Document Zod Validation Schemas (AC: #30) - documentUploadSchema, documentUpdateSchema, documentReplaceSchema with file type/size validations</task>
+      <task id="3">Create Document Frontend Service (AC: #31) - getDocuments, getDocument, uploadDocument, updateDocument, replaceDocument, deleteDocument, getVersionHistory, downloadDocument, previewDocument, getExpiringDocuments, getEntityDocuments</task>
+      <task id="4">Create Document React Query Hooks (AC: #32) - useDocuments, useDocument, useExpiringDocuments, useDocumentVersions, useEntityDocuments, mutation hooks</task>
+      <task id="5">Create Document Entity and Enums (Backend) (AC: #1, #2, #3) - Document JPA entity, DocumentEntityType enum, DocumentAccessLevel enum</task>
+      <task id="6">Create DocumentVersion Entity (AC: #5) - Version tracking entity with relationships</task>
+      <task id="7">Create Database Migrations (AC: #37) - V43__create_documents_table.sql, V44__create_document_versions_table.sql</task>
+      <task id="8">Create Document Repository (AC: #33) - DocumentRepository, DocumentVersionRepository with custom queries</task>
+      <task id="9">Create Document DTOs and Mapper (AC: #36) - DocumentDto, DocumentUploadDto, DocumentUpdateDto, DocumentReplaceDto, DocumentListDto, DocumentVersionDto, DocumentMapper</task>
+      <task id="10">Implement Document Number Generation (AC: #4) - DOC-YYYY-NNNN format with database sequence</task>
+      <task id="11">Implement Document Service Layer (AC: #34) - DocumentService with all business logic</task>
+      <task id="12">Implement Access Control (AC: #18) - PUBLIC/INTERNAL/RESTRICTED access checks with @PreAuthorize</task>
+      <task id="13">Implement Version Management (AC: #5, #12) - Archive current version, increment version number</task>
+      <task id="14">Create Document Expiry Email Template (AC: #38) - document-expiry-notification.html</task>
+      <task id="15">Implement Document Expiry Scheduler Job (AC: #17) - DocumentExpiryNotificationJob daily at 8 AM</task>
+      <task id="16">Implement Document Controller (AC: #35) - All REST endpoints with @PreAuthorize</task>
+      <task id="17">Implement Entity Documents Endpoints (AC: #16) - Convenience endpoints for properties/tenants/vendors/assets</task>
+      <task id="18">Create Document List Page (AC: #19) - /documents with DataTable, filters, search, pagination</task>
+      <task id="19">Create Document Detail Page (AC: #20) - /documents/[id] with all sections</task>
+      <task id="20">Create Document Upload Form (AC: #21) - /documents/new with all form fields</task>
+      <task id="21">Create Document Edit Form (AC: #22) - /documents/[id]/edit with editable fields</task>
+      <task id="22">Create Document Replace Dialog (AC: #23) - DocumentReplaceDialog component</task>
+      <task id="23">Create Document Preview Modal (AC: #24) - DocumentPreviewModal for PDFs/images</task>
+      <task id="24">Create Version History Component (AC: #25) - VersionHistory component</task>
+      <task id="25">Create Expiry Status Badge Component (AC: #26) - ExpiryStatusBadge with colors</task>
+      <task id="26">Create Access Level Badge Component (AC: #27) - AccessLevelBadge with tooltip</task>
+      <task id="27">Create Entity Type Badge Component (AC: #28) - EntityTypeBadge with colors</task>
+      <task id="28">Write Backend Unit Tests (AC: #39) - DocumentServiceTest, DocumentControllerTest</task>
+      <task id="29">Write Frontend Unit Tests (AC: #40) - Component and validation tests</task>
+      <task id="30">Mandatory Test Execution and Build Verification (AC: #41, #42) - mvn test, npm test, npm run build, npm run lint</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Document Entity Creation - Document JPA entity with all 18+ fields, indexes, relationships</criterion>
+    <criterion id="AC2">EntityType Enum - PROPERTY, TENANT, VENDOR, ASSET, GENERAL with display names</criterion>
+    <criterion id="AC3">AccessLevel Enum - PUBLIC, INTERNAL, RESTRICTED with descriptions</criterion>
+    <criterion id="AC4">Document Number Generation - DOC-YYYY-NNNN format, sequential, year reset</criterion>
+    <criterion id="AC5">DocumentVersion Entity - Version tracking with file info and notes</criterion>
+    <criterion id="AC6">Upload Document Endpoint - POST /api/v1/documents multipart, auto-generate number, S3 storage</criterion>
+    <criterion id="AC7">List Documents Endpoint - GET /api/v1/documents with filters, pagination, sorting</criterion>
+    <criterion id="AC8">Get Document Details Endpoint - GET /api/v1/documents/{id} with entity name, version count, presigned URL</criterion>
+    <criterion id="AC9">Download Document Endpoint - GET /api/v1/documents/{id}/download with access control</criterion>
+    <criterion id="AC10">Document Preview Endpoint - GET /api/v1/documents/{id}/preview for PDFs/images</criterion>
+    <criterion id="AC11">Update Document Metadata Endpoint - PUT /api/v1/documents/{id} for editable fields</criterion>
+    <criterion id="AC12">Replace Document Endpoint - POST /api/v1/documents/{id}/replace with versioning</criterion>
+    <criterion id="AC13">Version History Endpoint - GET /api/v1/documents/{id}/versions ordered by version DESC</criterion>
+    <criterion id="AC14">Soft Delete Document Endpoint - DELETE /api/v1/documents/{id} with isDeleted flag</criterion>
+    <criterion id="AC15">Expiring Documents Endpoint - GET /api/v1/documents/expiring with days parameter</criterion>
+    <criterion id="AC16">Entity Documents Endpoints - Convenience endpoints for properties/tenants/vendors/assets</criterion>
+    <criterion id="AC17">Document Expiry Notifications - Scheduled job at 8 AM, group by uploader, send email</criterion>
+    <criterion id="AC18">Access Control Implementation - @PreAuthorize for PUBLIC/INTERNAL/RESTRICTED</criterion>
+    <criterion id="AC19">Document List Page - DataTable with columns, filters, search, pagination, quick actions</criterion>
+    <criterion id="AC20">Document Detail Page - Header, entity section, file info, expiry, tags, version history, preview</criterion>
+    <criterion id="AC21">Document Upload Form - All fields, entity dropdown, file dropzone, validation</criterion>
+    <criterion id="AC22">Document Edit Form - Pre-populated, editable fields, replace button</criterion>
+    <criterion id="AC23">Document Replace Dialog - Current file info, new file upload, notes</criterion>
+    <criterion id="AC24">Document Preview Modal - PDF iframe, image display, unsupported message</criterion>
+    <criterion id="AC25">Version History Component - List with download links, current highlighted</criterion>
+    <criterion id="AC26">Expiry Status Badge Component - Green/Yellow/Red/Gray with days remaining</criterion>
+    <criterion id="AC27">Access Level Badge Component - Colors with tooltip descriptions</criterion>
+    <criterion id="AC28">Entity Type Badge Component - Colored badges per entity type</criterion>
+    <criterion id="AC29">Document TypeScript Types - All interfaces and enums in types/document.ts</criterion>
+    <criterion id="AC30">Document Zod Validation Schemas - Upload, update, replace schemas with file validation</criterion>
+    <criterion id="AC31">Document Frontend Service - All API methods in services/document.service.ts</criterion>
+    <criterion id="AC32">Document React Query Hooks - All queries and mutations in hooks/useDocuments.ts</criterion>
+    <criterion id="AC33">Document Repository - Custom queries for filtering, search, expiry tracking</criterion>
+    <criterion id="AC34">Document Service Layer - All business logic with @Transactional</criterion>
+    <criterion id="AC35">Document Controller - All REST endpoints with @PreAuthorize</criterion>
+    <criterion id="AC36">Document DTOs - All DTOs with MapStruct mapper</criterion>
+    <criterion id="AC37">Database Migrations - V43 documents table, V44 document_versions table</criterion>
+    <criterion id="AC38">Document Expiry Email Template - document-expiry-notification.html</criterion>
+    <criterion id="AC39">Backend Unit Tests - DocumentServiceTest, DocumentControllerTest with >= 80% coverage</criterion>
+    <criterion id="AC40">Frontend Unit Tests - Component, form, badge tests with data-testid verification</criterion>
+    <criterion id="AC41">Mandatory Test Execution - mvn test and npm test must pass with zero failures</criterion>
+    <criterion id="AC42">Build Verification - mvn compile and npm run build must complete with zero errors</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="3.8 Document and Compliance Module" snippet="Centralized document repository, version control, access permissions, expiry tracking, automated reminders, template library." />
+      <doc path="docs/architecture.md" title="Architecture Document" section="Data Architecture - Documents and Compliance" snippet="documents table schema with document_name, document_type, category, file_path, file_size, version, expiry_date, property_id, uploaded_by, uploaded_at." />
+      <doc path="docs/architecture.md" title="Architecture Document" section="Epic to Architecture Mapping" snippet="Document and Compliance module: DocumentController, ComplianceService, AuditService; routes /documents, /compliance; external service Document Storage (S3)." />
+      <doc path="docs/architecture.md" title="Architecture Document" section="Implementation Patterns" snippet="Backend patterns: Controller with @RestController, Service with @Transactional, Repository extending JpaRepository, DTOs with MapStruct, Exception handling with @ControllerAdvice." />
+      <doc path="docs/architecture.md" title="Architecture Document" section="Frontend Implementation Patterns" snippet="TypeScript types in types/*.ts, Zod validation in lib/validations/*.ts, API client pattern, React Query hooks, shadcn/ui components." />
+      <doc path="docs/epics/epic-7-asset-compliance-management.md" title="Epic 7" section="Story 7.2: Document Management System" snippet="Complete acceptance criteria for document upload, entity, versioning, expiry tracking, access control, list/search, API endpoints." />
+    </docs>
+    <code>
+      <file path="backend/src/main/java/com/ultrabms/entity/VendorDocument.java" kind="entity" symbol="VendorDocument" reason="Reference pattern for Document entity with expiry tracking, soft delete, file metadata, notification flags" />
+      <file path="backend/src/main/java/com/ultrabms/entity/enums/VendorDocumentType.java" kind="enum" symbol="VendorDocumentType" reason="Reference pattern for DocumentEntityType and DocumentAccessLevel enums" />
+      <file path="backend/src/main/java/com/ultrabms/entity/BaseEntity.java" kind="entity" symbol="BaseEntity" reason="Base entity class to extend for Document and DocumentVersion entities" />
+      <file path="backend/src/main/java/com/ultrabms/service/FileStorageService.java" kind="service" symbol="FileStorageService" reason="S3 file storage service for document upload, download, presigned URLs" />
+      <file path="backend/src/main/java/com/ultrabms/service/EmailService.java" kind="service" symbol="EmailService" reason="Email service for expiry notification sending" />
+      <file path="backend/src/main/resources/db/migration/V42__create_company_profile_table.sql" kind="migration" symbol="V42" reason="Latest migration - next should be V43__create_documents_table.sql" />
+      <file path="frontend/src/types/vendor-documents.ts" kind="types" symbol="VendorDocument interfaces" reason="Reference pattern for Document TypeScript types, enums, helper functions" />
+      <file path="frontend/src/lib/validations/vendor-document.ts" kind="validation" symbol="vendorDocumentSchema" reason="Reference pattern for Zod validation schemas with file validation" />
+      <file path="frontend/src/services/vendor-documents.service.ts" kind="service" symbol="vendorDocumentsService" reason="Reference pattern for document API service methods" />
+      <file path="frontend/src/hooks/useVendorDocuments.ts" kind="hook" symbol="useVendorDocuments" reason="Reference pattern for React Query hooks with mutations" />
+      <file path="frontend/src/hooks/useUploadDocument.ts" kind="hook" symbol="useUploadDocument" reason="Reference pattern for file upload mutation hook" />
+    </code>
+    <dependencies>
+      <node>
+        <package name="react-dropzone" version="^14.3.8" purpose="Drag-and-drop file upload component" />
+        <package name="date-fns" version="^4.1.0" purpose="Date formatting and calculations for expiry" />
+        <package name="@tanstack/react-query" version="^5.90.9" purpose="Data fetching, caching, mutations" />
+        <package name="zod" version="^4.1.12" purpose="Schema validation for forms" />
+        <package name="lucide-react" version="^0.553.0" purpose="Icons for file types, actions" />
+        <package name="@radix-ui/react-dialog" version="^1.1.4" purpose="Preview modal, replace dialog" />
+        <package name="@radix-ui/react-tabs" version="^1.1.13" purpose="Document detail page sections" />
+        <package name="@radix-ui/react-tooltip" version="^1.2.8" purpose="Access level badge tooltip" />
+        <package name="sonner" version="^2.0.7" purpose="Toast notifications" />
+      </node>
+      <java>
+        <package name="spring-boot-starter-web" purpose="REST controllers" />
+        <package name="spring-boot-starter-data-jpa" purpose="JPA entities, repositories" />
+        <package name="spring-boot-starter-validation" purpose="Bean validation" />
+        <package name="spring-boot-starter-security" purpose="Access control, @PreAuthorize" />
+        <package name="spring-boot-starter-mail" purpose="Expiry notification emails" />
+        <package name="mapstruct" purpose="Entity-DTO mapping" />
+        <package name="aws-java-sdk-s3" purpose="S3 file storage" />
+      </java>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="file">File types allowed: PDF, JPG, JPEG, PNG, DOC, DOCX, XLS, XLSX</constraint>
+    <constraint type="file">Max file size: 10MB</constraint>
+    <constraint type="database">documentNumber must be unique (database constraint)</constraint>
+    <constraint type="business">entityId required when entityType != GENERAL</constraint>
+    <constraint type="security">Access control enforced on download/preview endpoints</constraint>
+    <constraint type="audit">Version history retained indefinitely for audit</constraint>
+    <constraint type="pattern">Document number format: DOC-YYYY-NNNN (e.g., DOC-2025-0001)</constraint>
+    <constraint type="storage">S3 path: /uploads/documents/{entityType}/{entityId}/{filename}</constraint>
+    <constraint type="storage">Version path: /uploads/documents/{entityType}/{entityId}/versions/v{n}_{filename}</constraint>
+    <constraint type="testing">All interactive elements must have data-testid attribute</constraint>
+    <constraint type="testing">Backend tests >= 80% code coverage</constraint>
+    <constraint type="build">Zero compilation errors, zero lint errors required</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="FileStorageService" kind="service" signature="uploadFile(file, path), getPresignedUrl(path), deleteFile(path)" path="backend/src/main/java/com/ultrabms/service/FileStorageService.java" />
+    <interface name="EmailService" kind="service" signature="sendEmail(to, subject, template, variables)" path="backend/src/main/java/com/ultrabms/service/EmailService.java" />
+    <interface name="POST /api/v1/documents" kind="REST endpoint" signature="multipart: file, documentType, title, description?, entityType, entityId?, expiryDate?, tags?, accessLevel -> DocumentDto" path="backend/src/main/java/com/ultrabms/controller/DocumentController.java" />
+    <interface name="GET /api/v1/documents" kind="REST endpoint" signature="query: entityType?, entityId?, documentType?, expiryStatus?, accessLevel?, tags?, search?, dateRange?, page, size, sort -> Page of DocumentListDto" path="backend/src/main/java/com/ultrabms/controller/DocumentController.java" />
+    <interface name="GET /api/v1/documents/{id}" kind="REST endpoint" signature="path: id -> DocumentDto with entity name, version count, presigned URLs" path="backend/src/main/java/com/ultrabms/controller/DocumentController.java" />
+    <interface name="GET /api/v1/documents/{id}/download" kind="REST endpoint" signature="path: id -> presigned S3 URL (access control enforced)" path="backend/src/main/java/com/ultrabms/controller/DocumentController.java" />
+    <interface name="POST /api/v1/documents/{id}/replace" kind="REST endpoint" signature="path: id, multipart: file, notes? -> DocumentDto (archives old version)" path="backend/src/main/java/com/ultrabms/controller/DocumentController.java" />
+    <interface name="GET /api/v1/documents/{id}/versions" kind="REST endpoint" signature="path: id -> List of DocumentVersionDto ordered by version DESC" path="backend/src/main/java/com/ultrabms/controller/DocumentController.java" />
+    <interface name="GET /api/v1/documents/expiring" kind="REST endpoint" signature="query: days (default 30) -> List of expiring DocumentDto" path="backend/src/main/java/com/ultrabms/controller/DocumentController.java" />
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 + Mockito for unit tests, TestContainers for integration. Mock S3 and email services. Follow AAA pattern (Arrange-Act-Assert). Service tests cover all business logic methods. Controller tests verify authorization, validation, HTTP status codes. Minimum 80% code coverage for new code.
+      Frontend: Jest + React Testing Library for component tests. Test user interactions, form validation, data display. All components must have data-testid attributes. Test loading states, error states, success states. Verify accessibility of all interactive elements.
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/DocumentServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/controller/DocumentControllerTest.java</location>
+      <location>frontend/src/lib/validations/__tests__/document.test.ts</location>
+      <location>frontend/src/app/(dashboard)/documents/__tests__/page.test.tsx</location>
+      <location>frontend/src/components/documents/__tests__/</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">Test Document entity field validations, index queries</idea>
+      <idea ac="AC4">Test document number generation sequence, year rollover, uniqueness</idea>
+      <idea ac="AC5">Test version creation on replace, version history retrieval</idea>
+      <idea ac="AC6">Test file upload with valid/invalid types, size limits, multipart handling</idea>
+      <idea ac="AC7">Test list filtering by all criteria, pagination, sorting</idea>
+      <idea ac="AC9,AC18">Test access control: PUBLIC=all auth, INTERNAL=staff, RESTRICTED=role-specific</idea>
+      <idea ac="AC12">Test replace creates version, updates document, increments version number</idea>
+      <idea ac="AC17">Test scheduler finds expiring docs, groups by user, sends notification</idea>
+      <idea ac="AC19">Test document list renders columns, filters work, pagination navigates</idea>
+      <idea ac="AC21">Test upload form validation, entity dropdown cascading, file dropzone</idea>
+      <idea ac="AC23">Test replace dialog shows current file, accepts new file, submits correctly</idea>
+      <idea ac="AC24">Test preview modal: PDF in iframe, images displayed, DOC shows download</idea>
+      <idea ac="AC26">Test expiry badge colors: green >30d, yellow <=30d, red expired, gray null</idea>
+      <idea ac="AC30">Test Zod schemas reject invalid file types, oversized files, missing required fields</idea>
+    </ideas>
+  </tests>
+</story-context>
