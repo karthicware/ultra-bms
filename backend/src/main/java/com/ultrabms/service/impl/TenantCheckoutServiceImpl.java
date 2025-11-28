@@ -111,7 +111,7 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
         // Get unpaid invoices
         List<Invoice> unpaidInvoices = invoiceRepository.findByTenantIdAndStatusIn(
                 tenantId,
-                List.of(InvoiceStatus.PENDING, InvoiceStatus.OVERDUE, InvoiceStatus.PARTIALLY_PAID)
+                List.of(InvoiceStatus.SENT, InvoiceStatus.OVERDUE, InvoiceStatus.PARTIALLY_PAID)
         );
 
         List<OutstandingAmountsDto.OutstandingInvoiceDto> invoiceDtos = unpaidInvoices.stream()
@@ -120,9 +120,9 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
                         .invoiceNumber(inv.getInvoiceNumber())
                         .dueDate(inv.getDueDate())
                         .amount(inv.getTotalAmount())
-                        .amountPaid(inv.getAmountPaid() != null ? inv.getAmountPaid() : BigDecimal.ZERO)
-                        .balance(inv.getBalance())
-                        .description(inv.getDescription())
+                        .amountPaid(inv.getPaidAmount() != null ? inv.getPaidAmount() : BigDecimal.ZERO)
+                        .balance(inv.getBalanceAmount())
+                        .description(inv.getNotes())
                         .status(inv.getStatus().name())
                         .build())
                 .collect(Collectors.toList());
@@ -630,10 +630,11 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
         unit.setStatus(UnitStatus.AVAILABLE);
 
         // Deactivate tenant user account if exists
-        if (tenant.getUser() != null) {
-            User tenantUser = tenant.getUser();
-            tenantUser.setActive(false);
-            userRepository.save(tenantUser);
+        if (tenant.getUserId() != null) {
+            userRepository.findById(tenant.getUserId()).ifPresent(tenantUser -> {
+                tenantUser.setActive(false);
+                userRepository.save(tenantUser);
+            });
         }
 
         // Update checkout
@@ -775,11 +776,11 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
     private BigDecimal calculateOutstandingBalance(UUID tenantId) {
         List<Invoice> unpaidInvoices = invoiceRepository.findByTenantIdAndStatusIn(
                 tenantId,
-                List.of(InvoiceStatus.PENDING, InvoiceStatus.OVERDUE, InvoiceStatus.PARTIALLY_PAID)
+                List.of(InvoiceStatus.SENT, InvoiceStatus.OVERDUE, InvoiceStatus.PARTIALLY_PAID)
         );
 
         return unpaidInvoices.stream()
-                .map(Invoice::getBalance)
+                .map(Invoice::getBalanceAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

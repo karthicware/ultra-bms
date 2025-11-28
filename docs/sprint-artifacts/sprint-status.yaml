@@ -53,8 +53,8 @@ development_status:
   2-4-session-management-and-security-enhancements: done  # Completed 2025-11-15 - All ACs met, code reviewed, action items resolved (87 tests passing)
   2-5-frontend-authentication-components-and-protected-routes: done  # Completed 2025-11-15 - All 18 tasks complete: JWT auth, RBAC, route protection, session management, E2E tests, docs (24 files created/modified)
   2-6-admin-user-management: done  # Completed 2025-11-28 - Code review APPROVED. All 17 ACs met, 16 tasks complete. Backend: AdminUserController (6 endpoints), AdminUserService, DTOs, Flyway V38 migration, welcome email templates, 42 unit tests added. Frontend: User list page, create/edit dialogs, sidebar update. Tests: 374+ backend tests pass. Security: BCrypt, RBAC, crypto.getRandomValues() for temp passwords.
-  2-7-admin-theme-settings-and-system-theme-support: ready-for-dev  # Added 2025-11-28 via correct-course - Dark/Light/System mode toggle, next-themes library, user preference persistence, RBAC for admin defaults. Reference: Stitch settings_page_1 design. Context: docs/sprint-artifacts/epic-2/2-7-admin-theme-settings-and-system-theme-support.context.xml
-  2-8-company-profile-settings: backlog  # Added 2025-11-28 via correct-course SCP #4 - Company profile management (name, address, TRN, phone, email, logo). Used for invoice headers, PDC holder field, official documents. Reference: Stitch settings_page_2 design. Prerequisites: Story 1.6 (S3), Story 2.6 (Admin).
+  2-7-admin-theme-settings-and-system-theme-support: done  # CODE REVIEW APPROVED 2025-11-28. All 16 ACs met, 15 tasks complete. Backend: ThemePreference enum, User entity update, SettingsController/Service, V41 migration, 27 tests (SettingsControllerTest 15, SettingsServiceTest 12). Frontend: ThemeProvider, useThemeSync hook, appearance settings page, theme-toggle component, 28 tests (useThemeSync 9, theme-provider 7, page 12). Total: 55 tests pass. Also fixed: DepositRefundRepository.averageProcessingTimeDays() native query.
+  2-8-company-profile-settings: in-progress  # In Progress 2025-11-28. Company profile management (name, address, TRN, phone, email, logo). Used for invoice headers, PDC holder field, official documents. 20 ACs, 13 tasks. Prerequisites: Story 1.6 (S3), Story 2.6 (Admin). Story: docs/sprint-artifacts/epic-2/2-8-company-profile-settings.md. Context: docs/sprint-artifacts/epic-2/2-8-company-profile-settings.context.xml
   epic-2-retrospective: completed  # Completed 2025-11-15 - Retrospective document: docs/retrospectives/epic-2-retrospective.md
 
   # Epic 3: Tenant Management & Portal (8 technical stories + 8 E2E stories)
@@ -67,7 +67,7 @@ development_status:
   3-4-tenant-portal-dashboard-and-profile-management: done  # Completed 2025-11-16, Senior Dev Review APPROVED 2025-11-28. All 15 ACs implemented, 14 tasks verified. Dashboard, profile, account settings, password change (Zod validation), document management (react-dropzone). Security: RBAC verified, BCrypt password, tenant ownership validation. Tests: 5/5 pass. LOW issues: client vs server component, PasswordStrengthMeter missing - non-blocking.
   3-5-tenant-portal-maintenance-request-submission: done  # Completed 2025-11-20 - Code review UNBLOCKED. All 38 tests passing (PhotoUploadZone: 8, FeedbackForm: 8, MaintenanceRequestForm: 11, StatusTimeline: 10). Dependencies installed (browser-image-compression@2.0.2, react-rating-stars-component@2.2.0). Backend: 21/21 tests passing. Full implementation complete with email notifications, real-time polling, WCAG 2.1 AA compliant.
   3-6-tenant-lease-extension-and-renewal: done  # CODE REVIEW APPROVED 2025-11-28. All 18 ACs validated, 15 tasks complete. Strengths: Comprehensive TypeScript types with Zod validation, excellent JSDoc documentation, 44 test cases, professional email templates, proper audit logging, responsive UI design. Frontend: lease.ts types (316L), lease validations (349L), lease.service.ts (381L), 5 pages, LeaseExtensionHistory component. Backend: LeaseExtension/RenewalRequest entities, services, controllers, LeaseExpirationSchedulerJob, 4 email templates. No blocking issues. Context: docs/sprint-artifacts/epic-3/3-6-tenant-lease-extension-and-renewal.context.xml
-  3-7-tenant-checkout-and-deposit-refund: done  # Completed 2025-11-28 - All 20 ACs met, 15 tasks complete. Frontend: TypeScript types/enums (checkout.ts 900L), Zod validation schemas (checkout.ts 550L), checkout.service.ts (670L), 4-step wizard (NoticeDetailsStep, InspectionStep, DepositCalculationStep, FinalSettlementStep), checkouts management page, tenant checkout page. Backend: TenantCheckout/DepositRefund/CheckoutInspection entities, services, controllers. Features: Multi-step checkout wizard, inspection checklist with photo upload, deposit calculation with auto-deductions, refund processing (bank transfer/cheque/cash), document generation, email notifications. Tests: 535/536 pass (1 skipped), frontend build SUCCESS. Context: docs/sprint-artifacts/epic-3/3-7-tenant-checkout-and-deposit-refund.context.xml
+  3-7-tenant-checkout-and-deposit-refund: done  # Completed 2025-11-28 - All 20 ACs met, 15 tasks complete. Frontend: TypeScript types/enums (checkout.ts 900L), Zod validation schemas (checkout.ts 550L), checkout.service.ts (670L), 4-step wizard (NoticeDetailsStep, InspectionStep, DepositCalculationStep, FinalSettlementStep), checkouts management page, tenant checkout page. Backend: TenantCheckout/DepositRefund/CheckoutInspection entities, services, controllers. Features: Multi-step checkout wizard, inspection checklist with photo upload, deposit calculation with auto-deductions, refund processing (bank transfer/cheque/cash), document generation, email notifications. Tests: 535/536 pass (1 skipped), frontend build SUCCESS. Backend compile SUCCESS (fixed 2025-11-28: InvoiceStatus.SENT, Invoice.getBalanceAmount(), UserRepository lookup for tenant user, checkout email methods added). Context: docs/sprint-artifacts/epic-3/3-7-tenant-checkout-and-deposit-refund.context.xml
   # E2E Testing Stories (implement after all technical stories complete)
   3-1-e2e-lead-management-and-quotation-system: drafted  # Drafted 2025-11-16 - E2E test story for Story 3.1, needs story-context
   3-2-e2e-property-and-unit-management: review  # Ready for Review 2025-11-20 - All 8 tasks complete: 70+ E2E tests across 6 spec files, comprehensive documentation, package.json scripts added. Files: property-management.spec.ts, unit-management.spec.ts, occupancy-calculations.spec.ts, property-manager-assignment.spec.ts, quick-actions.spec.ts, validation-error-handling.spec.ts, README.md (550+ lines).
@@ -76,7 +76,7 @@ development_status:
   3-5-e2e-maintenance-requests: backlog
   3-6-e2e-tenant-lease-extension: backlog  # Added 2025-11-28 via correct-course
   3-7-e2e-tenant-checkout-and-deposit-refund: backlog  # Added 2025-11-28 via correct-course
-  3-8-parking-spot-inventory-management: backlog  # Added 2025-11-28 via correct-course SCP #5 - Parking spot CRUD (list/add/edit/delete), status management (Available/Assigned/Under Maintenance), integration with tenant allocation (3.3) and checkout (3.7). PRD FR16. Reference: Stitch parking_spot_inventory, add/edit_parking_spot_form designs.
+  3-8-parking-spot-inventory-management: ready  # Ready for dev 2025-11-28. Parking spot CRUD (list/add/edit/delete), status management (Available/Assigned/Under Maintenance), integration with tenant allocation (3.3) and checkout (3.7). PRD FR16. 20 ACs, 13 tasks. Story: docs/sprint-artifacts/epic-3/3-8-parking-spot-inventory-management.md. Context: docs/sprint-artifacts/epic-3/3-8-parking-spot-inventory-management.context.xml
   3-8-e2e-parking-spot-inventory-management: backlog  # Added 2025-11-28 via correct-course SCP #5
   epic-3-retrospective: optional
 
@@ -109,7 +109,7 @@ development_status:
   epic-6: backlog
   6-1-rent-invoicing-and-payment-management: done  # Completed 2025-11-28 - Full implementation: Invoice entity, Payment entity, InvoiceRepository, PaymentRepository, InvoiceService, InvoiceController (12 REST endpoints), PdfGenerationService (iTextPDF), 5 email templates (invoice-sent, payment-received, payment-reminder, invoice-overdue, late-fee-applied), InvoiceSchedulerJob (4 cron jobs). Frontend: TypeScript types, Zod schemas, invoice service, React Query hooks, 3 pages (list, detail, create), PaymentRecordForm component. All 31 ACs met. Backend: 20+ files, Frontend: 15+ files. Tests: Backend compiles, Frontend build SUCCESS. Context: docs/sprint-artifacts/epic-6/6-1-rent-invoicing-and-payment-management.context.xml
   6-2-expense-management-and-vendor-payments: done  # Completed 2025-11-28. Code review #4 APPROVED. All 34 ACs met, 28 tasks complete. Backend: Expense entity, service, controller (12 endpoints), 44 tests (25 service + 19 controller). Frontend: types, validation, service, hooks, 5 pages, ExpenseSummaryCharts (Recharts). Tests: 79/79 PASS. Build: SUCCESS. Lint: 0 errors.
-  6-3-post-dated-cheque-pdc-management: backlog  # PRIORITIZED 2025-11-28 via correct-course SCP #4 - PDC dashboard, registration, lifecycle (Received→Due→Deposited→Cleared/Bounced), withdrawal history, bounce handling. Enhanced with Stitch designs: withdrawal history page, PDC holder from company profile, beneficiary bank account selection. Prerequisites: Story 6.1, Story 2.8, Story 6.5. Reference: Stitch pdc_management_dashboard, pdc_details_page_2/3, withdraw_pdc_modal, cheque_withdrawal_history_page.
+  6-3-post-dated-cheque-pdc-management: ready  # Ready for dev 2025-11-29. PDC dashboard, registration (bulk entry), lifecycle (Received→Due→Deposited→Cleared/Bounced/Withdrawn), withdrawal history, bounce handling with replacement flow. Enhanced with Stitch designs: withdrawal history page, PDC holder from company profile, beneficiary bank account selection. 38 ACs, 25 tasks. Prerequisites: Story 6.1 (done), Story 2.8 (in-progress), Story 6.5 (backlog). Story: docs/sprint-artifacts/epic-6/6-3-post-dated-cheque-pdc-management.md. Context: docs/sprint-artifacts/epic-6/6-3-post-dated-cheque-pdc-management.context.xml
   6-4-financial-reporting-and-analytics: backlog
   6-5-bank-account-management: backlog  # Added 2025-11-28 via correct-course - Multi-bank account CRUD, AES-256 encryption for account numbers/IBAN, IBAN/SWIFT validation, Admin/Super Admin RBAC. Reference: Stitch bank_account_management_page design.
   # E2E Testing Stories (implement after all technical stories complete)
@@ -122,7 +122,7 @@ development_status:
 
   # Epic 7: Asset & Compliance Management (3 technical stories + 3 E2E stories)
   epic-7: backlog
-  7-1-asset-registry-and-tracking: backlog
+  7-1-asset-registry-and-tracking: drafted  # Drafted 2025-11-29. Asset registry CRUD (list/add/edit/delete), asset documents (upload/download), maintenance history from work orders, warranty expiry tracking (30-day alerts, email notifications), work order-asset linking. 37 ACs, 28 tasks. Prerequisites: Story 3.2 (Properties), Story 4.1 (Work Orders), Story 1.6 (S3). Story: docs/sprint-artifacts/epic-7/7-1-asset-registry-and-tracking.md
   7-2-document-management-system: backlog
   7-3-compliance-and-inspection-tracking: backlog
   # E2E Testing Stories (implement after all technical stories complete)
@@ -131,13 +131,23 @@ development_status:
   7-3-e2e-compliance-tracking: backlog
   epic-7-retrospective: optional
 
-  # Epic 8: Dashboard & Reporting (2 technical stories + 2 E2E stories)
+  # Epic 8: Dashboard & Reporting (6 technical stories + 6 E2E stories)
+  # NOTE: Story 8.2 REMOVED 2025-11-28 via correct-course SCP #7 - too broad
+  # NOTE: Stories 8.3-8.7 ADDED 2025-11-28 via correct-course SCP #7 - dedicated module dashboards per Stitch designs
   epic-8: backlog
   8-1-executive-summary-dashboard: backlog
-  8-2-operational-dashboards: backlog
+  8-3-occupancy-dashboard: backlog  # NEW - Portfolio occupancy, lease expirations (configurable default 100 days)
+  8-4-maintenance-dashboard: backlog  # NEW - Job metrics, status/priority/category charts
+  8-5-vendor-dashboard: backlog  # NEW - SLA compliance, performance snapshot scatter plot
+  8-6-finance-dashboard: backlog  # NEW - YTD metrics, income vs expense, receivables
+  8-7-assets-dashboard: backlog  # NEW - Asset KPIs, category breakdown, PM tracking
   # E2E Testing Stories (implement after all technical stories complete)
   8-1-e2e-executive-dashboard: backlog
-  8-2-e2e-operational-dashboards: backlog
+  8-3-e2e-occupancy-dashboard: backlog
+  8-4-e2e-maintenance-dashboard: backlog
+  8-5-e2e-vendor-dashboard: backlog
+  8-6-e2e-finance-dashboard: backlog
+  8-7-e2e-assets-dashboard: backlog
   epic-8-retrospective: optional
 
   # Epic 9: Communication & Notifications (2 technical stories + 2 E2E stories)

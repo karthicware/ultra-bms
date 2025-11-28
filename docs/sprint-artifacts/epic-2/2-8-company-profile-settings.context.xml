@@ -1,0 +1,326 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>8</storyId>
+    <title>Company Profile Settings</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-28</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-2/2-8-company-profile-settings.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>Admin or Super Admin</asA>
+    <iWant>manage company profile details</iWant>
+    <soThat>official documents display accurate company information</soThat>
+    <tasks>
+      <task id="1" title="Create Backend Entity and Migration" acs="#6, #7">
+        <subtask>Create CompanyProfile entity in com.ultrabms.entity</subtask>
+        <subtask>Add JPA annotations and field validations</subtask>
+        <subtask>Create Flyway migration V42__create_company_profile_table.sql</subtask>
+        <subtask>Create CompanyProfileRepository extending JpaRepository</subtask>
+      </task>
+      <task id="2" title="Create Backend DTOs" acs="#8, #9">
+        <subtask>Create CompanyProfileRequest DTO with @NotBlank/@Size validations</subtask>
+        <subtask>Create CompanyProfileResponse DTO (includes presigned logo URL)</subtask>
+        <subtask>Create CompanyProfileLogoResponse DTO for logo operations</subtask>
+      </task>
+      <task id="3" title="Create CompanyProfileService" acs="#8, #9, #10, #11, #15">
+        <subtask>Create service interface and implementation</subtask>
+        <subtask>Implement getCompanyProfile() with Optional return</subtask>
+        <subtask>Implement saveCompanyProfile() with upsert logic</subtask>
+        <subtask>Implement uploadLogo() using FileStorageService</subtask>
+        <subtask>Implement deleteLogo() with S3 cleanup</subtask>
+        <subtask>Add @Cacheable and @CacheEvict for Ehcache integration</subtask>
+      </task>
+      <task id="4" title="Create CompanyProfileController" acs="#8, #9, #10, #11, #14">
+        <subtask>Create controller with @RequestMapping("/api/v1/company-profile")</subtask>
+        <subtask>GET / endpoint with @PreAuthorize for read access</subtask>
+        <subtask>PUT / endpoint with @PreAuthorize for admin write access</subtask>
+        <subtask>POST /logo endpoint for multipart upload</subtask>
+        <subtask>DELETE /logo endpoint for logo removal</subtask>
+        <subtask>Implement RBAC: admins = write, finance/pm = read, others = 403</subtask>
+      </task>
+      <task id="5" title="Add Validation Utilities" acs="#12">
+        <subtask>Create TRN validator (15 digits, starts with 100)</subtask>
+        <subtask>Create UAE phone validator (+971 format)</subtask>
+        <subtask>Add validation annotations to DTOs</subtask>
+      </task>
+      <task id="6" title="Create Frontend Types and Validation" acs="#17">
+        <subtask>Create types/company-profile.ts with TypeScript interfaces</subtask>
+        <subtask>Create lib/validations/company-profile.ts with Zod schemas</subtask>
+        <subtask>Add TRN regex validation (^100\d{12}$)</subtask>
+        <subtask>Add UAE phone regex validation (^\+971\d{9}$)</subtask>
+        <subtask>Add file size/type validation helpers</subtask>
+      </task>
+      <task id="7" title="Create Frontend Service" acs="#8, #9, #10, #11">
+        <subtask>Create services/company-profile.service.ts</subtask>
+        <subtask>Implement getCompanyProfile() to fetch from API</subtask>
+        <subtask>Implement saveCompanyProfile() for upsert</subtask>
+        <subtask>Implement uploadLogo() with FormData</subtask>
+        <subtask>Implement deleteLogo()</subtask>
+      </task>
+      <task id="8" title="Create Company Profile Page" acs="#1, #2, #3, #4, #5">
+        <subtask>Create app/(dashboard)/settings/company-profile/page.tsx</subtask>
+        <subtask>Add info banner for admin-only access</subtask>
+        <subtask>Build Company Information section with form fields</subtask>
+        <subtask>Build Official Contact section with phone/email fields</subtask>
+        <subtask>Build Logo section with preview, upload, and remove</subtask>
+      </task>
+      <task id="9" title="Implement Logo Upload Component" acs="#4, #10">
+        <subtask>Create LogoUpload component with drag-drop support</subtask>
+        <subtask>Add file type and size validation (PNG/JPG, 2MB)</subtask>
+        <subtask>Show upload progress indicator</subtask>
+        <subtask>Display current logo preview with presigned URL</subtask>
+        <subtask>Add "Remove" action with confirmation</subtask>
+      </task>
+      <task id="10" title="Add Country Dropdown" acs="#2">
+        <subtask>Create countries.ts data file with country list</subtask>
+        <subtask>Default to "United Arab Emirates" in form</subtask>
+        <subtask>Use shadcn/ui Select component</subtask>
+      </task>
+      <task id="11" title="Update Settings Navigation" acs="#1">
+        <subtask>Add "Company Profile" link in Settings page</subtask>
+        <subtask>Use Building2 icon for menu item</subtask>
+        <subtask>Position after Appearance in settings menu</subtask>
+      </task>
+      <task id="12" title="Backend Unit Tests" acs="#18">
+        <subtask>Create CompanyProfileServiceTest with CRUD tests</subtask>
+        <subtask>Test logo upload and delete operations</subtask>
+        <subtask>Test RBAC restrictions (admin vs non-admin)</subtask>
+        <subtask>Test upsert behavior (create and update paths)</subtask>
+      </task>
+      <task id="13" title="Frontend Unit Tests" acs="#19">
+        <subtask>Test company profile form rendering</subtask>
+        <subtask>Test validation schema behavior</subtask>
+        <subtask>Test logo upload component states</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="AC1">Company Profile Page Access: Settings &gt; Company Profile accessible to ADMIN and SUPER_ADMIN roles. Info banner displays role restriction.</ac>
+    <ac id="AC2">Company Information Section: Legal Company Name, Company Address, City, Country dropdown (UAE default), TRN (15-digit UAE format).</ac>
+    <ac id="AC3">Official Contact Section: Phone Number (+971 format), Email Address (RFC 5322).</ac>
+    <ac id="AC4">Company Logo Section: Preview, upload button (PNG/JPG, max 2MB), recommendation text, remove link.</ac>
+    <ac id="AC5">Save Functionality: Save Changes button, success toast, inline validation errors.</ac>
+    <ac id="AC6">CompanyProfile Entity: UUID id, legalCompanyName, companyAddress, city, country, trn, phoneNumber, emailAddress, logoFilePath, updatedBy, updatedAt.</ac>
+    <ac id="AC7">Flyway Migration: V42__create_company_profile_table.sql with all columns and constraints.</ac>
+    <ac id="AC8">GET API Endpoint: GET /api/v1/company-profile returns profile or 404, presigned URL for logo.</ac>
+    <ac id="AC9">PUT API Endpoint: PUT /api/v1/company-profile creates or updates (upsert), sets updatedBy/updatedAt.</ac>
+    <ac id="AC10">Logo Upload Endpoint: POST /api/v1/company-profile/logo accepts multipart, validates type/size, stores in S3.</ac>
+    <ac id="AC11">Logo Delete Endpoint: DELETE /api/v1/company-profile/logo removes from S3, clears logoFilePath.</ac>
+    <ac id="AC12">Validation Rules: TRN 15 digits (100*), phone +971*, email RFC 5322, logo max 2MB PNG/JPG.</ac>
+    <ac id="AC13">Single Record Constraint: Only one company profile allowed, PUT performs upsert.</ac>
+    <ac id="AC14">RBAC Restrictions: ADMIN/SUPER_ADMIN write, FINANCE_MANAGER/PROPERTY_MANAGER read-only, others 403.</ac>
+    <ac id="AC15">Ehcache Integration: Company profile cached, invalidated on update.</ac>
+    <ac id="AC16">Integration Points Documented: PdfGenerationService, PDC Management, Email templates, Official documents.</ac>
+    <ac id="AC17">Frontend Form Validation: Zod schemas, real-time validation feedback.</ac>
+    <ac id="AC18">Unit Tests Backend: CompanyProfileService CRUD, logo ops, RBAC, upsert behavior.</ac>
+    <ac id="AC19">Unit Tests Frontend: Form rendering, validation schemas, logo component states.</ac>
+    <ac id="AC20">Build Verification: mvn compile and npm run build with zero errors.</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>3.1 Authentication &amp; Access Control</section>
+        <snippet>RBAC roles defined: Super Admin (full access), Property Manager (property-specific), Finance Manager (financial ops). All relevant to company profile access control.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Implementation Patterns - Backend/Frontend</section>
+        <snippet>Controller pattern with @PreAuthorize, Service layer with @Cacheable, Repository extending JpaRepository. Frontend uses React Hook Form + Zod validation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Data Architecture - Core Entities</section>
+        <snippet>Entity conventions: snake_case tables, UUID primary keys, timestamp tracking fields. Foreign keys reference users table for audit trail.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Technology Stack - File Storage</section>
+        <snippet>AWS S3 for file storage, FileStorageService interface with storeFile(), deleteFile(), getDownloadUrl() methods. LocalStack for development.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-2-authentication-user-management.md</path>
+        <title>Epic 2: Authentication &amp; User Management</title>
+        <section>Story 2.8: Company Profile Settings</section>
+        <snippet>Complete story specification with ACs, single record design, S3 logo storage, Ehcache caching, RBAC tiered access.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic-2/2-7-admin-theme-settings-and-system-theme-support.md</path>
+        <title>Story 2.7: Theme Settings (Reference)</title>
+        <section>Dev Agent Record</section>
+        <snippet>Reference implementation: SettingsController/Service pattern, settings.service.ts, types/settings.ts, lib/validations/settings.ts structure.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/FileStorageService.java</path>
+        <kind>service-interface</kind>
+        <symbol>FileStorageService</symbol>
+        <lines>1-68</lines>
+        <reason>S3 file storage interface - use storeFile() for logo upload, deleteFile() for removal, getDownloadUrl() for presigned URLs</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/controller/SettingsController.java</path>
+        <kind>controller</kind>
+        <symbol>SettingsController</symbol>
+        <lines>1-102</lines>
+        <reason>Reference pattern for settings endpoints - @PreAuthorize, response format, Authentication parameter</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/SettingsService.java</path>
+        <kind>service-interface</kind>
+        <symbol>SettingsService</symbol>
+        <reason>Reference service interface pattern for settings operations</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/impl/SettingsServiceImpl.java</path>
+        <kind>service-impl</kind>
+        <symbol>SettingsServiceImpl</symbol>
+        <reason>Reference implementation for settings service with @Cacheable patterns</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/settings.service.ts</path>
+        <kind>frontend-service</kind>
+        <symbol>settings.service</symbol>
+        <lines>1-71</lines>
+        <reason>Reference pattern for frontend API service with JSDoc, apiClient usage, type imports</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/settings.ts</path>
+        <kind>types</kind>
+        <symbol>settings</symbol>
+        <reason>Reference TypeScript types structure for settings module</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/lib/validations/settings.ts</path>
+        <kind>validation</kind>
+        <symbol>settings-validation</symbol>
+        <reason>Reference Zod validation schema structure for settings forms</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/app/(dashboard)/settings/page.tsx</path>
+        <kind>page</kind>
+        <symbol>SettingsPage</symbol>
+        <lines>1-87</lines>
+        <reason>Settings landing page - add Company Profile card after Appearance with Building2 icon</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/app/(dashboard)/settings/appearance/page.tsx</path>
+        <kind>page</kind>
+        <symbol>AppearancePage</symbol>
+        <reason>Reference settings page structure for Company Profile page implementation</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/User.java</path>
+        <kind>entity</kind>
+        <symbol>User</symbol>
+        <reason>Reference entity pattern, updatedBy foreign key pattern for audit trail</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <backend framework="Spring Boot 3.4.0">
+        <dependency>spring-boot-starter-web</dependency>
+        <dependency>spring-boot-starter-data-jpa</dependency>
+        <dependency>spring-boot-starter-security</dependency>
+        <dependency>spring-boot-starter-validation</dependency>
+        <dependency>spring-boot-starter-cache</dependency>
+        <dependency>postgresql</dependency>
+        <dependency>flyway-core</dependency>
+      </backend>
+      <frontend framework="Next.js 16.0.2">
+        <dependency name="react" version="19.2.0" />
+        <dependency name="react-hook-form" version="^7.66.0" />
+        <dependency name="@hookform/resolvers" version="^5.2.2" />
+        <dependency name="zod" version="^4.1.12" />
+        <dependency name="axios" version="^1.13.2" />
+        <dependency name="@tanstack/react-query" version="^5.90.9" />
+        <dependency name="lucide-react" version="^0.553.0" />
+        <dependency name="sonner" version="^2.0.7" />
+        <dependency name="react-dropzone" version="^14.3.8" />
+        <dependency name="@radix-ui/react-select" version="^2.2.6" />
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architecture">Single record design - only one company profile allowed in database. Use unique index on (TRUE) to enforce.</constraint>
+    <constraint type="security">RBAC tiered access: ADMIN/SUPER_ADMIN have write access, FINANCE_MANAGER/PROPERTY_MANAGER have read-only access, all other roles get 403 Forbidden.</constraint>
+    <constraint type="validation">TRN format: 15 digits starting with 100 (^100\d{12}$). UAE phone: +971 followed by 9 digits (^\+971\d{9}$).</constraint>
+    <constraint type="file-storage">Logo stored in S3 at /uploads/company/logo.{ext}. Max 2MB, PNG/JPG only. Use existing FileStorageService.</constraint>
+    <constraint type="caching">Use Ehcache with @Cacheable for getCompanyProfile() and @CacheEvict for save/delete operations. Cache name: "companyProfile".</constraint>
+    <constraint type="testing">All interactive elements must have data-testid attributes per Epic 2 retrospective action items.</constraint>
+    <constraint type="migration">Use V42 for migration (V41 was last migration from Story 2.7).</constraint>
+    <constraint type="api-format">Follow existing API response format: { success, data, message, timestamp }.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>GET /api/v1/company-profile</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/company-profile → CompanyProfileResponse | 404</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/CompanyProfileController.java</path>
+    </interface>
+    <interface>
+      <name>PUT /api/v1/company-profile</name>
+      <kind>REST endpoint</kind>
+      <signature>PUT /api/v1/company-profile (CompanyProfileRequest) → CompanyProfileResponse</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/CompanyProfileController.java</path>
+    </interface>
+    <interface>
+      <name>POST /api/v1/company-profile/logo</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/company-profile/logo (MultipartFile) → CompanyProfileLogoResponse</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/CompanyProfileController.java</path>
+    </interface>
+    <interface>
+      <name>DELETE /api/v1/company-profile/logo</name>
+      <kind>REST endpoint</kind>
+      <signature>DELETE /api/v1/company-profile/logo → 204 No Content</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/CompanyProfileController.java</path>
+    </interface>
+    <interface>
+      <name>FileStorageService</name>
+      <kind>service interface</kind>
+      <signature>storeFile(MultipartFile, String directory): String; deleteFile(String path): void; getDownloadUrl(String path): String</signature>
+      <path>backend/src/main/java/com/ultrabms/service/FileStorageService.java</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 with Mockito for unit tests. Use @MockBean for dependencies, @WebMvcTest for controller tests.
+      Frontend: Jest with React Testing Library. Test components in isolation, mock API calls. All interactive elements need data-testid.
+      Follow existing test patterns in backend/src/test and frontend/src/**/__tests__/.
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/</location>
+      <location>backend/src/test/java/com/ultrabms/controller/</location>
+      <location>frontend/src/components/**/__tests__/</location>
+      <location>frontend/src/lib/validations/__tests__/</location>
+      <location>frontend/src/services/__tests__/</location>
+      <location>frontend/src/app/(dashboard)/settings/company-profile/__tests__/</location>
+    </locations>
+    <ideas>
+      <idea ac="AC6, AC7">Test CompanyProfile entity persistence and migration runs successfully</idea>
+      <idea ac="AC8">Test GET returns 404 when no profile exists, returns data with presigned logo URL when exists</idea>
+      <idea ac="AC9">Test PUT creates new profile when none exists, updates existing profile (upsert)</idea>
+      <idea ac="AC10">Test logo upload validates file type (PNG/JPG only) and size (max 2MB), stores in S3</idea>
+      <idea ac="AC11">Test logo delete removes from S3 and clears logoFilePath field</idea>
+      <idea ac="AC12">Test TRN validation rejects invalid formats, phone validation rejects non-UAE formats</idea>
+      <idea ac="AC13">Test unique constraint prevents multiple company profile records</idea>
+      <idea ac="AC14">Test ADMIN can write, FINANCE_MANAGER can read-only, TENANT gets 403</idea>
+      <idea ac="AC15">Test cache is populated on GET, evicted on PUT/DELETE</idea>
+      <idea ac="AC17">Test Zod schemas validate all fields correctly on frontend</idea>
+      <idea ac="AC19">Test logo upload component renders upload area, handles file selection, shows preview</idea>
+    </ideas>
+  </tests>
+</story-context>

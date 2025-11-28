@@ -1,0 +1,308 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>8</storyId>
+    <title>Parking Spot Inventory Management</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-28</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-3/3-8-parking-spot-inventory-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>property manager</asA>
+    <iWant>to manage parking spot inventory for each building</iWant>
+    <soThat>I can track available spots and allocate them to tenants</soThat>
+    <tasks>
+      <task id="1" ac="17">Define TypeScript Types, Enums, and Validation Schemas - Create parking.ts types, ParkingSpotStatus enum, Zod schemas, parking.service.ts, React Query hooks</task>
+      <task id="2" ac="11">Create Database Schema and Entity - V43 migration, ParkingSpot entity, ParkingSpotStatus enum, ParkingSpotRepository with indexes and unique constraint</task>
+      <task id="3" ac="12,13">Implement Parking Spot Service - CRUD, filters, status change, soft delete, bulk operations, getAvailableSpots, 15+ unit tests</task>
+      <task id="4" ac="12,13">Implement Backend API Endpoints - ParkingSpotController with all REST endpoints and @PreAuthorize RBAC annotations</task>
+      <task id="5" ac="1,2,3,4">Create Parking Spot List Page - Table with columns, status badges, search, filters, pagination, sorting, breadcrumb, empty state</task>
+      <task id="6" ac="5,6,7">Create Add/Edit Parking Spot Modal - Form with validation, create/edit modes, 409 conflict handling, success toast</task>
+      <task id="7" ac="8,9">Implement Delete and Status Change Actions - Actions dropdown, confirmation dialog, ASSIGNED check, status transitions</task>
+      <task id="8" ac="10">Implement Bulk Actions - Checkbox column, select all, BulkActionBar, bulk delete/status change with ASSIGNED skip</task>
+      <task id="9" ac="16">Update Sidebar Navigation - Add Parking Spots menu item with ParkingCircle icon, RBAC visibility</task>
+      <task id="10" ac="14">Integration with Tenant Onboarding - Update parking allocation to use ParkingSpot dropdown, status update on allocation</task>
+      <task id="11" ac="15">Integration with Tenant Checkout - Release parking spots on checkout complete, set status AVAILABLE, clear assignments</task>
+      <task id="12" ac="18">Frontend Unit Tests - parking.test.ts validations, component tests, data-testid verification, 70%+ coverage</task>
+      <task id="13" ac="19,20">Mandatory Test Execution and Build Verification - mvn test, npm test, mvn compile, npm run build, npm run lint all pass</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Parking spot management accessible at /property-management/parking for SUPER_ADMIN, ADMIN, PROPERTY_MANAGER. Uses Next.js App Router (dashboard) route group. Client component with React Query. Responsive layout. Auth middleware with role check. Breadcrumb: Dashboard > Property Management > Parking Spots.</criterion>
+    <criterion id="AC2">Table displays: Checkbox, Spot Number, Building, Default Fee (AED), Status, Assigned To, Actions. Sorting on Spot Number, Building, Fee. Pagination 10/20/50. Empty state message.</criterion>
+    <criterion id="AC3">Status badges: AVAILABLE (green), ASSIGNED (blue, clickable tenant link), UNDER_MAINTENANCE (orange). Uses shadcn/ui Badge with variant prop.</criterion>
+    <criterion id="AC4">Search by Spot Number and Tenant name. Building filter dropdown (useProperties hook). Status filter dropdown. Filters apply immediately (300ms debounce). URL query params persist filter state.</criterion>
+    <criterion id="AC5">Add New Parking Spot modal: Building (required, Select), Spot Number (required, max 20 chars), Default Fee (required, number, min 0). Zod validation. POST /api/v1/parking-spots. Success toast, query invalidation.</criterion>
+    <criterion id="AC6">Spot number uniqueness: Backend unique constraint (property_id, spot_number) WHERE active=true. 409 Conflict response with error message displayed below field.</criterion>
+    <criterion id="AC7">Edit modal pre-populated. Building disabled if ASSIGNED. Fee updates affect future only. PUT /api/v1/parking-spots/{id}. Success toast.</criterion>
+    <criterion id="AC8">Delete confirmation dialog. ASSIGNED spots cannot be deleted (disabled/error). Soft delete via DELETE endpoint. Success toast.</criterion>
+    <criterion id="AC9">Status change actions: Available → Under Maintenance, Under Maintenance → Available. ASSIGNED managed via tenant flows only. PATCH /api/v1/parking-spots/{id}/status.</criterion>
+    <criterion id="AC10">Bulk actions: Select all toggle, BulkActionBar with count, Delete Selected, Change Status. Skip ASSIGNED spots with warning. POST /bulk-delete, POST /bulk-status endpoints.</criterion>
+    <criterion id="AC11">ParkingSpot entity: id (UUID), spotNumber (max 20), property (ManyToOne), defaultFee (BigDecimal), status (enum), assignedTenant (nullable), assignedAt, notes (max 500), timestamps, active. V43 migration with indexes.</criterion>
+    <criterion id="AC12">REST endpoints: POST (create 201), GET (list with filters), GET/{id}, PUT/{id}, PATCH/{id}/status, DELETE/{id} (400 if ASSIGNED), GET /properties/{id}/parking-spots, GET /available. Proper DTOs.</criterion>
+    <criterion id="AC13">RBAC: SUPER_ADMIN/ADMIN/PROPERTY_MANAGER full CRUD. FINANCE_MANAGER/MAINTENANCE_SUPERVISOR read-only. TENANT/VENDOR 403. @PreAuthorize annotations.</criterion>
+    <criterion id="AC14">Tenant onboarding integration: Parking dropdown shows available spots. On allocation update ParkingSpot status=ASSIGNED, set assignedTenantId, assignedAt.</criterion>
+    <criterion id="AC15">Tenant checkout integration: Release all assigned spots. Set status=AVAILABLE, clear assignedTenantId/assignedAt. Audit log for release.</criterion>
+    <criterion id="AC16">Sidebar: Add Parking Spots under Property Management. ParkingCircle icon (lucide-react). Route /property-management/parking. Visible to SUPER_ADMIN/ADMIN/PROPERTY_MANAGER.</criterion>
+    <criterion id="AC17">Frontend types: parking.ts with ParkingSpot, ParkingSpotListResponse, ParkingSpotFilters, ParkingSpotStatus enum. Validation schemas. Service with API methods. Export from types/index.ts.</criterion>
+    <criterion id="AC18">Tests: ParkingSpotServiceTest 15+ tests, ParkingSpotControllerTest 12+ tests. Frontend validation/component tests. All data-testid attributes. 80% backend, 70% frontend coverage.</criterion>
+    <criterion id="AC19">Execute mvn test and npm test. ALL tests must pass. Fix failures before complete. Document results.</criterion>
+    <criterion id="AC20">mvn compile and npm run build with zero errors. npm run lint passes. Document in Completion Notes.</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>3.9 Parking Management Module</section>
+        <snippet>Parking inventory includes spot categorization, allocation management, availability tracking, revenue optimization. Assignment workflow covers tenant parking allocation, visitor passes, monthly permits.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Database Schema Overview - Parking Management</section>
+        <snippet>parking_spots table with id, property_id, spot_number, spot_type, floor_level, status (AVAILABLE/OCCUPIED/RESERVED), timestamps. parking_allocations links spots to tenants with vehicle info and fees.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-3-tenant-management-portal.md</path>
+        <title>Epic 3: Tenant Management Portal</title>
+        <section>Story 3.8: Parking Spot Inventory Management</section>
+        <snippet>Full story specification with 20 ACs covering CRUD, status management, bulk actions, integration with onboarding (3.3) and checkout (3.7), RBAC, testing requirements.</snippet>
+      </doc>
+      <doc>
+        <path>docs/patterns/frontend-patterns.md</path>
+        <title>Frontend Patterns</title>
+        <section>React Query, Form Validation, Table Components</section>
+        <snippet>Reference for React Query hooks, Zod validation with react-hook-form, DataTable patterns with shadcn/ui components.</snippet>
+      </doc>
+      <doc>
+        <path>docs/patterns/backend-patterns.md</path>
+        <title>Backend Patterns</title>
+        <section>Service Layer, Repository, Controller Patterns</section>
+        <snippet>Reference for Spring Boot service patterns, JPA repositories, REST controllers with DTOs and exception handling.</snippet>
+      </doc>
+      <doc>
+        <path>docs/development/data-testid-conventions.md</path>
+        <title>Data TestID Conventions</title>
+        <section>Naming Conventions</section>
+        <snippet>All interactive elements require data-testid following pattern: {component}-{element}-{action}. Required for E2E testing per Epic 2 retrospective AI-2-1.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Property.java</path>
+        <kind>entity</kind>
+        <symbol>Property</symbol>
+        <reason>ParkingSpot has ManyToOne relationship to Property. Reference for entity structure and JPA annotations.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Tenant.java</path>
+        <kind>entity</kind>
+        <symbol>Tenant</symbol>
+        <reason>ParkingSpot has nullable ManyToOne to Tenant for assigned spots. Reference for tenant relationship.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/PropertyService.java</path>
+        <kind>service</kind>
+        <symbol>PropertyService</symbol>
+        <reason>Reference for CRUD service pattern with soft delete, pagination, filters.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/impl/PropertyServiceImpl.java</path>
+        <kind>service-impl</kind>
+        <symbol>PropertyServiceImpl</symbol>
+        <reason>Implementation pattern for service layer with transactions and repository usage.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/controller/PropertyController.java</path>
+        <kind>controller</kind>
+        <symbol>PropertyController</symbol>
+        <reason>REST controller pattern with @PreAuthorize annotations for RBAC.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/repository/PropertyRepository.java</path>
+        <kind>repository</kind>
+        <symbol>PropertyRepository</symbol>
+        <reason>JPA repository pattern extending JpaRepository with custom query methods.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/impl/TenantCheckoutServiceImpl.java</path>
+        <kind>service-impl</kind>
+        <symbol>TenantCheckoutServiceImpl</symbol>
+        <reason>AC15 requires updating this service to release parking spots on checkout complete.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/impl/TenantServiceImpl.java</path>
+        <kind>service-impl</kind>
+        <symbol>TenantServiceImpl</symbol>
+        <reason>AC14 requires updating tenant onboarding to allocate parking spots from ParkingSpot entity.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/checkout.ts</path>
+        <kind>types</kind>
+        <symbol>CheckoutStatus, TenantCheckout</symbol>
+        <reason>Reference pattern for TypeScript enum and interface definitions with JSDoc comments.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/lib/validations/checkout.ts</path>
+        <kind>validation</kind>
+        <symbol>checkoutReasonSchema, noticeDetailsSchema</symbol>
+        <reason>Reference pattern for Zod v4 schemas with nativeEnum, superRefine, type inference.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/checkout.service.ts</path>
+        <kind>service</kind>
+        <symbol>initiateCheckout, getTenantCheckoutSummary</symbol>
+        <reason>Reference pattern for API service with JSDoc, error handling, typed responses.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/components/layout/Sidebar.tsx</path>
+        <kind>component</kind>
+        <symbol>Sidebar, NavItem, NavSection</symbol>
+        <lines>1-150</lines>
+        <reason>AC16 requires adding Parking Spots nav item. Contains navigation structure and RBAC filtering.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/app/(dashboard)/properties/page.tsx</path>
+        <kind>page</kind>
+        <symbol>PropertiesPage</symbol>
+        <reason>Reference for list page pattern with table, filters, search, pagination.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/properties.service.ts</path>
+        <kind>service</kind>
+        <symbol>getProperties, createProperty</symbol>
+        <reason>Reference for CRUD service methods pattern. AC4 uses useProperties() hook from here.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <ecosystem name="frontend">
+        <package name="next" version="16.0.2">Next.js App Router framework</package>
+        <package name="react" version="19.2.0">React library</package>
+        <package name="typescript" version="5.x">TypeScript</package>
+        <package name="@tanstack/react-query" version="^5.90.9">Data fetching and caching</package>
+        <package name="@tanstack/react-table" version="^8.21.3">Table component library</package>
+        <package name="zod" version="^4.1.12">Schema validation (v4 syntax)</package>
+        <package name="react-hook-form" version="^7.66.0">Form state management</package>
+        <package name="@hookform/resolvers" version="^5.2.2">Zod resolver for react-hook-form</package>
+        <package name="lucide-react" version="^0.553.0">Icons including ParkingCircle</package>
+        <package name="date-fns" version="^4.1.0">Date formatting</package>
+        <package name="sonner" version="^2.0.7">Toast notifications</package>
+        <package name="axios" version="^1.13.2">HTTP client</package>
+      </ecosystem>
+      <ecosystem name="backend">
+        <package name="spring-boot-starter-parent" version="3.4.0">Spring Boot framework</package>
+        <package name="spring-boot-starter-data-jpa">JPA/Hibernate ORM</package>
+        <package name="spring-boot-starter-security">Security with @PreAuthorize</package>
+        <package name="spring-boot-starter-validation">Bean validation</package>
+        <package name="postgresql">PostgreSQL driver</package>
+        <package name="flyway-core">Database migrations</package>
+        <package name="lombok">Boilerplate reduction</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Follow existing CRUD patterns from PropertyService/UnitService for backend implementation</constraint>
+    <constraint type="pattern">Use React Query hooks pattern from existing services (useQuery, useMutation with query invalidation)</constraint>
+    <constraint type="pattern">Use shadcn/ui components: Table, Dialog, Badge, Button, Select, Input, DropdownMenu</constraint>
+    <constraint type="testing">All interactive elements must have data-testid per docs/development/data-testid-conventions.md</constraint>
+    <constraint type="testing">Backend test coverage minimum 80%, Frontend test coverage minimum 70%</constraint>
+    <constraint type="validation">Zod v4 syntax: use .min(1, "message") not deprecated required_error</constraint>
+    <constraint type="database">Migration file must be V43__create_parking_spots_table.sql (V41 is latest)</constraint>
+    <constraint type="security">RBAC via @PreAuthorize annotations matching AC13 role requirements</constraint>
+    <constraint type="integration">TenantCheckoutServiceImpl.complete() must release assigned parking spots</constraint>
+    <constraint type="integration">Tenant onboarding parking allocation must update ParkingSpot status</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>POST /api/v1/parking-spots</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/parking-spots - Create parking spot, returns 201</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ParkingSpotController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/parking-spots</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/parking-spots?propertyId=&amp;status=&amp;search=&amp;page=&amp;size=&amp;sort= - List with filters</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ParkingSpotController.java</path>
+    </interface>
+    <interface>
+      <name>PATCH /api/v1/parking-spots/{id}/status</name>
+      <kind>REST endpoint</kind>
+      <signature>PATCH /api/v1/parking-spots/{id}/status - Change status (AVAILABLE/UNDER_MAINTENANCE only)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ParkingSpotController.java</path>
+    </interface>
+    <interface>
+      <name>DELETE /api/v1/parking-spots/{id}</name>
+      <kind>REST endpoint</kind>
+      <signature>DELETE /api/v1/parking-spots/{id} - Soft delete, returns 400 if ASSIGNED</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ParkingSpotController.java</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/parking-spots/available</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/parking-spots/available?propertyId= - List available spots for allocation dropdowns</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ParkingSpotController.java</path>
+    </interface>
+    <interface>
+      <name>POST /api/v1/parking-spots/bulk-delete</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/parking-spots/bulk-delete - Body: {ids: [...]}</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ParkingSpotController.java</path>
+    </interface>
+    <interface>
+      <name>POST /api/v1/parking-spots/bulk-status</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/parking-spots/bulk-status - Body: {ids: [...], status: "..."}</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/ParkingSpotController.java</path>
+    </interface>
+    <interface>
+      <name>useProperties</name>
+      <kind>React Query hook</kind>
+      <signature>useProperties(): { data: Property[], isLoading, error }</signature>
+      <path>frontend/src/services/properties.service.ts</path>
+    </interface>
+    <interface>
+      <name>ParkingSpotStatus</name>
+      <kind>TypeScript enum</kind>
+      <signature>enum ParkingSpotStatus { AVAILABLE, ASSIGNED, UNDER_MAINTENANCE }</signature>
+      <path>frontend/src/types/parking.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use JUnit 5 with Mockito for backend unit tests. Use Jest with React Testing Library for frontend component tests. All tests must pass before marking story complete. Follow existing test patterns from checkout, expense, vendor modules.</standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/ParkingSpotServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/controller/ParkingSpotControllerTest.java</location>
+      <location>frontend/src/lib/validations/__tests__/parking.test.ts</location>
+      <location>frontend/src/components/parking/__tests__/*.test.tsx</location>
+    </locations>
+    <ideas>
+      <idea ac="AC5">Test create parking spot with valid data returns 201</idea>
+      <idea ac="AC6">Test duplicate spot number same property returns 409</idea>
+      <idea ac="AC6">Test same spot number different property succeeds</idea>
+      <idea ac="AC8">Test delete ASSIGNED spot returns 400</idea>
+      <idea ac="AC8">Test delete AVAILABLE spot soft deletes</idea>
+      <idea ac="AC9">Test status change AVAILABLE to UNDER_MAINTENANCE succeeds</idea>
+      <idea ac="AC9">Test status change ASSIGNED fails</idea>
+      <idea ac="AC10">Test bulk delete skips ASSIGNED spots</idea>
+      <idea ac="AC13">Test PROPERTY_MANAGER can create spot</idea>
+      <idea ac="AC13">Test FINANCE_MANAGER cannot create spot (403)</idea>
+      <idea ac="AC13">Test TENANT gets 403 on all endpoints</idea>
+      <idea ac="AC14">Test parking allocation updates spot status</idea>
+      <idea ac="AC15">Test checkout releases parking spots</idea>
+      <idea ac="AC17">Test Zod schema rejects invalid spot number (>20 chars)</idea>
+      <idea ac="AC17">Test Zod schema rejects negative fee</idea>
+      <idea ac="AC17">Test Zod schema accepts valid parking spot data</idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -85,10 +85,11 @@ To become the leading integrated property management platform in the MENA region
 - Critical alerts panel
 
 #### 3.2.2 Operational Dashboards
-- **Maintenance Dashboard:** Active/pending/completed job tracking
-- **Financial Dashboard:** Income vs. expense analysis
-- **Occupancy Dashboard:** Unit availability and tenant status
-- **Vendor Performance Dashboard:** SLA compliance and ratings
+- **Occupancy Dashboard:** Portfolio occupancy, lease expirations, unit availability
+- **Maintenance Dashboard:** Active/pending/completed job tracking, category breakdown
+- **Vendor Dashboard:** SLA compliance, performance snapshot, expiring documents
+- **Finance Dashboard:** Income vs. expense analysis, receivables, PDC status
+- **Assets Dashboard:** Asset KPIs, category breakdown, PM tracking, depreciation
 
 ### 3.3 Tenant Management Module
 

@@ -1,0 +1,286 @@
+<story-context id="bmm/workflows/4-implementation/story-context" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>1</storyId>
+    <title>Asset Registry and Tracking</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-7/7-1-asset-registry-and-tracking.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>property manager</asA>
+    <iWant>to maintain an asset registry for property equipment</iWant>
+    <soThat>I can track maintenance history and warranty information</soThat>
+    <tasks>
+      <task id="1">Create Asset TypeScript Types (AC #25)</task>
+      <task id="2">Create Asset Zod Validation Schemas (AC #26)</task>
+      <task id="3">Create Asset Frontend Service (AC #27)</task>
+      <task id="4">Create Asset React Query Hooks (AC #28)</task>
+      <task id="5">Create Asset Entity and Enums - Backend (AC #1, #2, #3)</task>
+      <task id="6">Create AssetDocument Entity (AC #5)</task>
+      <task id="7">Create Database Migrations V43-V45 (AC #33)</task>
+      <task id="8">Create Asset Repository (AC #29)</task>
+      <task id="9">Create Asset DTOs and Mapper (AC #32)</task>
+      <task id="10">Implement Asset Number Generation (AC #4)</task>
+      <task id="11">Implement Asset Service Layer (AC #30)</task>
+      <task id="12">Implement Document Upload Service (AC #12, #13)</task>
+      <task id="13">Implement Work Order Asset Integration (AC #16)</task>
+      <task id="14">Create Warranty Expiry Email Template (AC #17)</task>
+      <task id="15">Implement Warranty Expiry Scheduler Job (AC #17)</task>
+      <task id="16">Implement Asset Controller (AC #31)</task>
+      <task id="17">Create Asset List Page (AC #18)</task>
+      <task id="18">Create Asset Detail Page (AC #19)</task>
+      <task id="19">Create Asset Create Form (AC #20)</task>
+      <task id="20">Create Asset Edit Page (AC #21)</task>
+      <task id="21">Create Asset Status Dialog (AC #22)</task>
+      <task id="22">Create Document Upload Dialog (AC #23)</task>
+      <task id="23">Create Warranty Status Badge Component (AC #24)</task>
+      <task id="24">Create Category and Status Badge Components (AC #18)</task>
+      <task id="25">Update Work Order UI for Asset Link (AC #16)</task>
+      <task id="26">Write Backend Unit Tests (AC #34)</task>
+      <task id="27">Write Frontend Unit Tests (AC #35)</task>
+      <task id="28">Mandatory Test Execution and Build Verification (AC #36, #37)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Create Asset JPA entity with all fields: id (UUID), assetNumber (unique, AST-YYYY-NNNN), assetName, category enum, propertyId FK, location, manufacturer, modelNumber, serialNumber, installationDate, warrantyExpiryDate, purchaseCost, estimatedUsefulLife, status enum, lastMaintenanceDate, nextMaintenanceDate, timestamps. Add indexes.</criterion>
+    <criterion id="AC2">Create AssetCategory enum: HVAC, ELEVATOR, GENERATOR, WATER_PUMP, FIRE_SYSTEM, SECURITY_SYSTEM, ELECTRICAL_PANEL, PLUMBING_FIXTURE, APPLIANCE, OTHER with display names.</criterion>
+    <criterion id="AC3">Create AssetStatus enum: ACTIVE, UNDER_MAINTENANCE, OUT_OF_SERVICE, DISPOSED with display names and colors.</criterion>
+    <criterion id="AC4">Implement asset number generation AST-{YYYY}-{NNNN} with annual reset and thread-safety.</criterion>
+    <criterion id="AC5">Create AssetDocument entity with documentType enum, fileName, filePath (S3), fileSize, uploadedBy, uploadedAt.</criterion>
+    <criterion id="AC6">POST /api/v1/assets - Create asset with auto-generated number, property validation.</criterion>
+    <criterion id="AC7">GET /api/v1/assets - List with filters (propertyId, category, status, search), pagination, sort.</criterion>
+    <criterion id="AC8">GET /api/v1/assets/{id} - Full details including property name, documents, maintenance summary.</criterion>
+    <criterion id="AC9">PUT /api/v1/assets/{id} - Update all fields except assetNumber.</criterion>
+    <criterion id="AC10">PATCH /api/v1/assets/{id}/status - Update status with notes, audit trail.</criterion>
+    <criterion id="AC11">GET /api/v1/assets/{id}/maintenance-history - Work orders linked to asset with pagination.</criterion>
+    <criterion id="AC12">POST /api/v1/assets/{id}/documents - Upload PDF/JPG/PNG max 10MB to S3, return presigned URL.</criterion>
+    <criterion id="AC13">DELETE /api/v1/assets/{id}/documents/{documentId} - Remove from S3 and database.</criterion>
+    <criterion id="AC14">GET /api/v1/assets/expiring-warranties - Assets with warranty expiring within N days.</criterion>
+    <criterion id="AC15">DELETE /api/v1/assets/{id} - Soft delete (status=DISPOSED or isDeleted flag).</criterion>
+    <criterion id="AC16">Add assetId to WorkOrder entity, update lastMaintenanceDate on completion.</criterion>
+    <criterion id="AC17">Daily job at 7 AM for 30-day warranty expiry notifications via email.</criterion>
+    <criterion id="AC18">Asset list page with DataTable, filters, search, badges, pagination at /assets.</criterion>
+    <criterion id="AC19">Asset detail page at /assets/{id} with all sections and actions.</criterion>
+    <criterion id="AC20">Asset create form at /assets/new with all fields and validation.</criterion>
+    <criterion id="AC21">Asset edit page at /assets/{id}/edit, pre-populated, assetNumber read-only.</criterion>
+    <criterion id="AC22">Asset status dialog with status dropdown (exclude current), notes, PATCH call.</criterion>
+    <criterion id="AC23">Document upload dialog with type select, drag-drop, progress indicator.</criterion>
+    <criterion id="AC24">Warranty status badge: green (>30 days), yellow (<=30), red (expired), gray (null).</criterion>
+    <criterion id="AC25">TypeScript types: Asset, AssetCreate, AssetUpdate, AssetStatusUpdate, AssetDocument, enums.</criterion>
+    <criterion id="AC26">Zod validation schemas: assetCreateSchema, assetUpdateSchema, assetStatusUpdateSchema, documentUploadSchema.</criterion>
+    <criterion id="AC27">Frontend service with all API methods using existing API client pattern.</criterion>
+    <criterion id="AC28">React Query hooks for queries and mutations with cache invalidation.</criterion>
+    <criterion id="AC29">AssetRepository with custom queries for filters, search, expiry check.</criterion>
+    <criterion id="AC30">AssetService with business logic for all operations.</criterion>
+    <criterion id="AC31">AssetController with @PreAuthorize for PROPERTY_MANAGER or SUPER_ADMIN.</criterion>
+    <criterion id="AC32">DTOs and MapStruct mapper for entity-DTO conversion.</criterion>
+    <criterion id="AC33">Flyway migrations V43 (assets), V44 (asset_documents), V45 (work_orders.asset_id).</criterion>
+    <criterion id="AC34">Backend unit tests: AssetServiceTest, AssetControllerTest with >= 80% coverage.</criterion>
+    <criterion id="AC35">Frontend unit tests: pages, forms, dialogs, badges with data-testid verification.</criterion>
+    <criterion id="AC36">Execute mvn test and npm test - ALL tests must pass.</criterion>
+    <criterion id="AC37">Build verification: mvn compile, npm run build, npm run lint - zero errors.</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics/epic-7-asset-compliance-management.md</path>
+        <title>Epic 7: Asset and Compliance Management</title>
+        <section>Story 7.1: Asset Registry and Tracking</section>
+        <snippet>Asset entity with propertyId FK, status enum (ACTIVE, UNDER_MAINTENANCE, OUT_OF_SERVICE, DISPOSED), maintenance history tracking via work order linking, warranty expiry notifications 30 days before.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Ultra BMS Architecture</title>
+        <section>Data Architecture - Asset Management</section>
+        <snippet>Assets table with property_id FK, asset_tag unique, category enum, warranty_expiry, status. Maintenance_history table links assets to work_orders.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Ultra BMS Architecture</title>
+        <section>Implementation Patterns</section>
+        <snippet>Backend: Controller → Service → Repository pattern. Use @Transactional, @PreAuthorize. Frontend: TypeScript types, Zod validation, React Query hooks, shadcn/ui components.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Ultra BMS Architecture</title>
+        <section>REST API Conventions</section>
+        <snippet>Base URL /api/v1, kebab-case endpoints, HTTP methods (GET list/detail, POST create, PUT update, PATCH partial, DELETE soft). Standard response format with success, data, message, timestamp.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Property.java</path>
+        <kind>entity</kind>
+        <symbol>Property</symbol>
+        <lines>1-126</lines>
+        <reason>Asset.propertyId references Property. Use similar entity pattern: @Entity, @Table with indexes, @Data, @Builder, extends BaseEntity.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/WorkOrder.java</path>
+        <kind>entity</kind>
+        <symbol>WorkOrder</symbol>
+        <lines>1-356</lines>
+        <reason>Add assetId FK to link work orders to assets. Update lastMaintenanceDate on completion. Reference for number generation pattern (WO-YYYY-NNNN).</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/FileStorageService.java</path>
+        <kind>interface</kind>
+        <symbol>FileStorageService</symbol>
+        <lines>1-69</lines>
+        <reason>Use for asset document uploads. Methods: storeFile(file, directory), deleteFile(path), getDownloadUrl(path). S3 storage with presigned URLs.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/enums/ExpenseCategory.java</path>
+        <kind>enum</kind>
+        <symbol>ExpenseCategory</symbol>
+        <lines>1-61</lines>
+        <reason>Pattern for AssetCategory and AssetStatus enums: enum values with displayName field and getDisplayName() method.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/enums/DocumentType.java</path>
+        <kind>enum</kind>
+        <symbol>DocumentType</symbol>
+        <reason>Existing DocumentType enum - verify if compatible or create AssetDocumentType enum for asset documents.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/expense.ts</path>
+        <kind>types</kind>
+        <symbol>Expense, ExpenseCategory, PaymentStatus</symbol>
+        <lines>1-100</lines>
+        <reason>Pattern for asset.ts: enums as TypeScript enums, interfaces for entity, list item, detail, create, update DTOs.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/lib/validations/expense.ts</path>
+        <kind>validation</kind>
+        <symbol>expenseCreateSchema, expenseUpdateSchema</symbol>
+        <lines>1-100</lines>
+        <reason>Pattern for asset validation schemas: z.object with field validations, nativeEnum for enums, optional/nullable handling.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/expense.service.ts</path>
+        <kind>service</kind>
+        <symbol>expenseService</symbol>
+        <reason>Pattern for asset.service.ts: API methods using axios client, error handling, response typing.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/hooks/useExpenses.ts</path>
+        <kind>hook</kind>
+        <symbol>useExpenses, useExpense, useCreateExpense</symbol>
+        <reason>Pattern for useAssets.ts: React Query useQuery/useMutation hooks with cache keys and invalidation.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <backend>
+        <framework>Spring Boot 3.4.0</framework>
+        <java>17 LTS</java>
+        <database>PostgreSQL</database>
+        <migration>Flyway</migration>
+        <orm>Spring Data JPA + Hibernate</orm>
+        <validation>Jakarta Bean Validation</validation>
+        <storage>AWS S3 (via FileStorageService)</storage>
+        <email>Spring Mail + Thymeleaf templates</email>
+        <scheduling>Spring @Scheduled</scheduling>
+        <testing>JUnit 5, Mockito, Spring Boot Test</testing>
+        <lombok>Lombok (@Data, @Builder, @NoArgsConstructor, @AllArgsConstructor)</lombok>
+      </backend>
+      <frontend>
+        <framework>Next.js 16.0.2</framework>
+        <react>React 19.2.0</react>
+        <language>TypeScript</language>
+        <ui>shadcn/ui (Radix UI primitives)</ui>
+        <styling>Tailwind CSS</styling>
+        <forms>React Hook Form 7.x + Zod 4.x</forms>
+        <dataFetching>TanStack React Query 5.x</dataFetching>
+        <httpClient>Axios</httpClient>
+        <fileUpload>react-dropzone 14.x</fileUpload>
+        <dates>date-fns 4.x</dates>
+        <icons>lucide-react</icons>
+        <testing>Jest, React Testing Library</testing>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint category="entity">Asset entity extends BaseEntity (id UUID, createdAt, updatedAt, version).</constraint>
+    <constraint category="entity">assetNumber must be unique (database constraint), format AST-{YYYY}-{NNNN}.</constraint>
+    <constraint category="entity">propertyId is required FK - validate property exists before creating asset.</constraint>
+    <constraint category="entity">Only ACTIVE/UNDER_MAINTENANCE assets can link to new work orders.</constraint>
+    <constraint category="entity">DISPOSED assets cannot be edited or linked to work orders.</constraint>
+    <constraint category="document">Document max size: 10MB.</constraint>
+    <constraint category="document">Document types: PDF, JPG, JPEG, PNG only.</constraint>
+    <constraint category="document">Store at S3 path: /uploads/assets/{assetId}/documents/{filename}</constraint>
+    <constraint category="number">Asset number pattern: AST-{YYYY}-{NNNN} (e.g., AST-2025-0001).</constraint>
+    <constraint category="number">Reset sequence at year change (AST-2026-0001).</constraint>
+    <constraint category="number">Use database sequence or optimistic locking for thread-safety.</constraint>
+    <constraint category="security">All endpoints require PROPERTY_MANAGER or SUPER_ADMIN role via @PreAuthorize.</constraint>
+    <constraint category="testing">All interactive elements must have data-testid attributes.</constraint>
+    <constraint category="testing">Backend >= 80% code coverage for new code.</constraint>
+    <constraint category="migration">Next Flyway versions: V43 (assets), V44 (asset_documents), V45 (work_orders.asset_id).</constraint>
+    <constraint category="api">Follow existing API response format: { success, data, message, timestamp }.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>FileStorageService</name>
+      <kind>Java interface</kind>
+      <signature>String storeFile(MultipartFile file, String directory); void deleteFile(String filePath); String getDownloadUrl(String filePath);</signature>
+      <path>backend/src/main/java/com/ultrabms/service/FileStorageService.java</path>
+    </interface>
+    <interface>
+      <name>Property Entity</name>
+      <kind>JPA Entity</kind>
+      <signature>UUID id, String name, String address, PropertyType propertyType, User manager</signature>
+      <path>backend/src/main/java/com/ultrabms/entity/Property.java</path>
+    </interface>
+    <interface>
+      <name>WorkOrder Entity</name>
+      <kind>JPA Entity</kind>
+      <signature>UUID id, String workOrderNumber, UUID propertyId, UUID unitId, WorkOrderStatus status, BigDecimal actualCost, LocalDateTime completedAt</signature>
+      <path>backend/src/main/java/com/ultrabms/entity/WorkOrder.java</path>
+    </interface>
+    <interface>
+      <name>Asset API Endpoints</name>
+      <kind>REST API</kind>
+      <signature>POST /api/v1/assets, GET /api/v1/assets, GET /api/v1/assets/{id}, PUT /api/v1/assets/{id}, PATCH /api/v1/assets/{id}/status, GET /api/v1/assets/{id}/maintenance-history, POST /api/v1/assets/{id}/documents, DELETE /api/v1/assets/{id}/documents/{docId}, GET /api/v1/assets/expiring-warranties, DELETE /api/v1/assets/{id}</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/AssetController.java (to create)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 with Mockito for unit tests. Use @SpringBootTest for integration tests. Mock FileStorageService and EmailService. Follow AAA pattern (Arrange, Act, Assert). Test service layer methods and controller endpoints including authorization. Target >= 80% coverage for new code.
+
+      Frontend: Jest with React Testing Library. Test component rendering, user interactions, form validation. Use data-testid for element selection. Mock API calls with MSW or jest.mock. Test all form validation rules, error states, loading states.
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/AssetServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/controller/AssetControllerTest.java</location>
+      <location>frontend/src/app/(dashboard)/assets/__tests__/</location>
+      <location>frontend/src/components/assets/__tests__/</location>
+      <location>frontend/src/hooks/__tests__/useAssets.test.ts</location>
+      <location>frontend/src/lib/validations/__tests__/asset.test.ts</location>
+    </locations>
+    <ideas>
+      <idea acId="AC1">Test Asset entity creation with all fields, validation annotations.</idea>
+      <idea acId="AC4">Test asset number generation uniqueness, year rollover, concurrent generation.</idea>
+      <idea acId="AC6">Test createAsset success, property validation failure, duplicate check.</idea>
+      <idea acId="AC10">Test status transitions, audit logging, DISPOSED prevention.</idea>
+      <idea acId="AC11">Test maintenance history pagination, cost calculation.</idea>
+      <idea acId="AC12">Test document upload size validation, type validation, S3 storage.</idea>
+      <idea acId="AC14">Test expiring warranties query with different day thresholds.</idea>
+      <idea acId="AC17">Test scheduler job execution, email sending, asset filtering.</idea>
+      <idea acId="AC18">Test asset list page rendering, filtering, search, pagination.</idea>
+      <idea acId="AC20">Test create form validation, field requirements, submission.</idea>
+      <idea acId="AC22">Test status dialog interactions, status exclusion, API call.</idea>
+      <idea acId="AC24">Test warranty badge colors for all states (active, expiring, expired, null).</idea>
+      <idea acId="AC26">Test Zod schema validation for all field rules.</idea>
+    </ideas>
+  </tests>
+</story-context>

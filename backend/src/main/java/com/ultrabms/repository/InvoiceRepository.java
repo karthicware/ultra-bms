@@ -78,6 +78,15 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     @Query("SELECT i FROM Invoice i WHERE i.tenant.id = :tenantId AND i.status IN ('SENT', 'PARTIALLY_PAID', 'OVERDUE') ORDER BY i.dueDate ASC")
     List<Invoice> findOutstandingInvoicesByTenant(@Param("tenantId") UUID tenantId);
 
+    /**
+     * Find invoices by tenant and status list
+     *
+     * @param tenantId Tenant UUID
+     * @param statuses List of invoice statuses
+     * @return List of matching invoices
+     */
+    List<Invoice> findByTenantIdAndStatusIn(UUID tenantId, List<InvoiceStatus> statuses);
+
     // =================================================================
     // FIND BY PROPERTY
     // =================================================================

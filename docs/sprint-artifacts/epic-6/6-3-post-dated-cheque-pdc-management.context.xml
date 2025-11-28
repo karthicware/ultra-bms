@@ -1,0 +1,342 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>3</storyId>
+    <title>Post-Dated Cheque (PDC) Management</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-6/6-3-post-dated-cheque-pdc-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>finance manager</asA>
+    <iWant>manage post-dated cheques from tenants</iWant>
+    <soThat>I can track cheque deposits, handle bounced cheques, and maintain financial records accurately</soThat>
+    <tasks>
+      <task id="1">Create PDC TypeScript Types (AC: #20)</task>
+      <task id="2">Create PDC Zod Validation Schemas (AC: #21)</task>
+      <task id="3">Create PDC Frontend Service (AC: #22)</task>
+      <task id="4">Create PDC React Query Hooks (AC: #23)</task>
+      <task id="5">Create PDC Entity and Enums Backend (AC: #1, #2)</task>
+      <task id="6">Create Database Migration V43 (AC: #28)</task>
+      <task id="7">Create PDC Repository (AC: #24)</task>
+      <task id="8">Create PDC DTOs and Mapper (AC: #27)</task>
+      <task id="9">Implement PDC Service Layer (AC: #25)</task>
+      <task id="10">Implement Invoice Integration (AC: #31)</task>
+      <task id="11">Create PDC Email Templates (AC: #30)</task>
+      <task id="12">Implement PDC Scheduler Job (AC: #8, #29)</task>
+      <task id="13">Implement PDC Controller (AC: #26)</task>
+      <task id="14">Create PDC Dashboard Page (AC: #6, #7)</task>
+      <task id="15">Create PDC List Page (AC: #13)</task>
+      <task id="16">Create PDC Registration Form (AC: #4, #5)</task>
+      <task id="17">Create PDC Detail Page (AC: #14, #15)</task>
+      <task id="18">Create PDC Action Modals (AC: #9, #10, #11, #16)</task>
+      <task id="19">Create Withdraw PDC Modal (AC: #17, #18)</task>
+      <task id="20">Create Withdrawal History Page (AC: #19)</task>
+      <task id="21">Create Status Badge Component (AC: #33)</task>
+      <task id="22">Implement Responsive Design (AC: #34)</task>
+      <task id="23">Write Backend Unit Tests (AC: #35)</task>
+      <task id="24">Write Frontend Unit Tests (AC: #36)</task>
+      <task id="25">Mandatory Test Execution and Build Verification (AC: #37, #38)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">PDC Entity Creation - JPA entity with all fields, relationships, indexes</criterion>
+    <criterion id="AC2">PDCStatus enum - RECEIVED, DUE, DEPOSITED, CLEARED, BOUNCED, CANCELLED, REPLACED, WITHDRAWN</criterion>
+    <criterion id="AC3">PDC Number Uniqueness - unique constraint per tenant</criterion>
+    <criterion id="AC4">PDC Registration Form - tenant selection, bulk entry table (1-24 cheques)</criterion>
+    <criterion id="AC5">Bulk PDC Registration - POST /api/v1/pdcs/bulk with atomic transaction</criterion>
+    <criterion id="AC6">PDC Dashboard Page - KPI cards, upcoming PDCs, recently deposited</criterion>
+    <criterion id="AC7">PDC Dashboard API - GET /api/v1/pdcs/dashboard</criterion>
+    <criterion id="AC8">Auto-DUE Status Transition - daily 6 AM scheduler for 7-day window</criterion>
+    <criterion id="AC9">Mark PDC as Deposited - PATCH with depositDate, bankAccountId</criterion>
+    <criterion id="AC10">Mark PDC as Cleared - PATCH with auto-payment recording on invoice</criterion>
+    <criterion id="AC11">Mark PDC as Bounced - PATCH with reason, notifications, late fee</criterion>
+    <criterion id="AC12">PDC Replacement Flow - POST /api/v1/pdcs/{id}/replace</criterion>
+    <criterion id="AC13">PDC List Page - DataTable with filters, search, pagination</criterion>
+    <criterion id="AC14">PDC Detail Page - header, status badge, timeline, action buttons</criterion>
+    <criterion id="AC15">PDC Holder Display - from company_profile.legalCompanyName</criterion>
+    <criterion id="AC16">Beneficiary Bank Account Selection - dropdown from bank_accounts (Story 6.5)</criterion>
+    <criterion id="AC17">Withdraw PDC Modal - PDC info, withdrawal form, payment method options</criterion>
+    <criterion id="AC18">Withdraw PDC API - PATCH /api/v1/pdcs/{id}/withdraw</criterion>
+    <criterion id="AC19">Cheque Withdrawal History Page - DataTable with filters, export</criterion>
+    <criterion id="AC20">PDC TypeScript Types - types/pdc.ts</criterion>
+    <criterion id="AC21">PDC Zod Validation Schemas - lib/validations/pdc.ts</criterion>
+    <criterion id="AC22">PDC Frontend Service - services/pdc.service.ts</criterion>
+    <criterion id="AC23">PDC React Query Hooks - hooks/usePDCs.ts</criterion>
+    <criterion id="AC24">PDC Repository - JpaRepository with custom queries</criterion>
+    <criterion id="AC25">PDC Service Layer - PDCService interface and impl</criterion>
+    <criterion id="AC26">PDC Controller - REST endpoints with RBAC</criterion>
+    <criterion id="AC27">PDC DTOs - request/response DTOs with MapStruct mapper</criterion>
+    <criterion id="AC28">Database Migration - V43__create_pdcs_table.sql</criterion>
+    <criterion id="AC29">PDC Status Scheduler Job - 6 AM status transitions, 9 AM reminders</criterion>
+    <criterion id="AC30">PDC Email Templates - 4 templates (reminder, confirmed, bounced, withdrawal)</criterion>
+    <criterion id="AC31">Invoice Integration on Clear - call PaymentService.recordPayment()</criterion>
+    <criterion id="AC32">Tenant PDC History - GET /api/v1/tenants/{tenantId}/pdcs with bounceRate</criterion>
+    <criterion id="AC33">Status Badges - color-coded using shadcn Badge</criterion>
+    <criterion id="AC34">Responsive Design - mobile-first, dark theme support</criterion>
+    <criterion id="AC35">Backend Unit Tests - PDCServiceTest, PDCControllerTest >= 80% coverage</criterion>
+    <criterion id="AC36">Frontend Unit Tests - component and hook tests</criterion>
+    <criterion id="AC37">Mandatory Test Execution - mvn test, npm test ALL pass</criterion>
+    <criterion id="AC38">Build Verification - mvn compile, npm run build, npm run lint zero errors</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Novel Architectural Patterns - PDC Management</section>
+        <snippet>PDC management unique to MENA region. State machine: RECEIVED → DEPOSITED → CLEARED/BOUNCED → REPLACED. Includes @Scheduled jobs for status transitions and reminders.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Data Architecture - pdcs table schema</section>
+        <snippet>pdcs table: id, tenant_id, lease_id, cheque_number, bank_name, amount, cheque_date, deposit_date, status, bounce_reason, replacement_pdc_id, notes, created_at, updated_at</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Implementation Patterns - Backend Patterns</section>
+        <snippet>Controller pattern with @RestController, Service pattern with @Transactional, Repository extends JpaRepository, MapStruct for DTO mapping, @Scheduled for async jobs.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Implementation Patterns - Frontend Patterns</section>
+        <snippet>React Hook Form + Zod for forms, React Query for server state, shadcn/ui components, TypeScript strict mode, date-fns for date handling.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-6-financial-management.md</path>
+        <title>Epic 6: Financial Management</title>
+        <section>Story 6.3: Post-Dated Cheque (PDC) Management</section>
+        <snippet>Full PDC management including registration, dashboard, status workflow, bounce handling, replacement flow. Enhanced with Stitch designs: withdrawal history, PDC holder from company profile, beneficiary bank selection.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/enums/PaymentMethod.java</path>
+        <kind>enum</kind>
+        <symbol>PaymentMethod</symbol>
+        <lines>1-38</lines>
+        <reason>PDC is already a payment method value - use when recording payments from cleared PDCs</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/InvoiceService.java</path>
+        <kind>interface</kind>
+        <symbol>InvoiceService</symbol>
+        <lines>1-206</lines>
+        <reason>recordPayment() method to call when PDC clears and is linked to an invoice (AC#31)</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/impl/InvoiceServiceImpl.java</path>
+        <kind>service</kind>
+        <symbol>InvoiceServiceImpl</symbol>
+        <reason>Reference implementation for payment recording integration</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/CompanyProfile.java</path>
+        <kind>entity</kind>
+        <symbol>CompanyProfile</symbol>
+        <lines>1-136</lines>
+        <reason>legalCompanyName field used for PDC Holder display (AC#15)</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/scheduler/InvoiceSchedulerJob.java</path>
+        <kind>scheduler</kind>
+        <symbol>InvoiceSchedulerJob</symbol>
+        <lines>1-109</lines>
+        <reason>Reference pattern for PDCStatusSchedulerJob implementation - @Scheduled cron jobs</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Invoice.java</path>
+        <kind>entity</kind>
+        <symbol>Invoice</symbol>
+        <reason>PDC links to invoices via invoiceId foreign key</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Payment.java</path>
+        <kind>entity</kind>
+        <symbol>Payment</symbol>
+        <reason>Payment entity created when PDC clears - payment method = PDC</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/repository/PaymentRepository.java</path>
+        <kind>repository</kind>
+        <symbol>PaymentRepository</symbol>
+        <reason>Reference for repository pattern with custom queries</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/service/EmailService.java</path>
+        <kind>service</kind>
+        <symbol>EmailService</symbol>
+        <reason>Send PDC reminder, deposit confirmation, bounce notification emails</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/invoice.ts</path>
+        <kind>types</kind>
+        <symbol>Invoice types</symbol>
+        <reason>Reference for TypeScript type patterns - Invoice, InvoiceStatus, PaymentMethod enums</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/expense.ts</path>
+        <kind>types</kind>
+        <symbol>Expense types</symbol>
+        <reason>Reference for TypeScript type patterns in financial module</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/invoice.service.ts</path>
+        <kind>service</kind>
+        <symbol>invoiceService</symbol>
+        <reason>Reference pattern for frontend API service methods</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/services/expense.service.ts</path>
+        <kind>service</kind>
+        <symbol>expenseService</symbol>
+        <reason>Reference pattern for CRUD + action service methods</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/hooks/useInvoices.ts</path>
+        <kind>hook</kind>
+        <symbol>useInvoices</symbol>
+        <reason>Reference pattern for React Query hooks with mutations</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/hooks/useExpenses.ts</path>
+        <kind>hook</kind>
+        <symbol>useExpenses</symbol>
+        <reason>Reference pattern for React Query hooks</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <backend>
+        <framework>Spring Boot 3.4.0</framework>
+        <java>17</java>
+        <database>PostgreSQL with Flyway migrations</database>
+        <orm>Spring Data JPA with Hibernate</orm>
+        <validation>Spring Validation (jakarta.validation)</validation>
+        <mapping>MapStruct 1.6.3</mapping>
+        <lombok>1.18.36</lombok>
+        <scheduling>Spring @Scheduled</scheduling>
+        <email>Spring Mail + Thymeleaf templates</email>
+        <pdf>iText 8.0.5</pdf>
+        <testing>JUnit 5 + Mockito + H2</testing>
+        <coverage>JaCoCo (80% line, 70% branch)</coverage>
+      </backend>
+      <frontend>
+        <framework>Next.js 16.0.2</framework>
+        <react>19.2.0</react>
+        <typescript>5.x</typescript>
+        <stateManagement>@tanstack/react-query 5.90.9</stateManagement>
+        <forms>react-hook-form 7.66.0 + @hookform/resolvers 5.2.2</forms>
+        <validation>zod 4.1.12</validation>
+        <ui>shadcn/ui (Radix primitives)</ui>
+        <styling>Tailwind CSS 4</styling>
+        <dates>date-fns 4.1.0</dates>
+        <icons>lucide-react 0.553.0</icons>
+        <charts>recharts 3.4.1</charts>
+        <http>axios 1.13.2</http>
+        <testing>Jest 30.2.0 + @testing-library/react 16.3.0</testing>
+        <e2e>@playwright/test 1.49.1</e2e>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="business">Cheque number must be unique per tenant (same number allowed across different tenants)</constraint>
+    <constraint type="business">Cheque date must be in future at registration time</constraint>
+    <constraint type="business">Only DUE status PDCs can be deposited</constraint>
+    <constraint type="business">Only DEPOSITED status PDCs can be cleared or bounced</constraint>
+    <constraint type="business">Only BOUNCED status PDCs can be replaced</constraint>
+    <constraint type="business">Only RECEIVED or DUE status PDCs can be withdrawn</constraint>
+    <constraint type="business">PDC Holder comes from company_profile.legalCompanyName (graceful fallback if not configured)</constraint>
+    <constraint type="business">Bank account required for deposit when Story 6.5 is implemented (graceful handling if not available)</constraint>
+    <constraint type="technical">Database migration must be V43 (V42 is company_profile)</constraint>
+    <constraint type="technical">All @Scheduled jobs use cron expressions with configurable properties</constraint>
+    <constraint type="technical">RBAC: PROPERTY_MANAGER or FINANCE_MANAGER role required for all endpoints</constraint>
+    <constraint type="technical">Use @Transactional for all write operations in service layer</constraint>
+    <constraint type="technical">All interactive elements must have data-testid attributes</constraint>
+    <constraint type="technical">Backend tests: >= 80% line coverage, >= 70% branch coverage</constraint>
+    <constraint type="technical">All tests must pass (mvn test, npm test) before marking story complete</constraint>
+    <constraint type="technical">Build must succeed (mvn compile, npm run build, npm run lint) with zero errors</constraint>
+    <constraint type="pattern">Follow existing controller/service/repository patterns from Invoice/Expense modules</constraint>
+    <constraint type="pattern">Follow existing frontend type/service/hook patterns</constraint>
+    <constraint type="pattern">Use shadcn/ui components consistently</constraint>
+    <constraint type="pattern">Mobile-first responsive design with dark theme support</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>InvoiceService.recordPayment()</name>
+      <kind>method</kind>
+      <signature>PaymentResponseDto recordPayment(UUID invoiceId, PaymentCreateDto dto, UUID recordedBy)</signature>
+      <path>backend/src/main/java/com/ultrabms/service/InvoiceService.java:107</path>
+      <usage>Call when PDC status changes to CLEARED and invoiceId is linked. PaymentCreateDto: amount=PDC amount, paymentMethod=PDC, transactionReference=chequeNumber, paymentDate=clearedDate</usage>
+    </interface>
+    <interface>
+      <name>CompanyProfile.legalCompanyName</name>
+      <kind>field</kind>
+      <signature>String legalCompanyName (max 255 chars)</signature>
+      <path>backend/src/main/java/com/ultrabms/entity/CompanyProfile.java:56</path>
+      <usage>Fetch via CompanyProfileRepository.findFirst() and display as PDC Holder. Graceful fallback: "Company Profile Not Configured"</usage>
+    </interface>
+    <interface>
+      <name>PaymentMethod.PDC</name>
+      <kind>enum-value</kind>
+      <signature>PaymentMethod.PDC</signature>
+      <path>backend/src/main/java/com/ultrabms/entity/enums/PaymentMethod.java:23</path>
+      <usage>Use as paymentMethod when recording payment from cleared PDC</usage>
+    </interface>
+    <interface>
+      <name>EmailService</name>
+      <kind>service</kind>
+      <signature>@Async void sendEmail(String to, String subject, String template, Map&lt;String, Object&gt; context)</signature>
+      <path>backend/src/main/java/com/ultrabms/service/EmailService.java</path>
+      <usage>Send PDC reminder, deposit confirmation, bounce notification, withdrawal confirmation emails</usage>
+    </interface>
+    <interface>
+      <name>REST API Base Path</name>
+      <kind>convention</kind>
+      <signature>/api/v1/pdcs</signature>
+      <path>docs/architecture.md</path>
+      <usage>All PDC endpoints use this base path. Additional: /api/v1/tenants/{tenantId}/pdcs for tenant history</usage>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 with Mockito for unit tests, H2 in-memory database for integration tests. Use @WebMvcTest for controller tests, @SpringBootTest for service tests. Mock external dependencies (EmailService, CompanyProfileRepository for optional dependencies). Achieve >= 80% line coverage with JaCoCo.
+      Frontend: Jest with React Testing Library. Test component rendering, user interactions, form validation. Mock API calls with jest.fn(). Use data-testid attributes for element selection. Test all user flows including error states.
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/PDCServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/controller/PDCControllerTest.java</location>
+      <location>frontend/src/hooks/__tests__/usePDCs.test.ts</location>
+      <location>frontend/src/app/(dashboard)/finance/pdc/__tests__/</location>
+      <location>frontend/src/components/finance/__tests__/</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">Test PDC entity field constraints (@NotNull, @Size), relationship mappings</idea>
+      <idea ac="AC2">Test PDCStatus enum values and display names</idea>
+      <idea ac="AC3">Test unique constraint violation for duplicate cheque number per tenant</idea>
+      <idea ac="AC5">Test bulk PDC creation with atomic transaction (all-or-nothing)</idea>
+      <idea ac="AC8">Test scheduler job updates RECEIVED to DUE when chequeDate within 7 days</idea>
+      <idea ac="AC9">Test depositPDC only works for DUE status, sets depositDate and bankAccountId</idea>
+      <idea ac="AC10">Test clearPDC calls InvoiceService.recordPayment when invoiceId linked</idea>
+      <idea ac="AC11">Test bouncePDC sends notifications, applies late fee, flags tenant</idea>
+      <idea ac="AC12">Test replacePDC creates new PDC with link to original bounced PDC</idea>
+      <idea ac="AC15">Test PDC detail page displays company name from CompanyProfile (graceful fallback)</idea>
+      <idea ac="AC16">Test bank account dropdown populated correctly (graceful handling when empty)</idea>
+      <idea ac="AC17-18">Test withdrawal modal form validation and API call</idea>
+      <idea ac="AC31">Test payment auto-recorded with method=PDC, reference=chequeNumber</idea>
+      <idea ac="AC33">Test status badge renders correct colors for each status</idea>
+      <idea ac="AC35-36">Test coverage >= 80% line, all edge cases covered</idea>
+    </ideas>
+  </tests>
+</story-context>

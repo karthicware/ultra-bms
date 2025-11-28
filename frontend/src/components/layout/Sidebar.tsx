@@ -134,7 +134,7 @@ const navigationSections: NavSection[] = [
         name: 'Settings',
         href: '/settings',
         icon: Settings,
-        role: 'SUPER_ADMIN',
+        // No role restriction - all authenticated users can access settings (Story 2.7 AC#11)
       },
     ],
   },

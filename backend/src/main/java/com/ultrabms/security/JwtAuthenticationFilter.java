@@ -76,10 +76,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             authorities.add(new SimpleGrantedAuthority(permission))
                         );
 
-                        // Create a UserDetails principal with email as username
-                        org.springframework.security.core.userdetails.User userPrincipal =
-                                new org.springframework.security.core.userdetails.User(
-                                        email, "", authorities);
+                        // Create UserPrincipal with user ID for @CurrentUser injection
+                        UserPrincipal userPrincipal = new UserPrincipal(
+                                userId,
+                                email,
+                                "", // password not needed for token auth
+                                authorities,
+                                true, // enabled
+                                true  // accountNonLocked
+                        );
 
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(userPrincipal, null, authorities);

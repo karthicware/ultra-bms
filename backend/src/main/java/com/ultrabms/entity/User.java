@@ -1,6 +1,7 @@
 package com.ultrabms.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ultrabms.entity.enums.ThemePreference;
 import com.ultrabms.entity.enums.UserStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -133,6 +134,15 @@ public class User extends BaseEntity {
      */
     @Column(name = "must_change_password", nullable = false)
     private Boolean mustChangePassword = false;
+
+    /**
+     * User's theme preference for the application UI.
+     * SYSTEM = follow OS preference, LIGHT = force light mode, DARK = force dark mode.
+     * Story 2.7: Admin Theme Settings & System Theme Support
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "theme_preference", nullable = false, length = 20)
+    private ThemePreference themePreference = ThemePreference.SYSTEM;
 
     /**
      * Get user authorities (permissions) for Spring Security.

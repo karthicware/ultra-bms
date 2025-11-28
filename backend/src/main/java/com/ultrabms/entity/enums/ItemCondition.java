@@ -17,6 +17,11 @@ public enum ItemCondition {
     FAIR,
 
     /**
+     * Item needs repair but is not critically damaged
+     */
+    NEEDS_REPAIR,
+
+    /**
      * Item is damaged and requires repair
      */
     DAMAGED,
@@ -24,5 +29,10 @@ public enum ItemCondition {
     /**
      * Item is missing entirely
      */
-    MISSING
+    MISSING,
+
+    /**
+     * Item condition is not applicable for this inspection
+     */
+    NOT_APPLICABLE
 }

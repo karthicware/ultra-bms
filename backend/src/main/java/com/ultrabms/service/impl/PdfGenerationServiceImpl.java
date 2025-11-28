@@ -1374,10 +1374,10 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         return switch (type) {
             case UNPAID_RENT -> "Unpaid Rent";
             case UNPAID_UTILITIES -> "Unpaid Utilities";
-            case DAMAGE_REPAIR -> "Damage Repair";
+            case DAMAGE_REPAIRS -> "Damage Repairs";
             case CLEANING_FEE -> "Cleaning Fee";
             case KEY_REPLACEMENT -> "Key Replacement";
-            case EARLY_TERMINATION -> "Early Termination";
+            case EARLY_TERMINATION_PENALTY -> "Early Termination Penalty";
             case OTHER -> "Other";
         };
     }

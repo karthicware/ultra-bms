@@ -1605,6 +1605,233 @@ public class EmailService {
     }
 
     // ========================================================================
+    // Story 3.7: Tenant Checkout Email Notifications
+    // ========================================================================
+
+    /**
+     * Send checkout initiated notification email to tenant asynchronously.
+     * Confirms that checkout process has been started.
+     * Story 3.7: Tenant Checkout and Deposit Refund Processing (AC #7)
+     *
+     * @param tenant Tenant entity
+     * @param checkout TenantCheckout entity
+     */
+    @Async("emailTaskExecutor")
+    public void sendCheckoutInitiatedNotification(
+            com.ultrabms.entity.Tenant tenant,
+            com.ultrabms.entity.TenantCheckout checkout
+    ) {
+        try {
+            String portalUrl = frontendUrl + "/tenant/dashboard";
+
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("checkoutNumber", checkout.getCheckoutNumber());
+            context.setVariable("propertyName", tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A");
+            context.setVariable("unitNumber", tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A");
+            context.setVariable("noticeDate", checkout.getNoticeDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("expectedMoveOutDate", checkout.getExpectedMoveOutDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("checkoutReason", checkout.getCheckoutReason() != null ? checkout.getCheckoutReason().toString().replace("_", " ") : "N/A");
+            context.setVariable("portalUrl", portalUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            // Simple text content (HTML template can be added later)
+            String textContent = String.format(
+                "Dear %s,\n\n" +
+                "Your checkout request has been initiated successfully.\n\n" +
+                "Checkout Details:\n" +
+                "- Checkout Number: %s\n" +
+                "- Property: %s\n" +
+                "- Unit: %s\n" +
+                "- Notice Date: %s\n" +
+                "- Expected Move-Out Date: %s\n" +
+                "- Reason: %s\n\n" +
+                "Next Steps:\n" +
+                "1. A property inspection will be scheduled\n" +
+                "2. Your security deposit will be calculated\n" +
+                "3. Final settlement will be processed\n\n" +
+                "You can track your checkout progress at: %s\n\n" +
+                "If you have any questions, please contact us at %s.\n\n" +
+                "Best regards,\n" +
+                "Ultra BMS Team",
+                tenant.getFirstName() + " " + tenant.getLastName(),
+                checkout.getCheckoutNumber(),
+                tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A",
+                tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A",
+                checkout.getNoticeDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")),
+                checkout.getExpectedMoveOutDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")),
+                checkout.getCheckoutReason() != null ? checkout.getCheckoutReason().toString().replace("_", " ") : "N/A",
+                portalUrl,
+                supportEmail
+            );
+
+            sendEmail(
+                tenant.getEmail(),
+                String.format("Checkout Initiated - %s", checkout.getCheckoutNumber()),
+                textContent,
+                textContent
+            );
+
+            log.info("Checkout initiated email sent successfully to tenant: {} ({}) for checkout: {}",
+                    tenant.getId(), tenant.getEmail(), checkout.getCheckoutNumber());
+
+        } catch (Exception e) {
+            log.error("Failed to send checkout initiated email to tenant: {} ({}) for checkout: {}",
+                    tenant.getId(), tenant.getEmail(), checkout.getCheckoutNumber(), e);
+        }
+    }
+
+    /**
+     * Send inspection scheduled notification email to tenant asynchronously.
+     * Notifies tenant that property inspection has been scheduled.
+     * Story 3.7: Tenant Checkout and Deposit Refund Processing (AC #8)
+     *
+     * @param tenant Tenant entity
+     * @param checkout TenantCheckout entity with inspection details
+     */
+    @Async("emailTaskExecutor")
+    public void sendInspectionScheduledNotification(
+            com.ultrabms.entity.Tenant tenant,
+            com.ultrabms.entity.TenantCheckout checkout
+    ) {
+        try {
+            String portalUrl = frontendUrl + "/tenant/dashboard";
+
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("checkoutNumber", checkout.getCheckoutNumber());
+            context.setVariable("propertyName", tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A");
+            context.setVariable("unitNumber", tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A");
+            context.setVariable("inspectionDate", checkout.getInspectionDate() != null
+                    ? checkout.getInspectionDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                    : "TBD");
+            context.setVariable("inspectionTime", checkout.getInspectionTime() != null
+                    ? checkout.getInspectionTime()
+                    : "TBD");
+            context.setVariable("portalUrl", portalUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            // Simple text content
+            String textContent = String.format(
+                "Dear %s,\n\n" +
+                "Your property inspection has been scheduled for your checkout.\n\n" +
+                "Inspection Details:\n" +
+                "- Checkout Number: %s\n" +
+                "- Property: %s\n" +
+                "- Unit: %s\n" +
+                "- Date: %s\n" +
+                "- Time: %s\n\n" +
+                "Please ensure:\n" +
+                "1. The unit is accessible at the scheduled time\n" +
+                "2. All personal belongings are removed\n" +
+                "3. The unit is clean and in good condition\n" +
+                "4. All keys and access cards are available\n\n" +
+                "You can view your checkout details at: %s\n\n" +
+                "If you need to reschedule, please contact us at %s.\n\n" +
+                "Best regards,\n" +
+                "Ultra BMS Team",
+                tenant.getFirstName() + " " + tenant.getLastName(),
+                checkout.getCheckoutNumber(),
+                tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A",
+                tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A",
+                checkout.getInspectionDate() != null
+                        ? checkout.getInspectionDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                        : "TBD",
+                checkout.getInspectionTime() != null
+                        ? checkout.getInspectionTime()
+                        : "TBD",
+                portalUrl,
+                supportEmail
+            );
+
+            sendEmail(
+                tenant.getEmail(),
+                String.format("Inspection Scheduled - %s", checkout.getCheckoutNumber()),
+                textContent,
+                textContent
+            );
+
+            log.info("Inspection scheduled email sent successfully to tenant: {} ({}) for checkout: {}",
+                    tenant.getId(), tenant.getEmail(), checkout.getCheckoutNumber());
+
+        } catch (Exception e) {
+            log.error("Failed to send inspection scheduled email to tenant: {} ({}) for checkout: {}",
+                    tenant.getId(), tenant.getEmail(), checkout.getCheckoutNumber(), e);
+        }
+    }
+
+    /**
+     * Send checkout completed notification email to tenant asynchronously.
+     * Confirms that checkout process is complete with final settlement details.
+     * Story 3.7: Tenant Checkout and Deposit Refund Processing (AC #9)
+     *
+     * @param tenant Tenant entity
+     * @param checkout TenantCheckout entity with completion details
+     */
+    @Async("emailTaskExecutor")
+    public void sendCheckoutCompletedNotification(
+            com.ultrabms.entity.Tenant tenant,
+            com.ultrabms.entity.TenantCheckout checkout
+    ) {
+        try {
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("checkoutNumber", checkout.getCheckoutNumber());
+            context.setVariable("propertyName", tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A");
+            context.setVariable("unitNumber", tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A");
+            context.setVariable("completedAt", checkout.getCompletedAt() != null
+                    ? checkout.getCompletedAt().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a"))
+                    : "N/A");
+            context.setVariable("actualMoveOutDate", checkout.getActualMoveOutDate() != null
+                    ? checkout.getActualMoveOutDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                    : "N/A");
+            context.setVariable("supportEmail", supportEmail);
+
+            // Simple text content
+            String textContent = String.format(
+                "Dear %s,\n\n" +
+                "Your checkout has been completed successfully.\n\n" +
+                "Checkout Summary:\n" +
+                "- Checkout Number: %s\n" +
+                "- Property: %s\n" +
+                "- Unit: %s\n" +
+                "- Move-Out Date: %s\n" +
+                "- Completed: %s\n\n" +
+                "Your security deposit refund (if applicable) will be processed according to the agreed terms.\n\n" +
+                "Thank you for being a valued tenant. We wish you all the best!\n\n" +
+                "If you have any questions about your final settlement, please contact us at %s.\n\n" +
+                "Best regards,\n" +
+                "Ultra BMS Team",
+                tenant.getFirstName() + " " + tenant.getLastName(),
+                checkout.getCheckoutNumber(),
+                tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A",
+                tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A",
+                checkout.getActualMoveOutDate() != null
+                        ? checkout.getActualMoveOutDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                        : "N/A",
+                checkout.getCompletedAt() != null
+                        ? checkout.getCompletedAt().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a"))
+                        : "N/A",
+                supportEmail
+            );
+
+            sendEmail(
+                tenant.getEmail(),
+                String.format("Checkout Completed - %s", checkout.getCheckoutNumber()),
+                textContent,
+                textContent
+            );
+
+            log.info("Checkout completed email sent successfully to tenant: {} ({}) for checkout: {}",
+                    tenant.getId(), tenant.getEmail(), checkout.getCheckoutNumber());
+
+        } catch (Exception e) {
+            log.error("Failed to send checkout completed email to tenant: {} ({}) for checkout: {}",
+                    tenant.getId(), tenant.getEmail(), checkout.getCheckoutNumber(), e);
+        }
+    }
+
+    // ========================================================================
     // Email Helper Methods
     // ========================================================================
 

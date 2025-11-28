@@ -7,9 +7,19 @@
 
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, User, Bell, Palette } from 'lucide-react';
+import { Shield, User, Bell, Palette, Building2 } from 'lucide-react';
+import { usePermission } from '@/contexts/auth-context';
 
-const settingsSections = [
+interface SettingsSection {
+  title: string;
+  description: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  comingSoon?: boolean;
+  requiresRole?: string[];
+}
+
+const settingsSections: SettingsSection[] = [
   {
     title: 'Security',
     description: 'Manage your password and active sessions',
@@ -35,11 +45,25 @@ const settingsSections = [
     description: 'Customize the look and feel of the application',
     href: '/settings/appearance',
     icon: Palette,
-    comingSoon: true,
+  },
+  {
+    title: 'Company Profile',
+    description: 'Manage company information for invoices and documents',
+    href: '/settings/company',
+    icon: Building2,
+    requiresRole: ['SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'PROPERTY_MANAGER'],
   },
 ];
 
 export default function SettingsPage() {
+  const { hasRole } = usePermission();
+
+  // Filter sections based on role requirements
+  const visibleSections = settingsSections.filter((section) => {
+    if (!section.requiresRole) return true;
+    return section.requiresRole.some((role) => hasRole(role));
+  });
+
   return (
     <div className="container max-w-4xl py-8">
       <div className="mb-6">
@@ -50,7 +74,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {settingsSections.map((section) => {
+        {visibleSections.map((section) => {
           const Icon = section.icon;
 
           if (section.comingSoon) {

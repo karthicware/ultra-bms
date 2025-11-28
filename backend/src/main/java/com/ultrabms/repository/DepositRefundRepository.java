@@ -163,8 +163,9 @@ public interface DepositRefundRepository extends JpaRepository<DepositRefund, UU
      *
      * @return Average days or null if no completed refunds
      */
-    @Query("SELECT AVG(EXTRACT(DAY FROM (d.processedAt - d.createdAt))) " +
-           "FROM DepositRefund d WHERE d.refundStatus = 'COMPLETED' AND d.processedAt IS NOT NULL")
+    @Query(value = "SELECT AVG(EXTRACT(DAY FROM (processed_at - created_at))) " +
+           "FROM deposit_refunds WHERE refund_status = 'COMPLETED' AND processed_at IS NOT NULL",
+           nativeQuery = true)
     Double averageProcessingTimeDays();
 
     /**

@@ -97,147 +97,319 @@ So that I can quickly understand the overall business health and identify issues
 - Calculate KPIs server-side for accuracy
 - Add drill-down capability for each KPI (click to see details)
 
-## Story 8.2: Operational Dashboards
+## Story 8.3: Occupancy Dashboard
 
-As a department user (maintenance supervisor, finance manager),
-I want role-specific operational dashboards,
-So that I can monitor and manage my area of responsibility effectively.
+**Stitch Reference:** `docs/archive/stitch_building_maintenance_software/occupancy_module_dashboard/screen.png`
+
+As a property manager,
+I want a dedicated occupancy dashboard with portfolio metrics and lease tracking,
+So that I can monitor occupancy rates and manage lease renewals effectively.
 
 **Acceptance Criteria:**
 
-**Given** I am logged in with a specific role
-**When** I access my operational dashboard
-**Then** I see role-appropriate information:
+**Given** I am logged in as PROPERTY_MANAGER or higher role
+**When** I navigate to the Occupancy Dashboard
+**Then** I see the following components:
 
-**Maintenance Dashboard (for MAINTENANCE_SUPERVISOR):**
+**KPI Cards (Top Row):**
+- **Portfolio Occupancy** - Percentage with visual indicator
+- **Vacant Units** - Count of available units
+- **Leases Expiring** - Count in configurable period (default: 100 days)
+- **Average Rent/SqFt** - Currency amount
 
-- **KPI Cards:**
-  - Open work orders (count)
-  - In-progress work orders (count)
-  - Completed this month (count)
-  - Average completion time (days)
+**Portfolio Occupancy Chart (Donut):**
+- Segments: Occupied, Vacant, Under Renovation, Notice Period
+- Center displays total units count
+- Legend with percentages
 
-- **Work Order Status Chart:**
-  - Pie chart: distribution by status (OPEN, ASSIGNED, IN_PROGRESS, COMPLETED)
-  - Click slice to filter work order list
+**Lease Expirations by Month (Bar Chart):**
+- X-axis: Next 12 months
+- Y-axis: Count of expiring leases
+- Color-coded bars (renewed vs pending)
 
-- **Work Orders by Category:**
-  - Bar chart showing count by category (PLUMBING, ELECTRICAL, etc.)
-  - Identify most common issues
+**Upcoming Lease Expirations (List):**
+- Table: Tenant, Unit, Property, Expiry Date, Days Remaining
+- Sorted by expiry date ascending
+- Quick actions: View Lease, Initiate Renewal
 
-- **Work Order List:**
-  - Filterable, sortable table
-  - Shows: number, property/unit, category, priority, status, scheduled date, assigned to
-  - Quick actions: View, Assign, Update Status
-
-- **Vendor Performance:**
-  - List of top 5 vendors by jobs completed this month
-  - Shows: vendor name, jobs completed, average rating, on-time rate
-  - Click to view vendor details
-
-**Financial Dashboard (for FINANCE_MANAGER):**
-
-- **KPI Cards:**
-  - Total revenue (current month)
-  - Total expenses (current month)
-  - Net profit/loss (current month)
-  - Collection rate (payments received / invoices issued)
-
-- **Income vs. Expense Chart:**
-  - Line chart showing monthly trend (last 12 months)
-  - Two lines: income (green) and expenses (red)
-  - Net profit/loss area in between
-
-- **Revenue Breakdown:**
-  - Pie chart: rent, service charges, parking, other
-  - Shows percentage and amount for each
-
-- **Expense Breakdown:**
-  - Pie chart: maintenance, utilities, salaries, other
-  - Click to see detailed expense list
-
-- **Outstanding Invoices:**
-  - Table of unpaid invoices (sorted by due date)
-  - Shows: invoice number, tenant, amount, due date, days overdue
-  - Quick actions: View, Record Payment
-
-- **PDC Status:**
-  - Summary of PDC status (from Story 6.3):
-    - Due this week
-    - Due this month
-    - Deposited awaiting clearance
-    - Recently bounced
-  - Click to view PDC management page
-
-**Occupancy Dashboard (for PROPERTY_MANAGER):**
-
-- **KPI Cards:**
-  - Overall occupancy rate (percentage)
-  - Vacant units (count)
-  - Leases expiring (next 90 days)
-  - Average rent per sqft
-
-- **Occupancy by Property:**
-  - Bar chart showing occupancy rate per property
-  - Identify underperforming properties
-
-- **Unit Status Breakdown:**
-  - Pie chart: occupied, vacant, under renovation, notice period
-  - Count and percentage for each
-
-- **Vacant Units List:**
-  - Table of available units
-  - Shows: property, unit number, type, size, rent, days vacant
-  - Sort by days vacant to prioritize leasing
-  - Quick action: Create Lead/Lease
-
-- **Lease Expiration Timeline:**
-  - Calendar view of upcoming expirations (next 6 months)
-  - Color-coded: renewed (green), pending renewal (yellow), notice given (red)
-  - Click date to see leases expiring that month
-
-- **Tenant Satisfaction:**
-  - Average rating from maintenance request feedback
-  - Top 3 properties by satisfaction
-  - Bottom 3 properties needing attention
-
-**And** dashboard navigation:
-- Sidebar or tab navigation between dashboards
-- Breadcrumb showing current dashboard
-- Quick switch dropdown to change dashboard
-
-**And** common features across all dashboards:
-- Date range filter
-- Property filter (if applicable to role)
-- Export to PDF/Excel
-- Print-friendly layout
-- Refresh button and auto-refresh
+**Recent Activity Feed:**
+- Timeline of lease-related activities
+- Shows: action, tenant, unit, timestamp
+- Limited to last 10 items
 
 **And** API endpoints:
-- GET /api/v1/dashboard/maintenance: Get maintenance dashboard data
-- GET /api/v1/dashboard/financial: Get financial dashboard data
-- GET /api/v1/dashboard/occupancy: Get occupancy dashboard data
-- Each dashboard endpoint returns all charts and tables data
+- GET /api/v1/dashboard/occupancy
+- GET /api/v1/dashboard/occupancy/lease-expirations
+- GET /api/v1/dashboard/occupancy/recent-activity
 
-**Prerequisites:** All previous epics
+**Prerequisites:** Epic 4 (Tenant & Lease Management)
 
 **Technical Notes:**
-- Implement role-based dashboard access (@PreAuthorize)
-- Cache dashboard data per role (5-minute TTL)
-- Use database views for complex queries
-- Frontend: Consistent chart styling across dashboards
-- Use shadcn/ui Tabs for dashboard navigation
-- Implement drill-down from charts to detailed lists
-- Add data export functionality for each dashboard
-- Ensure mobile-friendly layouts
-- Display loading states with skeleton screens
-- Add customization: users can hide/show dashboard widgets (optional)
+- Leases Expiring period is configurable via settings (default: 100 days)
+- Use Recharts for donut and bar charts
+- Implement role-based access (@PreAuthorize)
+- Cache data for 5 minutes
+- Add skeleton loaders during data fetch
+
+---
+
+## Story 8.4: Maintenance Dashboard
+
+**Stitch Reference:** `docs/archive/stitch_building_maintenance_software/maintenance_module_dashboard/screen.png`
+
+As a maintenance supervisor,
+I want a dedicated maintenance dashboard with job metrics and status tracking,
+So that I can monitor work orders and prioritize maintenance activities effectively.
+
+**Acceptance Criteria:**
+
+**Given** I am logged in as MAINTENANCE_SUPERVISOR or higher role
+**When** I navigate to the Maintenance Dashboard
+**Then** I see the following components:
+
+**KPI Cards (Top Row):**
+- **Active Jobs** - Count of non-completed work orders
+- **Overdue Jobs** - Count where scheduledDate < today and status != COMPLETED (red highlight)
+- **Pending Jobs** - Count with status OPEN
+- **Jobs Completed (This Month)** - Count completed in current month
+
+**Jobs by Status (Pie/Donut Chart):**
+- Segments: Open, Assigned, In Progress, Completed, Cancelled
+- Color-coded per status
+- Click segment to filter job list
+
+**Jobs by Priority (Bar Chart):**
+- X-axis: Priority levels (LOW, MEDIUM, HIGH, URGENT)
+- Y-axis: Count
+- Color gradient from green to red
+
+**Jobs by Category (Bar Chart):**
+- Categories: Plumbing, Electrical, HVAC, General, etc.
+- Horizontal bars showing count per category
+- Sorted by count descending
+
+**High Priority & Overdue Jobs (List):**
+- Table: Job #, Property/Unit, Title, Priority, Status, Assigned To, Days Overdue
+- Filtered to HIGH/URGENT priority or overdue
+- Red highlight for overdue items
+- Quick actions: View, Assign, Update Status
+
+**Recently Completed Jobs (List):**
+- Table: Job #, Title, Property, Completed Date, Completed By
+- Last 5 completed jobs
+- Quick action: View Details
+
+**And** API endpoints:
+- GET /api/v1/dashboard/maintenance
+- GET /api/v1/dashboard/maintenance/jobs-by-status
+- GET /api/v1/dashboard/maintenance/jobs-by-priority
+- GET /api/v1/dashboard/maintenance/jobs-by-category
+- GET /api/v1/dashboard/maintenance/high-priority-overdue
+- GET /api/v1/dashboard/maintenance/recently-completed
+
+**Prerequisites:** Epic 5 (Maintenance & Work Orders)
+
+**Technical Notes:**
+- Use Recharts for pie and bar charts
+- Implement click-to-filter functionality on chart segments
+- Cache data for 5 minutes
+- Add drill-down navigation to work order list
+
+---
+
+## Story 8.5: Vendor Dashboard
+
+**Stitch Reference:** `docs/archive/stitch_building_maintenance_software/vendor_module_dashboard/screen.png`
+
+As an administrator or property manager,
+I want a dedicated vendor dashboard with performance metrics and document tracking,
+So that I can monitor vendor performance and manage compliance effectively.
+
+**Acceptance Criteria:**
+
+**Given** I am logged in as ADMIN, PROPERTY_MANAGER, or MAINTENANCE_SUPERVISOR
+**When** I navigate to the Vendor Dashboard
+**Then** I see the following components:
+
+**KPI Cards (Top Row):**
+- **Total Active Vendors** - Count of active vendors
+- **Avg SLA Compliance** - Percentage across all vendors
+- **Top Performing Vendor** - Name with rating badge
+- **Expiring Documents** - Count of documents expiring in 30 days
+
+**Jobs by Specialization (Bar Chart):**
+- X-axis: Specialization categories (Plumbing, Electrical, HVAC, etc.)
+- Y-axis: Job count
+- Shows distribution of work across specializations
+
+**Vendor Performance Snapshot (Scatter Plot):**
+- X-axis: SLA Compliance %
+- Y-axis: Customer Rating (1-5)
+- Bubble size: Number of completed jobs
+- Hover shows vendor name and details
+
+**Vendors with Expiring Documents (List):**
+- Table: Vendor Name, Document Type, Expiry Date, Days Until Expiry
+- Sorted by expiry date ascending
+- Red highlight for < 7 days
+- Quick action: View Vendor, Upload Document
+
+**Top Vendors by Jobs (List):**
+- Table: Rank, Vendor Name, Jobs Completed (This Month), Avg Rating
+- Top 5 vendors by job volume
+- Quick action: View Vendor Profile
+
+**And** API endpoints:
+- GET /api/v1/dashboard/vendor
+- GET /api/v1/dashboard/vendor/jobs-by-specialization
+- GET /api/v1/dashboard/vendor/performance-snapshot
+- GET /api/v1/dashboard/vendor/expiring-documents
+- GET /api/v1/dashboard/vendor/top-vendors
+
+**Prerequisites:** Epic 5 (Vendor Management)
+
+**Technical Notes:**
+- Use Recharts ScatterChart for vendor performance snapshot
+- Bubble size proportional to completed job count
+- Cache data for 5 minutes
+- Implement tooltip with vendor details on hover
+
+---
+
+## Story 8.6: Finance Dashboard
+
+**Stitch Reference:** `docs/archive/stitch_building_maintenance_software/finance_module_dashboard/screen.png`
+
+As a finance manager or administrator,
+I want a dedicated finance dashboard with YTD metrics and transaction tracking,
+So that I can monitor financial performance and manage receivables effectively.
+
+**Acceptance Criteria:**
+
+**Given** I am logged in as FINANCE_MANAGER or ADMIN
+**When** I navigate to the Finance Dashboard
+**Then** I see the following components:
+
+**KPI Cards (Top Row):**
+- **Total Income YTD** - Currency amount with trend indicator
+- **Total Expenses YTD** - Currency amount with trend indicator
+- **Net Profit/Loss YTD** - Currency amount (green/red based on value)
+- **VAT Paid YTD** - Currency amount
+
+**Income vs Expense (Stacked Bar Chart):**
+- X-axis: Last 12 months
+- Y-axis: Amount
+- Stacked bars: Income (green), Expenses (red)
+- Line overlay showing net profit/loss trend
+
+**Top Expense Categories (Donut Chart):**
+- Segments: Maintenance, Utilities, Salaries, Insurance, Other
+- Percentages and amounts
+- Click to drill down to expense list
+
+**Outstanding Receivables (Summary Card):**
+- Total amount outstanding
+- Aging breakdown: Current, 30+, 60+, 90+ days
+- Click to view invoice list
+
+**Recent High-Value Transactions (List):**
+- Table: Date, Type (Income/Expense), Description, Amount, Category
+- Last 10 transactions above threshold
+- Quick action: View Details
+
+**PDC Status Summary (Card):**
+- Due This Week: Count and amount
+- Due This Month: Count and amount
+- Awaiting Clearance: Count and amount
+- Click to view PDC management
+
+**And** API endpoints:
+- GET /api/v1/dashboard/finance
+- GET /api/v1/dashboard/finance/income-vs-expense
+- GET /api/v1/dashboard/finance/expense-categories
+- GET /api/v1/dashboard/finance/outstanding-receivables
+- GET /api/v1/dashboard/finance/recent-transactions
+- GET /api/v1/dashboard/finance/pdc-status
+
+**Prerequisites:** Epic 6 (Financial Management)
+
+**Technical Notes:**
+- Use ComposedChart for income vs expense with line overlay
+- Color-code net profit/loss (green positive, red negative)
+- Cache data for 5 minutes
+- Implement drill-down from donut chart to expense list
+
+---
+
+## Story 8.7: Assets Dashboard
+
+**Stitch Reference:** `docs/archive/stitch_building_maintenance_software/assets_module_dashboard/screen.png`
+
+As an administrator or property manager,
+I want a dedicated assets dashboard with asset metrics and PM tracking,
+So that I can monitor asset value and manage preventive maintenance effectively.
+
+**Acceptance Criteria:**
+
+**Given** I am logged in as ADMIN, PROPERTY_MANAGER, or MAINTENANCE_SUPERVISOR
+**When** I navigate to the Assets Dashboard
+**Then** I see the following components:
+
+**KPI Cards (Top Row):**
+- **Total Registered Assets** - Count of all assets
+- **Total Asset Value** - Sum of all asset values (currency)
+- **Assets with Overdue PM** - Count needing preventive maintenance
+- **Most Expensive Asset (TCO)** - Name and total cost of ownership
+
+**Assets by Category (Donut Chart):**
+- Segments: HVAC, Electrical, Plumbing, Mechanical, Other
+- Count and percentage per category
+- Click to view category assets
+
+**Top 5 Assets by Maintenance Spend (Bar Chart):**
+- Horizontal bars showing maintenance cost
+- Asset name on Y-axis
+- Amount on X-axis
+- Click to view asset details
+
+**Overdue Preventive Maintenance (List):**
+- Table: Asset Name, Category, Property, Last PM Date, Days Overdue
+- Sorted by days overdue descending
+- Red highlight for > 30 days overdue
+- Quick action: Create Work Order
+
+**Recently Added Assets (List):**
+- Table: Asset Name, Category, Property, Added Date, Value
+- Last 5 added assets
+- Quick action: View Asset
+
+**Asset Depreciation Summary (Card):**
+- Original Value Total
+- Current Value Total
+- Total Depreciation
+- Click for detailed report
+
+**And** API endpoints:
+- GET /api/v1/dashboard/assets
+- GET /api/v1/dashboard/assets/by-category
+- GET /api/v1/dashboard/assets/top-maintenance-spend
+- GET /api/v1/dashboard/assets/overdue-pm
+- GET /api/v1/dashboard/assets/recently-added
+- GET /api/v1/dashboard/assets/depreciation-summary
+
+**Prerequisites:** Epic 7 (Asset Management)
+
+**Technical Notes:**
+- Use horizontal BarChart for maintenance spend
+- Calculate TCO as purchase price + total maintenance cost
+- Cache data for 5 minutes
+- Implement drill-down from donut chart to asset list
 
 ---
 
 ## E2E Testing Stories
 
-**Note:** The following E2E test stories should be implemented AFTER all technical implementation stories (8.1-8.2) are completed. Each E2E story corresponds to its technical story and contains comprehensive end-to-end tests covering all user flows.
+**Note:** The following E2E test stories should be implemented AFTER all technical implementation stories (8.1, 8.3-8.7) are completed. Each E2E story corresponds to its technical story and contains comprehensive end-to-end tests covering all user flows.
 
 ## Story 8.1.e2e: E2E Tests for Executive Dashboard
 
@@ -274,38 +446,159 @@ So that I can ensure KPIs and visualizations are accurate.
 - Test drill-down functionality
 - Verify auto-refresh mechanism
 
-## Story 8.2.e2e: E2E Tests for Operational Dashboards
+## Story 8.3.e2e: E2E Tests for Occupancy Dashboard
 
 As a QA engineer / developer,
-I want comprehensive end-to-end tests for operational dashboards,
-So that I can ensure role-specific dashboards display correct data.
+I want comprehensive end-to-end tests for the occupancy dashboard,
+So that I can ensure occupancy metrics and lease tracking are accurate.
 
 **Acceptance Criteria:**
 
-**Given** Story 8.2 implementation is complete (status: done)
+**Given** Story 8.3 implementation is complete (status: done)
 **When** E2E tests are executed with Playwright
 **Then** the following user flows are tested:
 
-**Role-Based Dashboard Access:**
-- Login as MAINTENANCE_SUPERVISOR → verify maintenance dashboard shown
-- Login as FINANCE_MANAGER → verify financial dashboard shown
-- Login as PROPERTY_MANAGER → verify occupancy dashboard shown
+**KPI Accuracy:**
+- Verify portfolio occupancy percentage matches database
+- Verify vacant units count accurate
+- Verify leases expiring count with configurable period
+- Test configurable lease expiry period (default 100 days)
 
-**Dashboard Data Accuracy:**
-- Verify work order counts match database
-- Verify financial calculations accurate
-- Verify occupancy metrics correct
+**Chart Functionality:**
+- Verify donut chart segments match unit status
+- Verify bar chart shows correct monthly data
+- Click chart elements → verify navigation works
 
-**Export Functionality:**
-- Export dashboard to PDF → verify PDF contains all data
-- Export to Excel → verify Excel has correct sheets
+**List Functionality:**
+- Verify upcoming lease expirations sorted correctly
+- Test quick actions (View Lease, Initiate Renewal)
+- Verify recent activity feed displays correctly
 
-**Prerequisites:** Story 8.2 (status: done)
+**Prerequisites:** Story 8.3 (status: done)
 
-**Technical Notes:**
-- Test role-based access control
-- Verify data accuracy for each dashboard
-- Test export functionality
-- Clean up test data
+## Story 8.4.e2e: E2E Tests for Maintenance Dashboard
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for the maintenance dashboard,
+So that I can ensure job metrics and status tracking are accurate.
+
+**Acceptance Criteria:**
+
+**Given** Story 8.4 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**KPI Accuracy:**
+- Verify active jobs count matches database
+- Verify overdue jobs count (scheduledDate < today)
+- Verify pending jobs count (status = OPEN)
+- Verify jobs completed this month count
+
+**Chart Interactions:**
+- Click pie chart segment → verify job list filters
+- Verify priority bar chart color coding
+- Verify category bar chart sorted correctly
+
+**List Functionality:**
+- Verify high priority & overdue list filtering
+- Test quick actions (View, Assign, Update Status)
+- Verify recently completed jobs list
+
+**Prerequisites:** Story 8.4 (status: done)
+
+## Story 8.5.e2e: E2E Tests for Vendor Dashboard
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for the vendor dashboard,
+So that I can ensure vendor performance metrics are accurate.
+
+**Acceptance Criteria:**
+
+**Given** Story 8.5 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**KPI Accuracy:**
+- Verify total active vendors count
+- Verify average SLA compliance calculation
+- Verify top performing vendor identification
+- Verify expiring documents count (30 days)
+
+**Scatter Plot:**
+- Verify vendor positions match SLA/rating data
+- Hover vendor bubble → verify tooltip details
+- Verify bubble size proportional to job count
+
+**List Functionality:**
+- Verify expiring documents sorted by date
+- Test red highlight for < 7 days expiry
+- Verify top vendors list ranking
+
+**Prerequisites:** Story 8.5 (status: done)
+
+## Story 8.6.e2e: E2E Tests for Finance Dashboard
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for the finance dashboard,
+So that I can ensure financial metrics are accurate.
+
+**Acceptance Criteria:**
+
+**Given** Story 8.6 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**KPI Accuracy:**
+- Verify total income YTD matches database
+- Verify total expenses YTD calculation
+- Verify net profit/loss calculation
+- Verify VAT paid YTD amount
+
+**Chart Functionality:**
+- Verify stacked bar chart shows monthly data
+- Verify line overlay trend is accurate
+- Click donut segment → verify drill-down works
+
+**Receivables and PDC:**
+- Verify outstanding receivables aging breakdown
+- Verify PDC status summary counts
+- Test navigation to PDC management
+
+**Prerequisites:** Story 8.6 (status: done)
+
+## Story 8.7.e2e: E2E Tests for Assets Dashboard
+
+As a QA engineer / developer,
+I want comprehensive end-to-end tests for the assets dashboard,
+So that I can ensure asset metrics and PM tracking are accurate.
+
+**Acceptance Criteria:**
+
+**Given** Story 8.7 implementation is complete (status: done)
+**When** E2E tests are executed with Playwright
+**Then** the following user flows are tested:
+
+**KPI Accuracy:**
+- Verify total registered assets count
+- Verify total asset value sum
+- Verify assets with overdue PM count
+- Verify TCO calculation for most expensive asset
+
+**Chart Functionality:**
+- Verify donut chart category breakdown
+- Click category → verify asset list navigation
+- Verify bar chart shows top 5 by maintenance spend
+
+**List Functionality:**
+- Verify overdue PM list sorted by days overdue
+- Test red highlight for > 30 days overdue
+- Test Create Work Order quick action
+- Verify recently added assets list
+
+**Depreciation:**
+- Verify depreciation summary calculations
+- Test navigation to detailed report
+
+**Prerequisites:** Story 8.7 (status: done)
 
 ---
