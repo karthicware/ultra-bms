@@ -58,8 +58,9 @@ export default function PaymentRecordForm({
   const schema = createPaymentSchemaWithMaxAmount(balanceAmount);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const paymentResolver: any = zodResolver(schema);
   const form = useForm<PaymentCreateFormData>({
-    resolver: zodResolver(schema) as any,
+    resolver: paymentResolver,
     defaultValues: {
       ...paymentCreateDefaults,
       amount: balanceAmount,

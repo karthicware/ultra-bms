@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lease Expiry Reminder</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header.urgent {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .countdown-box {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .countdown-box.urgent {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .countdown-box .days {
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .countdown-box .label {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 50%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: right;
+        }
+        .warning-box {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .warning-box.urgent {
+            background-color: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #1152D4;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div th:class="${isUrgent} ? 'header urgent' : 'header'">
+            <div class="icon" th:text="${isCritical} ? '&#128680;' : '&#128197;'">&#128197;</div>
+            <h1 th:text="${isUrgent} ? 'Urgent: Lease Expiring Soon!' : 'Lease Expiry Reminder'">Lease Expiry Reminder</h1>
+        </div>
+
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${tenantName}">Tenant</span>,
+            </div>
+
+            <p th:if="${isCritical}">
+                <strong style="color: #dc2626;">Your lease is expiring very soon!</strong> Please take immediate action to renew your lease to continue your tenancy.
+            </p>
+            <p th:if="${isUrgent and !isCritical}">
+                This is an urgent reminder that your lease is expiring soon. We encourage you to contact us or submit a renewal request to continue your tenancy.
+            </p>
+            <p th:if="${!isUrgent}">
+                This is a friendly reminder that your lease will be expiring in the coming weeks. If you'd like to continue your tenancy, please submit a renewal request at your earliest convenience.
+            </p>
+
+            <div th:class="${isUrgent} ? 'countdown-box urgent' : 'countdown-box'">
+                <div class="days" th:text="${daysRemaining}">30</div>
+                <div class="label" th:text="${daysRemaining} == 1 ? 'Day Remaining' : 'Days Remaining'">Days Remaining</div>
+            </div>
+
+            <table class="details-table">
+                <tr>
+                    <th>Property</th>
+                    <td th:text="${propertyName}">Property Name</td>
+                </tr>
+                <tr>
+                    <th>Unit</th>
+                    <td th:text="'Unit ' + ${unitNumber}">Unit 101</td>
+                </tr>
+                <tr>
+                    <th>Lease End Date</th>
+                    <td th:text="${leaseEndDate}">Dec 31, 2025</td>
+                </tr>
+            </table>
+
+            <div th:class="${isUrgent} ? 'warning-box urgent' : 'warning-box'">
+                <strong th:text="${isUrgent} ? '&#128680; Action Required' : '&#128161; What to Do Next'">What to Do Next</strong>
+                <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #666;">
+                    <li>Submit a renewal request through the tenant portal</li>
+                    <li>Contact our office to discuss renewal terms</li>
+                    <li>If you're moving out, please notify us at least 30 days in advance</li>
+                </ul>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${portalUrl}" class="button">Request Renewal</a>
+            </div>
+
+            <p style="color: #666; font-size: 14px;">
+                If you've already spoken with us about your renewal, please disregard this reminder.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>
+                Questions? Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

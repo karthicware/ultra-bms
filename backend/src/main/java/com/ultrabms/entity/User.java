@@ -1,8 +1,11 @@
 package com.ultrabms.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ultrabms.entity.enums.UserStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -115,6 +118,21 @@ public class User extends BaseEntity {
      */
     @Column(name = "failed_login_attempts", nullable = false)
     private Integer failedLoginAttempts = 0;
+
+    /**
+     * User account status (ACTIVE, INACTIVE, PENDING).
+     * Controls login eligibility.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private UserStatus status = UserStatus.ACTIVE;
+
+    /**
+     * Flag indicating user must change password on next login.
+     * Set to true for admin-created users.
+     */
+    @Column(name = "must_change_password", nullable = false)
+    private Boolean mustChangePassword = false;
 
     /**
      * Get user authorities (permissions) for Spring Security.

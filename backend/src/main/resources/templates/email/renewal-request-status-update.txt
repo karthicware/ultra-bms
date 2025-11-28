@@ -1,0 +1,46 @@
+[# th:if="${isApproved}"]RENEWAL REQUEST APPROVED[/][# th:if="${!isApproved}"]RENEWAL REQUEST UPDATE[/]
+
+Hi [(${tenantName})],
+
+[# th:if="${isApproved}"]
+Great news! Your lease renewal request has been APPROVED.
+Our team will be in touch with you shortly to finalize the lease extension details.
+[/]
+[# th:if="${!isApproved}"]
+We have reviewed your lease renewal request and unfortunately, we are unable to approve it at this time.
+[/]
+
+REQUEST DETAILS
+---------------
+Request Number: [(${requestNumber})]
+Status: [(${status})]
+Processed On: [(${processedAt})]
+
+[# th:if="${isApproved}"]
+NEXT STEPS
+----------
+1. Our property management team will contact you within 2-3 business days
+2. We'll discuss the renewal terms and any rent adjustments
+3. Once finalized, you'll receive your updated lease agreement
+[/]
+
+[# th:if="${!isApproved}"]
+REASON FOR DECISION
+-------------------
+[(${rejectedReason})]
+
+WHAT YOU CAN DO
+---------------
+1. Contact our office to discuss alternative options
+2. Submit a new renewal request with updated preferences
+3. Plan your next steps before your current lease ends
+[/]
+
+View your request details in the portal:
+[(${portalUrl})]
+
+If you have any questions, please contact us at [(${supportEmail})].
+
+---
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

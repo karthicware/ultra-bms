@@ -41,6 +41,7 @@ import com.ultrabms.repository.WorkOrderCommentRepository;
 import com.ultrabms.repository.WorkOrderProgressRepository;
 import com.ultrabms.repository.WorkOrderRepository;
 import com.ultrabms.service.EmailService;
+import com.ultrabms.service.ExpenseService;
 import com.ultrabms.service.S3Service;
 import com.ultrabms.service.WorkOrderService;
 import org.slf4j.Logger;
@@ -81,6 +82,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     private final UserRepository userRepository;
     private final S3Service s3Service;
     private final EmailService emailService;
+    private final ExpenseService expenseService;
 
     public WorkOrderServiceImpl(
             WorkOrderRepository workOrderRepository,
@@ -91,7 +93,8 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             UnitRepository unitRepository,
             UserRepository userRepository,
             S3Service s3Service,
-            EmailService emailService
+            EmailService emailService,
+            ExpenseService expenseService
     ) {
         this.workOrderRepository = workOrderRepository;
         this.workOrderCommentRepository = workOrderCommentRepository;
@@ -102,6 +105,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         this.userRepository = userRepository;
         this.s3Service = s3Service;
         this.emailService = emailService;
+        this.expenseService = expenseService;
     }
 
     @Override
@@ -1363,6 +1367,17 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         workOrderCommentRepository.save(statusComment);
 
         LOGGER.info("Work order marked complete: {}", id);
+
+        // Auto-create expense from work order if actualCost > 0 (AC#5/AC#27)
+        if (dto.getTotalCost() != null && dto.getTotalCost().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            try {
+                expenseService.createExpenseFromWorkOrder(id, currentUserId);
+                LOGGER.info("Auto-created expense for completed work order: {}", id);
+            } catch (Exception e) {
+                // Log but don't fail the completion - expense can be created manually
+                LOGGER.error("Failed to auto-create expense for work order: {}. Error: {}", id, e.getMessage());
+            }
+        }
 
         // Send email notification to property manager
         sendCompletionNotification(workOrder, currentUserId, dto);

@@ -121,6 +121,14 @@ public class AuthServiceImpl implements AuthService {
                     return new BadCredentialsException("Invalid email or password");
                 });
 
+        // Check if user is inactive (Story 2.6: Admin User Management)
+        if (user.getStatus() != null && user.getStatus() == com.ultrabms.entity.enums.UserStatus.INACTIVE) {
+            log.warn("Login attempt for inactive account: {}", user.getEmail());
+            logAuditEvent(user.getId(), "LOGIN_FAILED", ipAddress, userAgent,
+                    Map.of("reason", "Account inactive"));
+            throw new AccountLockedException("Your account has been deactivated. Please contact an administrator.");
+        }
+
         // Check if account is locked
         if (Boolean.TRUE.equals(user.getAccountLocked()) &&
                 user.getLockedUntil() != null &&
@@ -187,11 +195,15 @@ public class AuthServiceImpl implements AuthService {
         log.info("User logged in successfully: {} (ID: {}) with session {}",
                 user.getEmail(), user.getId(), sessionId);
 
+        // Include mustChangePassword flag for first-time login (Story 2.6)
+        Boolean mustChangePassword = Boolean.TRUE.equals(user.getMustChangePassword());
+
         return new LoginResponse(
                 accessToken,
                 refreshToken,
                 3600L, // 1 hour in seconds
-                mapToUserDto(user));
+                mapToUserDto(user),
+                mustChangePassword);
     }
 
     /**

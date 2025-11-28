@@ -299,8 +299,9 @@ public class PasswordResetService {
         // Step 4: Hash the new password with BCrypt
         String hashedPassword = passwordEncoder.encode(newPassword);
 
-        // Step 5: Update user's password
+        // Step 5: Update user's password and clear mustChangePassword flag (Story 2.6)
         user.setPasswordHash(hashedPassword);
+        user.setMustChangePassword(false); // Clear first-login password change requirement
         userRepository.save(user);
 
         log.info("Password updated successfully for user ID: {}", user.getId());

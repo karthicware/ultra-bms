@@ -66,21 +66,40 @@ public class AuthController {
     private boolean cookieHttpOnly;
 
     /**
+     * Whether self-registration is enabled.
+     * Story 2.6: Admin User Management - Admin creates all users, no self-registration.
+     * Default is false (disabled).
+     */
+    @Value("${app.self-registration-enabled:false}")
+    private boolean selfRegistrationEnabled;
+
+    /**
      * Registers a new user in the system.
+     * NOTE: This endpoint is disabled by default per Story 2.6 (Admin User Management).
+     * Admin creates all users via /api/v1/admin/users endpoint.
      *
      * @param request registration request with user details
-     * @return 201 Created with user DTO
+     * @return 201 Created with user DTO, or 403 Forbidden if self-registration is disabled
      */
     @PostMapping("/register")
-    @Operation(summary = "Register new user", description = "Creates a new user account with email and password")
+    @Operation(summary = "Register new user", description = "Creates a new user account with email and password. Disabled by default - admin creates all users.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User registered successfully", content = @Content(schema = @Schema(implementation = UserDto.class))),
             @ApiResponse(responseCode = "400", description = "Invalid input or validation error"),
+            @ApiResponse(responseCode = "403", description = "Self-registration is disabled"),
             @ApiResponse(responseCode = "409", description = "Email already exists")
     })
     public ResponseEntity<UserDto> register(
             @Valid @RequestBody RegisterRequest request,
             HttpServletRequest httpRequest) {
+
+        // Check if self-registration is enabled (Story 2.6)
+        if (!selfRegistrationEnabled) {
+            log.warn("Self-registration attempt rejected (disabled): {}", request.email());
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Self-registration is disabled. Please contact an administrator to create your account.");
+        }
+
         log.info("Registration request received for email: {}", request.email());
 
         // Extract IP address and user agent for audit logging

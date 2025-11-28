@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Processed</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .amount-box {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .amount-box .label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        .amount-box .amount {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .success-box {
+            background-color: #ecfdf5;
+            border: 2px solid #10b981;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .success-box .checkmark {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 50%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: right;
+        }
+        .expenses-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .expenses-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #0A2342;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .expenses-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .expenses-table td:last-child {
+            text-align: right;
+            font-weight: 500;
+        }
+        .expenses-table tfoot td {
+            background-color: #f8f9fa;
+            font-weight: 700;
+            border-top: 2px solid #0A2342;
+        }
+        .paid-badge {
+            background-color: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+            .details-table th,
+            .details-table td,
+            .expenses-table th,
+            .expenses-table td {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">&#128176;</div>
+            <h1>Payment Processed</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Dear <span th:text="${vendorName}">Vendor</span>,
+            </div>
+
+            <p>We are pleased to inform you that your payment has been processed successfully. Please find the details below.</p>
+
+            <div class="success-box">
+                <div class="checkmark">&#9989;</div>
+                <h3 style="margin: 0; color: #059669;">Payment Complete!</h3>
+                <p style="margin: 10px 0 0 0; color: #666;">Your payment has been processed and funds have been transferred.</p>
+            </div>
+
+            <div class="amount-box">
+                <div class="label">Total Amount Paid</div>
+                <div class="amount" th:text="${totalAmount}">AED 10,000.00</div>
+            </div>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Payment Details</h3>
+            <table class="details-table">
+                <tr>
+                    <th>Payment Date</th>
+                    <td th:text="${paymentDate}">Jan 15, 2025</td>
+                </tr>
+                <tr>
+                    <th>Payment Method</th>
+                    <td th:text="${paymentMethod}">Bank Transfer</td>
+                </tr>
+                <tr th:if="${transactionReference != null and transactionReference != ''}">
+                    <th>Transaction Reference</th>
+                    <td th:text="${transactionReference}">BATCH-TXN-001</td>
+                </tr>
+                <tr>
+                    <th>Number of Expenses</th>
+                    <td th:text="${expenseCount}">3</td>
+                </tr>
+            </table>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Expenses Covered</h3>
+            <table class="expenses-table">
+                <thead>
+                    <tr>
+                        <th>Expense #</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="expense : ${expenses}">
+                        <td th:text="${expense.expenseNumber}">EXP-2025-0001</td>
+                        <td th:text="${expense.description}">Maintenance work</td>
+                        <td th:text="${expense.amount}">AED 3,500.00</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2">Total</td>
+                        <td th:text="${totalAmount}">AED 10,000.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <p style="color: #666; font-size: 14px; margin-top: 30px;">
+                If you have any questions about this payment or need additional documentation, please don't hesitate to contact us.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Questions about this payment?</strong></p>
+            <p>
+                Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

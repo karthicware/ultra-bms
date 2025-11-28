@@ -15,6 +15,7 @@ import jakarta.validation.constraints.Positive;
  * @param refreshToken JWT refresh token (7 days expiration, also set as HTTP-only cookie)
  * @param expiresIn access token expiration time in seconds
  * @param user authenticated user's profile information
+ * @param mustChangePassword whether user must change password on first login (Story 2.6)
  */
 @Schema(description = "Login response with JWT tokens and user profile")
 public record LoginResponse(
@@ -33,6 +34,15 @@ public record LoginResponse(
 
         @NotNull(message = "User profile is required")
         @Schema(description = "Authenticated user's profile (excluding password)", required = true)
-        UserDto user
+        UserDto user,
+
+        @Schema(description = "Whether user must change password on first login", example = "false", required = false)
+        Boolean mustChangePassword
 ) {
+    /**
+     * Backward-compatible constructor without mustChangePassword.
+     */
+    public LoginResponse(String accessToken, String refreshToken, Long expiresIn, UserDto user) {
+        this(accessToken, refreshToken, expiresIn, user, false);
+    }
 }

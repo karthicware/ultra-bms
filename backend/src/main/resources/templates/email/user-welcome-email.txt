@@ -1,0 +1,29 @@
+Welcome to Ultra BMS!
+=====================
+
+Hi [(${firstName})],
+
+Your Ultra BMS account has been created by an administrator. You can now log in to access the Building Management System.
+
+Your assigned role: [(${roleName})]
+
+YOUR LOGIN CREDENTIALS
+----------------------
+Email: [(${email})]
+Temporary Password: [(${temporaryPassword})]
+
+IMPORTANT: For security reasons, you will be required to change your password when you log in for the first time. Please choose a strong password that you haven't used elsewhere.
+
+Log in here: [(${loginUrl})]
+
+SECURITY TIPS
+-------------
+- Never share your password with anyone
+- Use a unique password for Ultra BMS
+- Log out when using shared computers
+
+---
+Ultra BMS - Building Management System
+Need help? Contact us at [(${supportEmail})]
+
+This is an automated message. Please do not reply to this email.

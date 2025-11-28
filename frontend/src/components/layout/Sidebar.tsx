@@ -11,7 +11,8 @@ import {
   FileText,
   Settings,
   LogOut,
-  Truck
+  Truck,
+  UserCog
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -88,7 +89,14 @@ const navigationSections: NavSection[] = [
     ],
   },
   {
+    title: 'Admin',
     items: [
+      {
+        name: 'User Management',
+        href: '/settings/users',
+        icon: UserCog,
+        permission: 'users:read',
+      },
       {
         name: 'Settings',
         href: '/settings',

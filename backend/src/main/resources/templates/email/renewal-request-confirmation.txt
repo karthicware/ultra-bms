@@ -1,0 +1,33 @@
+RENEWAL REQUEST RECEIVED
+
+Hi [(${tenantName})],
+
+Thank you for submitting your lease renewal request. We have received your request and our team will review it shortly.
+
+REQUEST DETAILS
+---------------
+Request Number: [(${requestNumber})]
+Preferred Term: [(${preferredTerm})]
+Submitted On: [(${submittedAt})]
+Status: Pending Review
+
+[# th:if="${comments != null and !comments.empty}"]
+YOUR COMMENTS
+-------------
+[(${comments})]
+[/]
+
+WHAT HAPPENS NEXT?
+------------------
+1. Our property management team will review your request
+2. You'll receive an email notification once a decision is made
+3. If approved, we'll contact you to finalize the lease extension
+
+Track your request status in the portal:
+[(${portalUrl})]
+
+If you have any questions about your renewal request, please contact us at [(${supportEmail})].
+
+---
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

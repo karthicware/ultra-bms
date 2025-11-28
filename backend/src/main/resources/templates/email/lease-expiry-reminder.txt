@@ -1,0 +1,41 @@
+[# th:if="${isUrgent}"]URGENT: [/]LEASE EXPIRY REMINDER
+
+Hi [(${tenantName})],
+
+[# th:if="${isCritical}"]
+*** CRITICAL: YOUR LEASE IS EXPIRING VERY SOON! ***
+Please take immediate action to renew your lease.
+[/]
+
+[# th:if="${isUrgent and !isCritical}"]
+This is an urgent reminder that your lease is expiring soon.
+[/]
+
+[# th:if="${!isUrgent}"]
+This is a friendly reminder about your upcoming lease expiration.
+[/]
+
+DAYS REMAINING: [(${daysRemaining})]
+
+LEASE DETAILS
+-------------
+Property: [(${propertyName})]
+Unit: Unit [(${unitNumber})]
+Lease End Date: [(${leaseEndDate})]
+
+WHAT TO DO NEXT
+---------------
+1. Submit a renewal request through the tenant portal
+2. Contact our office to discuss renewal terms
+3. If moving out, notify us at least 30 days in advance
+
+Request your renewal here:
+[(${portalUrl})]
+
+If you've already spoken with us about your renewal, please disregard this reminder.
+
+Questions? Contact us at [(${supportEmail})].
+
+---
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

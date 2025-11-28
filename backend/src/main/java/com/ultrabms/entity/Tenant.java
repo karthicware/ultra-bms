@@ -200,6 +200,38 @@ public class Tenant extends BaseEntity {
     @Builder.Default
     private Boolean renewalOption = false;
 
+    /**
+     * Auto-renewal flag for lease extensions
+     * Story 3.6: Tenant Lease Extension and Renewal
+     */
+    @Column(name = "auto_renewal", nullable = false)
+    @Builder.Default
+    private Boolean autoRenewal = false;
+
+    /**
+     * 60-day expiry notification sent flag
+     * Story 3.6: Expiry monitoring
+     */
+    @Column(name = "expiry_60_day_notified", nullable = false)
+    @Builder.Default
+    private Boolean expiry60DayNotified = false;
+
+    /**
+     * 30-day expiry notification sent flag
+     * Story 3.6: Expiry monitoring
+     */
+    @Column(name = "expiry_30_day_notified", nullable = false)
+    @Builder.Default
+    private Boolean expiry30DayNotified = false;
+
+    /**
+     * 14-day expiry notification sent flag
+     * Story 3.6: Expiry monitoring
+     */
+    @Column(name = "expiry_14_day_notified", nullable = false)
+    @Builder.Default
+    private Boolean expiry14DayNotified = false;
+
     // =================================================================
     // RENT BREAKDOWN
     // =================================================================

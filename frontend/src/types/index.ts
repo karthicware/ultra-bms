@@ -43,3 +43,4 @@ export * from './vendor-documents';
 export * from './vendor-ratings';
 export * from './invoice';
 export * from './expense';
+export * from './lease';

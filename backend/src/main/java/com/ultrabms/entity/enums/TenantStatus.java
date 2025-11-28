@@ -16,6 +16,12 @@ public enum TenantStatus {
     ACTIVE,
 
     /**
+     * Lease expiring soon (within 60 days)
+     * Story 3.6: Added for expiry monitoring
+     */
+    EXPIRING_SOON,
+
+    /**
      * Lease has expired
      */
     EXPIRED,

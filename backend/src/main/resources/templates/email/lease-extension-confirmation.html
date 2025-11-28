@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lease Extended</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .extension-number {
+            background-color: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .extension-number strong {
+            color: #059669;
+            font-size: 20px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 50%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: right;
+        }
+        .highlight-box {
+            background-color: #f0fdf4;
+            border: 2px solid #10b981;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .highlight-box .label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .highlight-box .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #059669;
+        }
+        .rent-change {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #1152D4 0%, #0A2342 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #1152D4;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">&#127881;</div>
+            <h1>Lease Extended Successfully!</h1>
+        </div>
+
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${tenantName}">Tenant</span>,
+            </div>
+
+            <p>
+                Great news! Your lease has been successfully extended. Please review the details of your lease extension below.
+            </p>
+
+            <div class="extension-number">
+                <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Extension Reference</div>
+                <strong th:text="${extensionNumber}">EXT-2025-0001</strong>
+            </div>
+
+            <div class="highlight-box">
+                <div class="label">New Lease End Date</div>
+                <div class="value" th:text="${newEndDate}">Dec 31, 2026</div>
+            </div>
+
+            <table class="details-table">
+                <tr>
+                    <th>Property</th>
+                    <td th:text="${propertyName}">Property Name</td>
+                </tr>
+                <tr>
+                    <th>Unit</th>
+                    <td th:text="'Unit ' + ${unitNumber}">Unit 101</td>
+                </tr>
+                <tr>
+                    <th>Previous End Date</th>
+                    <td th:text="${previousEndDate}">Dec 31, 2025</td>
+                </tr>
+                <tr>
+                    <th>New End Date</th>
+                    <td th:text="${newEndDate}">Dec 31, 2026</td>
+                </tr>
+                <tr>
+                    <th>Effective From</th>
+                    <td th:text="${effectiveDate}">Jan 01, 2026</td>
+                </tr>
+                <tr th:if="${autoRenewal}">
+                    <th>Auto-Renewal</th>
+                    <td>Enabled</td>
+                </tr>
+            </table>
+
+            <div th:if="${rentChanged}" class="rent-change">
+                <strong>&#128181; Rent Update</strong>
+                <p style="margin: 10px 0 0 0;">
+                    Your monthly rent has been updated from <span th:text="${previousRent}">AED 5,000</span> to
+                    <strong th:text="${newRent}">AED 5,250</strong> effective from <span th:text="${effectiveDate}">Jan 01, 2026</span>.
+                </p>
+            </div>
+
+            <div th:if="${specialTerms != null and !specialTerms.empty}" style="margin: 25px 0; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
+                <strong>Special Terms:</strong>
+                <p style="margin: 10px 0 0 0; color: #666;" th:text="${specialTerms}">Special terms...</p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${portalUrl}" class="button">View in Portal</a>
+            </div>
+
+            <p style="color: #666; font-size: 14px;">
+                If you have any questions about your lease extension, please don't hesitate to contact us.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>
+                Questions? Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

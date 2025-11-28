@@ -54,6 +54,7 @@ import {
   FileText,
   CreditCard,
 } from 'lucide-react';
+import { ExpenseSummaryCharts } from '@/components/expenses/ExpenseSummaryCharts';
 
 export default function ExpensesPage() {
   const router = useRouter();
@@ -264,7 +265,7 @@ export default function ExpensesPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="page-expenses">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -287,6 +288,9 @@ export default function ExpensesPage() {
 
       {/* Summary Cards */}
       <SummaryCards />
+
+      {/* Charts */}
+      <ExpenseSummaryCharts summary={summary} isLoading={isLoading} />
 
       {/* Filters */}
       <Card>

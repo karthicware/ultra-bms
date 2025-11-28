@@ -48,6 +48,7 @@ cookie:
 app:
   frontend-url: http://localhost:3000
   support-email: support@ultrabms.com
+  self-registration-enabled: true  # Enable for existing registration tests (Story 2.6 disabled by default)
 
 logging:
   level:

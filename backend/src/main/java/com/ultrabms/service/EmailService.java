@@ -1286,6 +1286,325 @@ public class EmailService {
     }
 
     // ========================================================================
+    // Story 2.6: Admin User Management - Welcome Email
+    // ========================================================================
+
+    /**
+     * Send welcome email to new user created by admin asynchronously.
+     * Includes temporary password and prompt to change on first login.
+     * Story 2.6: Admin User Management (AC #7)
+     *
+     * @param user User entity newly created
+     * @param temporaryPassword The temporary password set by admin
+     */
+    @Async("emailTaskExecutor")
+    public void sendUserWelcomeEmail(User user, String temporaryPassword) {
+        try {
+            String loginUrl = frontendUrl + "/login";
+
+            Context context = new Context();
+            context.setVariable("firstName", user.getFirstName());
+            context.setVariable("lastName", user.getLastName());
+            context.setVariable("email", user.getEmail());
+            context.setVariable("temporaryPassword", temporaryPassword);
+            context.setVariable("roleName", user.getRoleName());
+            context.setVariable("loginUrl", loginUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/user-welcome-email", context);
+            String textContent = templateEngine.process("email/user-welcome-email.txt", context);
+
+            sendEmail(
+                user.getEmail(),
+                "Welcome to Ultra BMS - Your Account Has Been Created",
+                textContent,
+                htmlContent
+            );
+
+            log.info("User welcome email sent successfully to: {} ({})",
+                    user.getId(), user.getEmail());
+
+        } catch (Exception e) {
+            log.error("Failed to send user welcome email to: {} ({})",
+                    user.getId(), user.getEmail(), e);
+        }
+    }
+
+    // ========================================================================
+    // Vendor Payment Email Methods (Story 6.2: Expense Management)
+    // ========================================================================
+
+    /**
+     * Send vendor payment notification email asynchronously.
+     * Notifies vendor that payment has been processed for their expenses.
+     * Story 6.2: Expense Management and Vendor Payments (AC #10)
+     *
+     * @param vendorEmail Vendor's email address
+     * @param vendorName Vendor's company name
+     * @param totalAmount Total payment amount
+     * @param paymentDate Date of payment
+     * @param paymentMethod Payment method used
+     * @param transactionReference Optional transaction reference
+     * @param expenseCount Number of expenses included
+     * @param expenseDetails List of expense detail maps with expenseNumber, description, amount
+     */
+    @Async("emailTaskExecutor")
+    public void sendVendorPaymentNotification(
+            String vendorEmail,
+            String vendorName,
+            String totalAmount,
+            String paymentDate,
+            String paymentMethod,
+            String transactionReference,
+            int expenseCount,
+            java.util.List<java.util.Map<String, String>> expenseDetails
+    ) {
+        try {
+            Context context = new Context();
+            context.setVariable("vendorName", vendorName);
+            context.setVariable("totalAmount", totalAmount);
+            context.setVariable("paymentDate", paymentDate);
+            context.setVariable("paymentMethod", paymentMethod);
+            context.setVariable("transactionReference", transactionReference);
+            context.setVariable("expenseCount", expenseCount);
+            context.setVariable("expenses", expenseDetails);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/vendor-payment-notification", context);
+
+            // Simple text content fallback
+            String textContent = String.format(
+                "Dear %s,\n\n" +
+                "We are pleased to inform you that your payment of %s has been processed successfully.\n\n" +
+                "Payment Details:\n" +
+                "- Payment Date: %s\n" +
+                "- Payment Method: %s\n" +
+                "- Transaction Reference: %s\n" +
+                "- Number of Expenses: %d\n\n" +
+                "If you have any questions, please contact us at %s.\n\n" +
+                "Best regards,\n" +
+                "Ultra BMS Team",
+                vendorName, totalAmount, paymentDate, paymentMethod,
+                transactionReference != null ? transactionReference : "N/A",
+                expenseCount, supportEmail
+            );
+
+            sendEmail(
+                vendorEmail,
+                "Payment Processed - " + totalAmount,
+                textContent,
+                htmlContent
+            );
+
+            log.info("Vendor payment notification sent successfully to: {}", vendorEmail);
+
+        } catch (Exception e) {
+            log.error("Failed to send vendor payment notification to: {}", vendorEmail, e);
+        }
+    }
+
+    // ========================================================================
+    // Story 3.6: Lease Extension and Renewal Email Notifications
+    // ========================================================================
+
+    /**
+     * Send lease extension confirmation email to tenant asynchronously.
+     * Confirms successful lease extension with new terms.
+     * Story 3.6: Tenant Lease Extension and Renewal (AC #8)
+     *
+     * @param tenant Tenant entity
+     * @param extension LeaseExtension entity with extension details
+     */
+    @Async("emailTaskExecutor")
+    public void sendLeaseExtensionConfirmation(
+            com.ultrabms.entity.Tenant tenant,
+            com.ultrabms.entity.LeaseExtension extension
+    ) {
+        try {
+            String portalUrl = frontendUrl + "/tenant/dashboard";
+
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("extensionNumber", extension.getExtensionNumber());
+            context.setVariable("propertyName", tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A");
+            context.setVariable("unitNumber", tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A");
+            context.setVariable("previousEndDate", extension.getPreviousEndDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("newEndDate", extension.getNewEndDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("effectiveDate", extension.getEffectiveDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("previousRent", formatCurrency(extension.getPreviousRent()));
+            context.setVariable("newRent", formatCurrency(extension.getNewRent()));
+            context.setVariable("rentChanged", !extension.getPreviousRent().equals(extension.getNewRent()));
+            context.setVariable("autoRenewal", extension.getAutoRenewal());
+            context.setVariable("specialTerms", extension.getSpecialTerms());
+            context.setVariable("portalUrl", portalUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/lease-extension-confirmation", context);
+            String textContent = templateEngine.process("email/lease-extension-confirmation.txt", context);
+
+            sendEmail(
+                tenant.getEmail(),
+                String.format("Lease Extended - %s", extension.getExtensionNumber()),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Lease extension confirmation email sent successfully to tenant: {} ({}) for extension: {}",
+                    tenant.getId(), tenant.getEmail(), extension.getExtensionNumber());
+
+        } catch (Exception e) {
+            log.error("Failed to send lease extension confirmation email to tenant: {} ({}) for extension: {}",
+                    tenant.getId(), tenant.getEmail(), extension.getExtensionNumber(), e);
+        }
+    }
+
+    /**
+     * Send lease expiry reminder email to tenant asynchronously.
+     * Notifies tenant that their lease is expiring soon.
+     * Story 3.6: Tenant Lease Extension and Renewal (AC #9)
+     *
+     * @param tenant Tenant entity with expiring lease
+     * @param daysRemaining Days until lease expires
+     */
+    @Async("emailTaskExecutor")
+    public void sendLeaseExpiryReminder(
+            com.ultrabms.entity.Tenant tenant,
+            int daysRemaining
+    ) {
+        try {
+            String portalUrl = frontendUrl + "/tenant/lease/renew";
+
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("propertyName", tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A");
+            context.setVariable("unitNumber", tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A");
+            context.setVariable("leaseEndDate", tenant.getLeaseEndDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("daysRemaining", daysRemaining);
+            context.setVariable("isUrgent", daysRemaining <= 14);
+            context.setVariable("isCritical", daysRemaining <= 7);
+            context.setVariable("portalUrl", portalUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/lease-expiry-reminder", context);
+            String textContent = templateEngine.process("email/lease-expiry-reminder.txt", context);
+
+            String subject = daysRemaining <= 14
+                    ? String.format("URGENT: Your Lease Expires in %d Days", daysRemaining)
+                    : String.format("Lease Expiry Reminder - %d Days Remaining", daysRemaining);
+
+            sendEmail(
+                tenant.getEmail(),
+                subject,
+                textContent,
+                htmlContent
+            );
+
+            log.info("Lease expiry reminder email sent successfully to tenant: {} ({}) - {} days remaining",
+                    tenant.getId(), tenant.getEmail(), daysRemaining);
+
+        } catch (Exception e) {
+            log.error("Failed to send lease expiry reminder email to tenant: {} ({})",
+                    tenant.getId(), tenant.getEmail(), e);
+        }
+    }
+
+    /**
+     * Send renewal request submitted confirmation email to tenant asynchronously.
+     * Confirms that tenant's renewal request has been received.
+     * Story 3.6: Tenant Lease Extension and Renewal (AC #10)
+     *
+     * @param tenant Tenant entity
+     * @param request RenewalRequest entity
+     */
+    @Async("emailTaskExecutor")
+    public void sendRenewalRequestConfirmation(
+            com.ultrabms.entity.Tenant tenant,
+            com.ultrabms.entity.RenewalRequest request
+    ) {
+        try {
+            String portalUrl = frontendUrl + "/tenant/dashboard";
+
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("requestNumber", request.getRequestNumber());
+            context.setVariable("preferredTerm", request.getPreferredTerm().replace("_", " "));
+            context.setVariable("submittedAt", request.getRequestedAt().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")));
+            context.setVariable("comments", request.getComments());
+            context.setVariable("portalUrl", portalUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/renewal-request-confirmation", context);
+            String textContent = templateEngine.process("email/renewal-request-confirmation.txt", context);
+
+            sendEmail(
+                tenant.getEmail(),
+                String.format("Renewal Request Received - %s", request.getRequestNumber()),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Renewal request confirmation email sent successfully to tenant: {} ({}) for request: {}",
+                    tenant.getId(), tenant.getEmail(), request.getRequestNumber());
+
+        } catch (Exception e) {
+            log.error("Failed to send renewal request confirmation email to tenant: {} ({})",
+                    tenant.getId(), tenant.getEmail(), e);
+        }
+    }
+
+    /**
+     * Send renewal request status update email to tenant asynchronously.
+     * Notifies tenant when their renewal request is approved or rejected.
+     * Story 3.6: Tenant Lease Extension and Renewal (AC #11)
+     *
+     * @param tenant Tenant entity
+     * @param request RenewalRequest entity with updated status
+     */
+    @Async("emailTaskExecutor")
+    public void sendRenewalRequestStatusUpdate(
+            com.ultrabms.entity.Tenant tenant,
+            com.ultrabms.entity.RenewalRequest request
+    ) {
+        try {
+            String portalUrl = frontendUrl + "/tenant/dashboard";
+            boolean isApproved = request.getStatus() == com.ultrabms.entity.enums.RenewalRequestStatus.APPROVED;
+
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("requestNumber", request.getRequestNumber());
+            context.setVariable("status", request.getStatus().name());
+            context.setVariable("isApproved", isApproved);
+            context.setVariable("rejectedReason", request.getRejectedReason());
+            context.setVariable("processedAt", request.getProcessedAt() != null
+                    ? request.getProcessedAt().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                    : "N/A");
+            context.setVariable("portalUrl", portalUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/renewal-request-status-update", context);
+            String textContent = templateEngine.process("email/renewal-request-status-update.txt", context);
+
+            String subject = isApproved
+                    ? String.format("Renewal Request Approved - %s", request.getRequestNumber())
+                    : String.format("Renewal Request Update - %s", request.getRequestNumber());
+
+            sendEmail(
+                tenant.getEmail(),
+                subject,
+                textContent,
+                htmlContent
+            );
+
+            log.info("Renewal request status update email sent successfully to tenant: {} ({}) for request: {} - status: {}",
+                    tenant.getId(), tenant.getEmail(), request.getRequestNumber(), request.getStatus());
+
+        } catch (Exception e) {
+            log.error("Failed to send renewal request status update email to tenant: {} ({})",
+                    tenant.getId(), tenant.getEmail(), e);
+        }
+    }
+
+    // ========================================================================
     // Email Helper Methods
     // ========================================================================
 

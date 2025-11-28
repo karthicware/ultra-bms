@@ -101,8 +101,9 @@ function CreateInvoicePageContent() {
 
   // Form setup
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const invoiceResolver: any = zodResolver(invoiceCreateSchema);
   const form = useForm<InvoiceCreateFormData>({
-    resolver: zodResolver(invoiceCreateSchema) as any,
+    resolver: invoiceResolver,
     defaultValues: {
       ...invoiceCreateDefaults,
       tenantId: preselectedTenantId || '',

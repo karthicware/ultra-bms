@@ -1,0 +1,37 @@
+LEASE EXTENDED SUCCESSFULLY
+
+Hi [(${tenantName})],
+
+Great news! Your lease has been successfully extended.
+
+Extension Reference: [(${extensionNumber})]
+
+EXTENSION DETAILS
+-----------------
+Property: [(${propertyName})]
+Unit: Unit [(${unitNumber})]
+Previous End Date: [(${previousEndDate})]
+New End Date: [(${newEndDate})]
+Effective From: [(${effectiveDate})]
+[# th:if="${autoRenewal}"]Auto-Renewal: Enabled[/]
+
+[# th:if="${rentChanged}"]
+RENT UPDATE
+-----------
+Your monthly rent has been updated from [(${previousRent})] to [(${newRent})] effective from [(${effectiveDate})].
+[/]
+
+[# th:if="${specialTerms != null and !specialTerms.empty}"]
+SPECIAL TERMS
+-------------
+[(${specialTerms})]
+[/]
+
+View your updated lease in the portal:
+[(${portalUrl})]
+
+If you have any questions about your lease extension, please contact us at [(${supportEmail})].
+
+---
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

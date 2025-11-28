@@ -15,6 +15,7 @@ import com.ultrabms.repository.ExpenseRepository;
 import com.ultrabms.repository.PropertyRepository;
 import com.ultrabms.repository.VendorRepository;
 import com.ultrabms.repository.WorkOrderRepository;
+import com.ultrabms.service.EmailService;
 import com.ultrabms.service.ExpenseService;
 import com.ultrabms.service.FileStorageService;
 import com.ultrabms.service.PdfGenerationService;
@@ -55,6 +56,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     private final ExpenseMapper expenseMapper;
     private final FileStorageService fileStorageService;
     private final PdfGenerationService pdfGenerationService;
+    private final EmailService emailService;
 
     public ExpenseServiceImpl(
             ExpenseRepository expenseRepository,
@@ -63,7 +65,8 @@ public class ExpenseServiceImpl implements ExpenseService {
             WorkOrderRepository workOrderRepository,
             ExpenseMapper expenseMapper,
             FileStorageService fileStorageService,
-            PdfGenerationService pdfGenerationService
+            PdfGenerationService pdfGenerationService,
+            EmailService emailService
     ) {
         this.expenseRepository = expenseRepository;
         this.vendorRepository = vendorRepository;
@@ -72,6 +75,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         this.expenseMapper = expenseMapper;
         this.fileStorageService = fileStorageService;
         this.pdfGenerationService = pdfGenerationService;
+        this.emailService = emailService;
     }
 
     // =================================================================
@@ -324,6 +328,11 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         LOGGER.info("Batch payment completed. Success: {}, Failed: {}",
                 successfulIds.size(), failedExpenses.size());
+
+        // Send vendor payment notification emails (AC#10)
+        if (!successfulIds.isEmpty()) {
+            sendVendorPaymentNotifications(expenses, successfulIds, dto, totalAmount);
+        }
 
         return BatchPaymentResponseDto.builder()
                 .totalProcessed(dto.expenseIds().size())
@@ -593,5 +602,88 @@ public class ExpenseServiceImpl implements ExpenseService {
         }
         // All work order categories map to MAINTENANCE expense category
         return ExpenseCategory.MAINTENANCE;
+    }
+
+    /**
+     * Send vendor payment notification emails (AC#10)
+     * Groups paid expenses by vendor and sends one email per vendor
+     */
+    private void sendVendorPaymentNotifications(
+            List<Expense> allExpenses,
+            List<UUID> successfulIds,
+            BatchPaymentRequestDto dto,
+            BigDecimal totalAmount
+    ) {
+        try {
+            // Filter to only successful expenses
+            List<Expense> paidExpenses = allExpenses.stream()
+                    .filter(e -> successfulIds.contains(e.getId()))
+                    .toList();
+
+            // Group by vendor
+            java.util.Map<UUID, List<Expense>> expensesByVendor = paidExpenses.stream()
+                    .filter(e -> e.getVendor() != null)
+                    .collect(java.util.stream.Collectors.groupingBy(e -> e.getVendor().getId()));
+
+            // Send email to each vendor
+            for (java.util.Map.Entry<UUID, List<Expense>> entry : expensesByVendor.entrySet()) {
+                UUID vendorId = entry.getKey();
+                List<Expense> vendorExpenses = entry.getValue();
+
+                try {
+                    Vendor vendor = vendorRepository.findById(vendorId).orElse(null);
+                    if (vendor == null || vendor.getEmail() == null || vendor.getEmail().isBlank()) {
+                        LOGGER.warn("Skipping email notification for vendor {}: no email address", vendorId);
+                        continue;
+                    }
+
+                    // Calculate vendor total
+                    BigDecimal vendorTotal = vendorExpenses.stream()
+                            .map(Expense::getAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    // Prepare expense details for template
+                    List<java.util.Map<String, String>> expenseDetails = vendorExpenses.stream()
+                            .map(e -> {
+                                java.util.Map<String, String> detail = new java.util.HashMap<>();
+                                detail.put("expenseNumber", e.getExpenseNumber());
+                                detail.put("description", e.getDescription() != null ? e.getDescription() : "N/A");
+                                detail.put("amount", formatAmount(e.getAmount()));
+                                return detail;
+                            })
+                            .toList();
+
+                    // Send email asynchronously using the proper method
+                    emailService.sendVendorPaymentNotification(
+                            vendor.getEmail(),
+                            vendor.getCompanyName(),
+                            formatAmount(vendorTotal),
+                            dto.paymentDate().toString(),
+                            dto.paymentMethod().name().replace("_", " "),
+                            dto.transactionReference(),
+                            vendorExpenses.size(),
+                            expenseDetails
+                    );
+
+                    LOGGER.info("Sent payment notification to vendor {} ({}) for {} expenses",
+                            vendor.getCompanyName(), vendor.getEmail(), vendorExpenses.size());
+
+                } catch (Exception e) {
+                    LOGGER.error("Failed to send payment notification to vendor {}: {}",
+                            vendorId, e.getMessage());
+                    // Don't fail the batch - email is non-critical
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error sending vendor payment notifications: {}", e.getMessage());
+            // Don't fail the batch payment for email errors
+        }
+    }
+
+    /**
+     * Format amount as AED currency
+     */
+    private String formatAmount(BigDecimal amount) {
+        return "AED " + String.format("%,.2f", amount);
     }
 }
