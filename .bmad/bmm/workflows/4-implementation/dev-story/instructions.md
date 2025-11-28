@@ -204,7 +204,67 @@ Expected ready-for-dev or in-progress. Continuing anyway...
     <action>Save the story file</action>
     <action>Determine if more incomplete tasks remain</action>
     <action if="more tasks remain"><goto step="2">Next task</goto></action>
-    <action if="no tasks remain"><goto step="6">Completion</goto></action>
+    <action if="no tasks remain"><goto step="5.5">Mandatory test execution</goto></action>
+  </step>
+
+  <step n="5.5" goal="Mandatory test execution and build verification">
+    <critical>This step is MANDATORY and CANNOT be skipped. ALL tests must pass before story completion.</critical>
+    <critical>Do NOT proceed to Step 6 until ALL validations pass.</critical>
+
+    <action>Navigate to backend directory and execute backend test suite: mvn test</action>
+    <check if="backend tests fail">
+      <action>HALT: Fix all failing backend tests before continuing</action>
+      <action>After fixing, re-run mvn test until ALL tests pass</action>
+      <action>Do NOT proceed until backend tests show 0 failures</action>
+    </check>
+    <action>Record backend test results: "Backend: X/X tests passed"</action>
+
+    <action>Navigate to frontend directory and execute frontend test suite: npm test</action>
+    <check if="frontend tests fail">
+      <action>HALT: Fix all failing frontend tests before continuing</action>
+      <action>After fixing, re-run npm test until ALL tests pass</action>
+      <action>Do NOT proceed until frontend tests show 0 failures</action>
+    </check>
+    <action>Record frontend test results: "Frontend: X/X tests passed"</action>
+
+    <action>Execute backend compilation check: mvn compile</action>
+    <check if="compilation errors exist">
+      <action>HALT: Fix all compilation errors before continuing</action>
+      <action>Re-run mvn compile until successful</action>
+    </check>
+
+    <action>Execute frontend build: npm run build</action>
+    <check if="build errors exist">
+      <action>HALT: Fix all TypeScript/build errors before continuing</action>
+      <action>Re-run npm run build until successful</action>
+    </check>
+
+    <action>Execute frontend lint check: npm run lint</action>
+    <check if="lint errors exist">
+      <action>HALT: Fix all lint errors before continuing</action>
+      <action>Re-run npm run lint until successful</action>
+    </check>
+
+    <output>✅ **All Validations Passed**
+- Backend tests: PASSED
+- Frontend tests: PASSED
+- Backend build: SUCCESS
+- Frontend build: SUCCESS
+- Lint check: PASSED
+
+Proceeding to story completion...
+    </output>
+
+    <action>Add validation results to Dev Agent Record → Completion Notes:
+      "Final Validation Results:
+      - Backend tests: X/X passed
+      - Frontend tests: X/X passed
+      - Backend build: SUCCESS
+      - Frontend build: SUCCESS
+      - Lint check: PASSED"
+    </action>
+
+    <goto step="6">Story completion</goto>
   </step>
 
   <step n="6" goal="Story completion and mark for review" tag="sprint-status">

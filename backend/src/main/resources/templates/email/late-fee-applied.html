@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Late Fee Applied</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .fee-box {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .fee-box .label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        .fee-box .amount {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .invoice-number {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .invoice-number strong {
+            color: #d97706;
+            font-size: 20px;
+        }
+        .balance-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .balance-item:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 18px;
+            padding-top: 15px;
+            color: #dc2626;
+        }
+        .balance-item .label {
+            color: #666;
+        }
+        .info-box {
+            background-color: #f0f7ff;
+            border-left: 4px solid #1152D4;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #1152D4 0%, #0A2342 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .button.primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #1152D4;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">&#128184;</div>
+            <h1>Late Fee Applied</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${tenantName}">Tenant</span>,
+            </div>
+
+            <p>
+                We're writing to inform you that a late fee has been applied to your overdue invoice. Please make your payment as soon as possible to settle your account.
+            </p>
+
+            <div class="invoice-number">
+                <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Invoice Number</div>
+                <strong th:text="${invoiceNumber}">INV-2025-0001</strong>
+            </div>
+
+            <div class="fee-box">
+                <div class="label">Late Fee Applied</div>
+                <div class="amount" th:text="${lateFeeAmount}">AED 100.00</div>
+            </div>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Updated Balance</h3>
+            <div class="balance-box">
+                <div class="balance-item">
+                    <span class="label">Previous Balance</span>
+                    <span th:text="${previousBalance}">AED 5,000.00</span>
+                </div>
+                <div class="balance-item">
+                    <span class="label">Late Fee</span>
+                    <span style="color: #d97706;" th:text="'+ ' + ${lateFeeAmount}">+ AED 100.00</span>
+                </div>
+                <div class="balance-item">
+                    <span>New Balance Due</span>
+                    <span th:text="${newBalance}">AED 5,100.00</span>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>&#128197; Original Due Date:</strong> <span th:text="${dueDate}">Jan 15, 2025</span>
+                <p style="margin: 10px 0 0 0; color: #666;">
+                    This late fee was applied because payment was not received by the due date.
+                </p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${invoiceUrl}" class="button primary">Pay Invoice Now</a>
+                <br>
+                <a th:href="${invoiceUrl}" class="button">View Invoice Details</a>
+            </div>
+
+            <p style="color: #666; font-size: 14px; text-align: center;">
+                To avoid additional fees, please make your payment promptly. If you have any questions or need to discuss payment arrangements, please contact us.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Questions about this fee?</strong></p>
+            <p>
+                Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

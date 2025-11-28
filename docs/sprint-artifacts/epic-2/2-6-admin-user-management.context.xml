@@ -1,0 +1,894 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Story Context for Story 2.6: Admin User Management
+  Generated: 2025-11-28
+  Purpose: Provides AI agent with all context needed to implement story without additional exploration
+-->
+<story-context story-id="2.6" epic-id="2" generated="2025-11-28">
+
+  <!-- ============================================================
+       SECTION 1: STORY DEFINITION
+       ============================================================ -->
+  <story>
+    <title>Admin User Management</title>
+    <status>drafted</status>
+    <user-story>
+      <as-a>Super Admin or Admin</as-a>
+      <i-want>create, view, update, and deactivate user accounts</i-want>
+      <so-that>I can onboard property managers, tenants, vendors, and other users (since self-registration is disabled)</so-that>
+    </user-story>
+
+    <acceptance-criteria count="17">
+      <ac id="1" title="User List API">GET /api/v1/admin/users returns paginated list with: id, firstName, lastName, email, phone, role, status, createdAt. Supports query params: page, size, search, role, status.</ac>
+      <ac id="2" title="Create User API">POST /api/v1/admin/users creates user with: firstName, lastName, email, phone, roleId, temporaryPassword. Returns 201 with created user. Validates email uniqueness.</ac>
+      <ac id="3" title="Role Coverage">Admin can create users with ANY role: SUPER_ADMIN (if caller is SUPER_ADMIN), PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR, FINANCE_MANAGER, TENANT, VENDOR. This is the ONLY mechanism for user creation in the system.</ac>
+      <ac id="4" title="Update User API">PUT /api/v1/admin/users/{id} updates: firstName, lastName, phone, roleId. Email is immutable. Returns 200 with updated user.</ac>
+      <ac id="5" title="Deactivate User API">DELETE /api/v1/admin/users/{id} soft-deletes user (sets status=INACTIVE). User cannot log in. Returns 204.</ac>
+      <ac id="6" title="Reactivate User API">POST /api/v1/admin/users/{id}/reactivate sets status=ACTIVE. Returns 200.</ac>
+      <ac id="7" title="Welcome Email">On user creation, send email with: welcome message, login URL, temporary password, prompt to change password on first login.</ac>
+      <ac id="8" title="Force Password Change">New admin-created users have mustChangePassword=true flag. After first login, redirect to change password.</ac>
+      <ac id="9" title="Frontend User List Page">/admin/users page with DataTable showing users. Search box, role filter dropdown, status filter. Pagination controls.</ac>
+      <ac id="10" title="Frontend Create User Dialog">Modal form with: firstName, lastName, email, phone, role dropdown (all roles), auto-generated temp password (or manual entry). Submit calls POST API.</ac>
+      <ac id="11" title="Frontend Edit User Dialog">Modal form pre-populated with user data. Save calls PUT API.</ac>
+      <ac id="12" title="Frontend Deactivate Confirmation">Confirm dialog before deactivation. Shows user name and warns about login access.</ac>
+      <ac id="13" title="Audit Logging">Log all actions (CREATE_USER, UPDATE_USER, DEACTIVATE_USER, REACTIVATE_USER) to audit_logs with userId, action, targetUserId, details.</ac>
+      <ac id="14" title="Sidebar Navigation">Add "Users" menu item under Settings section. Visible only to SUPER_ADMIN and users with users:read permission.</ac>
+      <ac id="15" title="Disable Self-Registration">Remove or disable the POST /api/v1/auth/signup endpoint. Return 403 Forbidden with message "Self-registration is disabled. Contact administrator." All users must be created by an admin through /api/v1/admin/users.</ac>
+      <ac id="16" title="Unit Test Execution">After all implementation tasks are complete, execute full backend unit test suite (mvn test) and frontend test suite (npm test). ALL tests must pass.</ac>
+      <ac id="17" title="Build Verification">Backend build (mvn compile) and frontend build (npm run build) must complete with zero errors before story completion.</ac>
+    </acceptance-criteria>
+
+    <tasks count="16">
+      <task id="1" title="Backend - Admin User DTOs" acs="1,2,4">
+        <subtask>Create AdminUserCreateRequest DTO (firstName, lastName, email, phone, roleId, temporaryPassword)</subtask>
+        <subtask>Create AdminUserUpdateRequest DTO (firstName, lastName, phone, roleId)</subtask>
+        <subtask>Create AdminUserResponse DTO (id, firstName, lastName, email, phone, role, status, createdAt)</subtask>
+        <subtask>Create AdminUserListResponse DTO (Page wrapper)</subtask>
+      </task>
+      <task id="2" title="Backend - User Entity Updates" acs="5,6,8">
+        <subtask>Add status field to User entity (enum: ACTIVE, INACTIVE, PENDING) if not exists</subtask>
+        <subtask>Add mustChangePassword boolean field (default false)</subtask>
+        <subtask>Create Flyway migration V38__add_user_management_fields.sql</subtask>
+        <subtask>Update UserRepository with findByStatus, findByRole methods</subtask>
+      </task>
+      <task id="3" title="Backend - AdminUserService" acs="1,2,3,4,5,6">
+        <subtask>Create AdminUserService in com.ultrabms.service</subtask>
+        <subtask>Implement listUsers(page, size, search, role, status) with Specification</subtask>
+        <subtask>Implement createUser(AdminUserCreateRequest) with role validation</subtask>
+        <subtask>Implement updateUser(id, AdminUserUpdateRequest)</subtask>
+        <subtask>Implement deactivateUser(id) - soft delete</subtask>
+        <subtask>Implement reactivateUser(id)</subtask>
+        <subtask>Validate SUPER_ADMIN can only be created by SUPER_ADMIN</subtask>
+      </task>
+      <task id="4" title="Backend - AdminUserController" acs="1,2,3,4,5,6">
+        <subtask>Create AdminUserController with @RequestMapping("/api/v1/admin/users")</subtask>
+        <subtask>GET / - list users with @PreAuthorize("hasAuthority('users:read')")</subtask>
+        <subtask>POST / - create user with @PreAuthorize("hasAuthority('users:create')")</subtask>
+        <subtask>PUT /{id} - update user with @PreAuthorize("hasAuthority('users:update')")</subtask>
+        <subtask>DELETE /{id} - deactivate with @PreAuthorize("hasAuthority('users:delete')")</subtask>
+        <subtask>POST /{id}/reactivate with @PreAuthorize("hasAuthority('users:update')")</subtask>
+        <subtask>Add Swagger/OpenAPI annotations</subtask>
+      </task>
+      <task id="5" title="Backend - Welcome Email" acs="7">
+        <subtask>Create user-welcome-email.html Thymeleaf template</subtask>
+        <subtask>Create user-welcome-email.txt plain text template</subtask>
+        <subtask>Add sendUserWelcomeEmail(user, temporaryPassword) method to EmailService</subtask>
+        <subtask>Call from AdminUserService.createUser()</subtask>
+        <subtask>Include: welcome message, login URL, temp password, change password prompt</subtask>
+      </task>
+      <task id="6" title="Backend - Force Password Change" acs="8">
+        <subtask>Update AuthService.login() to check mustChangePassword flag</subtask>
+        <subtask>Return requiresPasswordChange: true in login response DTO</subtask>
+        <subtask>Create/update POST /api/v1/auth/change-password endpoint</subtask>
+        <subtask>Set mustChangePassword=false after successful password change</subtask>
+        <subtask>Frontend redirect to change password page if flag is true</subtask>
+      </task>
+      <task id="7" title="Backend - Disable Self-Registration" acs="15">
+        <subtask>Update AuthController: modify POST /api/v1/auth/register to return 403 Forbidden</subtask>
+        <subtask>Return message "Self-registration is disabled. Contact administrator."</subtask>
+        <subtask>Update any frontend signup links/pages to show admin contact info</subtask>
+        <subtask>Update tests that relied on signup endpoint</subtask>
+      </task>
+      <task id="8" title="Backend - Audit Logging" acs="13">
+        <subtask>Call AuditLogService from AdminUserService for all operations</subtask>
+        <subtask>Log CREATE_USER with: creatorId, newUserId, role assigned</subtask>
+        <subtask>Log UPDATE_USER with: updaterId, targetUserId, fields changed</subtask>
+        <subtask>Log DEACTIVATE_USER with: adminId, targetUserId, reason</subtask>
+        <subtask>Log REACTIVATE_USER with: adminId, targetUserId</subtask>
+      </task>
+      <task id="9" title="Frontend - Admin User Types and Validation" acs="9,10,11,12">
+        <subtask>Create types/admin-user.ts with interfaces (AdminUser, AdminUserCreateRequest, etc.)</subtask>
+        <subtask>Create lib/validations/admin-user.ts with Zod schemas</subtask>
+        <subtask>Validate: email format, required fields, password strength for temp password</subtask>
+      </task>
+      <task id="10" title="Frontend - Admin User Service" acs="9,10,11,12">
+        <subtask>Create services/admin-user.service.ts</subtask>
+        <subtask>Implement listUsers(params) with pagination</subtask>
+        <subtask>Implement createUser(data)</subtask>
+        <subtask>Implement updateUser(id, data)</subtask>
+        <subtask>Implement deactivateUser(id)</subtask>
+        <subtask>Implement reactivateUser(id)</subtask>
+      </task>
+      <task id="11" title="Frontend - User List Page" acs="9">
+        <subtask>Create app/(dashboard)/admin/users/page.tsx</subtask>
+        <subtask>Implement DataTable with columns: Name, Email, Role, Status, Created, Actions</subtask>
+        <subtask>Add search input (debounced, searches name/email)</subtask>
+        <subtask>Add role filter dropdown (all roles)</subtask>
+        <subtask>Add status filter dropdown (ACTIVE, INACTIVE, PENDING)</subtask>
+        <subtask>Add pagination controls</subtask>
+        <subtask>Add "Create User" button (opens dialog)</subtask>
+        <subtask>Add row actions: Edit, Deactivate/Reactivate</subtask>
+      </task>
+      <task id="12" title="Frontend - Create User Dialog" acs="10">
+        <subtask>Create components/admin/CreateUserDialog.tsx</subtask>
+        <subtask>Form fields: firstName, lastName, email, phone, role dropdown</subtask>
+        <subtask>Password field: auto-generate button + manual entry option</subtask>
+        <subtask>Form validation with Zod schema</subtask>
+        <subtask>Submit handler calls createUser API</subtask>
+        <subtask>Success toast: "User created. Welcome email sent."</subtask>
+        <subtask>Error handling with field-level errors</subtask>
+      </task>
+      <task id="13" title="Frontend - Edit User Dialog" acs="11">
+        <subtask>Create components/admin/EditUserDialog.tsx</subtask>
+        <subtask>Pre-populate form with user data</subtask>
+        <subtask>Disable email field (immutable)</subtask>
+        <subtask>Role dropdown (with SUPER_ADMIN restriction check)</subtask>
+        <subtask>Submit handler calls updateUser API</subtask>
+        <subtask>Success toast: "User updated successfully."</subtask>
+      </task>
+      <task id="14" title="Frontend - Deactivate/Reactivate Dialogs" acs="12">
+        <subtask>Create components/admin/DeactivateUserDialog.tsx</subtask>
+        <subtask>Show warning: "User will no longer be able to log in."</subtask>
+        <subtask>Confirm/Cancel buttons</subtask>
+        <subtask>Create Reactivate confirmation (simpler)</subtask>
+        <subtask>Success toasts for both actions</subtask>
+      </task>
+      <task id="15" title="Frontend - Sidebar Update" acs="14">
+        <subtask>Add "Users" menu item to Sidebar.tsx in Settings section</subtask>
+        <subtask>Icon: Users from lucide-react</subtask>
+        <subtask>Permission check: hasPermission('users:read')</subtask>
+        <subtask>Path: /admin/users</subtask>
+      </task>
+      <task id="16" title="Testing and Validation" acs="16,17">
+        <subtask>Write backend unit tests for AdminUserService (all CRUD operations)</subtask>
+        <subtask>Write backend unit tests for role validation logic</subtask>
+        <subtask>Write backend integration tests for AdminUserController (all endpoints)</subtask>
+        <subtask>Write frontend validation tests for admin-user schemas</subtask>
+        <subtask>Execute full backend test suite: mvn test - ALL tests must pass</subtask>
+        <subtask>Execute full frontend test suite: npm test - ALL tests must pass</subtask>
+        <subtask>Fix any failing tests before marking story complete</subtask>
+        <subtask>Execute backend build: mvn compile - must succeed with 0 errors</subtask>
+        <subtask>Execute frontend build: npm run build - must succeed with 0 errors</subtask>
+        <subtask>Manual E2E testing: Create user, login as new user, change password</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <!-- ============================================================
+       SECTION 2: PROJECT ARCHITECTURE
+       ============================================================ -->
+  <architecture>
+    <tech-stack>
+      <backend>
+        <framework>Spring Boot 3.4.0</framework>
+        <language>Java 17</language>
+        <database>PostgreSQL</database>
+        <orm>Spring Data JPA</orm>
+        <migrations>Flyway</migrations>
+        <security>Spring Security with JWT</security>
+        <email>Spring Boot Mail + Thymeleaf templates</email>
+        <validation>Jakarta Validation (Bean Validation 3.0)</validation>
+        <testing>JUnit 5, Mockito, Spring Security Test</testing>
+        <api-docs>SpringDoc OpenAPI (Swagger)</api-docs>
+      </backend>
+      <frontend>
+        <framework>Next.js 16.0.2</framework>
+        <language>TypeScript</language>
+        <react>React 19.2.0</react>
+        <ui-components>Radix UI + shadcn/ui</ui-components>
+        <styling>Tailwind CSS 4</styling>
+        <forms>React Hook Form + Zod</forms>
+        <state>React Query (TanStack Query)</state>
+        <http>Axios</http>
+        <testing>Jest + Testing Library</testing>
+        <e2e>Playwright</e2e>
+      </frontend>
+    </tech-stack>
+
+    <package-structure>
+      <backend-packages>
+        <package name="com.ultrabms.controller">REST controllers with @RestController</package>
+        <package name="com.ultrabms.service">Service interfaces</package>
+        <package name="com.ultrabms.service.impl">Service implementations</package>
+        <package name="com.ultrabms.dto">Request/Response DTOs (using Java records)</package>
+        <package name="com.ultrabms.entity">JPA entities extending BaseEntity</package>
+        <package name="com.ultrabms.entity.enums">Enum types</package>
+        <package name="com.ultrabms.repository">Spring Data JPA repositories</package>
+        <package name="com.ultrabms.mapper">MapStruct mappers</package>
+        <package name="com.ultrabms.security">Security configuration, JWT, filters</package>
+        <package name="com.ultrabms.exception">Custom exceptions and handlers</package>
+      </backend-packages>
+      <frontend-folders>
+        <folder name="src/app/(dashboard)">Protected dashboard pages</folder>
+        <folder name="src/components">Reusable UI components</folder>
+        <folder name="src/components/ui">shadcn/ui base components</folder>
+        <folder name="src/services">API service functions</folder>
+        <folder name="src/types">TypeScript interfaces</folder>
+        <folder name="src/lib/validations">Zod validation schemas</folder>
+        <folder name="src/hooks">Custom React hooks</folder>
+        <folder name="src/contexts">React context providers</folder>
+      </frontend-folders>
+    </package-structure>
+
+    <api-patterns>
+      <base-url>/api/v1</base-url>
+      <authentication>Bearer JWT token in Authorization header</authentication>
+      <authorization>@PreAuthorize with hasAuthority('permission:action')</authorization>
+      <pagination>Spring Data Page with page, size, sort params</pagination>
+      <error-format>{ timestamp, status, error, message, path, details }</error-format>
+    </api-patterns>
+  </architecture>
+
+  <!-- ============================================================
+       SECTION 3: EXISTING CODE PATTERNS TO FOLLOW
+       ============================================================ -->
+  <code-patterns>
+
+    <pattern name="Entity Pattern" file="backend/src/main/java/com/ultrabms/entity/User.java">
+      <description>
+        Entities extend BaseEntity which provides id (UUID), createdAt, updatedAt, version.
+        Use @Entity, @Table, @Data (Lombok), proper JPA annotations.
+        Include validation annotations (@NotNull, @Email, @Size).
+      </description>
+      <example><![CDATA[
+@Entity
+@Table(name = "users", indexes = {
+    @Index(name = "idx_users_email", columnList = "email")
+})
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+@AllArgsConstructor
+public class User extends BaseEntity {
+    @NotNull(message = "Email cannot be null")
+    @Email(message = "Email must be valid")
+    @Column(name = "email", unique = true, nullable = false)
+    private String email;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
+
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
+}
+      ]]></example>
+    </pattern>
+
+    <pattern name="Repository Pattern" file="backend/src/main/java/com/ultrabms/repository/UserRepository.java">
+      <description>
+        Repositories extend JpaRepository with UUID as ID type.
+        Use @Repository annotation.
+        Define custom query methods following Spring Data naming conventions.
+      </description>
+      <example><![CDATA[
+@Repository
+public interface UserRepository extends JpaRepository<User, UUID> {
+    Optional<User> findByEmail(String email);
+    List<User> findByActiveTrue();
+    Page<User> findByRole_Name(String role, Pageable pageable);
+}
+      ]]></example>
+    </pattern>
+
+    <pattern name="Controller Pattern" file="backend/src/main/java/com/ultrabms/controller/AuthController.java">
+      <description>
+        Controllers use @RestController, @RequestMapping, @RequiredArgsConstructor.
+        Include Swagger annotations (@Operation, @ApiResponses, @Tag).
+        Use @PreAuthorize for permission checks.
+        Return ResponseEntity with appropriate status codes.
+      </description>
+      <example><![CDATA[
+@RestController
+@RequestMapping("/api/v1/admin/users")
+@RequiredArgsConstructor
+@Slf4j
+@Tag(name = "Admin User Management", description = "Endpoints for managing system users")
+public class AdminUserController {
+
+    private final AdminUserService adminUserService;
+
+    @GetMapping
+    @Operation(summary = "List users", description = "Returns paginated list of users")
+    @PreAuthorize("hasAuthority('users:read')")
+    public ResponseEntity<Page<AdminUserResponse>> listUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(adminUserService.listUsers(page, size));
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAuthority('users:create')")
+    public ResponseEntity<AdminUserResponse> createUser(
+            @Valid @RequestBody AdminUserCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(adminUserService.createUser(request));
+    }
+}
+      ]]></example>
+    </pattern>
+
+    <pattern name="DTO Record Pattern" file="backend/src/main/java/com/ultrabms/dto/LoginRequest.java">
+      <description>
+        DTOs are Java records with validation annotations.
+        Use records for immutability and automatic getters.
+      </description>
+      <example><![CDATA[
+public record AdminUserCreateRequest(
+    @NotBlank(message = "First name is required")
+    @Size(max = 100, message = "First name must not exceed 100 characters")
+    String firstName,
+
+    @NotBlank(message = "Last name is required")
+    @Size(max = 100, message = "Last name must not exceed 100 characters")
+    String lastName,
+
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be valid")
+    String email,
+
+    @Size(max = 20, message = "Phone must not exceed 20 characters")
+    String phone,
+
+    @NotNull(message = "Role ID is required")
+    UUID roleId,
+
+    @NotBlank(message = "Temporary password is required")
+    @Size(min = 8, message = "Password must be at least 8 characters")
+    String temporaryPassword
+) {}
+      ]]></example>
+    </pattern>
+
+    <pattern name="Email Service Pattern" file="backend/src/main/java/com/ultrabms/service/EmailService.java">
+      <description>
+        EmailService uses @Async for non-blocking email sending.
+        Templates are Thymeleaf files in resources/templates/email/.
+        Create both HTML and TXT versions for email clients.
+        Fail silently with logging (don't throw exceptions to caller).
+      </description>
+      <example><![CDATA[
+@Async("emailTaskExecutor")
+public void sendUserWelcomeEmail(User user, String temporaryPassword) {
+    try {
+        String loginLink = frontendUrl + "/login";
+
+        Context context = new Context();
+        context.setVariable("firstName", user.getFirstName());
+        context.setVariable("email", user.getEmail());
+        context.setVariable("temporaryPassword", temporaryPassword);
+        context.setVariable("loginLink", loginLink);
+        context.setVariable("supportEmail", supportEmail);
+
+        String htmlContent = templateEngine.process("email/user-welcome-email", context);
+        String textContent = templateEngine.process("email/user-welcome-email.txt", context);
+
+        sendEmail(
+            user.getEmail(),
+            "Welcome to Ultra BMS - Your Account Has Been Created",
+            textContent,
+            htmlContent
+        );
+
+        log.info("Welcome email sent successfully to user: {} ({})", user.getId(), user.getEmail());
+    } catch (Exception e) {
+        log.error("Failed to send welcome email to user: {} ({})", user.getId(), user.getEmail(), e);
+    }
+}
+      ]]></example>
+    </pattern>
+
+    <pattern name="Audit Logging Pattern" file="backend/src/main/java/com/ultrabms/service/AuditLogService.java">
+      <description>
+        Use AuditLogService.logSecurityEvent() for tracking user actions.
+        Include userId, action name, IP address, and details map.
+        Runs async to not block main request.
+      </description>
+      <example><![CDATA[
+// In AdminUserService
+auditLogService.logSecurityEvent(
+    currentUser.getId(),
+    "CREATE_USER",
+    ipAddress,
+    Map.of(
+        "targetUserId", newUser.getId().toString(),
+        "targetEmail", newUser.getEmail(),
+        "roleAssigned", role.getName()
+    )
+);
+      ]]></example>
+    </pattern>
+
+    <pattern name="Frontend Service Pattern" file="frontend/src/services/invoice.service.ts">
+      <description>
+        Services use axios for HTTP requests.
+        Export named functions for each API operation.
+        Handle pagination with params object.
+        Use TypeScript interfaces for type safety.
+      </description>
+      <example><![CDATA[
+import axios from '@/lib/axios';
+import { AdminUser, AdminUserCreateRequest, AdminUserUpdateRequest } from '@/types/admin-user';
+import { PaginatedResponse } from '@/types';
+
+export interface AdminUserListParams {
+  page?: number;
+  size?: number;
+  search?: string;
+  role?: string;
+  status?: string;
+}
+
+export async function listUsers(params: AdminUserListParams): Promise<PaginatedResponse<AdminUser>> {
+  const { data } = await axios.get('/api/v1/admin/users', { params });
+  return data;
+}
+
+export async function createUser(request: AdminUserCreateRequest): Promise<AdminUser> {
+  const { data } = await axios.post('/api/v1/admin/users', request);
+  return data;
+}
+
+export async function deactivateUser(id: string): Promise<void> {
+  await axios.delete(`/api/v1/admin/users/${id}`);
+}
+      ]]></example>
+    </pattern>
+
+    <pattern name="Zod Validation Pattern" file="frontend/src/lib/validations/vendor.ts">
+      <description>
+        Use Zod for form validation schemas.
+        Export schema and inferred TypeScript type.
+        Include descriptive error messages.
+      </description>
+      <example><![CDATA[
+import { z } from 'zod';
+
+export const adminUserCreateSchema = z.object({
+  firstName: z.string().min(1, 'First name is required').max(100),
+  lastName: z.string().min(1, 'Last name is required').max(100),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().max(20).optional().or(z.literal('')),
+  roleId: z.string().uuid('Please select a role'),
+  temporaryPassword: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+export type AdminUserCreateFormData = z.infer<typeof adminUserCreateSchema>;
+      ]]></example>
+    </pattern>
+
+    <pattern name="Sidebar Navigation Pattern" file="frontend/src/components/layout/Sidebar.tsx">
+      <description>
+        Navigation items defined in navigationSections array.
+        Each item has name, href, icon, and optional permission/role check.
+        filterItems function removes items user doesn't have access to.
+      </description>
+      <example><![CDATA[
+// Add to navigationSections in Settings section:
+{
+  items: [
+    {
+      name: 'Settings',
+      href: '/settings',
+      icon: Settings,
+      role: 'SUPER_ADMIN',
+    },
+    {
+      name: 'Users',
+      href: '/admin/users',
+      icon: Users,
+      permission: 'users:read',
+    },
+  ],
+},
+      ]]></example>
+    </pattern>
+
+    <pattern name="DataTable Page Pattern" file="frontend/src/app/(dashboard)/tenants/page.tsx">
+      <description>
+        Dashboard pages are in app/(dashboard) folder.
+        Use 'use client' directive for client components.
+        Include loading states, error handling, and empty states.
+        Use React Query hooks for data fetching.
+      </description>
+    </pattern>
+
+    <pattern name="Dialog Component Pattern" file="frontend/src/components/vendors/VendorForm.tsx">
+      <description>
+        Dialog components use shadcn Dialog component.
+        Use react-hook-form with zodResolver for validation.
+        Include loading state on submit button.
+        Show success toast on completion using sonner.
+      </description>
+    </pattern>
+
+  </code-patterns>
+
+  <!-- ============================================================
+       SECTION 4: DATABASE SCHEMA
+       ============================================================ -->
+  <database>
+    <current-migration-version>V37</current-migration-version>
+    <next-migration-version>V38</next-migration-version>
+
+    <existing-tables relevant="true">
+      <table name="users">
+        <columns>
+          <column name="id" type="UUID" pk="true"/>
+          <column name="email" type="VARCHAR(255)" unique="true"/>
+          <column name="password_hash" type="VARCHAR"/>
+          <column name="first_name" type="VARCHAR(100)"/>
+          <column name="last_name" type="VARCHAR(100)"/>
+          <column name="phone" type="VARCHAR(20)" nullable="true"/>
+          <column name="role_id" type="UUID" fk="roles.id"/>
+          <column name="active" type="BOOLEAN" default="true"/>
+          <column name="mfa_enabled" type="BOOLEAN" default="false"/>
+          <column name="account_locked" type="BOOLEAN" default="false"/>
+          <column name="locked_until" type="TIMESTAMP" nullable="true"/>
+          <column name="failed_login_attempts" type="INTEGER" default="0"/>
+          <column name="created_at" type="TIMESTAMP"/>
+          <column name="updated_at" type="TIMESTAMP"/>
+          <column name="version" type="INTEGER"/>
+        </columns>
+        <note>Need to add: status (VARCHAR), must_change_password (BOOLEAN)</note>
+      </table>
+
+      <table name="roles">
+        <columns>
+          <column name="id" type="UUID" pk="true"/>
+          <column name="name" type="VARCHAR(50)" unique="true"/>
+          <column name="description" type="VARCHAR(255)"/>
+          <column name="is_super_admin" type="BOOLEAN" default="false"/>
+        </columns>
+        <values>SUPER_ADMIN, PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR, FINANCE_MANAGER, TENANT, VENDOR</values>
+      </table>
+
+      <table name="permissions">
+        <description>Permission definitions like 'users:read', 'users:create', etc.</description>
+        <note>Ensure users:read, users:create, users:update, users:delete permissions exist</note>
+      </table>
+
+      <table name="audit_logs">
+        <columns>
+          <column name="id" type="UUID" pk="true"/>
+          <column name="user_id" type="UUID" nullable="true"/>
+          <column name="action" type="VARCHAR(100)"/>
+          <column name="ip_address" type="VARCHAR(45)"/>
+          <column name="details" type="JSONB"/>
+          <column name="created_at" type="TIMESTAMP"/>
+        </columns>
+      </table>
+    </existing-tables>
+
+    <required-migration file="V38__add_user_management_fields.sql">
+      <sql><![CDATA[
+-- Add status field to users table (ACTIVE, INACTIVE, PENDING)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'ACTIVE';
+
+-- Add must_change_password flag for forcing password change on first login
+ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false;
+
+-- Update existing users to ACTIVE status
+UPDATE users SET status = 'ACTIVE' WHERE status IS NULL;
+
+-- Add index for status queries
+CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
+
+-- Add users permissions if they don't exist
+INSERT INTO permissions (id, name, description, created_at, updated_at, version)
+SELECT gen_random_uuid(), 'users:read', 'Read user accounts', NOW(), NOW(), 0
+WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE name = 'users:read');
+
+INSERT INTO permissions (id, name, description, created_at, updated_at, version)
+SELECT gen_random_uuid(), 'users:create', 'Create user accounts', NOW(), NOW(), 0
+WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE name = 'users:create');
+
+INSERT INTO permissions (id, name, description, created_at, updated_at, version)
+SELECT gen_random_uuid(), 'users:update', 'Update user accounts', NOW(), NOW(), 0
+WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE name = 'users:update');
+
+INSERT INTO permissions (id, name, description, created_at, updated_at, version)
+SELECT gen_random_uuid(), 'users:delete', 'Delete/deactivate user accounts', NOW(), NOW(), 0
+WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE name = 'users:delete');
+
+-- Grant users permissions to SUPER_ADMIN role
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r, permissions p
+WHERE r.name = 'SUPER_ADMIN'
+AND p.name IN ('users:read', 'users:create', 'users:update', 'users:delete')
+AND NOT EXISTS (
+    SELECT 1 FROM role_permissions rp
+    WHERE rp.role_id = r.id AND rp.permission_id = p.id
+);
+      ]]></sql>
+    </required-migration>
+  </database>
+
+  <!-- ============================================================
+       SECTION 5: FILES TO CREATE/MODIFY
+       ============================================================ -->
+  <file-operations>
+    <files-to-create>
+      <!-- Backend DTOs -->
+      <file path="backend/src/main/java/com/ultrabms/dto/admin/AdminUserCreateRequest.java"/>
+      <file path="backend/src/main/java/com/ultrabms/dto/admin/AdminUserUpdateRequest.java"/>
+      <file path="backend/src/main/java/com/ultrabms/dto/admin/AdminUserResponse.java"/>
+
+      <!-- Backend Entity Enum -->
+      <file path="backend/src/main/java/com/ultrabms/entity/enums/UserStatus.java"/>
+
+      <!-- Backend Service -->
+      <file path="backend/src/main/java/com/ultrabms/service/AdminUserService.java"/>
+      <file path="backend/src/main/java/com/ultrabms/service/impl/AdminUserServiceImpl.java"/>
+
+      <!-- Backend Controller -->
+      <file path="backend/src/main/java/com/ultrabms/controller/AdminUserController.java"/>
+
+      <!-- Backend Migration -->
+      <file path="backend/src/main/resources/db/migration/V38__add_user_management_fields.sql"/>
+
+      <!-- Backend Email Templates -->
+      <file path="backend/src/main/resources/templates/email/user-welcome-email.html"/>
+      <file path="backend/src/main/resources/templates/email/user-welcome-email.txt"/>
+
+      <!-- Backend Tests -->
+      <file path="backend/src/test/java/com/ultrabms/service/AdminUserServiceTest.java"/>
+      <file path="backend/src/test/java/com/ultrabms/controller/AdminUserControllerTest.java"/>
+
+      <!-- Frontend Types -->
+      <file path="frontend/src/types/admin-user.ts"/>
+
+      <!-- Frontend Validation -->
+      <file path="frontend/src/lib/validations/admin-user.ts"/>
+
+      <!-- Frontend Service -->
+      <file path="frontend/src/services/admin-user.service.ts"/>
+
+      <!-- Frontend Hook -->
+      <file path="frontend/src/hooks/useAdminUsers.ts"/>
+
+      <!-- Frontend Page -->
+      <file path="frontend/src/app/(dashboard)/admin/users/page.tsx"/>
+
+      <!-- Frontend Components -->
+      <file path="frontend/src/components/admin/CreateUserDialog.tsx"/>
+      <file path="frontend/src/components/admin/EditUserDialog.tsx"/>
+      <file path="frontend/src/components/admin/DeactivateUserDialog.tsx"/>
+      <file path="frontend/src/components/admin/UserDataTable.tsx"/>
+    </files-to-create>
+
+    <files-to-modify>
+      <!-- Backend -->
+      <file path="backend/src/main/java/com/ultrabms/entity/User.java" changes="Add status, mustChangePassword fields"/>
+      <file path="backend/src/main/java/com/ultrabms/repository/UserRepository.java" changes="Add findByStatus, findByStatusAndRole methods"/>
+      <file path="backend/src/main/java/com/ultrabms/controller/AuthController.java" changes="Disable register endpoint, check mustChangePassword in login"/>
+      <file path="backend/src/main/java/com/ultrabms/service/AuthServiceImpl.java" changes="Check mustChangePassword, add change password logic"/>
+      <file path="backend/src/main/java/com/ultrabms/dto/LoginResponse.java" changes="Add requiresPasswordChange field"/>
+      <file path="backend/src/main/java/com/ultrabms/service/EmailService.java" changes="Add sendUserWelcomeEmail method"/>
+
+      <!-- Frontend -->
+      <file path="frontend/src/components/layout/Sidebar.tsx" changes="Add Users menu item"/>
+      <file path="frontend/src/contexts/auth-context.tsx" changes="Handle requiresPasswordChange redirect"/>
+    </files-to-modify>
+  </file-operations>
+
+  <!-- ============================================================
+       SECTION 6: API ENDPOINTS
+       ============================================================ -->
+  <api-endpoints>
+    <endpoint method="GET" path="/api/v1/admin/users" permission="users:read">
+      <description>List users with pagination and filters</description>
+      <query-params>
+        <param name="page" type="int" default="0"/>
+        <param name="size" type="int" default="20"/>
+        <param name="search" type="string" optional="true" description="Search by name or email"/>
+        <param name="role" type="string" optional="true" description="Filter by role name"/>
+        <param name="status" type="string" optional="true" description="Filter by ACTIVE, INACTIVE, PENDING"/>
+      </query-params>
+      <response status="200">Page of AdminUserResponse</response>
+    </endpoint>
+
+    <endpoint method="POST" path="/api/v1/admin/users" permission="users:create">
+      <description>Create new user account</description>
+      <request-body>AdminUserCreateRequest</request-body>
+      <response status="201">AdminUserResponse</response>
+      <errors>
+        <error status="400">Validation errors</error>
+        <error status="409">Email already exists</error>
+        <error status="403">Cannot create SUPER_ADMIN (unless caller is SUPER_ADMIN)</error>
+      </errors>
+    </endpoint>
+
+    <endpoint method="PUT" path="/api/v1/admin/users/{id}" permission="users:update">
+      <description>Update user account (email is immutable)</description>
+      <path-params>
+        <param name="id" type="UUID"/>
+      </path-params>
+      <request-body>AdminUserUpdateRequest</request-body>
+      <response status="200">AdminUserResponse</response>
+      <errors>
+        <error status="404">User not found</error>
+        <error status="400">Validation errors</error>
+      </errors>
+    </endpoint>
+
+    <endpoint method="DELETE" path="/api/v1/admin/users/{id}" permission="users:delete">
+      <description>Deactivate user (soft delete)</description>
+      <path-params>
+        <param name="id" type="UUID"/>
+      </path-params>
+      <response status="204">No content</response>
+      <errors>
+        <error status="404">User not found</error>
+        <error status="400">Cannot deactivate self</error>
+      </errors>
+    </endpoint>
+
+    <endpoint method="POST" path="/api/v1/admin/users/{id}/reactivate" permission="users:update">
+      <description>Reactivate deactivated user</description>
+      <path-params>
+        <param name="id" type="UUID"/>
+      </path-params>
+      <response status="200">AdminUserResponse</response>
+      <errors>
+        <error status="404">User not found</error>
+        <error status="400">User is already active</error>
+      </errors>
+    </endpoint>
+
+    <endpoint method="POST" path="/api/v1/auth/register" permission="none">
+      <description>DISABLED - Returns 403 Forbidden</description>
+      <response status="403">{ "message": "Self-registration is disabled. Contact administrator." }</response>
+    </endpoint>
+
+    <endpoint method="POST" path="/api/v1/auth/change-password" permission="authenticated">
+      <description>Change password (for first-login password change)</description>
+      <request-body>{ currentPassword, newPassword }</request-body>
+      <response status="200">{ success: true, message: "Password changed successfully" }</response>
+    </endpoint>
+  </api-endpoints>
+
+  <!-- ============================================================
+       SECTION 7: TESTING REQUIREMENTS
+       ============================================================ -->
+  <testing>
+    <backend-tests>
+      <test-class name="AdminUserServiceTest">
+        <test>testListUsers_WithFilters_ReturnsFilteredResults</test>
+        <test>testCreateUser_ValidRequest_CreatesUserAndSendsEmail</test>
+        <test>testCreateUser_DuplicateEmail_ThrowsConflictException</test>
+        <test>testCreateUser_SuperAdminByNonSuperAdmin_ThrowsForbiddenException</test>
+        <test>testUpdateUser_ValidRequest_UpdatesUser</test>
+        <test>testUpdateUser_EmailChange_ThrowsBadRequestException</test>
+        <test>testDeactivateUser_ValidUser_SetsStatusInactive</test>
+        <test>testDeactivateUser_Self_ThrowsBadRequestException</test>
+        <test>testReactivateUser_InactiveUser_SetsStatusActive</test>
+      </test-class>
+
+      <test-class name="AdminUserControllerTest">
+        <test>testListUsers_Authorized_Returns200</test>
+        <test>testListUsers_Unauthorized_Returns403</test>
+        <test>testCreateUser_ValidRequest_Returns201</test>
+        <test>testCreateUser_InvalidRequest_Returns400</test>
+        <test>testUpdateUser_ValidRequest_Returns200</test>
+        <test>testDeleteUser_ValidId_Returns204</test>
+        <test>testReactivateUser_ValidId_Returns200</test>
+      </test-class>
+    </backend-tests>
+
+    <frontend-tests>
+      <test-file name="admin-user.validation.test.ts">
+        <test>adminUserCreateSchema validates required fields</test>
+        <test>adminUserCreateSchema validates email format</test>
+        <test>adminUserCreateSchema validates password minimum length</test>
+      </test-file>
+    </frontend-tests>
+
+    <commands>
+      <command purpose="Run all backend tests">mvn test</command>
+      <command purpose="Run all frontend tests">npm test</command>
+      <command purpose="Backend build verification">mvn compile</command>
+      <command purpose="Frontend build verification">npm run build</command>
+    </commands>
+  </testing>
+
+  <!-- ============================================================
+       SECTION 8: DEPENDENCIES & REFERENCES
+       ============================================================ -->
+  <dependencies>
+    <story-dependencies>
+      <dependency story="2.2" title="Role-Based Access Control" status="COMPLETED">
+        Provides roles, permissions, @PreAuthorize infrastructure
+      </dependency>
+      <dependency story="2.3" title="Password Reset and Recovery" status="COMPLETED">
+        Provides email template patterns, password validation
+      </dependency>
+      <dependency story="2.5" title="Frontend Auth Integration" status="COMPLETED">
+        Provides auth context, usePermission hook, protected routes
+      </dependency>
+    </story-dependencies>
+
+    <document-references>
+      <reference type="PRD" section="3.1.2">User Roles - defines SUPER_ADMIN, PROPERTY_MANAGER, etc.</reference>
+      <reference type="Architecture" section="Security Architecture">RBAC implementation details</reference>
+      <reference type="Epic" id="2">Authentication and User Management epic definition</reference>
+    </document-references>
+  </dependencies>
+
+  <!-- ============================================================
+       SECTION 9: IMPLEMENTATION ORDER
+       ============================================================ -->
+  <implementation-order>
+    <phase number="1" name="Database &amp; Entity">
+      <step>Create V38 migration with status and must_change_password columns</step>
+      <step>Create UserStatus enum</step>
+      <step>Update User entity with new fields</step>
+      <step>Update UserRepository with new query methods</step>
+    </phase>
+
+    <phase number="2" name="Backend DTOs &amp; Service">
+      <step>Create AdminUserCreateRequest, AdminUserUpdateRequest, AdminUserResponse DTOs</step>
+      <step>Create AdminUserService interface</step>
+      <step>Implement AdminUserServiceImpl with all CRUD operations</step>
+      <step>Add audit logging to all operations</step>
+    </phase>
+
+    <phase number="3" name="Backend Controller &amp; Email">
+      <step>Create AdminUserController with all endpoints</step>
+      <step>Create welcome email templates (HTML + TXT)</step>
+      <step>Add sendUserWelcomeEmail to EmailService</step>
+    </phase>
+
+    <phase number="4" name="Auth Changes">
+      <step>Disable register endpoint in AuthController</step>
+      <step>Add mustChangePassword check in login</step>
+      <step>Update LoginResponse with requiresPasswordChange</step>
+      <step>Implement change-password endpoint</step>
+    </phase>
+
+    <phase number="5" name="Backend Tests">
+      <step>Write AdminUserServiceTest unit tests</step>
+      <step>Write AdminUserControllerTest integration tests</step>
+      <step>Run mvn test - fix any failures</step>
+    </phase>
+
+    <phase number="6" name="Frontend Types &amp; Services">
+      <step>Create admin-user.ts types</step>
+      <step>Create admin-user.ts Zod validations</step>
+      <step>Create admin-user.service.ts</step>
+      <step>Create useAdminUsers.ts hook</step>
+    </phase>
+
+    <phase number="7" name="Frontend UI Components">
+      <step>Update Sidebar.tsx with Users menu item</step>
+      <step>Create UserDataTable.tsx component</step>
+      <step>Create CreateUserDialog.tsx</step>
+      <step>Create EditUserDialog.tsx</step>
+      <step>Create DeactivateUserDialog.tsx</step>
+      <step>Create admin/users/page.tsx</step>
+    </phase>
+
+    <phase number="8" name="Frontend Auth Changes">
+      <step>Update auth-context.tsx to handle requiresPasswordChange</step>
+      <step>Create change-password page if not exists</step>
+    </phase>
+
+    <phase number="9" name="Final Validation">
+      <step>Run npm test - fix any failures</step>
+      <step>Run mvn compile - verify 0 errors</step>
+      <step>Run npm run build - verify 0 errors</step>
+      <step>Manual E2E: Create user, login, change password</step>
+    </phase>
+  </implementation-order>
+
+</story-context>

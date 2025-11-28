@@ -28,6 +28,14 @@ public interface VendorRepository extends JpaRepository<Vendor, UUID> {
     // =================================================================
 
     /**
+     * Find vendor by ID (excluding deleted vendors)
+     *
+     * @param id Vendor UUID
+     * @return Optional vendor
+     */
+    Optional<Vendor> findByIdAndIsDeletedFalse(UUID id);
+
+    /**
      * Find vendor by email address (excluding deleted vendors)
      *
      * @param email Email address

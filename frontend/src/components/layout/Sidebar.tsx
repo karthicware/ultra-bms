@@ -10,7 +10,8 @@ import {
   UserPlus,
   FileText,
   Settings,
-  LogOut
+  LogOut,
+  Truck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -66,6 +67,12 @@ const navigationSections: NavSection[] = [
         href: '/property-manager/work-orders',
         icon: Wrench,
         permission: 'work-orders:read',
+      },
+      {
+        name: 'Vendors',
+        href: '/property-manager/vendors',
+        icon: Truck,
+        permission: 'vendor:read',
       },
     ],
   },

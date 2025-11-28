@@ -43,29 +43,35 @@ development_status:
   1-6-aws-s3-file-storage-integration: done  # Completed 2025-11-23 - Code review APPROVED. All 7 ACs met, build SUCCESS, Checkstyle 0 violations. Sprint change via *correct-course: Accelerated S3 migration for all document uploads. LocalStack for dev, presigned URLs, supports all modules. Story Context: docs/sprint-artifacts/epic-1/1-6-aws-s3-file-storage-integration.context.xml. Implementation: 15 files modified, 2 created. Review findings: 2 LOW priority improvements (FileStorageException usage, batch delete optimization) - non-blocking, defer to next sprint.
   epic-1-retrospective: optional
 
-  # Epic 2: Authentication & User Management (5 stories)
+  # Epic 2: Authentication & User Management (6 stories)
+  # NOTE: Story 2.6 added 2025-11-28 via correct-course - Admin user creation (no self-registration)
   epic-2: backlog
-  2-1-user-registration-and-login-with-jwt-authentication: done  # Completed 2025-11-14 - All review action items resolved (66 tests passing)
+  2-1-user-registration-and-login-with-jwt-authentication: done  # Completed 2025-11-14 - All review action items resolved (66 tests passing). NOTE: Signup endpoint to be disabled in Story 2.6.
   2-2-role-based-access-control-rbac-implementation: done  # Completed 2025-11-13
   2-3-password-reset-and-recovery-workflow: done  # Completed 2025-11-14 - All tasks + audit logging complete (25 tests passing)
   2-4-session-management-and-security-enhancements: done  # Completed 2025-11-15 - All ACs met, code reviewed, action items resolved (87 tests passing)
   2-5-frontend-authentication-components-and-protected-routes: done  # Completed 2025-11-15 - All 18 tasks complete: JWT auth, RBAC, route protection, session management, E2E tests, docs (24 files created/modified)
+  2-6-admin-user-management: ready  # Ready 2025-11-28 - Story context created. Admin creates ALL users (no self-registration). 17 ACs, 16 tasks. Includes: user CRUD, welcome email, force password change, disable signup endpoint, mandatory test execution. Context: docs/sprint-artifacts/epic-2/2-6-admin-user-management.context.xml
   epic-2-retrospective: completed  # Completed 2025-11-15 - Retrospective document: docs/retrospectives/epic-2-retrospective.md
 
-  # Epic 3: Tenant Management & Portal (5 technical stories + 5 E2E stories)
-  # NOTE: Story numbering fixed - was duplicate 3.2, now corrected to 3.1-3.5
+  # Epic 3: Tenant Management & Portal (7 technical stories + 7 E2E stories)
+  # NOTE: Stories 3.6-3.7 added 2025-11-28 via correct-course to cover PRD 3.3.2 gaps (lease renewal, checkout/deposit refund)
   epic-3: backlog
   3-1-lead-management-and-quotation-system: done  # Completed 2025-11-16 - All tests passing: 73/73 tests (11 leads service + 11 quotations service + 20 quotations validation + 31 leads validation). Enhanced validation schemas with UUID and future date checks.
   3-2-property-and-unit-management: done  # Completed 2025-11-20 - Full implementation: Property & Unit CRUD, image upload, occupancy tracking, bulk operations, Ehcache configuration. All 29 tasks complete. 43 files created. Backend: PropertyService, UnitService, FileStorageService. Frontend: 5 pages + 6 components. All tests passing.
   3-3-tenant-onboarding-and-registration: done  # Completed 2025-11-16 - Full implementation: 7-step wizard, S3 integration, user creation, transactional tenant registration
   3-4-tenant-portal-dashboard-and-profile-management: done  # Completed 2025-11-16 - Full implementation: dashboard, profile, account settings, password change, document management. All tests passing: 5/5 tests (2 useTenantDashboard hook + 3 AccountSettingsSection component).
   3-5-tenant-portal-maintenance-request-submission: done  # Completed 2025-11-20 - Code review UNBLOCKED. All 38 tests passing (PhotoUploadZone: 8, FeedbackForm: 8, MaintenanceRequestForm: 11, StatusTimeline: 10). Dependencies installed (browser-image-compression@2.0.2, react-rating-stars-component@2.2.0). Backend: 21/21 tests passing. Full implementation complete with email notifications, real-time polling, WCAG 2.1 AA compliant.
+  3-6-tenant-lease-extension-and-renewal: ready-for-dev  # Ready 2025-11-28 - 16 ACs, 14 tasks. Lease extension form, rent adjustments, renewal requests, expiration monitoring, PDF amendment generation. Prerequisites: Story 3.3 (tenant onboarding). Context: docs/sprint-artifacts/epic-3/3-6-tenant-lease-extension-and-renewal.context.xml
+  3-7-tenant-checkout-and-deposit-refund: ready-for-dev  # Ready 2025-11-28 - 18 ACs, 14 tasks. Checkout initiation, inspection documentation with photos, deposit calculation with deductions, refund processing, tenant/unit status updates. Prerequisites: Story 3.3 (tenants), Story 6.1 (invoices). Context: docs/sprint-artifacts/epic-3/3-7-tenant-checkout-and-deposit-refund.context.xml
   # E2E Testing Stories (implement after all technical stories complete)
   3-1-e2e-lead-management-and-quotation-system: drafted  # Drafted 2025-11-16 - E2E test story for Story 3.1, needs story-context
   3-2-e2e-property-and-unit-management: review  # Ready for Review 2025-11-20 - All 8 tasks complete: 70+ E2E tests across 6 spec files, comprehensive documentation, package.json scripts added. Files: property-management.spec.ts, unit-management.spec.ts, occupancy-calculations.spec.ts, property-manager-assignment.spec.ts, quick-actions.spec.ts, validation-error-handling.spec.ts, README.md (550+ lines).
   3-3-e2e-tenant-onboarding: backlog
   3-4-e2e-tenant-portal-dashboard: backlog
   3-5-e2e-maintenance-requests: backlog
+  3-6-e2e-tenant-lease-extension: backlog  # Added 2025-11-28 via correct-course
+  3-7-e2e-tenant-checkout-and-deposit-refund: backlog  # Added 2025-11-28 via correct-course
   epic-3-retrospective: optional
 
   # Epic 4: Maintenance Operations (4 technical stories + 4 E2E stories)
@@ -94,8 +100,8 @@ development_status:
 
   # Epic 6: Financial Management (4 technical stories + 4 E2E stories)
   epic-6: backlog
-  6-1-rent-invoicing-and-payment-management: ready-for-dev  # Ready 2025-11-27 - Story context created. 31 ACs, 25 tasks, 13 implementation phases. Invoice generation (manual/scheduled), payment recording, PDF receipts, overdue tracking, late fee calculation. Prerequisites: Epic 3 (tenants/leases), Story 1.6 (S3). Context: docs/sprint-artifacts/epic-6/6-1-rent-invoicing-and-payment-management.context.xml
-  6-2-expense-management-and-vendor-payments: backlog
+  6-1-rent-invoicing-and-payment-management: done  # Completed 2025-11-28 - Full implementation: Invoice entity, Payment entity, InvoiceRepository, PaymentRepository, InvoiceService, InvoiceController (12 REST endpoints), PdfGenerationService (iTextPDF), 5 email templates (invoice-sent, payment-received, payment-reminder, invoice-overdue, late-fee-applied), InvoiceSchedulerJob (4 cron jobs). Frontend: TypeScript types, Zod schemas, invoice service, React Query hooks, 3 pages (list, detail, create), PaymentRecordForm component. All 31 ACs met. Backend: 20+ files, Frontend: 15+ files. Tests: Backend compiles, Frontend build SUCCESS. Context: docs/sprint-artifacts/epic-6/6-1-rent-invoicing-and-payment-management.context.xml
+  6-2-expense-management-and-vendor-payments: in-progress  # Started 2025-11-28 - Story context created. 32 ACs, 27 tasks. Expense entity, categories, receipt upload, batch vendor payments, auto-create from work orders. Context: docs/sprint-artifacts/epic-6/6-2-expense-management-and-vendor-payments.context.xml
   6-3-post-dated-cheque-pdc-management: backlog
   6-4-financial-reporting-and-analytics: backlog
   # E2E Testing Stories (implement after all technical stories complete)

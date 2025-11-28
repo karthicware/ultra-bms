@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Reminder</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header.urgent {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .invoice-number {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .invoice-number.urgent {
+            background-color: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        .invoice-number strong {
+            color: #d97706;
+            font-size: 20px;
+        }
+        .invoice-number.urgent strong {
+            color: #dc2626;
+        }
+        .countdown-box {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .countdown-box.urgent {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .countdown-box .days {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .countdown-box .label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .amount-box {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+            border: 2px solid #e9ecef;
+        }
+        .amount-box .label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .amount-box .amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0A2342;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 50%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: right;
+        }
+        .warning-box {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .warning-box.urgent {
+            background-color: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #1152D4 0%, #0A2342 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .button.primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #1152D4;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+            .details-table th,
+            .details-table td {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div th:class="${isUrgent} ? 'header urgent' : 'header'">
+            <div class="icon" th:text="${isUrgent} ? '&#9888;&#65039;' : '&#128276;'">&#128276;</div>
+            <h1 th:text="${isUrgent} ? 'Urgent Payment Reminder' : 'Payment Reminder'">Payment Reminder</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${tenantName}">Tenant</span>,
+            </div>
+
+            <p th:if="${isUrgent}">
+                <strong style="color: #dc2626;">This is an urgent reminder</strong> that your invoice payment is due very soon. Please make your payment promptly to avoid late fees.
+            </p>
+            <p th:unless="${isUrgent}">
+                This is a friendly reminder that you have an upcoming payment due. Please ensure your payment is made by the due date to avoid late fees.
+            </p>
+
+            <div th:class="${isUrgent} ? 'countdown-box urgent' : 'countdown-box'">
+                <div class="days" th:text="${daysUntilDue}">7</div>
+                <div class="label" th:text="${daysUntilDue} == 1 ? 'Day Until Due' : 'Days Until Due'">Days Until Due</div>
+            </div>
+
+            <div th:class="${isUrgent} ? 'invoice-number urgent' : 'invoice-number'">
+                <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Invoice Number</div>
+                <strong th:text="${invoiceNumber}">INV-2025-0001</strong>
+            </div>
+
+            <div class="amount-box">
+                <div class="label">Amount Due</div>
+                <div class="amount" th:text="${balanceAmount}">AED 5,000.00</div>
+            </div>
+
+            <table class="details-table">
+                <tr>
+                    <th>Property</th>
+                    <td th:text="${propertyName}">Property Name</td>
+                </tr>
+                <tr>
+                    <th>Unit</th>
+                    <td th:text="'Unit ' + ${unitNumber}">Unit 101</td>
+                </tr>
+                <tr>
+                    <th>Due Date</th>
+                    <td th:text="${dueDate}">Jan 15, 2025</td>
+                </tr>
+            </table>
+
+            <div th:class="${isUrgent} ? 'warning-box urgent' : 'warning-box'">
+                <strong th:if="${isUrgent}">&#9888;&#65039; Important Notice</strong>
+                <strong th:unless="${isUrgent}">&#128276; Reminder</strong>
+                <p style="margin: 10px 0 0 0; color: #666;">
+                    Late payments may incur additional fees. Please ensure your payment is received by <strong th:text="${dueDate}">Jan 15, 2025</strong>.
+                </p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${paymentUrl}" class="button primary">Make Payment Now</a>
+                <br>
+                <a th:href="${invoiceUrl}" class="button">View Invoice</a>
+            </div>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Payment Methods</h3>
+            <ul style="color: #666; padding-left: 20px;">
+                <li><strong>Bank Transfer:</strong> Contact us for bank details</li>
+                <li><strong>Card Payment:</strong> Pay online through the portal</li>
+                <li><strong>Cash/Cheque:</strong> Visit our office during business hours</li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Already made your payment?</strong></p>
+            <p>
+                If you've already paid, please disregard this reminder. It may take a few days for your payment to be processed.
+            </p>
+            <p style="margin-top: 15px;">
+                Questions? Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

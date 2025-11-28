@@ -1,0 +1,710 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Story Context: 3.6 - Tenant Lease Extension and Renewal
+  Generated: 2025-11-28
+  Epic: 3 - Tenant Management & Portal
+
+  This context document provides comprehensive technical guidance for implementing
+  the lease extension and renewal functionality.
+-->
+<story-context story-id="3.6" epic-id="3">
+  <metadata>
+    <title>Tenant Lease Extension and Renewal</title>
+    <status>drafted</status>
+    <priority>high</priority>
+    <story-points>13</story-points>
+    <acceptance-criteria-count>16</acceptance-criteria-count>
+    <task-count>14</task-count>
+  </metadata>
+
+  <user-story>
+    <as-a>property manager</as-a>
+    <i-want>to extend or renew tenant leases</i-want>
+    <so-that>I can manage lease continuity without re-onboarding tenants</so-that>
+  </user-story>
+
+  <!-- ========================================================================
+       ACCEPTANCE CRITERIA (from story file)
+       ======================================================================== -->
+  <acceptance-criteria>
+    <criterion id="AC-1" category="lease-extension-form">
+      <description>Lease Extension Form with all required fields</description>
+      <fields>
+        <field name="tenantId" type="UUID" required="true" note="Searchable dropdown"/>
+        <field name="currentLeaseEndDate" type="LocalDate" readonly="true"/>
+        <field name="newLeaseEndDate" type="LocalDate" required="true" validation="After current end date"/>
+        <field name="extensionDuration" type="Integer" note="Auto-calculated in months"/>
+        <field name="extensionReason" type="String" maxLength="500" required="true"/>
+        <field name="newBaseRent" type="BigDecimal" required="true" note="Default: current rent"/>
+        <field name="rentAdjustmentPercentage" type="BigDecimal" note="Auto-calculated"/>
+        <field name="newServiceCharge" type="BigDecimal" required="true"/>
+        <field name="newParkingFee" type="BigDecimal"/>
+        <field name="totalNewMonthlyRent" type="BigDecimal" note="Auto-calculated"/>
+        <field name="effectiveDate" type="LocalDate" required="true" default="Current lease end + 1 day"/>
+        <field name="additionalTerms" type="String" maxLength="2000"/>
+      </fields>
+    </criterion>
+
+    <criterion id="AC-2" category="lease-extension-entity">
+      <description>LeaseExtension entity creation</description>
+      <entity-fields>
+        <field name="id" type="UUID" key="primary"/>
+        <field name="extensionNumber" type="String" format="EXT-2025-0001" unique="true"/>
+        <field name="tenantId" type="UUID" key="foreign"/>
+        <field name="previousLeaseEndDate" type="LocalDate"/>
+        <field name="newLeaseEndDate" type="LocalDate"/>
+        <field name="extensionDuration" type="Integer"/>
+        <field name="previousBaseRent" type="BigDecimal"/>
+        <field name="newBaseRent" type="BigDecimal"/>
+        <field name="rentAdjustmentPercentage" type="BigDecimal"/>
+        <field name="newServiceCharge" type="BigDecimal"/>
+        <field name="newParkingFee" type="BigDecimal"/>
+        <field name="totalNewMonthlyRent" type="BigDecimal"/>
+        <field name="effectiveDate" type="LocalDate"/>
+        <field name="extensionReason" type="String"/>
+        <field name="additionalTerms" type="String"/>
+        <field name="status" type="LeaseExtensionStatus" enum="DRAFT,PENDING_APPROVAL,APPROVED,REJECTED,APPLIED"/>
+        <field name="approvedBy" type="UUID"/>
+        <field name="approvedAt" type="LocalDateTime"/>
+        <field name="appliedAt" type="LocalDateTime"/>
+        <field name="amendmentDocumentPath" type="String" note="S3 path to PDF"/>
+        <field name="createdAt" type="LocalDateTime"/>
+        <field name="updatedAt" type="LocalDateTime"/>
+        <field name="createdBy" type="UUID"/>
+      </entity-fields>
+    </criterion>
+
+    <criterion id="AC-3" category="rent-adjustment">
+      <description>Rent adjustment calculation with percentage display</description>
+      <formula>rentAdjustmentPercentage = ((newBaseRent - previousBaseRent) / previousBaseRent) * 100</formula>
+      <validation>Display as +X% or -X% with color coding (green for decrease, red for increase)</validation>
+    </criterion>
+
+    <criterion id="AC-4" category="extension-approval">
+      <description>Approval workflow for lease extensions</description>
+      <workflow>
+        <step order="1">PM creates extension (status = DRAFT)</step>
+        <step order="2">PM submits for approval (status = PENDING_APPROVAL)</step>
+        <step order="3">Admin/Senior PM approves or rejects</step>
+        <step order="4">If approved: status = APPROVED, can apply to tenant record</step>
+        <step order="5">When applied: Update Tenant entity, status = APPLIED</step>
+      </workflow>
+    </criterion>
+
+    <criterion id="AC-5" category="tenant-update">
+      <description>Apply extension to tenant record</description>
+      <updates>
+        <update field="leaseEndDate" value="newLeaseEndDate"/>
+        <update field="baseRent" value="newBaseRent"/>
+        <update field="serviceCharge" value="newServiceCharge"/>
+        <update field="parkingFeePerSpot" value="newParkingFee / parkingSpots"/>
+        <update field="totalMonthlyRent" value="totalNewMonthlyRent"/>
+        <update field="leaseDuration" note="Recalculate from start to new end"/>
+      </updates>
+    </criterion>
+
+    <criterion id="AC-6" category="renewal-request">
+      <description>Tenant renewal request submission (tenant-initiated)</description>
+      <form-fields>
+        <field name="requestedDuration" type="Integer" required="true" note="6, 12, 24 months"/>
+        <field name="requestedStartDate" type="LocalDate" default="Current lease end + 1"/>
+        <field name="comments" type="String" maxLength="1000"/>
+        <field name="preferredRentRange" type="String" note="Optional"/>
+      </form-fields>
+    </criterion>
+
+    <criterion id="AC-7" category="renewal-request-entity">
+      <description>RenewalRequest entity</description>
+      <entity-fields>
+        <field name="id" type="UUID" key="primary"/>
+        <field name="requestNumber" type="String" format="REN-2025-0001" unique="true"/>
+        <field name="tenantId" type="UUID" key="foreign"/>
+        <field name="requestedDuration" type="Integer"/>
+        <field name="requestedStartDate" type="LocalDate"/>
+        <field name="comments" type="String"/>
+        <field name="preferredRentRange" type="String"/>
+        <field name="status" type="RenewalRequestStatus" enum="PENDING,UNDER_REVIEW,APPROVED,REJECTED,CONVERTED"/>
+        <field name="pmResponse" type="String"/>
+        <field name="respondedBy" type="UUID"/>
+        <field name="respondedAt" type="LocalDateTime"/>
+        <field name="leaseExtensionId" type="UUID" note="FK when converted to extension"/>
+        <field name="createdAt" type="LocalDateTime"/>
+        <field name="updatedAt" type="LocalDateTime"/>
+      </entity-fields>
+    </criterion>
+
+    <criterion id="AC-8" category="renewal-to-extension">
+      <description>Convert approved renewal request to lease extension</description>
+      <action>Pre-populate LeaseExtension form with tenant info and requested duration</action>
+    </criterion>
+
+    <criterion id="AC-9" category="expiry-monitoring">
+      <description>Lease expiry monitoring scheduled job</description>
+      <schedule>Daily at 8 AM (configurable via cron property)</schedule>
+      <notifications>
+        <notification days="90">Send to PM: "Lease expiring in 90 days"</notification>
+        <notification days="60">Send to PM and Tenant: "Lease expiring in 60 days"</notification>
+        <notification days="30">Send to PM and Tenant: "URGENT: Lease expiring in 30 days"</notification>
+        <notification days="7">Send to PM and Tenant: "CRITICAL: Lease expiring in 7 days"</notification>
+      </notifications>
+    </criterion>
+
+    <criterion id="AC-10" category="email-notifications">
+      <description>Email notifications for lease events</description>
+      <templates>
+        <template name="lease-expiry-90-day" recipient="PM"/>
+        <template name="lease-expiry-60-day" recipient="PM,Tenant"/>
+        <template name="lease-expiry-30-day" recipient="PM,Tenant"/>
+        <template name="lease-expiry-7-day" recipient="PM,Tenant"/>
+        <template name="lease-extension-approved" recipient="Tenant"/>
+        <template name="lease-extension-applied" recipient="Tenant"/>
+        <template name="renewal-request-received" recipient="PM"/>
+        <template name="renewal-request-status" recipient="Tenant"/>
+      </templates>
+    </criterion>
+
+    <criterion id="AC-11" category="pdf-generation">
+      <description>Lease amendment PDF generation</description>
+      <content>
+        <section>Company header with logo</section>
+        <section>Amendment reference number and date</section>
+        <section>Tenant and property details</section>
+        <section>Original lease terms summary</section>
+        <section>New/amended lease terms</section>
+        <section>Rent comparison table (old vs new)</section>
+        <section>Effective date</section>
+        <section>Signature placeholders</section>
+        <section>Additional terms and conditions</section>
+      </content>
+    </criterion>
+
+    <criterion id="AC-12" category="expiring-leases-dashboard">
+      <description>Dashboard widget for expiring leases</description>
+      <features>
+        <feature>Count of leases expiring in 30/60/90 days</feature>
+        <feature>Color-coded urgency badges</feature>
+        <feature>Quick action buttons (Extend, View, Contact)</feature>
+        <feature>Filter by property</feature>
+      </features>
+    </criterion>
+
+    <criterion id="AC-13" category="extension-history">
+      <description>Extension history on tenant profile</description>
+      <display>
+        <item>List of all extensions with dates and rent changes</item>
+        <item>Status of each extension</item>
+        <item>Download amendment PDF</item>
+        <item>Timeline visualization</item>
+      </display>
+    </criterion>
+
+    <criterion id="AC-14" category="api-endpoints">
+      <description>API endpoints for lease management</description>
+      <endpoints>
+        <endpoint method="POST" path="/api/v1/lease-extensions">Create extension</endpoint>
+        <endpoint method="GET" path="/api/v1/lease-extensions">List extensions with filters</endpoint>
+        <endpoint method="GET" path="/api/v1/lease-extensions/{id}">Get extension details</endpoint>
+        <endpoint method="PUT" path="/api/v1/lease-extensions/{id}">Update extension (if DRAFT)</endpoint>
+        <endpoint method="POST" path="/api/v1/lease-extensions/{id}/submit">Submit for approval</endpoint>
+        <endpoint method="POST" path="/api/v1/lease-extensions/{id}/approve">Approve extension</endpoint>
+        <endpoint method="POST" path="/api/v1/lease-extensions/{id}/reject">Reject extension</endpoint>
+        <endpoint method="POST" path="/api/v1/lease-extensions/{id}/apply">Apply to tenant</endpoint>
+        <endpoint method="GET" path="/api/v1/lease-extensions/{id}/pdf">Generate amendment PDF</endpoint>
+        <endpoint method="GET" path="/api/v1/tenants/{id}/extensions">Get tenant's extension history</endpoint>
+        <endpoint method="POST" path="/api/v1/tenant/renewal-requests">Submit renewal request (tenant)</endpoint>
+        <endpoint method="GET" path="/api/v1/renewal-requests">List renewal requests (PM)</endpoint>
+        <endpoint method="GET" path="/api/v1/renewal-requests/{id}">Get request details</endpoint>
+        <endpoint method="POST" path="/api/v1/renewal-requests/{id}/respond">PM respond to request</endpoint>
+        <endpoint method="POST" path="/api/v1/renewal-requests/{id}/convert">Convert to extension</endpoint>
+        <endpoint method="GET" path="/api/v1/tenants/expiring">Get expiring leases</endpoint>
+      </endpoints>
+    </criterion>
+
+    <criterion id="AC-15" category="validation">
+      <description>Business rule validations</description>
+      <rules>
+        <rule>New lease end date must be after current lease end date</rule>
+        <rule>Effective date must be on or after current lease end date</rule>
+        <rule>Only ACTIVE tenants can have extensions</rule>
+        <rule>Only one DRAFT or PENDING_APPROVAL extension per tenant at a time</rule>
+        <rule>Rent adjustment cannot exceed configured percentage limit (e.g., 20%)</rule>
+        <rule>Tenant can only have one PENDING renewal request at a time</rule>
+      </rules>
+    </criterion>
+
+    <criterion id="AC-16" category="audit-logging">
+      <description>Audit trail for lease changes</description>
+      <events>
+        <event>Extension created</event>
+        <event>Extension submitted for approval</event>
+        <event>Extension approved/rejected</event>
+        <event>Extension applied to tenant</event>
+        <event>Renewal request submitted</event>
+        <event>Renewal request responded</event>
+        <event>Lease expiry notification sent</event>
+      </events>
+    </criterion>
+  </acceptance-criteria>
+
+  <!-- ========================================================================
+       TECHNICAL TASKS (from story file)
+       ======================================================================== -->
+  <tasks>
+    <task id="T1" category="backend">
+      <title>Create LeaseExtension and RenewalRequest entities</title>
+      <files>
+        <file path="backend/src/main/java/com/ultrabms/entity/LeaseExtension.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/entity/RenewalRequest.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/entity/enums/LeaseExtensionStatus.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/entity/enums/RenewalRequestStatus.java" action="create"/>
+      </files>
+    </task>
+
+    <task id="T2" category="backend">
+      <title>Create Flyway migration for lease_extensions and renewal_requests tables</title>
+      <files>
+        <file path="backend/src/main/resources/db/migration/V37__create_lease_extension_tables.sql" action="create"/>
+      </files>
+      <note>Next migration version is V37 (V36 is latest)</note>
+    </task>
+
+    <task id="T3" category="backend">
+      <title>Create repository interfaces</title>
+      <files>
+        <file path="backend/src/main/java/com/ultrabms/repository/LeaseExtensionRepository.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/repository/RenewalRequestRepository.java" action="create"/>
+      </files>
+    </task>
+
+    <task id="T4" category="backend">
+      <title>Create DTOs for lease extension and renewal request</title>
+      <files>
+        <file path="backend/src/main/java/com/ultrabms/dto/lease/CreateLeaseExtensionRequest.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/dto/lease/LeaseExtensionResponse.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/dto/lease/UpdateLeaseExtensionRequest.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/dto/lease/RenewalRequestDto.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/dto/lease/ExpiringLeaseDto.java" action="create"/>
+      </files>
+    </task>
+
+    <task id="T5" category="backend">
+      <title>Implement LeaseExtensionService and RenewalRequestService</title>
+      <files>
+        <file path="backend/src/main/java/com/ultrabms/service/LeaseExtensionService.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/service/impl/LeaseExtensionServiceImpl.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/service/RenewalRequestService.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/service/impl/RenewalRequestServiceImpl.java" action="create"/>
+      </files>
+    </task>
+
+    <task id="T6" category="backend">
+      <title>Create LeaseExtensionController and RenewalRequestController</title>
+      <files>
+        <file path="backend/src/main/java/com/ultrabms/controller/LeaseExtensionController.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/controller/RenewalRequestController.java" action="create"/>
+      </files>
+    </task>
+
+    <task id="T7" category="backend">
+      <title>Implement LeaseExpiryMonitoringJob scheduled task</title>
+      <files>
+        <file path="backend/src/main/java/com/ultrabms/scheduler/LeaseExpiryMonitoringJob.java" action="create"/>
+      </files>
+      <reference>Follow pattern from VendorDocumentExpiryJob.java</reference>
+    </task>
+
+    <task id="T8" category="backend">
+      <title>Add lease-related email methods to EmailService</title>
+      <files>
+        <file path="backend/src/main/java/com/ultrabms/service/EmailService.java" action="modify"/>
+      </files>
+      <methods>
+        <method name="sendLeaseExpiryNotification(Tenant, int daysRemaining)"/>
+        <method name="sendLeaseExtensionApproved(Tenant, LeaseExtension)"/>
+        <method name="sendLeaseExtensionApplied(Tenant, LeaseExtension)"/>
+        <method name="sendRenewalRequestReceived(Tenant, RenewalRequest)"/>
+        <method name="sendRenewalRequestStatus(Tenant, RenewalRequest)"/>
+      </methods>
+    </task>
+
+    <task id="T9" category="backend">
+      <title>Create email templates for lease notifications</title>
+      <files>
+        <file path="backend/src/main/resources/templates/email/lease-expiry-notification.html" action="create"/>
+        <file path="backend/src/main/resources/templates/email/lease-expiry-notification.txt" action="create"/>
+        <file path="backend/src/main/resources/templates/email/lease-extension-approved.html" action="create"/>
+        <file path="backend/src/main/resources/templates/email/lease-extension-approved.txt" action="create"/>
+        <file path="backend/src/main/resources/templates/email/renewal-request-received.html" action="create"/>
+        <file path="backend/src/main/resources/templates/email/renewal-request-received.txt" action="create"/>
+      </files>
+    </task>
+
+    <task id="T10" category="backend">
+      <title>Implement PDF generation for lease amendments</title>
+      <files>
+        <file path="backend/src/main/java/com/ultrabms/service/LeaseAmendmentPdfService.java" action="create"/>
+        <file path="backend/src/main/java/com/ultrabms/service/impl/LeaseAmendmentPdfServiceImpl.java" action="create"/>
+      </files>
+      <reference>Follow existing PDF generation pattern (if any) or use iText/OpenPDF</reference>
+    </task>
+
+    <task id="T11" category="frontend">
+      <title>Create TypeScript types for lease extension and renewal</title>
+      <files>
+        <file path="frontend/src/types/lease.ts" action="create"/>
+      </files>
+    </task>
+
+    <task id="T12" category="frontend">
+      <title>Create lease extension service and hooks</title>
+      <files>
+        <file path="frontend/src/services/lease.service.ts" action="create"/>
+        <file path="frontend/src/hooks/useLeaseExtensions.ts" action="create"/>
+        <file path="frontend/src/hooks/useRenewalRequests.ts" action="create"/>
+        <file path="frontend/src/lib/validations/lease.ts" action="create"/>
+      </files>
+    </task>
+
+    <task id="T13" category="frontend">
+      <title>Create lease extension pages and components (PM)</title>
+      <files>
+        <file path="frontend/src/app/(dashboard)/lease-extensions/page.tsx" action="create"/>
+        <file path="frontend/src/app/(dashboard)/lease-extensions/new/page.tsx" action="create"/>
+        <file path="frontend/src/app/(dashboard)/lease-extensions/[id]/page.tsx" action="create"/>
+        <file path="frontend/src/components/lease/LeaseExtensionForm.tsx" action="create"/>
+        <file path="frontend/src/components/lease/LeaseExtensionList.tsx" action="create"/>
+        <file path="frontend/src/components/lease/RentComparisonCard.tsx" action="create"/>
+        <file path="frontend/src/components/lease/ExpiringLeasesWidget.tsx" action="create"/>
+      </files>
+    </task>
+
+    <task id="T14" category="frontend">
+      <title>Create renewal request page for tenant portal</title>
+      <files>
+        <file path="frontend/src/app/(tenant-portal)/tenant/renewal/page.tsx" action="create"/>
+        <file path="frontend/src/components/tenant/RenewalRequestForm.tsx" action="create"/>
+        <file path="frontend/src/components/tenant/LeaseExtensionHistory.tsx" action="create"/>
+      </files>
+    </task>
+  </tasks>
+
+  <!-- ========================================================================
+       CODE REFERENCES (existing patterns to follow)
+       ======================================================================== -->
+  <code-references>
+    <reference category="entity-pattern">
+      <description>Existing Tenant entity for lease field structure</description>
+      <file path="backend/src/main/java/com/ultrabms/entity/Tenant.java"/>
+      <key-patterns>
+        <pattern>BaseEntity extension with UUID id</pattern>
+        <pattern>@Table with indexes and unique constraints</pattern>
+        <pattern>@Builder.Default for default values</pattern>
+        <pattern>@DecimalMin and @NotNull for validation</pattern>
+        <pattern>Fields: leaseStartDate, leaseEndDate, leaseDuration, baseRent, serviceCharge</pattern>
+      </key-patterns>
+    </reference>
+
+    <reference category="scheduled-job-pattern">
+      <description>VendorDocumentExpiryJob for scheduling pattern</description>
+      <file path="backend/src/main/java/com/ultrabms/scheduler/VendorDocumentExpiryJob.java"/>
+      <key-patterns>
+        <pattern>@Component annotation</pattern>
+        <pattern>@Scheduled(cron = "${property.name:default}") for configurable cron</pattern>
+        <pattern>Constructor injection of service</pattern>
+        <pattern>Try-catch with LOGGER.error for job failures</pattern>
+        <pattern>Process steps with individual counts logged</pattern>
+      </key-patterns>
+    </reference>
+
+    <reference category="email-service-pattern">
+      <description>EmailService for notification patterns</description>
+      <file path="backend/src/main/java/com/ultrabms/service/EmailService.java"/>
+      <key-patterns>
+        <pattern>@Async("emailTaskExecutor") for async sending</pattern>
+        <pattern>Thymeleaf Context for template variables</pattern>
+        <pattern>Both HTML and .txt templates</pattern>
+        <pattern>Fail silently with LOGGER.error</pattern>
+        <pattern>MimeMessageHelper for multipart emails</pattern>
+      </key-patterns>
+    </reference>
+
+    <reference category="service-pattern">
+      <description>TenantService interface structure</description>
+      <file path="backend/src/main/java/com/ultrabms/service/TenantService.java"/>
+      <key-patterns>
+        <pattern>Interface with clear method documentation</pattern>
+        <pattern>Return DTOs, not entities</pattern>
+        <pattern>Use UUID for IDs</pattern>
+        <pattern>Pageable for list methods</pattern>
+      </key-patterns>
+    </reference>
+
+    <reference category="frontend-types">
+      <description>Frontend TypeScript type patterns</description>
+      <file path="frontend/src/types/tenant.ts"/>
+      <key-patterns>
+        <pattern>Enums defined as TypeScript enums</pattern>
+        <pattern>Interfaces for entities and DTOs</pattern>
+        <pattern>Separate Request and Response types</pattern>
+        <pattern>Form data types with Date for date fields</pattern>
+        <pattern>Optional fields with ?</pattern>
+      </key-patterns>
+    </reference>
+
+    <reference category="migration-naming">
+      <description>Flyway migration naming convention</description>
+      <file path="backend/src/main/resources/db/migration/"/>
+      <key-patterns>
+        <pattern>V{n}__description.sql format</pattern>
+        <pattern>Latest version: V36</pattern>
+        <pattern>Next available: V37</pattern>
+      </key-patterns>
+    </reference>
+  </code-references>
+
+  <!-- ========================================================================
+       TECHNICAL IMPLEMENTATION GUIDANCE
+       ======================================================================== -->
+  <implementation-guidance>
+    <section name="database-schema">
+      <title>Database Schema for V37 Migration</title>
+      <sql><![CDATA[
+-- Lease Extension Status Enum
+-- Values: DRAFT, PENDING_APPROVAL, APPROVED, REJECTED, APPLIED
+
+CREATE TABLE lease_extensions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    extension_number VARCHAR(20) NOT NULL UNIQUE,
+    tenant_id UUID NOT NULL REFERENCES tenants(id),
+
+    -- Date fields
+    previous_lease_end_date DATE NOT NULL,
+    new_lease_end_date DATE NOT NULL,
+    extension_duration INTEGER NOT NULL,
+    effective_date DATE NOT NULL,
+
+    -- Rent fields (AED)
+    previous_base_rent DECIMAL(12,2) NOT NULL,
+    new_base_rent DECIMAL(12,2) NOT NULL,
+    rent_adjustment_percentage DECIMAL(5,2),
+    new_service_charge DECIMAL(12,2) NOT NULL DEFAULT 0,
+    new_parking_fee DECIMAL(12,2) DEFAULT 0,
+    total_new_monthly_rent DECIMAL(12,2) NOT NULL,
+
+    -- Details
+    extension_reason VARCHAR(500) NOT NULL,
+    additional_terms TEXT,
+
+    -- Workflow
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    approved_by UUID REFERENCES users(id),
+    approved_at TIMESTAMP,
+    applied_at TIMESTAMP,
+    rejection_reason VARCHAR(500),
+
+    -- Document
+    amendment_document_path VARCHAR(500),
+
+    -- Audit
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by UUID REFERENCES users(id),
+    version BIGINT DEFAULT 0
+);
+
+CREATE INDEX idx_lease_extensions_tenant_id ON lease_extensions(tenant_id);
+CREATE INDEX idx_lease_extensions_status ON lease_extensions(status);
+CREATE INDEX idx_lease_extensions_effective_date ON lease_extensions(effective_date);
+
+-- Renewal Request Status Enum
+-- Values: PENDING, UNDER_REVIEW, APPROVED, REJECTED, CONVERTED
+
+CREATE TABLE renewal_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_number VARCHAR(20) NOT NULL UNIQUE,
+    tenant_id UUID NOT NULL REFERENCES tenants(id),
+
+    -- Request details
+    requested_duration INTEGER NOT NULL,
+    requested_start_date DATE NOT NULL,
+    comments VARCHAR(1000),
+    preferred_rent_range VARCHAR(100),
+
+    -- Workflow
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    pm_response VARCHAR(1000),
+    responded_by UUID REFERENCES users(id),
+    responded_at TIMESTAMP,
+
+    -- Conversion
+    lease_extension_id UUID REFERENCES lease_extensions(id),
+
+    -- Audit
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version BIGINT DEFAULT 0
+);
+
+CREATE INDEX idx_renewal_requests_tenant_id ON renewal_requests(tenant_id);
+CREATE INDEX idx_renewal_requests_status ON renewal_requests(status);
+
+-- Add notification tracking fields to tenants (for expiry monitoring)
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS expiry_90_day_notified BOOLEAN DEFAULT FALSE;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS expiry_60_day_notified BOOLEAN DEFAULT FALSE;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS expiry_30_day_notified BOOLEAN DEFAULT FALSE;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS expiry_7_day_notified BOOLEAN DEFAULT FALSE;
+      ]]></sql>
+    </section>
+
+    <section name="extension-number-generation">
+      <title>Extension Number Generation</title>
+      <note>Follow tenant number pattern (TNT-2025-0001)</note>
+      <logic><![CDATA[
+Format: EXT-{YEAR}-{SEQUENCE}
+Example: EXT-2025-0001
+
+Repository method:
+@Query("SELECT MAX(CAST(SUBSTRING(e.extensionNumber, 10) AS integer)) FROM LeaseExtension e WHERE e.extensionNumber LIKE :prefix%")
+Integer findMaxSequenceForYear(@Param("prefix") String prefix);
+
+Service logic:
+String prefix = "EXT-" + Year.now().getValue() + "-";
+Integer maxSeq = repository.findMaxSequenceForYear(prefix);
+int nextSeq = (maxSeq == null) ? 1 : maxSeq + 1;
+return prefix + String.format("%04d", nextSeq);
+      ]]></logic>
+    </section>
+
+    <section name="rent-calculation">
+      <title>Rent Adjustment Calculation</title>
+      <logic><![CDATA[
+// In LeaseExtensionServiceImpl:
+private BigDecimal calculateRentAdjustment(BigDecimal previousRent, BigDecimal newRent) {
+    if (previousRent.compareTo(BigDecimal.ZERO) == 0) {
+        return BigDecimal.ZERO;
+    }
+    return newRent.subtract(previousRent)
+        .divide(previousRent, 4, RoundingMode.HALF_UP)
+        .multiply(BigDecimal.valueOf(100))
+        .setScale(2, RoundingMode.HALF_UP);
+}
+
+private BigDecimal calculateTotalMonthlyRent(CreateLeaseExtensionRequest request, Tenant tenant) {
+    BigDecimal base = request.getNewBaseRent();
+    BigDecimal service = request.getNewServiceCharge();
+    BigDecimal parking = request.getNewParkingFee() != null ? request.getNewParkingFee() : BigDecimal.ZERO;
+    return base.add(service).add(parking);
+}
+      ]]></logic>
+    </section>
+
+    <section name="scheduled-job-config">
+      <title>Lease Expiry Monitoring Job Configuration</title>
+      <config><![CDATA[
+# application.yml
+lease:
+  expiry:
+    monitoring:
+      cron: "0 0 8 * * *"  # 8 AM daily
+      notification-days:
+        critical: 7
+        urgent: 30
+        warning: 60
+        notice: 90
+      ]]></config>
+    </section>
+
+    <section name="pdf-generation">
+      <title>PDF Generation Approach</title>
+      <recommendation>Use OpenPDF (iText fork) or existing pattern if available</recommendation>
+      <dependencies><![CDATA[
+<!-- pom.xml -->
+<dependency>
+    <groupId>com.github.librepdf</groupId>
+    <artifactId>openpdf</artifactId>
+    <version>1.3.30</version>
+</dependency>
+      ]]></dependencies>
+    </section>
+
+    <section name="frontend-routes">
+      <title>Frontend Route Structure</title>
+      <routes>
+        <route path="/lease-extensions" role="PM" description="List all lease extensions"/>
+        <route path="/lease-extensions/new" role="PM" description="Create new extension"/>
+        <route path="/lease-extensions/new?tenantId={id}" role="PM" description="Create extension for specific tenant"/>
+        <route path="/lease-extensions/{id}" role="PM" description="View/edit extension details"/>
+        <route path="/renewal-requests" role="PM" description="List renewal requests"/>
+        <route path="/tenant/renewal" role="TENANT" description="Submit renewal request"/>
+        <route path="/tenant/profile" role="TENANT" description="View extension history (existing page)"/>
+      </routes>
+    </section>
+
+    <section name="testid-conventions">
+      <title>data-testid Conventions</title>
+      <conventions><![CDATA[
+Following docs/development/data-testid-conventions.md:
+
+Forms:
+- lease-extension-form
+- lease-extension-form-tenant-select
+- lease-extension-form-new-end-date
+- lease-extension-form-new-base-rent
+- lease-extension-form-submit
+
+Lists:
+- lease-extension-list
+- lease-extension-list-item-{id}
+- lease-extension-list-status-badge
+
+Actions:
+- lease-extension-approve-btn
+- lease-extension-reject-btn
+- lease-extension-apply-btn
+- lease-extension-download-pdf-btn
+
+Widgets:
+- expiring-leases-widget
+- expiring-leases-count-30
+- expiring-leases-count-60
+- expiring-leases-count-90
+      ]]></conventions>
+    </section>
+  </implementation-guidance>
+
+  <!-- ========================================================================
+       DEPENDENCIES AND PREREQUISITES
+       ======================================================================== -->
+  <dependencies>
+    <prerequisite story="3.3" status="done">Tenant Onboarding (Tenant entity exists)</prerequisite>
+    <prerequisite story="3.4" status="done">Tenant Portal Dashboard (tenant portal routes exist)</prerequisite>
+    <prerequisite>EmailService with async email support</prerequisite>
+    <prerequisite>S3 file storage for PDF documents</prerequisite>
+  </dependencies>
+
+  <!-- ========================================================================
+       TESTING REQUIREMENTS
+       ======================================================================== -->
+  <testing>
+    <unit-tests>
+      <test file="LeaseExtensionServiceTest.java">
+        <case>Create extension with valid data</case>
+        <case>Rent adjustment calculation</case>
+        <case>Extension number generation</case>
+        <case>Apply extension updates tenant correctly</case>
+        <case>Validation: new end date after current</case>
+        <case>Validation: only one draft per tenant</case>
+      </test>
+      <test file="LeaseExpiryMonitoringJobTest.java">
+        <case>90-day notification sent once</case>
+        <case>Multiple notification thresholds</case>
+        <case>Job handles empty result set</case>
+      </test>
+    </unit-tests>
+    <integration-tests>
+      <test>Extension approval workflow end-to-end</test>
+      <test>Renewal request to extension conversion</test>
+      <test>PDF generation with correct content</test>
+    </integration-tests>
+  </testing>
+</story-context>

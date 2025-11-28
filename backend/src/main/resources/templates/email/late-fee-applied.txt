@@ -1,0 +1,32 @@
+ULTRA BMS - LATE FEE APPLIED
+=============================
+
+Hi [(${tenantName})],
+
+We're writing to inform you that a late fee has been applied to your overdue invoice. Please make your payment as soon as possible to settle your account.
+
+INVOICE DETAILS
+---------------
+Invoice Number: [(${invoiceNumber})]
+Original Due Date: [(${dueDate})]
+
+LATE FEE APPLIED: [(${lateFeeAmount})]
+
+UPDATED BALANCE
+---------------
+Previous Balance:  [(${previousBalance})]
+Late Fee:        + [(${lateFeeAmount})]
+------------------------
+New Balance Due:   [(${newBalance})]
+
+This late fee was applied because payment was not received by the due date.
+
+View/Pay Invoice: [(${invoiceUrl})]
+
+To avoid additional fees, please make your payment promptly. If you have any questions or need to discuss payment arrangements, please contact us.
+
+---
+Questions about this fee?
+Contact us at [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.

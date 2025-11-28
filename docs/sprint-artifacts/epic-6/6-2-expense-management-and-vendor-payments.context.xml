@@ -1,0 +1,233 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>2</storyId>
+    <title>Expense Management and Vendor Payments</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-28</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-6/6-2-expense-management-and-vendor-payments.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>finance manager</asA>
+    <iWant>to track expenses and process vendor payments</iWant>
+    <soThat>all costs are recorded and vendors are paid on time</soThat>
+    <tasks>
+      <task id="1" ac="18">Create Expense TypeScript Types</task>
+      <task id="2" ac="19">Create Expense Zod Validation Schemas</task>
+      <task id="3" ac="20">Create Expense Frontend Service</task>
+      <task id="4" ac="21">Create Expense React Query Hooks</task>
+      <task id="5" ac="1,2">Create Expense Entity and Enums (Backend)</task>
+      <task id="6" ac="26">Create Database Migration V37</task>
+      <task id="7" ac="22">Create Expense Repository</task>
+      <task id="8" ac="25">Create Expense DTOs and Mapper</task>
+      <task id="9" ac="3">Implement Expense Number Generation</task>
+      <task id="10" ac="23">Implement Expense Service Layer</task>
+      <task id="11" ac="6">Implement Receipt Upload</task>
+      <task id="12" ac="8,9">Implement Batch Payment Processing</task>
+      <task id="13" ac="10">Create Vendor Payment Email Template</task>
+      <task id="14" ac="10">Implement Vendor Payment Notification</task>
+      <task id="15" ac="5,27">Implement Work Order Integration</task>
+      <task id="16" ac="24">Implement Expense Controller</task>
+      <task id="17" ac="11">Create Expense List Page</task>
+      <task id="18" ac="12">Create Expense Detail Page</task>
+      <task id="19" ac="13">Create Expense Create Form</task>
+      <task id="20" ac="14">Create Expense Edit Page</task>
+      <task id="21" ac="15">Create Pending Payments Page</task>
+      <task id="22" ac="16">Create Batch Payment Modal</task>
+      <task id="23" ac="17">Create Expense Summary Dashboard</task>
+      <task id="24" ac="28,29">Create Status and Category Badge Components</task>
+      <task id="25" ac="30">Implement Responsive Design</task>
+      <task id="26" ac="31">Write Backend Unit Tests</task>
+      <task id="27" ac="32">Write Frontend Unit Tests</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Expense Entity with UUID, expenseNumber (EXP-YYYY-NNNN), category enum, propertyId, vendorId, workOrderId, amount, expenseDate, paymentStatus, paymentMethod, paymentDate, description, receiptFilePath, recordedBy, timestamps, indexes</criterion>
+    <criterion id="AC2">ExpenseCategory enum: MAINTENANCE, UTILITIES, SALARIES, SUPPLIES, INSURANCE, TAXES, OTHER with display names</criterion>
+    <criterion id="AC3">Expense number format EXP-{YYYY}-{NNNN}, annual reset, concurrent-safe generation</criterion>
+    <criterion id="AC4">POST /api/v1/expenses - manual expense creation with optional receipt</criterion>
+    <criterion id="AC5">Auto-create expense when WorkOrder status=COMPLETED and actualCost>0</criterion>
+    <criterion id="AC6">Receipt upload PDF/JPG max 5MB to S3 /uploads/expenses/{expenseNumber}/</criterion>
+    <criterion id="AC7">PATCH /api/v1/expenses/{id}/pay - mark expense as paid (PENDING only)</criterion>
+    <criterion id="AC8">POST /api/v1/expenses/batch-pay - batch payment processing</criterion>
+    <criterion id="AC9">Payment summary PDF generation stored in S3</criterion>
+    <criterion id="AC10">Vendor payment notification email with @Async</criterion>
+    <criterion id="AC11">Expense list page with DataTable, filters, search, pagination data-testid="page-expenses"</criterion>
+    <criterion id="AC12">Expense detail page data-testid="page-expense-detail"</criterion>
+    <criterion id="AC13">Expense create form data-testid="form-expense-create"</criterion>
+    <criterion id="AC14">Expense edit page (PENDING only) data-testid="form-expense-edit"</criterion>
+    <criterion id="AC15">Pending payments page grouped by vendor data-testid="page-vendor-payments"</criterion>
+    <criterion id="AC16">Batch payment modal data-testid="btn-process-payment"</criterion>
+    <criterion id="AC17">Expense summary dashboard with pie/line charts data-testid="chart-expense-category", data-testid="chart-expense-trend"</criterion>
+    <criterion id="AC18">Expense TypeScript types in types/expense.ts</criterion>
+    <criterion id="AC19">Expense Zod validation schemas in lib/validations/expense.ts</criterion>
+    <criterion id="AC20">Expense frontend service in services/expense.service.ts</criterion>
+    <criterion id="AC21">Expense React Query hooks in hooks/useExpenses.ts</criterion>
+    <criterion id="AC22">ExpenseRepository with filter queries</criterion>
+    <criterion id="AC23">ExpenseService with all business logic methods</criterion>
+    <criterion id="AC24">ExpenseController REST endpoints with PROPERTY_MANAGER/FINANCE_MANAGER roles</criterion>
+    <criterion id="AC25">Expense DTOs and MapStruct mapper</criterion>
+    <criterion id="AC26">Flyway migration V37__create_expenses_table.sql</criterion>
+    <criterion id="AC27">WorkOrderService integration for auto-expense creation</criterion>
+    <criterion id="AC28">Status badges: PENDING=amber, PAID=green</criterion>
+    <criterion id="AC29">Category badges with distinct colors</criterion>
+    <criterion id="AC30">Responsive design, 44px touch targets, dark theme support</criterion>
+    <criterion id="AC31">Backend unit tests >= 80% coverage</criterion>
+    <criterion id="AC32">Frontend unit tests with React Testing Library</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/epics/epic-6-financial-management.md" title="Epic 6: Financial Management" section="Story 6.2" snippet="Expense Management and Vendor Payments requirements, acceptance criteria, technical notes"/>
+      <doc path="docs/architecture.md" title="Architecture" section="Implementation Patterns" snippet="Backend service, controller, repository, DTO patterns; Frontend component, form, API client patterns"/>
+      <doc path="docs/architecture.md" title="Architecture" section="Data Architecture" snippet="Database schema for expenses table, naming conventions, constraints"/>
+      <doc path="docs/prd.md" title="PRD" section="3.6.2 Expense Management" snippet="Vendor payment processing, maintenance cost tracking, expense allocation"/>
+    </docs>
+    <code>
+      <!-- Invoice/Payment Pattern Reference (Story 6.1) -->
+      <artifact path="backend/src/main/java/com/ultrabms/entity/Invoice.java" kind="entity" symbol="Invoice" reason="Reference pattern for Expense entity: UUID PK, number generation, status enum, BigDecimal amounts, audit fields, @Index annotations"/>
+      <artifact path="backend/src/main/java/com/ultrabms/entity/Payment.java" kind="entity" symbol="Payment" reason="Reference for payment recording pattern and PaymentMethod integration"/>
+      <artifact path="backend/src/main/java/com/ultrabms/entity/enums/PaymentMethod.java" kind="enum" symbol="PaymentMethod" reason="Existing enum to reuse: BANK_TRANSFER, CHEQUE, PDC, CASH, CARD, ONLINE"/>
+      <artifact path="backend/src/main/java/com/ultrabms/entity/enums/InvoiceStatus.java" kind="enum" symbol="InvoiceStatus" reason="Reference pattern for ExpenseCategory and PaymentStatus enums"/>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/InvoiceRepository.java" kind="repository" symbol="InvoiceRepository" reason="Reference pattern for ExpenseRepository filter queries"/>
+
+      <!-- File Storage Service (Story 1.6) -->
+      <artifact path="backend/src/main/java/com/ultrabms/service/FileStorageService.java" kind="service-interface" symbol="FileStorageService" reason="Use for receipt upload: storeFile(file, directory), deleteFile(path), getDownloadUrl(path)"/>
+      <artifact path="backend/src/main/java/com/ultrabms/service/impl/FileStorageServiceImpl.java" kind="service-impl" symbol="FileStorageServiceImpl" reason="S3 implementation with presigned URLs"/>
+
+      <!-- Work Order Integration (Epic 4) -->
+      <artifact path="backend/src/main/java/com/ultrabms/entity/WorkOrder.java" kind="entity" symbol="WorkOrder" reason="Hook into status change to COMPLETED for auto-expense creation; access actualCost, vendorId"/>
+      <artifact path="backend/src/main/java/com/ultrabms/service/WorkOrderService.java" kind="service-interface" symbol="WorkOrderService" reason="Modify to call ExpenseService.createExpenseForCompletedWorkOrder()"/>
+      <artifact path="backend/src/main/java/com/ultrabms/service/impl/WorkOrderServiceImpl.java" kind="service-impl" symbol="WorkOrderServiceImpl" reason="Add expense creation hook in status update method"/>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/WorkOrderRepository.java" kind="repository" symbol="WorkOrderRepository" reason="Reference for linking expense to workOrderId"/>
+
+      <!-- Vendor Integration (Epic 5) -->
+      <artifact path="backend/src/main/java/com/ultrabms/entity/Vendor.java" kind="entity" symbol="Vendor" reason="Link expense to vendor; get vendor email for payment notification"/>
+      <artifact path="backend/src/main/java/com/ultrabms/service/VendorService.java" kind="service-interface" symbol="VendorService" reason="Get vendor details for payment notifications"/>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/VendorRepository.java" kind="repository" symbol="VendorRepository" reason="Query vendors for dropdown and payment grouping"/>
+
+      <!-- Email Service -->
+      <artifact path="backend/src/main/java/com/ultrabms/service/EmailService.java" kind="service" symbol="EmailService" reason="Use for vendor payment notification emails"/>
+      <artifact path="backend/src/main/java/com/ultrabms/config/EmailConfig.java" kind="config" symbol="EmailConfig" reason="Email configuration reference"/>
+
+      <!-- Property Entity -->
+      <artifact path="backend/src/main/java/com/ultrabms/entity/Property.java" kind="entity" symbol="Property" reason="Link expense to property (nullable for general expenses)"/>
+
+      <!-- Frontend Patterns -->
+      <artifact path="frontend/src/types/invoice.ts" kind="types" symbol="Invoice types" reason="Reference pattern for Expense types, InvoiceStatus pattern for PaymentStatus"/>
+      <artifact path="frontend/src/lib/validations/invoice.ts" kind="validation" symbol="Invoice schemas" reason="Reference pattern for expense validation schemas"/>
+      <artifact path="frontend/src/services/invoice.service.ts" kind="service" symbol="invoiceService" reason="Reference pattern for expense.service.ts API calls"/>
+      <artifact path="frontend/src/hooks/useInvoices.ts" kind="hooks" symbol="useInvoices" reason="Reference pattern for useExpenses.ts React Query hooks"/>
+      <artifact path="frontend/src/types/vendors.ts" kind="types" symbol="Vendor types" reason="Vendor interface for vendor dropdown selection"/>
+      <artifact path="frontend/src/services/vendors.service.ts" kind="service" symbol="vendorsService" reason="Get vendors for expense form dropdown"/>
+    </code>
+    <dependencies>
+      <ecosystem name="java-maven">
+        <package name="spring-boot-starter-web" version="3.4.0"/>
+        <package name="spring-boot-starter-data-jpa" version="3.4.0"/>
+        <package name="spring-boot-starter-validation" version="3.4.0"/>
+        <package name="spring-boot-starter-mail" version="3.4.0"/>
+        <package name="spring-boot-starter-thymeleaf" version="3.4.0"/>
+        <package name="postgresql" scope="runtime"/>
+        <package name="flyway-core"/>
+        <package name="mapstruct" version="1.6.3"/>
+        <package name="lombok" version="1.18.36"/>
+        <package name="aws-sdk-s3" version="2.20.26"/>
+        <package name="itext-core" version="8.0.5" note="PDF generation for payment summary"/>
+        <package name="hypersistence-utils-hibernate-63" version="3.8.2" note="JSONB support if needed"/>
+      </ecosystem>
+      <ecosystem name="npm">
+        <package name="next" version="16.0.2"/>
+        <package name="react" version="19.2.0"/>
+        <package name="@tanstack/react-query" version="^5.90.9"/>
+        <package name="@tanstack/react-table" version="^8.21.3"/>
+        <package name="recharts" version="^3.4.1" note="Charts for expense summary"/>
+        <package name="zod" version="^4.1.12"/>
+        <package name="react-hook-form" version="^7.66.0"/>
+        <package name="@hookform/resolvers" version="^5.2.2"/>
+        <package name="axios" version="^1.13.2"/>
+        <package name="date-fns" version="^4.1.0"/>
+        <package name="lucide-react" version="^0.553.0"/>
+        <package name="react-dropzone" version="^14.3.8" note="For receipt upload"/>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint category="business">Only PENDING expenses can be edited or deleted (soft delete)</constraint>
+    <constraint category="business">Only PENDING expenses can be marked as paid</constraint>
+    <constraint category="business">Receipt max size 5MB, allowed types: PDF, JPG, JPEG, PNG</constraint>
+    <constraint category="business">Amount must be greater than 0</constraint>
+    <constraint category="business">Expense number must be unique (database constraint)</constraint>
+    <constraint category="business">Auto-expense creation from work order must be idempotent (no duplicates)</constraint>
+    <constraint category="technical">Use @Transactional for all write operations</constraint>
+    <constraint category="technical">Use @Async for email notifications (non-blocking)</constraint>
+    <constraint category="technical">Store receipts in S3 at /uploads/expenses/{expenseNumber}/{filename}</constraint>
+    <constraint category="technical">Store payment summary PDFs in S3 at /uploads/payment-summaries/</constraint>
+    <constraint category="technical">Next database migration version: V37</constraint>
+    <constraint category="technical">Follow existing PaymentMethod enum - do not create new one</constraint>
+    <constraint category="security">Endpoints require PROPERTY_MANAGER or FINANCE_MANAGER role</constraint>
+    <constraint category="ui">All interactive elements must have data-testid attributes</constraint>
+    <constraint category="ui">Touch targets >= 44x44px for mobile</constraint>
+    <constraint category="ui">Support dark theme</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="FileStorageService" kind="java-interface" path="backend/src/main/java/com/ultrabms/service/FileStorageService.java">
+      <method signature="String storeFile(MultipartFile file, String directory)"/>
+      <method signature="void deleteFile(String filePath)"/>
+      <method signature="String getDownloadUrl(String filePath)"/>
+    </interface>
+    <interface name="EmailService" kind="java-service" path="backend/src/main/java/com/ultrabms/service/EmailService.java">
+      <method signature="void sendEmail(String to, String subject, String templateName, Map context)"/>
+    </interface>
+    <interface name="ExpenseController" kind="rest-controller" path="backend/src/main/java/com/ultrabms/controller/ExpenseController.java">
+      <endpoint method="POST" path="/api/v1/expenses" description="Create expense with optional receipt"/>
+      <endpoint method="GET" path="/api/v1/expenses" description="List expenses with filters"/>
+      <endpoint method="GET" path="/api/v1/expenses/{id}" description="Get expense detail"/>
+      <endpoint method="PUT" path="/api/v1/expenses/{id}" description="Update expense (PENDING only)"/>
+      <endpoint method="PATCH" path="/api/v1/expenses/{id}/pay" description="Mark expense as paid"/>
+      <endpoint method="POST" path="/api/v1/expenses/batch-pay" description="Batch payment processing"/>
+      <endpoint method="DELETE" path="/api/v1/expenses/{id}" description="Soft delete expense"/>
+      <endpoint method="GET" path="/api/v1/expenses/summary" description="Get expense summary for charts"/>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 + Mockito for unit tests. Use @SpringBootTest for integration tests sparingly.
+      Mock external services (S3, Email). Use H2 in-memory database for tests.
+      Coverage requirements: >= 80% line coverage, >= 70% branch coverage (enforced by JaCoCo).
+      Frontend: Jest + React Testing Library for component tests. Vitest for validation schema tests.
+      Test all data-testid elements are accessible. Mock API calls with MSW or jest mocks.
+      E2E tests with Playwright (separate story 6.2.e2e).
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/ExpenseServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/controller/ExpenseControllerTest.java</location>
+      <location>frontend/src/lib/validations/__tests__/expense.test.ts</location>
+      <location>frontend/src/hooks/__tests__/useExpenses.test.ts</location>
+      <location>frontend/src/components/finance/__tests__/*.test.tsx</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1,AC2">Test Expense entity validation annotations and enum values</idea>
+      <idea ac="AC3">Test expense number generation with concurrent requests</idea>
+      <idea ac="AC4">Test createExpense with valid data, validation errors, file upload</idea>
+      <idea ac="AC5">Test auto-expense creation when work order completed with actualCost > 0</idea>
+      <idea ac="AC5">Test idempotency - no duplicate expense for same work order</idea>
+      <idea ac="AC6">Test receipt upload validation (size, type), S3 storage, presigned URL</idea>
+      <idea ac="AC7">Test markAsPaid - success, already paid error, not found error</idea>
+      <idea ac="AC8">Test batch payment - multiple expenses, validation, partial failure handling</idea>
+      <idea ac="AC9">Test payment summary PDF generation content</idea>
+      <idea ac="AC10">Test vendor email notification sent with correct data</idea>
+      <idea ac="AC11-17">Test frontend pages render, filters work, forms validate</idea>
+      <idea ac="AC19">Test Zod validation schemas for all edge cases</idea>
+      <idea ac="AC21">Test React Query hooks invalidate cache on mutations</idea>
+      <idea ac="AC28,AC29">Test badge colors match status/category values</idea>
+      <idea ac="AC30">Test responsive layout breakpoints</idea>
+    </ideas>
+  </tests>
+</story-context>

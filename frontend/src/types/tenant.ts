@@ -20,10 +20,11 @@ export enum PaymentFrequency {
 }
 
 export enum PaymentMethod {
+  CASH = 'CASH',
   BANK_TRANSFER = 'BANK_TRANSFER',
+  CARD = 'CARD',
   CHEQUE = 'CHEQUE',
   PDC = 'PDC',
-  CASH = 'CASH',
   ONLINE = 'ONLINE'
 }
 

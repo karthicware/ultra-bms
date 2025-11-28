@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Received</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .receipt-number {
+            background-color: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .receipt-number strong {
+            color: #059669;
+            font-size: 20px;
+        }
+        .amount-box {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .amount-box .label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        .amount-box .amount {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .success-box {
+            background-color: #ecfdf5;
+            border: 2px solid #10b981;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .success-box .checkmark {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 50%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: right;
+        }
+        .balance-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .balance-item:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 18px;
+            padding-top: 15px;
+        }
+        .paid-badge {
+            background-color: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+            .details-table th,
+            .details-table td {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">&#9989;</div>
+            <h1>Payment Received</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${tenantName}">Tenant</span>,
+            </div>
+
+            <p>Thank you for your payment! We have successfully received and processed your payment. Please find your receipt attached.</p>
+
+            <div th:if="${isPaidInFull}" class="success-box">
+                <div class="checkmark">&#127881;</div>
+                <h3 style="margin: 0; color: #059669;">Invoice Paid in Full!</h3>
+                <p style="margin: 10px 0 0 0; color: #666;">Thank you for completing your payment.</p>
+            </div>
+
+            <div class="receipt-number">
+                <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Receipt Number</div>
+                <strong th:text="${receiptNumber}">RCP-2025-0001</strong>
+            </div>
+
+            <div class="amount-box">
+                <div class="label">Amount Paid</div>
+                <div class="amount" th:text="${amountPaid}">AED 5,000.00</div>
+            </div>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Payment Details</h3>
+            <table class="details-table">
+                <tr>
+                    <th>Invoice Number</th>
+                    <td th:text="${invoiceNumber}">INV-2025-0001</td>
+                </tr>
+                <tr>
+                    <th>Payment Date</th>
+                    <td th:text="${paymentDate}">Jan 10, 2025</td>
+                </tr>
+                <tr>
+                    <th>Payment Method</th>
+                    <td th:text="${paymentMethod}">Bank Transfer</td>
+                </tr>
+                <tr th:if="${referenceNumber != null and referenceNumber != ''}">
+                    <th>Reference Number</th>
+                    <td th:text="${referenceNumber}">TXN123456</td>
+                </tr>
+            </table>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Balance Summary</h3>
+            <div class="balance-box">
+                <div class="balance-item">
+                    <span>Previous Balance</span>
+                    <span th:text="${previousBalance}">AED 5,000.00</span>
+                </div>
+                <div class="balance-item">
+                    <span>Payment Applied</span>
+                    <span style="color: #10b981;" th:text="'- ' + ${amountPaid}">- AED 5,000.00</span>
+                </div>
+                <div class="balance-item">
+                    <span>Remaining Balance</span>
+                    <span>
+                        <span th:text="${newBalance}">AED 0.00</span>
+                        <span th:if="${isPaidInFull}" class="paid-badge">PAID</span>
+                    </span>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${receiptUrl}" class="button">View Receipt Online</a>
+            </div>
+
+            <p style="color: #666; font-size: 14px; text-align: center;">
+                A PDF copy of your receipt is attached to this email for your records.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Questions about this payment?</strong></p>
+            <p>
+                Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -32,7 +32,17 @@ validation-rules:
 - [ ] Change Log includes a brief summary of what changed
 - [ ] Only permitted sections of the story file were modified
 
+## Mandatory Test Execution (Step 5.5 - Cannot Skip)
+
+- [ ] Backend test suite executed (`mvn test`) - ALL tests pass (0 failures)
+- [ ] Frontend test suite executed (`npm test`) - ALL tests pass (0 failures)
+- [ ] Backend compilation verified (`mvn compile`) - Zero errors
+- [ ] Frontend build verified (`npm run build`) - Zero errors
+- [ ] Frontend lint check passed (`npm run lint`) - Zero errors
+- [ ] Test and build results documented in Dev Agent Record → Completion Notes
+
 ## Final Status
 
+- [ ] All mandatory test execution and build verification completed
 - [ ] Regression suite executed successfully
 - [ ] Story Status is set to "Ready for Review"

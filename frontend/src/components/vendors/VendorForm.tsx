@@ -98,8 +98,12 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
   const [emailCheckStatus, setEmailCheckStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const [emailCheckTimeout, setEmailCheckTimeout] = useState<NodeJS.Timeout | null>(null);
 
+  // Create resolver outside with explicit any type to avoid inference issues
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const vendorResolver: any = zodResolver(vendorSchema);
+
   const form = useForm<VendorFormData>({
-    resolver: zodResolver(vendorSchema),
+    resolver: vendorResolver,
     defaultValues: {
       companyName: initialData?.companyName || '',
       contactPersonName: initialData?.contactPersonName || '',

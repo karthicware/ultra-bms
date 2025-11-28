@@ -1,0 +1,43 @@
+ULTRA BMS - INVOICE OVERDUE
+============================
+*** URGENT ATTENTION REQUIRED ***
+
+Hi [(${tenantName})],
+
+Your invoice is now past due. Please make your payment immediately to avoid additional late fees and potential service disruptions.
+
+OVERDUE BY [(${daysOverdue})] DAY[# th:if="${daysOverdue} != 1"]S[/]
+
+INVOICE DETAILS
+---------------
+Invoice Number: [(${invoiceNumber})]
+Original Due Date: [(${dueDate})]
+Amount Due: [(${balanceAmount})]
+
+[# th:if="${lateFeeApplied}"]
+LATE FEE APPLIED: [(${lateFee})]
+A late fee has been added to your invoice balance.
+[/]
+
+PROPERTY
+--------
+Property: [(${propertyName})]
+Unit: [(${unitNumber})]
+
+IMPORTANT NOTICE
+----------------
+Continued non-payment may result in:
+- Additional late fees being applied
+- Service restrictions
+- Impact on your rental history
+
+Pay Now: [(${paymentUrl})]
+View Invoice: [(${invoiceUrl})]
+
+If you're experiencing financial difficulties, please contact us immediately to discuss payment arrangements.
+
+---
+Need assistance?
+Contact us at [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.

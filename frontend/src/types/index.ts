@@ -41,3 +41,5 @@ export * from './work-order-progress';
 export * from './vendors';
 export * from './vendor-documents';
 export * from './vendor-ratings';
+export * from './invoice';
+export * from './expense';

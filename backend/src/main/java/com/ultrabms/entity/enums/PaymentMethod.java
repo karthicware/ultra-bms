@@ -26,7 +26,12 @@ public enum PaymentMethod {
     CASH,
 
     /**
-     * Online payment (credit card, debit card, etc.)
+     * Credit/Debit card payment
+     */
+    CARD,
+
+    /**
+     * Online payment (other electronic methods)
      */
     ONLINE
 }

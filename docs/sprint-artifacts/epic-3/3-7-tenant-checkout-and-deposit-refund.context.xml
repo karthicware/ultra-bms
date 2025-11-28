@@ -1,0 +1,1004 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Story Context: 3-7-tenant-checkout-and-deposit-refund
+  Generated: 2025-11-28
+  Purpose: Provides AI dev agent with complete context for implementing this story
+-->
+<story-context story-id="3.7" epic-id="3" generated="2025-11-28">
+
+  <!-- ================================================================== -->
+  <!-- SECTION 1: STORY METADATA -->
+  <!-- ================================================================== -->
+  <story-metadata>
+    <title>Tenant Checkout and Deposit Refund Processing</title>
+    <key>3-7-tenant-checkout-and-deposit-refund</key>
+    <status>drafted</status>
+    <story-type>feature</story-type>
+    <epic>Epic 3: Tenant Management &amp; Portal</epic>
+    <user-story>
+      <as-a>property manager</as-a>
+      <i-want>process tenant checkouts and refund security deposits</i-want>
+      <so-that>I can properly close out tenant accounts and settle financial obligations</so-that>
+    </user-story>
+  </story-metadata>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 2: ACCEPTANCE CRITERIA -->
+  <!-- ================================================================== -->
+  <acceptance-criteria>
+    <criterion id="AC-1" category="checkout-initiation">
+      <title>Checkout initiation for active tenants</title>
+      <given>I am logged in as a property manager</given>
+      <when>I initiate checkout for an active tenant</when>
+      <then>
+        - Checkout form includes: tenant selection (ACTIVE tenants only), checkout date (date picker, default: lease end date), checkout reason (dropdown: LEASE_END, EARLY_TERMINATION, EVICTION, TRANSFER, OTHER), early termination fee (if applicable), notes field (max 1000 chars)
+        - System validates: checkout date cannot be before lease start date, early termination requires fee calculation, tenant must have ACTIVE status
+      </then>
+    </criterion>
+
+    <criterion id="AC-2" category="outstanding-balance">
+      <title>Outstanding balance calculation</title>
+      <given>checkout is initiated</given>
+      <when>system calculates outstanding amounts</when>
+      <then>
+        - Display outstanding rent invoices (list with amounts, dates)
+        - Calculate total outstanding: sum of all unpaid invoices
+        - Show utility bills pending (if tracked)
+        - Show any damage charges from inspection
+        - Show early termination fee (if applicable)
+        - Display grand total outstanding
+      </then>
+    </criterion>
+
+    <criterion id="AC-3" category="deposit-calculation">
+      <title>Security deposit refund calculation</title>
+      <given>outstanding amounts are calculated</given>
+      <when>system calculates deposit refund</when>
+      <then>
+        - Show original security deposit amount from tenant record
+        - Calculate deductions: outstanding rent, damage charges, cleaning fees, early termination fee, other deductions (itemized list)
+        - Calculate net refund: security deposit - total deductions
+        - If deductions > deposit, show amount tenant owes
+        - Allow manual adjustment with reason (authorized managers only)
+      </then>
+    </criterion>
+
+    <criterion id="AC-4" category="checkout-inspection">
+      <title>Unit inspection documentation</title>
+      <given>checkout process is in progress</given>
+      <when>I document unit inspection</when>
+      <then>
+        - Inspection form includes: inspection date, inspector name, room-by-room condition checklist, damage items list (description, estimated cost), before/after photos upload (up to 20 photos), overall condition rating (1-5), notes
+        - Damage charges auto-populate in deposit calculation
+        - Photos stored in /uploads/inspections/{tenantId}/
+      </then>
+    </criterion>
+
+    <criterion id="AC-5" category="checkout-entity">
+      <title>Checkout entity creation</title>
+      <given>checkout is processed</given>
+      <when>checkout record is created</when>
+      <then>
+        - Checkout entity: id (UUID), checkoutNumber (CHK-2025-0001), tenantId, unitId, propertyId, checkoutDate, checkoutReason, securityDeposit, totalDeductions, netRefund, amountOwed (if any), inspectionId, status (PENDING, APPROVED, REFUND_PROCESSED, COMPLETED), processedBy, processedAt, notes, createdAt, updatedAt
+      </then>
+    </criterion>
+
+    <criterion id="AC-6" category="refund-processing">
+      <title>Deposit refund processing</title>
+      <given>checkout is approved</given>
+      <when>I process the refund</when>
+      <then>
+        - Refund form: refund amount (pre-populated, editable), refund method (BANK_TRANSFER, CHEQUE, CASH), bank details (if bank transfer): account holder name, bank name, IBAN, transaction reference (for tracking), refund date
+        - Generate refund receipt PDF
+        - Update checkout status to REFUND_PROCESSED
+        - Send confirmation email to tenant
+      </then>
+    </criterion>
+
+    <criterion id="AC-7" category="tenant-status-update">
+      <title>Tenant and unit status update</title>
+      <given>checkout is completed</given>
+      <when>system updates records</when>
+      <then>
+        - Update tenant status: ACTIVE → TERMINATED
+        - Update unit status: OCCUPIED → AVAILABLE
+        - Archive tenant documents
+        - Log activity: "Tenant {name} checked out from Unit {number}"
+        - Deactivate tenant user account (login disabled)
+      </then>
+    </criterion>
+
+    <criterion id="AC-8" category="checkout-list">
+      <title>Checkout history list</title>
+      <given>I am viewing checkout history</given>
+      <when>I access the checkouts page</when>
+      <then>
+        - List all checkouts with filters: status, property, date range
+        - Search by: tenant name, checkout number
+        - Columns: checkout number, tenant name, unit, checkout date, refund amount, status
+        - Quick actions: View details, Process refund, Download receipt
+      </then>
+    </criterion>
+
+    <criterion id="AC-9" category="checkout-detail">
+      <title>Checkout detail view</title>
+      <given>I view checkout details</given>
+      <when>I click on a checkout record</when>
+      <then>
+        - Full checkout information displayed
+        - Financial breakdown (deposit, deductions, refund)
+        - Inspection details and photos
+        - Status timeline
+        - Documents (refund receipt, inspection report)
+        - Action buttons based on status
+      </then>
+    </criterion>
+
+    <criterion id="AC-10" category="tenant-owing">
+      <title>Handle tenant owing money</title>
+      <given>deductions exceed security deposit</given>
+      <when>tenant owes money</when>
+      <then>
+        - Display amount owed prominently
+        - Generate invoice for outstanding amount
+        - Option to record payment
+        - Checkout cannot be marked COMPLETED until settled or written off
+        - Write-off requires manager approval with reason
+      </then>
+    </criterion>
+
+    <criterion id="AC-11" category="early-termination">
+      <title>Early termination handling</title>
+      <given>checkout reason is EARLY_TERMINATION</given>
+      <when>processing early checkout</when>
+      <then>
+        - Calculate early termination fee based on lease terms
+        - Default: 1 month rent if &lt; 6 months remaining, 2 months if &gt; 6 months
+        - Allow override with manager approval
+        - Add fee to deductions automatically
+        - Require acknowledgment from tenant (checkbox/signature)
+      </then>
+    </criterion>
+
+    <criterion id="AC-12" category="api-endpoints">
+      <title>API endpoints</title>
+      <then>
+        - POST /api/v1/checkouts: Initiate checkout
+        - GET /api/v1/checkouts: List checkouts with filters
+        - GET /api/v1/checkouts/{id}: Get checkout details
+        - PUT /api/v1/checkouts/{id}: Update checkout
+        - POST /api/v1/checkouts/{id}/inspection: Add inspection
+        - POST /api/v1/checkouts/{id}/inspection/photos: Upload photos
+        - POST /api/v1/checkouts/{id}/approve: Approve checkout
+        - POST /api/v1/checkouts/{id}/refund: Process refund
+        - POST /api/v1/checkouts/{id}/complete: Complete checkout
+        - GET /api/v1/checkouts/{id}/receipt: Download refund receipt
+        - GET /api/v1/tenants/{id}/outstanding: Get tenant outstanding amounts
+      </then>
+    </criterion>
+
+    <criterion id="AC-13" category="email-notifications">
+      <title>Email notifications</title>
+      <then>
+        - Checkout initiated: notify tenant with details
+        - Inspection scheduled: notify tenant with date/time
+        - Checkout approved: notify tenant with financial summary
+        - Refund processed: notify tenant with receipt attached
+        - Amount owed: notify tenant with invoice attached
+      </then>
+    </criterion>
+
+    <criterion id="AC-14" category="pdf-generation">
+      <title>PDF document generation</title>
+      <then>
+        - Checkout summary PDF: all details, financial breakdown
+        - Refund receipt PDF: refund details, transaction info
+        - Inspection report PDF: condition report with photos
+      </then>
+    </criterion>
+
+    <criterion id="AC-15" category="validation-rules">
+      <title>Validation rules</title>
+      <then>
+        - Cannot checkout tenant with PENDING status
+        - Cannot checkout tenant already TERMINATED
+        - Refund amount cannot exceed security deposit
+        - Bank details required for bank transfer refund
+        - Inspection required before approval (configurable)
+      </then>
+    </criterion>
+
+    <criterion id="AC-16" category="dashboard-kpis">
+      <title>Dashboard KPIs</title>
+      <then>
+        - Pending Checkouts: count of PENDING status
+        - Average Refund Processing Time: avg days from approval to refund
+        - Total Refunds This Month: sum of refund amounts
+        - Outstanding Collections: sum of amounts owed by checked-out tenants
+      </then>
+    </criterion>
+
+    <criterion id="AC-17" category="audit-trail">
+      <title>Audit trail</title>
+      <then>
+        - Log all checkout status changes
+        - Log all financial adjustments with reason
+        - Log user who performed each action
+        - Timestamps for all events
+      </then>
+    </criterion>
+
+    <criterion id="AC-18" category="prerequisites">
+      <title>Prerequisites</title>
+      <then>
+        - Story 3.3 (Tenant onboarding - tenant entity with security deposit)
+        - Story 6.1 (Rent invoicing - for outstanding invoice tracking)
+      </then>
+    </criterion>
+  </acceptance-criteria>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 3: TASKS -->
+  <!-- ================================================================== -->
+  <tasks>
+    <task id="T-1" phase="backend-entity">
+      <title>Create Checkout and Inspection entities</title>
+      <description>
+        Create JPA entities for Checkout and Inspection with all required fields, relationships, and validation annotations.
+      </description>
+      <subtasks>
+        <subtask>Create CheckoutReason enum (LEASE_END, EARLY_TERMINATION, EVICTION, TRANSFER, OTHER)</subtask>
+        <subtask>Create CheckoutStatus enum (PENDING, APPROVED, REFUND_PROCESSED, COMPLETED)</subtask>
+        <subtask>Create RefundMethod enum (BANK_TRANSFER, CHEQUE, CASH)</subtask>
+        <subtask>Create Checkout entity with all fields per AC-5</subtask>
+        <subtask>Create Inspection entity with room-by-room checklist JSON field</subtask>
+        <subtask>Create InspectionDamageItem embedded class</subtask>
+        <subtask>Add database indexes on tenantId, status, checkoutDate</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-2" phase="backend-migration">
+      <title>Database migration for checkouts and inspections</title>
+      <description>
+        Create Flyway migration script for new tables.
+      </description>
+      <subtasks>
+        <subtask>Create V37__create_checkouts_table.sql</subtask>
+        <subtask>Create V38__create_inspections_table.sql</subtask>
+        <subtask>Add foreign key constraints to tenants, units, properties</subtask>
+        <subtask>Add unique constraint on checkout_number</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-3" phase="backend-repository">
+      <title>Create CheckoutRepository and InspectionRepository</title>
+      <description>
+        Create Spring Data JPA repositories with custom query methods.
+      </description>
+      <subtasks>
+        <subtask>Create CheckoutRepository with filter queries</subtask>
+        <subtask>Create InspectionRepository</subtask>
+        <subtask>Add findByTenantId, findByPropertyId, findByStatus methods</subtask>
+        <subtask>Add checkout number generation query</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-4" phase="backend-dto">
+      <title>Create checkout DTOs</title>
+      <description>
+        Create request and response DTOs for checkout operations.
+      </description>
+      <subtasks>
+        <subtask>Create CheckoutCreateDto</subtask>
+        <subtask>Create CheckoutResponseDto</subtask>
+        <subtask>Create CheckoutListDto</subtask>
+        <subtask>Create CheckoutFilterDto</subtask>
+        <subtask>Create InspectionDto</subtask>
+        <subtask>Create RefundDto</subtask>
+        <subtask>Create OutstandingBalanceDto</subtask>
+        <subtask>Create DepositCalculationDto</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-5" phase="backend-service">
+      <title>Implement CheckoutService</title>
+      <description>
+        Create service layer with business logic for checkout processing.
+      </description>
+      <subtasks>
+        <subtask>Create CheckoutService interface</subtask>
+        <subtask>Create CheckoutServiceImpl with all methods</subtask>
+        <subtask>Implement initiateCheckout() with validation</subtask>
+        <subtask>Implement calculateOutstanding() using InvoiceService</subtask>
+        <subtask>Implement calculateDepositRefund()</subtask>
+        <subtask>Implement addInspection()</subtask>
+        <subtask>Implement approveCheckout()</subtask>
+        <subtask>Implement processRefund()</subtask>
+        <subtask>Implement completeCheckout() with tenant/unit status updates</subtask>
+        <subtask>Implement early termination fee calculation</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-6" phase="backend-controller">
+      <title>Create CheckoutController</title>
+      <description>
+        Create REST controller with all checkout endpoints.
+      </description>
+      <subtasks>
+        <subtask>Create CheckoutController with @RestController</subtask>
+        <subtask>Implement all endpoints per AC-12</subtask>
+        <subtask>Add @PreAuthorize for PROPERTY_MANAGER, ADMIN roles</subtask>
+        <subtask>Add request validation with @Valid</subtask>
+        <subtask>Add file upload endpoint for inspection photos</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-7" phase="backend-pdf">
+      <title>Implement PDF generation for checkout documents</title>
+      <description>
+        Extend PdfGenerationService for checkout-related documents.
+      </description>
+      <subtasks>
+        <subtask>Add generateCheckoutSummaryPdf() method</subtask>
+        <subtask>Add generateRefundReceiptPdf() method</subtask>
+        <subtask>Add generateInspectionReportPdf() method</subtask>
+        <subtask>Include photos in inspection report PDF</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-8" phase="backend-email">
+      <title>Add checkout email notifications</title>
+      <description>
+        Extend EmailService for checkout-related notifications.
+      </description>
+      <subtasks>
+        <subtask>Add sendCheckoutInitiatedEmail()</subtask>
+        <subtask>Add sendCheckoutApprovedEmail()</subtask>
+        <subtask>Add sendRefundProcessedEmail() with receipt attachment</subtask>
+        <subtask>Add sendAmountOwedEmail() with invoice attachment</subtask>
+        <subtask>Create email templates for each notification</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-9" phase="frontend-types">
+      <title>Create TypeScript types for checkout</title>
+      <description>
+        Define all TypeScript interfaces and enums for checkout feature.
+      </description>
+      <subtasks>
+        <subtask>Create src/types/checkout.ts with all interfaces</subtask>
+        <subtask>Add CheckoutStatus, CheckoutReason, RefundMethod enums</subtask>
+        <subtask>Add Checkout, Inspection, DepositCalculation interfaces</subtask>
+        <subtask>Add request/response types</subtask>
+        <subtask>Export from src/types/index.ts</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-10" phase="frontend-service">
+      <title>Create checkout service</title>
+      <description>
+        Create API service for checkout operations.
+      </description>
+      <subtasks>
+        <subtask>Create src/services/checkout.service.ts</subtask>
+        <subtask>Implement all API calls per AC-12</subtask>
+        <subtask>Add proper error handling</subtask>
+        <subtask>Add type safety for requests/responses</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-11" phase="frontend-hooks">
+      <title>Create React Query hooks for checkout</title>
+      <description>
+        Create custom hooks for data fetching and mutations.
+      </description>
+      <subtasks>
+        <subtask>Create src/hooks/useCheckouts.ts</subtask>
+        <subtask>Add useCheckouts() for list with filters</subtask>
+        <subtask>Add useCheckout() for single checkout</subtask>
+        <subtask>Add useInitiateCheckout() mutation</subtask>
+        <subtask>Add useApproveCheckout() mutation</subtask>
+        <subtask>Add useProcessRefund() mutation</subtask>
+        <subtask>Add useCompleteCheckout() mutation</subtask>
+        <subtask>Add useAddInspection() mutation</subtask>
+        <subtask>Add useUploadInspectionPhotos() mutation</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-12" phase="frontend-components">
+      <title>Create checkout UI components</title>
+      <description>
+        Build reusable components for checkout feature.
+      </description>
+      <subtasks>
+        <subtask>Create src/components/checkout/CheckoutForm.tsx - initiation form</subtask>
+        <subtask>Create src/components/checkout/OutstandingBalance.tsx - balance display</subtask>
+        <subtask>Create src/components/checkout/DepositCalculation.tsx - refund calc display</subtask>
+        <subtask>Create src/components/checkout/InspectionForm.tsx - inspection entry</subtask>
+        <subtask>Create src/components/checkout/RefundForm.tsx - refund processing</subtask>
+        <subtask>Create src/components/checkout/CheckoutTimeline.tsx - status timeline</subtask>
+        <subtask>Create src/components/checkout/CheckoutStatusBadge.tsx</subtask>
+        <subtask>Reuse PhotoUploadZone from maintenance components</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-13" phase="frontend-pages">
+      <title>Create checkout pages</title>
+      <description>
+        Build Next.js pages for checkout management.
+      </description>
+      <subtasks>
+        <subtask>Create src/app/(dashboard)/checkouts/page.tsx - list view</subtask>
+        <subtask>Create src/app/(dashboard)/checkouts/[id]/page.tsx - detail view</subtask>
+        <subtask>Create src/app/(dashboard)/checkouts/new/page.tsx - new checkout wizard</subtask>
+        <subtask>Add checkout to sidebar navigation</subtask>
+        <subtask>Add breadcrumb navigation</subtask>
+      </subtasks>
+    </task>
+
+    <task id="T-14" phase="testing">
+      <title>Unit and integration tests</title>
+      <description>
+        Write tests for checkout functionality.
+      </description>
+      <subtasks>
+        <subtask>Write CheckoutServiceTest.java</subtask>
+        <subtask>Write CheckoutControllerTest.java</subtask>
+        <subtask>Write frontend component tests</subtask>
+        <subtask>Write hook tests</subtask>
+      </subtasks>
+    </task>
+  </tasks>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 4: TECHNICAL NOTES -->
+  <!-- ================================================================== -->
+  <technical-notes>
+    <note category="number-generation">
+      Checkout numbers auto-increment with year prefix (CHK-2025-0001). Use sequence or max+1 approach similar to tenant numbers.
+    </note>
+    <note category="file-storage">
+      Store inspection photos in /uploads/inspections/{tenantId}/{checkoutId}/. Use existing FileStorageService.
+    </note>
+    <note category="image-compression">
+      Use browser-image-compression library (already installed) for client-side compression before upload.
+    </note>
+    <note category="pdf-generation">
+      Extend existing PdfGenerationService using iText library for checkout documents.
+    </note>
+    <note category="transaction-handling">
+      Use @Transactional for completeCheckout() - must atomically update tenant, unit, and checkout status.
+    </note>
+    <note category="audit-logging">
+      Use existing AuditLogService to log all checkout state transitions and financial adjustments.
+    </note>
+    <note category="currency">
+      All amounts in AED. Use BigDecimal for precision. Display with 2 decimal places.
+    </note>
+    <note category="timezone">
+      All dates displayed in UAE timezone (Gulf Standard Time - GST).
+    </note>
+    <note category="early-termination">
+      Early termination fee calculation: if lease remaining &lt; 6 months = 1 month rent, else = 2 months rent. Configurable in future.
+    </note>
+    <note category="component-reuse">
+      Reuse PhotoUploadZone, StatusTimeline, StatusBadge patterns from maintenance module.
+    </note>
+    <note category="data-testid">
+      Follow data-testid conventions from docs/development/data-testid-conventions.md.
+    </note>
+  </technical-notes>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 5: ARCHITECTURAL CONTEXT -->
+  <!-- ================================================================== -->
+  <architecture-context>
+    <backend>
+      <framework>Spring Boot 3.x</framework>
+      <database>PostgreSQL with Flyway migrations</database>
+      <orm>JPA/Hibernate with Lombok</orm>
+      <validation>Jakarta Validation annotations</validation>
+      <security>Spring Security with JWT, @PreAuthorize for RBAC</security>
+      <api-style>RESTful with standard response wrapper</api-style>
+      <package-structure>
+        <controller>com.ultrabms.controller</controller>
+        <service>com.ultrabms.service, com.ultrabms.service.impl</service>
+        <repository>com.ultrabms.repository</repository>
+        <entity>com.ultrabms.entity</entity>
+        <dto>com.ultrabms.dto.checkout</dto>
+        <mapper>com.ultrabms.mapper</mapper>
+        <enums>com.ultrabms.entity.enums</enums>
+      </package-structure>
+    </backend>
+    <frontend>
+      <framework>Next.js 16 (App Router)</framework>
+      <ui-library>shadcn/ui with Radix primitives</ui-library>
+      <state-management>TanStack Query (React Query)</state-management>
+      <forms>React Hook Form with Zod validation</forms>
+      <http-client>Axios</http-client>
+      <styling>Tailwind CSS v4</styling>
+      <icons>Lucide React</icons>
+      <charts>Recharts</charts>
+      <file-upload>react-dropzone with browser-image-compression</file-upload>
+    </frontend>
+  </architecture-context>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 6: EXISTING CODE REFERENCES -->
+  <!-- ================================================================== -->
+  <code-references>
+    <reference category="entity-pattern">
+      <file>backend/src/main/java/com/ultrabms/entity/Tenant.java</file>
+      <purpose>Reference for entity structure with validation, enums, relationships</purpose>
+      <relevant-fields>
+        <field>status (TenantStatus enum)</field>
+        <field>securityDeposit (BigDecimal)</field>
+        <field>unit (ManyToOne relationship)</field>
+        <field>property (ManyToOne relationship)</field>
+      </relevant-fields>
+    </reference>
+
+    <reference category="entity-pattern">
+      <file>backend/src/main/java/com/ultrabms/entity/Invoice.java</file>
+      <purpose>Reference for financial entity with status tracking, calculations</purpose>
+      <relevant-patterns>
+        <pattern>@PrePersist for auto-calculation</pattern>
+        <pattern>JSON column type for additionalCharges</pattern>
+        <pattern>Helper methods (isEditable, canReceivePayment)</pattern>
+      </relevant-patterns>
+    </reference>
+
+    <reference category="service-pattern">
+      <file>backend/src/main/java/com/ultrabms/service/impl/InvoiceServiceImpl.java</file>
+      <purpose>Reference for service implementation with transactions, validation</purpose>
+    </reference>
+
+    <reference category="frontend-types">
+      <file>frontend/src/types/tenant.ts</file>
+      <purpose>Reference for TypeScript enum and interface patterns</purpose>
+      <relevant-types>
+        <type>TenantStatus enum</type>
+        <type>PaymentMethod enum</type>
+        <type>Tenant interface with optional relations</type>
+      </relevant-types>
+    </reference>
+
+    <reference category="frontend-types">
+      <file>frontend/src/types/invoice.ts</file>
+      <purpose>Reference for financial types, status helpers, currency formatting</purpose>
+      <relevant-exports>
+        <export>InvoiceStatus enum</export>
+        <export>formatCurrency() helper</export>
+        <export>INVOICE_STATUS_OPTIONS for badges</export>
+      </relevant-exports>
+    </reference>
+
+    <reference category="component-pattern">
+      <file>frontend/src/components/maintenance/PhotoUploadZone.tsx</file>
+      <purpose>Reusable photo upload component with compression</purpose>
+      <props>
+        <prop>photos: File[]</prop>
+        <prop>maxPhotos: number</prop>
+        <prop>maxSizeMB: number</prop>
+        <prop>onPhotosChange: callback</prop>
+      </props>
+    </reference>
+
+    <reference category="component-pattern">
+      <file>frontend/src/components/maintenance/StatusTimeline.tsx</file>
+      <purpose>Status timeline display component</purpose>
+    </reference>
+
+    <reference category="component-pattern">
+      <file>frontend/src/components/maintenance/StatusBadge.tsx</file>
+      <purpose>Status badge with color coding</purpose>
+    </reference>
+
+    <reference category="hook-pattern">
+      <file>frontend/src/hooks/useInvoices.ts</file>
+      <purpose>Reference for React Query hook patterns</purpose>
+    </reference>
+
+    <reference category="service-pattern">
+      <file>frontend/src/services/invoice.service.ts</file>
+      <purpose>Reference for API service patterns</purpose>
+    </reference>
+
+    <reference category="validation-pattern">
+      <file>frontend/src/lib/validations/invoice.ts</file>
+      <purpose>Reference for Zod schema patterns</purpose>
+    </reference>
+
+    <reference category="page-pattern">
+      <file>frontend/src/app/(dashboard)/invoices/</file>
+      <purpose>Reference for list/detail page structure</purpose>
+    </reference>
+
+    <reference category="tenant-components">
+      <file>frontend/src/components/tenants/</file>
+      <purpose>Multi-step wizard form patterns (PersonalInfoStep, LeaseInfoStep, etc.)</purpose>
+    </reference>
+  </code-references>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 7: DATA MODEL -->
+  <!-- ================================================================== -->
+  <data-model>
+    <entity name="Checkout">
+      <field name="id" type="UUID" pk="true"/>
+      <field name="checkoutNumber" type="String(20)" unique="true" pattern="CHK-YYYY-NNNN"/>
+      <field name="tenantId" type="UUID" fk="tenants.id"/>
+      <field name="unitId" type="UUID" fk="units.id"/>
+      <field name="propertyId" type="UUID" fk="properties.id"/>
+      <field name="checkoutDate" type="LocalDate"/>
+      <field name="checkoutReason" type="CheckoutReason enum"/>
+      <field name="securityDeposit" type="BigDecimal(12,2)"/>
+      <field name="totalDeductions" type="BigDecimal(12,2)"/>
+      <field name="netRefund" type="BigDecimal(12,2)"/>
+      <field name="amountOwed" type="BigDecimal(12,2)" nullable="true"/>
+      <field name="earlyTerminationFee" type="BigDecimal(12,2)" nullable="true"/>
+      <field name="status" type="CheckoutStatus enum" default="PENDING"/>
+      <field name="refundMethod" type="RefundMethod enum" nullable="true"/>
+      <field name="refundDate" type="LocalDate" nullable="true"/>
+      <field name="refundTransactionRef" type="String(100)" nullable="true"/>
+      <field name="bankAccountHolder" type="String(200)" nullable="true"/>
+      <field name="bankName" type="String(100)" nullable="true"/>
+      <field name="bankIban" type="String(50)" nullable="true"/>
+      <field name="notes" type="String(1000)" nullable="true"/>
+      <field name="processedBy" type="UUID" nullable="true"/>
+      <field name="processedAt" type="LocalDateTime" nullable="true"/>
+      <field name="createdAt" type="LocalDateTime"/>
+      <field name="updatedAt" type="LocalDateTime"/>
+      <field name="createdBy" type="UUID"/>
+    </entity>
+
+    <entity name="Inspection">
+      <field name="id" type="UUID" pk="true"/>
+      <field name="checkoutId" type="UUID" fk="checkouts.id"/>
+      <field name="inspectionDate" type="LocalDate"/>
+      <field name="inspectorName" type="String(200)"/>
+      <field name="conditionChecklist" type="JSONB" description="Room-by-room condition ratings"/>
+      <field name="damageItems" type="JSONB" description="Array of {description, estimatedCost}"/>
+      <field name="totalDamageCost" type="BigDecimal(12,2)"/>
+      <field name="overallRating" type="Integer" range="1-5"/>
+      <field name="cleaningRequired" type="Boolean"/>
+      <field name="cleaningFee" type="BigDecimal(12,2)" nullable="true"/>
+      <field name="notes" type="String(2000)" nullable="true"/>
+      <field name="createdAt" type="LocalDateTime"/>
+      <field name="updatedAt" type="LocalDateTime"/>
+    </entity>
+
+    <entity name="InspectionPhoto">
+      <field name="id" type="UUID" pk="true"/>
+      <field name="inspectionId" type="UUID" fk="inspections.id"/>
+      <field name="fileName" type="String(255)"/>
+      <field name="filePath" type="String(500)"/>
+      <field name="fileSize" type="Long"/>
+      <field name="photoType" type="String(50)" description="BEFORE, AFTER, DAMAGE"/>
+      <field name="room" type="String(50)" nullable="true"/>
+      <field name="caption" type="String(200)" nullable="true"/>
+      <field name="uploadedAt" type="LocalDateTime"/>
+    </entity>
+
+    <enum name="CheckoutStatus">
+      <value>PENDING</value>
+      <value>APPROVED</value>
+      <value>REFUND_PROCESSED</value>
+      <value>COMPLETED</value>
+    </enum>
+
+    <enum name="CheckoutReason">
+      <value>LEASE_END</value>
+      <value>EARLY_TERMINATION</value>
+      <value>EVICTION</value>
+      <value>TRANSFER</value>
+      <value>OTHER</value>
+    </enum>
+
+    <enum name="RefundMethod">
+      <value>BANK_TRANSFER</value>
+      <value>CHEQUE</value>
+      <value>CASH</value>
+    </enum>
+  </data-model>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 8: API SPECIFICATION -->
+  <!-- ================================================================== -->
+  <api-specification>
+    <endpoint method="POST" path="/api/v1/checkouts">
+      <description>Initiate tenant checkout</description>
+      <auth>PROPERTY_MANAGER, ADMIN</auth>
+      <request-body>
+        {
+          "tenantId": "uuid",
+          "checkoutDate": "2025-12-31",
+          "checkoutReason": "LEASE_END",
+          "notes": "string (optional)"
+        }
+      </request-body>
+      <response status="201">
+        {
+          "success": true,
+          "message": "Checkout initiated successfully",
+          "data": { "id": "uuid", "checkoutNumber": "CHK-2025-0001", ... }
+        }
+      </response>
+    </endpoint>
+
+    <endpoint method="GET" path="/api/v1/checkouts">
+      <description>List checkouts with filters</description>
+      <auth>PROPERTY_MANAGER, ADMIN</auth>
+      <query-params>
+        <param name="status" type="CheckoutStatus" optional="true"/>
+        <param name="propertyId" type="UUID" optional="true"/>
+        <param name="fromDate" type="date" optional="true"/>
+        <param name="toDate" type="date" optional="true"/>
+        <param name="search" type="string" optional="true"/>
+        <param name="page" type="int" default="0"/>
+        <param name="size" type="int" default="20"/>
+      </query-params>
+      <response>Paginated list of CheckoutListDto</response>
+    </endpoint>
+
+    <endpoint method="GET" path="/api/v1/checkouts/{id}">
+      <description>Get checkout details</description>
+      <auth>PROPERTY_MANAGER, ADMIN</auth>
+      <response>Full CheckoutResponseDto with inspection, deductions</response>
+    </endpoint>
+
+    <endpoint method="POST" path="/api/v1/checkouts/{id}/inspection">
+      <description>Add inspection to checkout</description>
+      <auth>PROPERTY_MANAGER, ADMIN</auth>
+      <request-body>InspectionDto</request-body>
+    </endpoint>
+
+    <endpoint method="POST" path="/api/v1/checkouts/{id}/inspection/photos">
+      <description>Upload inspection photos</description>
+      <auth>PROPERTY_MANAGER, ADMIN</auth>
+      <content-type>multipart/form-data</content-type>
+      <request-body>files[], photoType, room (optional)</request-body>
+    </endpoint>
+
+    <endpoint method="POST" path="/api/v1/checkouts/{id}/approve">
+      <description>Approve checkout after inspection</description>
+      <auth>PROPERTY_MANAGER, ADMIN</auth>
+    </endpoint>
+
+    <endpoint method="POST" path="/api/v1/checkouts/{id}/refund">
+      <description>Process deposit refund</description>
+      <auth>PROPERTY_MANAGER, ADMIN</auth>
+      <request-body>RefundDto (amount, method, bank details)</request-body>
+    </endpoint>
+
+    <endpoint method="POST" path="/api/v1/checkouts/{id}/complete">
+      <description>Complete checkout (updates tenant/unit status)</description>
+      <auth>PROPERTY_MANAGER, ADMIN</auth>
+    </endpoint>
+
+    <endpoint method="GET" path="/api/v1/checkouts/{id}/receipt">
+      <description>Download refund receipt PDF</description>
+      <auth>PROPERTY_MANAGER, ADMIN</auth>
+      <response>PDF file</response>
+    </endpoint>
+
+    <endpoint method="GET" path="/api/v1/tenants/{id}/outstanding">
+      <description>Get tenant outstanding amounts</description>
+      <auth>PROPERTY_MANAGER, ADMIN</auth>
+      <response>OutstandingBalanceDto with invoice breakdown</response>
+    </endpoint>
+  </api-specification>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 9: UI WIREFRAMES (Text Description) -->
+  <!-- ================================================================== -->
+  <ui-wireframes>
+    <screen name="Checkouts List Page">
+      <path>/checkouts</path>
+      <layout>
+        <header>Page title "Tenant Checkouts" with "Initiate Checkout" button</header>
+        <filters>
+          <filter>Status dropdown (All, PENDING, APPROVED, REFUND_PROCESSED, COMPLETED)</filter>
+          <filter>Property dropdown</filter>
+          <filter>Date range picker</filter>
+          <filter>Search input (tenant name, checkout number)</filter>
+        </filters>
+        <table>
+          <columns>Checkout #, Tenant, Unit, Property, Date, Refund Amount, Status, Actions</columns>
+          <row-actions>View, Process Refund (if APPROVED), Download Receipt (if REFUND_PROCESSED)</row-actions>
+        </table>
+        <pagination>Standard pagination controls</pagination>
+      </layout>
+    </screen>
+
+    <screen name="Initiate Checkout Wizard">
+      <path>/checkouts/new</path>
+      <layout>
+        <step n="1" title="Select Tenant">
+          <field>Tenant dropdown (ACTIVE tenants only, shows name + unit)</field>
+          <display>Selected tenant details card</display>
+        </step>
+        <step n="2" title="Checkout Details">
+          <field>Checkout date (date picker, default: lease end date)</field>
+          <field>Checkout reason (dropdown)</field>
+          <field>Early termination fee display (if applicable)</field>
+          <field>Notes textarea</field>
+        </step>
+        <step n="3" title="Outstanding Balance">
+          <display>Outstanding invoices table</display>
+          <display>Utility bills (if any)</display>
+          <display>Total outstanding amount</display>
+        </step>
+        <step n="4" title="Deposit Calculation">
+          <display>Original security deposit</display>
+          <display>Deductions table (itemized)</display>
+          <display>Net refund OR Amount owed</display>
+          <field>Manual adjustment (with reason, manager only)</field>
+        </step>
+        <step n="5" title="Review &amp; Submit">
+          <display>Summary of all checkout details</display>
+          <button>Submit Checkout</button>
+        </step>
+      </layout>
+    </screen>
+
+    <screen name="Checkout Detail Page">
+      <path>/checkouts/[id]</path>
+      <layout>
+        <header>
+          <title>Checkout #{checkoutNumber}</title>
+          <status-badge>Current status</status-badge>
+          <actions>Based on status (Approve, Process Refund, Complete, Download Receipt)</actions>
+        </header>
+        <tabs>
+          <tab name="Overview">
+            <card>Tenant information</card>
+            <card>Unit information</card>
+            <card>Checkout details (date, reason, notes)</card>
+            <card>Financial summary (deposit, deductions, refund/owed)</card>
+          </tab>
+          <tab name="Inspection">
+            <card>Inspection details (date, inspector, rating)</card>
+            <card>Condition checklist</card>
+            <card>Damage items with costs</card>
+            <gallery>Inspection photos (thumbnail grid, click to enlarge)</gallery>
+            <button>Add/Edit Inspection (if not completed)</button>
+          </tab>
+          <tab name="Refund">
+            <card>Refund details (amount, method, date, reference)</card>
+            <card>Bank details (if bank transfer)</card>
+            <button>Download Receipt (if processed)</button>
+          </tab>
+          <tab name="Timeline">
+            <timeline>Status change history with timestamps and users</timeline>
+          </tab>
+        </tabs>
+      </layout>
+    </screen>
+
+    <screen name="Inspection Form">
+      <path>Modal/Sheet within checkout detail</path>
+      <layout>
+        <field>Inspection date (date picker)</field>
+        <field>Inspector name (text input)</field>
+        <section title="Room Condition">
+          <checklist>Living room, Kitchen, Bedroom(s), Bathroom(s), Balcony - each with Good/Fair/Poor/Damaged rating</checklist>
+        </section>
+        <section title="Damage Items">
+          <repeater>
+            <field>Description (text)</field>
+            <field>Estimated cost (number, AED)</field>
+            <button>Add damage item</button>
+          </repeater>
+        </section>
+        <field>Overall rating (1-5 stars)</field>
+        <field>Cleaning required (checkbox)</field>
+        <field>Cleaning fee (number, if checked)</field>
+        <field>Notes (textarea)</field>
+        <section title="Photos">
+          <uploader>PhotoUploadZone component (max 20 photos)</uploader>
+          <field>Photo type selector (Before, After, Damage)</field>
+        </section>
+        <button>Save Inspection</button>
+      </layout>
+    </screen>
+
+    <screen name="Process Refund Form">
+      <path>Modal/Sheet within checkout detail</path>
+      <layout>
+        <display>Net refund amount (read-only, highlighted)</display>
+        <field>Refund method (dropdown: Bank Transfer, Cheque, Cash)</field>
+        <conditional show-if="method=BANK_TRANSFER">
+          <field>Account holder name</field>
+          <field>Bank name</field>
+          <field>IBAN</field>
+        </conditional>
+        <field>Transaction reference (text)</field>
+        <field>Refund date (date picker, default: today)</field>
+        <button>Process Refund</button>
+      </layout>
+    </screen>
+  </ui-wireframes>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 10: DEPENDENCIES -->
+  <!-- ================================================================== -->
+  <dependencies>
+    <prerequisite-stories>
+      <story id="3.3">Tenant Onboarding - provides tenant entity with securityDeposit field</story>
+      <story id="6.1">Rent Invoicing - provides InvoiceService for outstanding calculation</story>
+    </prerequisite-stories>
+
+    <shared-services>
+      <service>InvoiceService - for fetching tenant outstanding invoices</service>
+      <service>TenantService - for updating tenant status</service>
+      <service>UnitService - for updating unit status to AVAILABLE</service>
+      <service>PdfGenerationService - for checkout/refund/inspection PDFs</service>
+      <service>EmailService - for checkout notifications</service>
+      <service>FileStorageService - for inspection photos</service>
+      <service>AuditLogService - for status change logging</service>
+    </shared-services>
+
+    <existing-components>
+      <component>PhotoUploadZone - from maintenance module</component>
+      <component>StatusTimeline - from maintenance module</component>
+      <component>StatusBadge - from maintenance module</component>
+      <component>PhotoGallery - from maintenance module</component>
+      <component>FileUploadZone - from tenants module</component>
+    </existing-components>
+
+    <npm-packages>
+      <package>browser-image-compression - already installed</package>
+      <package>react-dropzone - already installed</package>
+      <package>react-rating-stars-component - already installed</package>
+      <package>recharts - for dashboard charts if needed</package>
+    </npm-packages>
+  </dependencies>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 11: TESTING GUIDANCE -->
+  <!-- ================================================================== -->
+  <testing-guidance>
+    <unit-tests>
+      <test-file>CheckoutServiceTest.java</test-file>
+      <test-cases>
+        <case>testInitiateCheckout_Success</case>
+        <case>testInitiateCheckout_TenantNotActive_ThrowsException</case>
+        <case>testCalculateOutstanding_WithUnpaidInvoices</case>
+        <case>testCalculateDepositRefund_DeductionsLessThanDeposit</case>
+        <case>testCalculateDepositRefund_DeductionsExceedDeposit</case>
+        <case>testEarlyTerminationFee_LessThan6Months</case>
+        <case>testEarlyTerminationFee_MoreThan6Months</case>
+        <case>testCompleteCheckout_UpdatesTenantAndUnitStatus</case>
+        <case>testProcessRefund_BankTransfer_RequiresBankDetails</case>
+        <case>testApproveCheckout_RequiresInspection</case>
+      </test-cases>
+    </unit-tests>
+
+    <frontend-tests>
+      <test-file>CheckoutForm.test.tsx</test-file>
+      <test-file>DepositCalculation.test.tsx</test-file>
+      <test-file>InspectionForm.test.tsx</test-file>
+      <test-file>useCheckouts.test.ts</test-file>
+      <test-cases>
+        <case>renders checkout form with tenant dropdown</case>
+        <case>calculates early termination fee when reason is EARLY_TERMINATION</case>
+        <case>displays correct refund amount after deductions</case>
+        <case>shows amount owed when deductions exceed deposit</case>
+        <case>validates bank details required for bank transfer</case>
+        <case>uploads inspection photos with compression</case>
+      </test-cases>
+    </frontend-tests>
+
+    <data-testid-conventions>
+      <convention>checkout-form, checkout-list, checkout-detail</convention>
+      <convention>checkout-tenant-select, checkout-date-input, checkout-reason-select</convention>
+      <convention>outstanding-balance-table, deposit-calculation-card</convention>
+      <convention>inspection-form, inspection-photo-upload</convention>
+      <convention>refund-form, refund-method-select, refund-bank-iban</convention>
+      <convention>checkout-approve-button, checkout-refund-button, checkout-complete-button</convention>
+      <convention>checkout-status-badge, checkout-timeline</convention>
+    </data-testid-conventions>
+  </testing-guidance>
+
+</story-context>

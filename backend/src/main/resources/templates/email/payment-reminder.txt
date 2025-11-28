@@ -1,0 +1,40 @@
+ULTRA BMS - PAYMENT REMINDER
+=============================
+[# th:if="${isUrgent}"]*** URGENT ***[/]
+
+Hi [(${tenantName})],
+
+[# th:if="${isUrgent}"]This is an URGENT reminder that your invoice payment is due very soon. Please make your payment promptly to avoid late fees.[/]
+[# th:unless="${isUrgent}"]This is a friendly reminder that you have an upcoming payment due. Please ensure your payment is made by the due date to avoid late fees.[/]
+
+PAYMENT DUE IN [(${daysUntilDue})] DAY[# th:if="${daysUntilDue} != 1"]S[/]
+
+INVOICE DETAILS
+---------------
+Invoice Number: [(${invoiceNumber})]
+Due Date: [(${dueDate})]
+Amount Due: [(${balanceAmount})]
+
+PROPERTY
+--------
+Property: [(${propertyName})]
+Unit: [(${unitNumber})]
+
+IMPORTANT: Late payments may incur additional fees. Please ensure your payment is received by [(${dueDate})].
+
+Make Payment: [(${paymentUrl})]
+View Invoice: [(${invoiceUrl})]
+
+PAYMENT METHODS
+---------------
+- Bank Transfer: Contact us for bank details
+- Card Payment: Pay online through the portal
+- Cash/Cheque: Visit our office during business hours
+
+---
+Already made your payment?
+If you've already paid, please disregard this reminder. It may take a few days for your payment to be processed.
+
+Questions? Contact us at [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.

@@ -1,0 +1,53 @@
+ULTRA BMS - INVOICE
+====================
+
+Hi [(${tenantName})],
+
+Please find attached your invoice for your rental property. Below is a summary of the charges.
+
+INVOICE DETAILS
+---------------
+Invoice Number: [(${invoiceNumber})]
+Invoice Date: [(${invoiceDate})]
+Due Date: [(${dueDate})]
+
+PROPERTY
+--------
+Property: [(${propertyName})]
+Unit: [(${unitNumber})]
+
+CHARGES BREAKDOWN
+-----------------
+Base Rent:        [(${baseRent})]
+[# th:if="${serviceCharges != 'AED 0.00'}"]Service Charges:  [(${serviceCharges})]
+[/]
+[# th:if="${parkingFees != 'AED 0.00'}"]Parking Fees:     [(${parkingFees})]
+[/]
+[# th:each="charge : ${additionalCharges}"][(${charge.description})]: AED [(${#numbers.formatDecimal(charge.amount, 1, 2)})]
+[/]
+[# th:if="${lateFee != 'AED 0.00'}"]Late Fee:         [(${lateFee})]
+[/]
+-----------------
+TOTAL AMOUNT:     [(${totalAmount})]
+
+[# th:if="${notes != null and notes != ''}"]
+NOTES
+-----
+[(${notes})]
+[/]
+
+PAYMENT METHODS
+---------------
+- Bank Transfer: Contact us for bank details
+- Card Payment: Pay online through the portal
+- Cash/Cheque: Visit our office during business hours
+
+View Invoice Online: [(${invoiceUrl})]
+
+IMPORTANT: Please ensure payment is made by [(${dueDate})] to avoid late fees.
+
+---
+Questions about this invoice?
+Contact us at [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.

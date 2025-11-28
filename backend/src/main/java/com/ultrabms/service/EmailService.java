@@ -1028,6 +1028,264 @@ public class EmailService {
     }
 
     // ========================================================================
+    // Story 6.1: Invoice and Payment Email Notifications
+    // ========================================================================
+
+    /**
+     * Send invoice email to tenant asynchronously with PDF attachment.
+     * Story 6.1: Rent Invoicing and Payment Management (AC #11)
+     *
+     * @param invoice Invoice entity
+     * @param pdfContent Invoice PDF content
+     */
+    @Async("emailTaskExecutor")
+    public void sendInvoiceEmail(com.ultrabms.entity.Invoice invoice, byte[] pdfContent) {
+        try {
+            com.ultrabms.entity.Tenant tenant = invoice.getTenant();
+            String invoiceUrl = frontendUrl + "/tenant/invoices/" + invoice.getId();
+
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("invoiceNumber", invoice.getInvoiceNumber());
+            context.setVariable("invoiceDate", invoice.getInvoiceDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("dueDate", invoice.getDueDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("propertyName", invoice.getProperty() != null ? invoice.getProperty().getName() : "N/A");
+            context.setVariable("unitNumber", invoice.getUnit() != null ? invoice.getUnit().getUnitNumber() : "N/A");
+            context.setVariable("baseRent", formatCurrency(invoice.getBaseRent()));
+            context.setVariable("serviceCharges", formatCurrency(invoice.getServiceCharges()));
+            context.setVariable("parkingFees", formatCurrency(invoice.getParkingFees()));
+            context.setVariable("lateFee", formatCurrency(invoice.getLateFee()));
+            context.setVariable("totalAmount", formatCurrency(invoice.getTotalAmount()));
+            context.setVariable("balanceAmount", formatCurrency(invoice.getBalanceAmount()));
+            context.setVariable("additionalCharges", invoice.getAdditionalCharges());
+            context.setVariable("notes", invoice.getNotes());
+            context.setVariable("invoiceUrl", invoiceUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/invoice-sent", context);
+            String textContent = templateEngine.process("email/invoice-sent.txt", context);
+
+            sendEmailWithAttachment(
+                tenant.getEmail(),
+                String.format("Invoice %s - Payment Due %s",
+                        invoice.getInvoiceNumber(),
+                        invoice.getDueDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy"))),
+                textContent,
+                htmlContent,
+                pdfContent,
+                String.format("invoice-%s.pdf", invoice.getInvoiceNumber())
+            );
+
+            log.info("Invoice email sent successfully to tenant: {} ({}) for invoice: {}",
+                    tenant.getId(), tenant.getEmail(), invoice.getInvoiceNumber());
+
+        } catch (Exception e) {
+            log.error("Failed to send invoice email to tenant for invoice: {}",
+                    invoice.getInvoiceNumber(), e);
+        }
+    }
+
+    /**
+     * Send payment received confirmation email to tenant.
+     * Story 6.1: Rent Invoicing and Payment Management (AC #7)
+     *
+     * @param payment Payment entity
+     * @param receiptPdf Payment receipt PDF content
+     */
+    @Async("emailTaskExecutor")
+    public void sendPaymentReceivedEmail(com.ultrabms.entity.Payment payment, byte[] receiptPdf) {
+        try {
+            com.ultrabms.entity.Invoice invoice = payment.getInvoice();
+            com.ultrabms.entity.Tenant tenant = invoice.getTenant();
+            String receiptUrl = frontendUrl + "/tenant/invoices/" + invoice.getId() + "/payments/" + payment.getId();
+
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("receiptNumber", payment.getPaymentNumber());
+            context.setVariable("invoiceNumber", invoice.getInvoiceNumber());
+            context.setVariable("paymentDate", payment.getPaymentDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("paymentMethod", payment.getPaymentMethod().toString().replace("_", " "));
+            context.setVariable("amountPaid", formatCurrency(payment.getAmount()));
+            context.setVariable("referenceNumber", payment.getTransactionReference());
+            context.setVariable("previousBalance", formatCurrency(invoice.getBalanceAmount().add(payment.getAmount())));
+            context.setVariable("newBalance", formatCurrency(invoice.getBalanceAmount()));
+            context.setVariable("isPaidInFull", invoice.getBalanceAmount().compareTo(java.math.BigDecimal.ZERO) <= 0);
+            context.setVariable("receiptUrl", receiptUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/payment-received", context);
+            String textContent = templateEngine.process("email/payment-received.txt", context);
+
+            sendEmailWithAttachment(
+                tenant.getEmail(),
+                String.format("Payment Received - Receipt %s", payment.getPaymentNumber()),
+                textContent,
+                htmlContent,
+                receiptPdf,
+                String.format("receipt-%s.pdf", payment.getPaymentNumber())
+            );
+
+            log.info("Payment received email sent successfully to tenant: {} ({}) for payment: {}",
+                    tenant.getId(), tenant.getEmail(), payment.getPaymentNumber());
+
+        } catch (Exception e) {
+            log.error("Failed to send payment received email for payment: {}",
+                    payment.getId(), e);
+        }
+    }
+
+    /**
+     * Send payment reminder email to tenant before due date.
+     * Story 6.1: Rent Invoicing and Payment Management (AC #14)
+     *
+     * @param invoice Invoice entity
+     * @param daysUntilDue Number of days until the due date
+     */
+    @Async("emailTaskExecutor")
+    public void sendPaymentReminderEmail(com.ultrabms.entity.Invoice invoice, int daysUntilDue) {
+        try {
+            com.ultrabms.entity.Tenant tenant = invoice.getTenant();
+            String invoiceUrl = frontendUrl + "/tenant/invoices/" + invoice.getId();
+            String paymentUrl = frontendUrl + "/tenant/invoices/" + invoice.getId() + "/pay";
+
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("invoiceNumber", invoice.getInvoiceNumber());
+            context.setVariable("dueDate", invoice.getDueDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("daysUntilDue", daysUntilDue);
+            context.setVariable("balanceAmount", formatCurrency(invoice.getBalanceAmount()));
+            context.setVariable("propertyName", invoice.getProperty() != null ? invoice.getProperty().getName() : "N/A");
+            context.setVariable("unitNumber", invoice.getUnit() != null ? invoice.getUnit().getUnitNumber() : "N/A");
+            context.setVariable("isUrgent", daysUntilDue <= 3);
+            context.setVariable("invoiceUrl", invoiceUrl);
+            context.setVariable("paymentUrl", paymentUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/payment-reminder", context);
+            String textContent = templateEngine.process("email/payment-reminder.txt", context);
+
+            String subject = daysUntilDue <= 3
+                    ? String.format("URGENT: Payment Due in %d Day%s - Invoice %s",
+                            daysUntilDue, daysUntilDue == 1 ? "" : "s", invoice.getInvoiceNumber())
+                    : String.format("Payment Reminder - Invoice %s Due in %d Days",
+                            invoice.getInvoiceNumber(), daysUntilDue);
+
+            sendEmail(
+                tenant.getEmail(),
+                subject,
+                textContent,
+                htmlContent
+            );
+
+            log.info("Payment reminder email sent successfully to tenant: {} ({}) for invoice: {} - {} days until due",
+                    tenant.getId(), tenant.getEmail(), invoice.getInvoiceNumber(), daysUntilDue);
+
+        } catch (Exception e) {
+            log.error("Failed to send payment reminder email for invoice: {}",
+                    invoice.getInvoiceNumber(), e);
+        }
+    }
+
+    /**
+     * Send overdue invoice notification email to tenant.
+     * Story 6.1: Rent Invoicing and Payment Management (AC #12)
+     *
+     * @param invoice Invoice entity marked as overdue
+     * @param daysOverdue Number of days past due date
+     */
+    @Async("emailTaskExecutor")
+    public void sendOverdueInvoiceEmail(com.ultrabms.entity.Invoice invoice, long daysOverdue) {
+        try {
+            com.ultrabms.entity.Tenant tenant = invoice.getTenant();
+            String invoiceUrl = frontendUrl + "/tenant/invoices/" + invoice.getId();
+            String paymentUrl = frontendUrl + "/tenant/invoices/" + invoice.getId() + "/pay";
+
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("invoiceNumber", invoice.getInvoiceNumber());
+            context.setVariable("dueDate", invoice.getDueDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("daysOverdue", daysOverdue);
+            context.setVariable("balanceAmount", formatCurrency(invoice.getBalanceAmount()));
+            context.setVariable("lateFee", formatCurrency(invoice.getLateFee()));
+            context.setVariable("lateFeeApplied", invoice.getLateFeeApplied());
+            context.setVariable("propertyName", invoice.getProperty() != null ? invoice.getProperty().getName() : "N/A");
+            context.setVariable("unitNumber", invoice.getUnit() != null ? invoice.getUnit().getUnitNumber() : "N/A");
+            context.setVariable("invoiceUrl", invoiceUrl);
+            context.setVariable("paymentUrl", paymentUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/invoice-overdue", context);
+            String textContent = templateEngine.process("email/invoice-overdue.txt", context);
+
+            sendEmail(
+                tenant.getEmail(),
+                String.format("OVERDUE: Invoice %s - %d Day%s Past Due",
+                        invoice.getInvoiceNumber(), daysOverdue, daysOverdue == 1 ? "" : "s"),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Overdue invoice email sent successfully to tenant: {} ({}) for invoice: {} - {} days overdue",
+                    tenant.getId(), tenant.getEmail(), invoice.getInvoiceNumber(), daysOverdue);
+
+        } catch (Exception e) {
+            log.error("Failed to send overdue invoice email for invoice: {}",
+                    invoice.getInvoiceNumber(), e);
+        }
+    }
+
+    /**
+     * Send late fee applied notification email to tenant.
+     * Story 6.1: Rent Invoicing and Payment Management (AC #13)
+     *
+     * @param invoice Invoice entity with late fee applied
+     */
+    @Async("emailTaskExecutor")
+    public void sendLateFeeAppliedEmail(com.ultrabms.entity.Invoice invoice) {
+        try {
+            com.ultrabms.entity.Tenant tenant = invoice.getTenant();
+            String invoiceUrl = frontendUrl + "/tenant/invoices/" + invoice.getId();
+
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("invoiceNumber", invoice.getInvoiceNumber());
+            context.setVariable("dueDate", invoice.getDueDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+            context.setVariable("lateFeeAmount", formatCurrency(invoice.getLateFee()));
+            context.setVariable("previousBalance", formatCurrency(invoice.getBalanceAmount().subtract(invoice.getLateFee())));
+            context.setVariable("newBalance", formatCurrency(invoice.getBalanceAmount()));
+            context.setVariable("invoiceUrl", invoiceUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/late-fee-applied", context);
+            String textContent = templateEngine.process("email/late-fee-applied.txt", context);
+
+            sendEmail(
+                tenant.getEmail(),
+                String.format("Late Fee Applied - Invoice %s", invoice.getInvoiceNumber()),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Late fee applied email sent successfully to tenant: {} ({}) for invoice: {}",
+                    tenant.getId(), tenant.getEmail(), invoice.getInvoiceNumber());
+
+        } catch (Exception e) {
+            log.error("Failed to send late fee applied email for invoice: {}",
+                    invoice.getInvoiceNumber(), e);
+        }
+    }
+
+    /**
+     * Helper method to format currency amounts in AED
+     */
+    private String formatCurrency(java.math.BigDecimal amount) {
+        if (amount == null) {
+            return "AED 0.00";
+        }
+        return String.format("AED %,.2f", amount);
+    }
+
+    // ========================================================================
     // Email Helper Methods
     // ========================================================================
 

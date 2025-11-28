@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #0A2342 0%, #1152D4 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .invoice-number {
+            background-color: #f0f7ff;
+            border-left: 4px solid #1152D4;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .invoice-number strong {
+            color: #1152D4;
+            font-size: 20px;
+        }
+        .amount-box {
+            background: linear-gradient(135deg, #1152D4 0%, #0A2342 100%);
+            color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .amount-box .label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        .amount-box .amount {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .due-date-box {
+            background-color: #fff8e1;
+            border-left: 4px solid #D4AF37;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 50%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: right;
+        }
+        .charges-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .charges-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #0A2342;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .charges-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .charges-table .amount-col {
+            text-align: right;
+        }
+        .charges-table .total-row {
+            background-color: #f0f7ff;
+            font-weight: 600;
+        }
+        .charges-table .total-row td {
+            border-top: 2px solid #1152D4;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #1152D4 0%, #0A2342 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .notes-box {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #1152D4;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+            .details-table th,
+            .details-table td,
+            .charges-table th,
+            .charges-table td {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">&#128196;</div>
+            <h1>Invoice</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${tenantName}">Tenant</span>,
+            </div>
+
+            <p>Please find attached your invoice for your rental property. Below is a summary of the charges.</p>
+
+            <div class="invoice-number">
+                <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Invoice Number</div>
+                <strong th:text="${invoiceNumber}">INV-2025-0001</strong>
+            </div>
+
+            <div class="amount-box">
+                <div class="label">Total Amount Due</div>
+                <div class="amount" th:text="${totalAmount}">AED 5,000.00</div>
+            </div>
+
+            <div class="due-date-box">
+                <strong>&#128197; Payment Due Date:</strong> <span th:text="${dueDate}">Jan 15, 2025</span>
+                <br><small style="color: #666;">Please ensure payment is made by this date to avoid late fees.</small>
+            </div>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Property Details</h3>
+            <table class="details-table">
+                <tr>
+                    <th>Property</th>
+                    <td th:text="${propertyName}">Property Name</td>
+                </tr>
+                <tr>
+                    <th>Unit</th>
+                    <td th:text="'Unit ' + ${unitNumber}">Unit 101</td>
+                </tr>
+                <tr>
+                    <th>Invoice Date</th>
+                    <td th:text="${invoiceDate}">Jan 01, 2025</td>
+                </tr>
+            </table>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Charges Breakdown</h3>
+            <table class="charges-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th class="amount-col">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Base Rent</td>
+                        <td class="amount-col" th:text="${baseRent}">AED 4,000.00</td>
+                    </tr>
+                    <tr th:if="${serviceCharges != 'AED 0.00'}">
+                        <td>Service Charges</td>
+                        <td class="amount-col" th:text="${serviceCharges}">AED 500.00</td>
+                    </tr>
+                    <tr th:if="${parkingFees != 'AED 0.00'}">
+                        <td>Parking Fees</td>
+                        <td class="amount-col" th:text="${parkingFees}">AED 200.00</td>
+                    </tr>
+                    <tr th:each="charge : ${additionalCharges}">
+                        <td th:text="${charge.description}">Additional Charge</td>
+                        <td class="amount-col" th:text="'AED ' + ${#numbers.formatDecimal(charge.amount, 1, 2)}">AED 100.00</td>
+                    </tr>
+                    <tr th:if="${lateFee != 'AED 0.00'}">
+                        <td style="color: #c00;">Late Fee</td>
+                        <td class="amount-col" style="color: #c00;" th:text="${lateFee}">AED 100.00</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td><strong>Total Amount</strong></td>
+                        <td class="amount-col"><strong th:text="${totalAmount}">AED 5,000.00</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="notes-box" th:if="${notes != null and notes != ''}">
+                <strong style="color: #0A2342;">&#128221; Notes</strong>
+                <p style="color: #666; margin-bottom: 0; white-space: pre-line;" th:text="${notes}">Invoice notes...</p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${invoiceUrl}" class="button">View Invoice Details</a>
+            </div>
+
+            <h3 style="color: #0A2342; margin-top: 30px;">Payment Methods</h3>
+            <ul style="color: #666; padding-left: 20px;">
+                <li><strong>Bank Transfer:</strong> Contact us for bank details</li>
+                <li><strong>Card Payment:</strong> Pay online through the portal</li>
+                <li><strong>Cash/Cheque:</strong> Visit our office during business hours</li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Questions about this invoice?</strong></p>
+            <p>
+                Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
