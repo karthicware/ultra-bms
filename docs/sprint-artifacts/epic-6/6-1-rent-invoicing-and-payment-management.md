@@ -1,6 +1,6 @@
 # Story 6.1: Rent Invoicing and Payment Management
 
-Status: drafted
+Status: ready-for-dev
 
 ## Story
 
@@ -482,7 +482,7 @@ BigDecimal calculateLateFee(Invoice invoice) {
 
 ### Context Reference
 
-<!-- Path(s) to story context XML will be added here by context workflow -->
+- docs/sprint-artifacts/epic-6/6-1-rent-invoicing-and-payment-management.context.xml
 
 ### Agent Model Used
 

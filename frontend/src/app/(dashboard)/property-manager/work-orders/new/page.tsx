@@ -174,11 +174,11 @@ export default function CreateWorkOrderPage() {
     try {
       setIsSubmitting(true);
 
-      // Prepare DTO
+      // Prepare DTO - category is guaranteed non-empty by form validation
       const dto = {
         propertyId: data.propertyId,
         unitId: data.unitId || undefined,
-        category: data.category,
+        category: data.category as WorkOrderCategory,
         priority: data.priority,
         title: data.title,
         description: data.description,

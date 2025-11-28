@@ -256,7 +256,10 @@ export function usePermission() {
 
   const hasPermission = useCallback(
     (permission: Permission): boolean => {
-      if (!user || !user.permissions) return false;
+      if (!user) return false;
+      // SUPER_ADMIN and ADMIN have access to all permissions
+      if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') return true;
+      if (!user.permissions) return false;
       return user.permissions.includes(permission);
     },
     [user]
@@ -264,7 +267,10 @@ export function usePermission() {
 
   const hasAnyPermission = useCallback(
     (permissions: Permission[]): boolean => {
-      if (!user || !user.permissions) return false;
+      if (!user) return false;
+      // SUPER_ADMIN and ADMIN have access to all permissions
+      if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') return true;
+      if (!user.permissions) return false;
       return permissions.some((permission) => user.permissions.includes(permission));
     },
     [user]
@@ -272,7 +278,10 @@ export function usePermission() {
 
   const hasAllPermissions = useCallback(
     (permissions: Permission[]): boolean => {
-      if (!user || !user.permissions) return false;
+      if (!user) return false;
+      // SUPER_ADMIN and ADMIN have access to all permissions
+      if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') return true;
+      if (!user.permissions) return false;
       return permissions.every((permission) => user.permissions.includes(permission));
     },
     [user]

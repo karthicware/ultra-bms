@@ -127,7 +127,7 @@ export default function LeadsQuotesDashboardPage() {
             <Percent className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboard.conversionRate.toFixed(1)}%</div>
+            <div className="text-2xl font-bold">{(dashboard.conversionRate ?? 0).toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground">Accepted / Sent ratio</p>
           </CardContent>
         </Card>
@@ -138,7 +138,7 @@ export default function LeadsQuotesDashboardPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboard.avgTimeToConvert.toFixed(0)} days</div>
+            <div className="text-2xl font-bold">{(dashboard.avgTimeToConvert ?? 0).toFixed(0)} days</div>
             <p className="text-xs text-muted-foreground">From sent to accepted</p>
           </CardContent>
         </Card>
@@ -175,7 +175,7 @@ export default function LeadsQuotesDashboardPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {dashboard.expiringQuotes.length === 0 ? (
+          {(!dashboard.expiringQuotes || dashboard.expiringQuotes.length === 0) ? (
             <p className="text-center py-8 text-muted-foreground">
               No quotations expiring in the next 30 days
             </p>

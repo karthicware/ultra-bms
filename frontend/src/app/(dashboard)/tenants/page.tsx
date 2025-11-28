@@ -292,9 +292,9 @@ export default function TenantsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-medium">{tenant.propertyName || '-'}</span>
+                          <span className="font-medium">{tenant.property?.name || '-'}</span>
                           <span className="text-sm text-muted-foreground">
-                            Unit {tenant.unitNumber || '-'}
+                            Unit {tenant.unit?.unitNumber || '-'}
                           </span>
                         </div>
                       </TableCell>
