@@ -314,12 +314,16 @@ To become the leading integrated property management platform in the MENA region
 
 ### 3.11 Communication & Notifications
 
-#### 3.11.1 Announcement Management
-- Building-wide announcements
-- Targeted messaging
-- Emergency broadcasts
-- Maintenance notifications
-- Event communications
+#### 3.11.1 Internal Announcement Management
+- Internal announcements for all tenants (no targeting)
+- Rich text formatting with print/PDF support
+- Template-based creation (Office Closure, Maintenance Schedule, Policy Update)
+- Announcement expiry with auto-archive to history
+- Dashboard widget showing active announcement count
+- Email delivery to all tenants on publish
+- Tenant portal announcement list (active only)
+- Copy/duplicate existing announcements
+- Multiple drafts supported simultaneously
 
 #### 3.11.2 Notification System
 - Multi-channel delivery (Email, SMS, In-app)

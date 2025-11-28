@@ -122,100 +122,160 @@ So that users are informed of important events and updates via email.
 - Consider using AWS SES as alternative to Gmail (future enhancement)
 - Add email preview feature (send test email)
 
-## Story 9.2: Announcement Management
+## Story 9.2: Internal Announcement Management (REVISED via SCP #6)
 
 As a property manager,
-I want to create and send announcements to tenants,
-So that I can communicate important information to residents.
+I want to create and publish internal announcements,
+So that I can communicate important information to all tenants via email and website.
+
+**SCOPE SIMPLIFICATION (SCP #6 - 2025-11-28):**
+- Email + Website delivery only (no SMS, no in-app push)
+- All tenants always (no targeting)
+- No emergency broadcasts or categories
+- Added: Expiry date with auto-archive
+- Added: Printable/PDF support
+- Added: Dashboard widget (active count)
+- Added: Copy/duplicate announcements
+- Added: Multiple drafts allowed
 
 **Acceptance Criteria:**
 
-**Given** I need to communicate with tenants
-**When** I create an announcement
+**Given** I need to communicate with all tenants
+**When** I create an internal announcement
 **Then** the announcement management includes:
 
-**Announcement Creation:**
-- Announcement form includes:
-  - Title (required, max 200 chars)
-  - Message (required, rich text editor, max 5000 chars)
-  - Category (dropdown: GENERAL, MAINTENANCE, EMERGENCY, EVENT, POLICY_CHANGE, OTHER)
-  - Priority (enum: HIGH, NORMAL, LOW)
-  - Target audience (multi-select):
-    - All tenants
-    - Specific property (dropdown)
-    - Specific tenants (multi-select)
-  - Schedule delivery (date-time picker, default: immediate)
-  - Attachment (optional, PDF, max 5MB, e.g., policy document)
+**1. Announcement Creation Form:**
+- Title (required, max 200 chars)
+- Message (required, rich text editor with: Bold, Italic, Underline, Lists, Headings, Tables, Images)
+- Template selector (optional dropdown):
+  - Office Closure Notice
+  - Maintenance Schedule
+  - Policy Update
+- Expiry Date (required, date picker, must be future date)
+- Attachment (optional, PDF, max 5MB)
 
-**And** announcement entity:
-- id (UUID), announcementNumber (unique, format: ANN-2025-0001)
-- title, message (HTML), category, priority
-- targetAudience (enum: ALL_TENANTS, SPECIFIC_PROPERTY, SPECIFIC_TENANTS)
-- propertyIds (JSON array, if property-specific)
-- tenantIds (JSON array, if tenant-specific)
-- scheduledAt (datetime)
-- status (enum: DRAFT, SCHEDULED, SENT, CANCELLED)
-- sentAt timestamp
-- attachmentFilePath (PDF stored in /uploads/announcements/)
+**2. Copy/Duplicate Announcement:**
+- "Copy" action on existing announcements (any status)
+- Creates new draft with "[Copy] Original Title"
+- Copies: title, message, template, attachment
+- Does NOT copy: expiry date (must set new)
+- Redirects to edit form for new draft
+
+**3. Multiple Drafts Support:**
+- Multiple announcements can exist in DRAFT status simultaneously
+- Drafts tab shows all unpublished announcements
+- Each draft can be edited, published, or deleted independently
+
+**4. Announcement Entity:**
+- id (UUID)
+- announcementNumber (unique, format: ANN-2025-0001)
+- title, message (HTML)
+- templateUsed (nullable enum: OFFICE_CLOSURE, MAINTENANCE_SCHEDULE, POLICY_UPDATE)
+- expiresAt (datetime, required)
+- status (enum: DRAFT, PUBLISHED, EXPIRED, ARCHIVED)
+- publishedAt (timestamp, nullable)
+- attachmentFilePath (nullable)
 - createdBy (userId)
 - createdAt, updatedAt timestamps
 
-**And** announcement delivery:
-- If scheduled for future: status = SCHEDULED
-  - Scheduled job checks for due announcements every 5 minutes
-  - Send when scheduledAt <= now
-- If immediate: status = SENT immediately
-- Email sent to all recipients in target audience
-- Email subject: "[Priority] Announcement: {title}"
-- Email body: rendered message HTML with attachment link
-- Track delivery: store email_notification records for each recipient
+**5. Announcement Publishing:**
+- "Publish" button on draft detail page
+- On publish: status = PUBLISHED, publishedAt = now
+- Email sent to ALL active tenants:
+  - Subject: "Announcement: {title}"
+  - Body: rendered message HTML
+  - Attachment included if present
+- Cannot edit published announcements (only archive/delete)
 
-**And** announcement list page (for managers):
-- Filters: category, priority, status, date range
-- Search by: title, message
-- Shows: announcement number, title, category, priority, target audience, scheduled date, status
-- Quick actions: View, Edit (if draft), Cancel (if scheduled), Delete
+**6. Expiry Handling:**
+- Scheduled job runs daily at midnight
+- Announcements with expiresAt < now AND status = PUBLISHED → status = EXPIRED
+- Expired announcements hidden from tenant portal
+- Expired announcements visible in History tab (manager view)
 
-**And** announcement view (for tenants):
-- Tenant portal shows recent announcements (last 30 days)
-- List shows: title, category, date, read/unread status
+**7. Announcement List Page (Manager View):**
+- Route: /admin/announcements
+- Tabs: Active | Drafts | History
+- Active tab: PUBLISHED announcements not yet expired
+- Drafts tab: DRAFT announcements (multiple allowed)
+- History tab: EXPIRED and ARCHIVED announcements
+- Table columns: Number, Title, Published Date, Expires, Status, Actions
+- Actions: View, Edit (if draft), Copy, Archive, Delete, Print/Download PDF
+- "Create New Announcement" button (top right)
+
+**8. Print/PDF Support:**
+- "Print Preview" button on announcement detail page
+- "Download PDF" button
+- PDF includes:
+  - Company letterhead (from company profile - Story 2.8)
+  - Announcement title and date
+  - Full message body with formatting preserved
+  - Professional layout suitable for physical distribution
+
+**9. Dashboard Widget:**
+- Admin dashboard shows "Announcements" card
+- Displays count: "{n} Active Announcements"
+- Click navigates to announcements list page
+- Icon: campaign (Material Symbols)
+
+**10. Tenant Portal View:**
+- Route: /tenant/announcements (or dashboard section)
+- Shows list of PUBLISHED (non-expired) announcements only
+- List columns: Title, Date Published
 - Click to view full announcement
-- Mark as read when viewed
 - Download attachment if available
-- Filter by category
+- Sorted by publishedAt DESC (newest first)
 
-**And** announcement read tracking:
-- Track which tenants have read which announcements
-- Entity: announcement_reads
-  - announcementId, tenantId, readAt timestamp
-- Show read count / total recipients on announcement detail page
-
-**And** API endpoints:
-- POST /api/v1/announcements: Create announcement
-- GET /api/v1/announcements: List announcements (manager view)
+**11. API Endpoints:**
+- POST /api/v1/announcements: Create announcement (draft)
+- GET /api/v1/announcements: List all announcements (manager, with filters)
 - GET /api/v1/announcements/{id}: Get announcement details
 - PUT /api/v1/announcements/{id}: Update announcement (if draft)
-- PATCH /api/v1/announcements/{id}/send: Send immediately
-- PATCH /api/v1/announcements/{id}/cancel: Cancel scheduled announcement
+- POST /api/v1/announcements/{id}/copy: Duplicate announcement as new draft
+- PATCH /api/v1/announcements/{id}/publish: Publish announcement
+- PATCH /api/v1/announcements/{id}/archive: Archive announcement
 - DELETE /api/v1/announcements/{id}: Delete announcement
-- GET /api/v1/tenant/announcements: List announcements for logged-in tenant
-- POST /api/v1/tenant/announcements/{id}/mark-read: Mark as read
+- GET /api/v1/announcements/{id}/pdf: Download PDF
+- GET /api/v1/tenant/announcements: List active announcements for tenant
+- GET /api/v1/dashboard/stats: Include announcementCount
 
-**Prerequisites:** Story 9.1 (Email notification system), Story 3.3 (Tenant portal)
+**12. Email Template:**
+- Create announcement email template at: /resources/email-templates/announcement.html
+- Template variables: {{title}}, {{message}}, {{companyName}}, {{publishDate}}
+- Include company logo (from company profile)
+- Include "View Online" link to tenant portal
+
+**13. Database Migration:**
+- V44__create_announcements_table.sql
+- Indexes on status, expiresAt, createdBy
+
+**14. Scheduled Jobs:**
+- AnnouncementExpiryJob: Daily at midnight, expires past-due announcements
+
+**15. RBAC:**
+- SUPER_ADMIN, ADMIN, PROPERTY_MANAGER: Full CRUD
+- FINANCE_MANAGER, MAINTENANCE_SUPERVISOR: Read-only
+- TENANT: Read active announcements only (via tenant portal)
+- VENDOR: No access
+
+**16. Sidebar Navigation:**
+- Add "Announcements" menu item under main navigation
+- Icon: campaign (Material Symbols)
+- Route: /admin/announcements
+
+**17. Tests:**
+- Backend: AnnouncementServiceTest (CRUD, copy, publish, expiry job)
+- Frontend: Validation tests, component tests
+- All existing tests must pass
+
+**Prerequisites:** Story 9.1 (Email notification system), Story 3.4 (Tenant portal - DONE), Story 2.8 (Company Profile - for PDF letterhead)
 
 **Technical Notes:**
-- Use rich text editor (Quill or TinyMCE) for message formatting
-- Sanitize HTML input to prevent XSS
-- Store attachments in /uploads/announcements/
-- Scheduled job (@Scheduled) runs every 5 minutes to check for due announcements
-- Batch email sending for large recipient lists
-- Track email delivery status per recipient
-- Add database indexes on status, scheduledAt
-- Frontend: Use shadcn/ui Badge for priority/category indicators
-- Implement announcement preview before sending
-- Add confirmation dialog for sending to all tenants
-- Display recipient count before sending
-- Optional: Add in-app notification banner for high-priority announcements
+- Use Quill or TipTap for rich text editor
+- Sanitize HTML input (DOMPurify) to prevent XSS
+- Use iTextPDF (existing) for PDF generation
+- Store attachments in S3: /uploads/announcements/{id}/
+- Reference: docs/archive/stitch_building_maintenance_software/announcements_management_page/
 
 ---
 

@@ -1,0 +1,262 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>7</storyId>
+    <title>Admin Theme Settings &amp; System Theme Support</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-28</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-2/2-7-admin-theme-settings-and-system-theme-support.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>Admin or Super Admin</asA>
+    <iWant>configure the application theme (dark/light mode)</iWant>
+    <soThat>users can customize their viewing experience and reduce eye strain</soThat>
+    <tasks>
+      <task id="1" status="pending">Install next-themes library - NOTE: Already installed (v0.4.6)</task>
+      <task id="2" status="pending">Configure Tailwind Dark Mode - Update tailwind.config.ts with darkMode: 'class'</task>
+      <task id="3" status="pending">Create ThemeProvider Component - Wrap next-themes ThemeProvider</task>
+      <task id="4" status="pending">Integrate ThemeProvider in Root Layout - Update providers.tsx</task>
+      <task id="5" status="pending">Backend - User Entity Update - Add ThemePreference enum and field</task>
+      <task id="6" status="pending">Backend - Settings DTOs - Create AppearanceSettingsRequest/Response</task>
+      <task id="7" status="pending">Backend - Settings Service - Create SettingsService interface and impl</task>
+      <task id="8" status="pending">Backend - Settings Controller - GET/PUT /api/v1/settings/appearance</task>
+      <task id="9" status="pending">Frontend - Types and Validation - Create types/settings.ts and Zod schemas</task>
+      <task id="10" status="pending">Frontend - Settings Service - Create services/settings.service.ts</task>
+      <task id="11" status="pending">Frontend - useThemeSync Hook - Sync theme with backend</task>
+      <task id="12" status="pending">Frontend - Appearance Settings Page - Create /settings/appearance</task>
+      <task id="13" status="pending">Frontend - Theme Toggle UI Component - Create theme-toggle.tsx</task>
+      <task id="14" status="pending">Frontend - Sidebar/Settings Page Update - Enable Appearance section</task>
+      <task id="15" status="pending">Testing &amp; Validation - Unit tests, build verification</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Theme Mode Toggle: Settings &gt; Appearance page provides three theme options (System/Light/Dark), applies immediately</criterion>
+    <criterion id="AC2">Theme Provider Setup: Application wrapped with ThemeProvider, attribute="class" for Tailwind compatibility</criterion>
+    <criterion id="AC3">User Preference Persistence: Theme stored in users.theme_preference column (enum: SYSTEM, LIGHT, DARK)</criterion>
+    <criterion id="AC4">LocalStorage Fallback: Non-authenticated users use localStorage, migrate to DB on login</criterion>
+    <criterion id="AC5">System Theme Detection: "System" option respects OS prefers-color-scheme, real-time response</criterion>
+    <criterion id="AC6">Backend API Endpoints: GET/PUT /api/v1/settings/appearance for theme preference</criterion>
+    <criterion id="AC7">Database Migration: V41__add_user_theme_preference.sql adds column with default 'SYSTEM'</criterion>
+    <criterion id="AC8">Tailwind Dark Mode Configuration: darkMode: 'class' strategy - ALREADY CONFIGURED via globals.css</criterion>
+    <criterion id="AC9">Smooth Theme Transition: 200ms CSS transition, no FOUC on page load</criterion>
+    <criterion id="AC10">useTheme Hook: Provides theme, setTheme, resolvedTheme, systemTheme</criterion>
+    <criterion id="AC11">RBAC Restrictions: All authenticated users can change personal theme preference</criterion>
+    <criterion id="AC12">Appearance Settings Page: /settings/appearance with theme selection UI and live preview</criterion>
+    <criterion id="AC13">Frontend Integration: Accessible from Settings sidebar, shadcn/ui supports dark mode</criterion>
+    <criterion id="AC14">Unit Tests (Backend): Tests for theme preference retrieval/update endpoints</criterion>
+    <criterion id="AC15">Unit Tests (Frontend): Tests for ThemeProvider, useTheme hook, Appearance page</criterion>
+    <criterion id="AC16">Build Verification: mvn compile and npm run build complete with zero errors</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Theme/Appearance Settings</section>
+        <snippet>User preference for dark/light mode with system detection fallback</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Frontend Implementation Patterns</section>
+        <snippet>shadcn/ui component library, Tailwind CSS with dark mode class strategy, React Hook Form + Zod for validation</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Backend Implementation Patterns</section>
+        <snippet>Controller pattern with @RequestMapping, Service pattern with @Service, DTO pattern for request/response</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-2-authentication-user-management.md</path>
+        <title>Epic 2: Authentication &amp; User Management</title>
+        <section>Story 2.7: Admin Theme Settings</section>
+        <snippet>ThemeProvider component, useTheme hook, CSS variables for theme colors, Tailwind dark: variant</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic-2/2-6-admin-user-management.md</path>
+        <title>Story 2.6 - Reference Implementation</title>
+        <section>Dev Notes - Learnings</section>
+        <snippet>Settings section exists in Sidebar, use isAuthenticated() for all-user endpoints, toast notifications pattern</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>backend/src/main/java/com/ultrabms/entity/User.java</path>
+        <kind>entity</kind>
+        <symbol>User</symbol>
+        <lines>1-188</lines>
+        <reason>User entity to extend with themePreference field. Currently has email, passwordHash, firstName, lastName, role, active, phone, mfaEnabled, accountLocked, status, mustChangePassword fields.</reason>
+      </file>
+      <file>
+        <path>frontend/src/app/layout.tsx</path>
+        <kind>layout</kind>
+        <symbol>RootLayout</symbol>
+        <lines>1-43</lines>
+        <reason>Root layout with Providers wrapper. Has suppressHydrationWarning already set on html and body tags for theme hydration.</reason>
+      </file>
+      <file>
+        <path>frontend/src/app/providers.tsx</path>
+        <kind>provider</kind>
+        <symbol>Providers</symbol>
+        <lines>1-25</lines>
+        <reason>Provider component wrapping QueryClientProvider. ThemeProvider needs to be added here alongside QueryClientProvider.</reason>
+      </file>
+      <file>
+        <path>frontend/src/app/globals.css</path>
+        <kind>styles</kind>
+        <symbol>:root, .dark</symbol>
+        <lines>71-180</lines>
+        <reason>CSS variables with complete light (:root) and dark (.dark) theme definitions using OKLCH color space. Dark mode already fully configured.</reason>
+      </file>
+      <file>
+        <path>frontend/src/app/(dashboard)/settings/page.tsx</path>
+        <kind>page</kind>
+        <symbol>SettingsPage</symbol>
+        <lines>1-89</lines>
+        <reason>Settings landing page with Appearance section marked comingSoon: true. Remove comingSoon flag and update href to enable.</reason>
+      </file>
+      <file>
+        <path>frontend/src/components/layout/Sidebar.tsx</path>
+        <kind>component</kind>
+        <symbol>Sidebar</symbol>
+        <lines>1-239</lines>
+        <reason>Navigation sidebar. Settings link exists under Admin section with role: 'SUPER_ADMIN'. May need Appearance link or rely on settings page navigation.</reason>
+      </file>
+      <file>
+        <path>frontend/src/services/admin-users.service.ts</path>
+        <kind>service</kind>
+        <symbol>getAdminUsers, createAdminUser</symbol>
+        <lines>1-269</lines>
+        <reason>Reference implementation for frontend service pattern. Uses apiClient, JSDoc documentation, TypeScript types from types/ folder.</reason>
+      </file>
+      <file>
+        <path>frontend/src/types/admin-users.ts</path>
+        <kind>types</kind>
+        <symbol>AdminUser, UserRole, UserStatus</symbol>
+        <lines>full</lines>
+        <reason>Reference implementation for TypeScript types pattern. Includes interfaces, enums, and display constants.</reason>
+      </file>
+      <file>
+        <path>frontend/package.json</path>
+        <kind>config</kind>
+        <symbol>dependencies</symbol>
+        <lines>62</lines>
+        <reason>next-themes v0.4.6 already installed. No need to install - just import and use.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <package>next-themes</package>
+        <version>^0.4.6</version>
+        <note>Already installed - provides ThemeProvider and useTheme hook</note>
+      </node>
+      <node>
+        <package>@tanstack/react-query</package>
+        <version>^5.90.9</version>
+        <note>Already installed - for API state management</note>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.12</version>
+        <note>Already installed - for validation schemas</note>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>^0.553.0</version>
+        <note>Already installed - Sun, Moon, Monitor icons for theme toggle</note>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>^2.0.7</version>
+        <note>Already installed - for toast notifications</note>
+      </node>
+      <maven>
+        <dependency>spring-boot-starter-web</dependency>
+        <note>REST controller support</note>
+      </maven>
+      <maven>
+        <dependency>spring-boot-starter-data-jpa</dependency>
+        <note>JPA entity and repository support</note>
+      </maven>
+      <maven>
+        <dependency>flyway-core</dependency>
+        <note>Database migrations</note>
+      </maven>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint category="architecture">Use Tailwind CSS darkMode: 'class' strategy (not 'media') for programmatic control</constraint>
+    <constraint category="architecture">ThemeProvider must be client component ('use client') and wrap application in providers.tsx</constraint>
+    <constraint category="database">Migration file must be V41__add_user_theme_preference.sql (next sequential number)</constraint>
+    <constraint category="database">Theme preference column: VARCHAR(20) with CHECK constraint for SYSTEM, LIGHT, DARK values</constraint>
+    <constraint category="api">Endpoint path: /api/v1/settings/appearance (follows existing pattern)</constraint>
+    <constraint category="api">Use @PreAuthorize("isAuthenticated()") - all authenticated users can change their own theme</constraint>
+    <constraint category="frontend">Follow existing service pattern in admin-users.service.ts with JSDoc and comprehensive error handling</constraint>
+    <constraint category="frontend">Follow existing types pattern in types/ folder with interfaces and Zod schemas</constraint>
+    <constraint category="frontend">Use shadcn/ui components which already support dark mode via CSS variables</constraint>
+    <constraint category="testing">All tests must pass: mvn test (backend), npm test (frontend)</constraint>
+    <constraint category="testing">Build must succeed: mvn compile (0 errors), npm run build (0 TypeScript errors)</constraint>
+    <constraint category="ux">Theme transition should be 200ms for smooth experience</constraint>
+    <constraint category="ux">Prevent FOUC (Flash of Unstyled Content) with suppressHydrationWarning - already set in layout</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>GET /api/v1/settings/appearance</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/settings/appearance -> AppearanceSettingsResponse { themePreference: 'SYSTEM' | 'LIGHT' | 'DARK' }</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/SettingsController.java (to create)</path>
+    </interface>
+    <interface>
+      <name>PUT /api/v1/settings/appearance</name>
+      <kind>REST endpoint</kind>
+      <signature>PUT /api/v1/settings/appearance { themePreference: 'SYSTEM' | 'LIGHT' | 'DARK' } -> AppearanceSettingsResponse</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/SettingsController.java (to create)</path>
+    </interface>
+    <interface>
+      <name>ThemeProvider</name>
+      <kind>React component</kind>
+      <signature>ThemeProvider from 'next-themes' - props: attribute="class", defaultTheme="system", enableSystem=true, storageKey="ultra-bms-theme"</signature>
+      <path>frontend/src/components/theme-provider.tsx (to create)</path>
+    </interface>
+    <interface>
+      <name>useTheme</name>
+      <kind>React hook</kind>
+      <signature>useTheme() from 'next-themes' -> { theme, setTheme, resolvedTheme, systemTheme }</signature>
+      <path>node_modules/next-themes</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend uses JUnit 5 with Mockito for unit tests. Test classes follow {ClassName}Test naming convention in src/test/java. Use @MockBean for mocking dependencies, @WebMvcTest for controller tests. Frontend uses Jest with React Testing Library. Test files follow {component}.test.tsx naming in __tests__ folders or co-located. Use screen queries and userEvent for interactions.
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/SettingsServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/controller/SettingsControllerTest.java</location>
+      <location>frontend/src/components/__tests__/theme-provider.test.tsx</location>
+      <location>frontend/src/app/(dashboard)/settings/appearance/__tests__/page.test.tsx</location>
+      <location>frontend/src/hooks/__tests__/useThemeSync.test.ts</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC1">Test theme toggle changes theme immediately without page refresh</idea>
+      <idea acRef="AC2">Test ThemeProvider wraps children and provides theme context</idea>
+      <idea acRef="AC3">Test theme preference persists to database for authenticated users</idea>
+      <idea acRef="AC4">Test localStorage fallback for non-authenticated users</idea>
+      <idea acRef="AC5">Test system theme detection responds to OS preference changes</idea>
+      <idea acRef="AC6">Test GET returns current user theme preference</idea>
+      <idea acRef="AC6">Test PUT updates user theme preference and returns updated value</idea>
+      <idea acRef="AC7">Test migration adds column with default SYSTEM value</idea>
+      <idea acRef="AC9">Test no FOUC on initial page load</idea>
+      <idea acRef="AC10">Test useTheme hook returns theme, setTheme, resolvedTheme, systemTheme</idea>
+      <idea acRef="AC11">Test all authenticated users can access theme settings regardless of role</idea>
+      <idea acRef="AC12">Test Appearance page renders theme options and live preview</idea>
+    </ideas>
+  </tests>
+</story-context>
