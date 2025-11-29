@@ -3,6 +3,7 @@
  * Wraps sonner toast library with a consistent API
  */
 
+import { useCallback } from 'react';
 import { toast as sonnerToast } from 'sonner';
 
 type ToastVariant = 'default' | 'destructive' | 'success';
@@ -15,7 +16,7 @@ interface ToastProps {
 }
 
 export function useToast() {
-  const toast = ({ title, description, variant = 'default', duration = 5000 }: ToastProps) => {
+  const toast = useCallback(({ title, description, variant = 'default', duration = 5000 }: ToastProps) => {
     const message = title || description || '';
     const fullDescription = title && description ? description : undefined;
 
@@ -38,7 +39,7 @@ export function useToast() {
           duration,
         });
     }
-  };
+  }, []);
 
   return { toast };
 }

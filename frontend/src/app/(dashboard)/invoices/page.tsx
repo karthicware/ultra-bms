@@ -97,7 +97,8 @@ export default function InvoicesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm, statusFilter, sortField, sortDirection, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, searchTerm, statusFilter, sortField, sortDirection]);
 
   // Fetch summary
   const fetchSummary = useCallback(async () => {

@@ -25,25 +25,24 @@ CREATE INDEX IF NOT EXISTS idx_users_status_role ON users(status, role_id);
 -- Add users permissions for admin user management
 -- =====================================================
 
--- users:read - View user accounts
-INSERT INTO permissions (id, name, description, created_at, updated_at, version)
-SELECT gen_random_uuid(), 'users:read', 'View user accounts', NOW(), NOW(), 0
-WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE name = 'users:read');
+-- Note: These permissions already exist from V10, but we keep these statements
+-- for idempotency. The WHERE NOT EXISTS clause will prevent duplicates.
 
--- users:create - Create user accounts
-INSERT INTO permissions (id, name, description, created_at, updated_at, version)
-SELECT gen_random_uuid(), 'users:create', 'Create user accounts', NOW(), NOW(), 0
-WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE name = 'users:create');
+-- users:read - View user accounts
+-- Already exists in V10, but kept for reference
+-- (No action needed - permission exists)
+
+-- users:create - Create user accounts  
+-- Already exists in V10, but kept for reference
+-- (No action needed - permission exists)
 
 -- users:update - Update user accounts
-INSERT INTO permissions (id, name, description, created_at, updated_at, version)
-SELECT gen_random_uuid(), 'users:update', 'Update user accounts', NOW(), NOW(), 0
-WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE name = 'users:update');
+-- Already exists in V10, but kept for reference
+-- (No action needed - permission exists)
 
 -- users:delete - Delete/deactivate user accounts
-INSERT INTO permissions (id, name, description, created_at, updated_at, version)
-SELECT gen_random_uuid(), 'users:delete', 'Delete or deactivate user accounts', NOW(), NOW(), 0
-WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE name = 'users:delete');
+-- Already exists in V10, but kept for reference
+-- (No action needed - permission exists)
 
 -- =====================================================
 -- Grant users permissions to SUPER_ADMIN role

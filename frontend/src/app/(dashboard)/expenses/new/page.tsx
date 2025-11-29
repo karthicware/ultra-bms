@@ -333,14 +333,17 @@ function CreateExpensePageContent() {
                       {isLoadingProperties ? (
                         <Skeleton className="h-10 w-full" />
                       ) : (
-                        <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <Select
+                          onValueChange={(val) => field.onChange(val === '__none__' ? '' : val)}
+                          value={field.value || '__none__'}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select property (optional)" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">No property</SelectItem>
+                            <SelectItem value="__none__">No property</SelectItem>
                             {properties.map((property) => (
                               <SelectItem key={property.id} value={property.id}>
                                 {property.name}
@@ -363,14 +366,17 @@ function CreateExpensePageContent() {
                       {isLoadingVendors ? (
                         <Skeleton className="h-10 w-full" />
                       ) : (
-                        <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <Select
+                          onValueChange={(val) => field.onChange(val === '__none__' ? '' : val)}
+                          value={field.value || '__none__'}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select vendor (optional)" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">No vendor</SelectItem>
+                            <SelectItem value="__none__">No vendor</SelectItem>
                             {vendors.map((vendor) => (
                               <SelectItem key={vendor.id} value={vendor.id}>
                                 {vendor.companyName}

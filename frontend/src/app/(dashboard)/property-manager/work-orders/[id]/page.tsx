@@ -218,7 +218,8 @@ export default function WorkOrderDetailPage() {
     if (workOrderId) {
       fetchWorkOrder();
     }
-  }, [workOrderId, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workOrderId]);
 
   // Refresh comments
   const refreshComments = async () => {

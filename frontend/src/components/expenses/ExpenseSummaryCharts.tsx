@@ -54,12 +54,12 @@ const LINE_COLORS = {
 /**
  * Custom tooltip for pie chart
  */
-const PieChartTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: { categoryLabel: string; amount: number; percentage: number; count: number } }[] }) => {
+const PieChartTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: { categoryDisplayName: string; amount: number; percentage: number; count: number } }[] }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
       <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-        <p className="font-semibold text-gray-900 dark:text-gray-100">{data.categoryLabel}</p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100">{data.categoryDisplayName}</p>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Amount: {formatExpenseCurrency(data.amount)}
         </p>
@@ -126,14 +126,14 @@ export function ExpenseSummaryCharts({ summary, isLoading }: ExpenseSummaryChart
   }
 
   // Prepare pie chart data with colors
-  const pieChartData = summary.expensesByCategory.map((item) => ({
+  const pieChartData = (summary.categoryBreakdown || []).map((item) => ({
     ...item,
-    fill: CATEGORY_COLORS[item.category] || CATEGORY_COLORS[ExpenseCategory.OTHER],
+    fill: CATEGORY_COLORS[item.category as ExpenseCategory] || CATEGORY_COLORS[ExpenseCategory.OTHER],
   }));
 
   // Prepare line chart data
-  const lineChartData = summary.monthlyTrend.map((item) => ({
-    name: item.monthLabel,
+  const lineChartData = (summary.monthlyTrend || []).map((item) => ({
+    name: item.monthName,
     'Total': item.totalAmount,
     'Paid': item.paidAmount,
     'Pending': item.pendingAmount,
@@ -162,7 +162,7 @@ export function ExpenseSummaryCharts({ summary, isLoading }: ExpenseSummaryChart
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="amount"
-                  nameKey="categoryLabel"
+                  nameKey="categoryDisplayName"
                 >
                   {pieChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />

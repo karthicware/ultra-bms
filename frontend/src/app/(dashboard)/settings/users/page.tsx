@@ -97,15 +97,24 @@ export default function UsersPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm, roleFilter, statusFilter, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, searchTerm, roleFilter, statusFilter]);
 
   // Fetch roles for dropdowns
   const fetchRoles = useCallback(async () => {
     try {
+      console.log('[UsersPage] Fetching roles...');
       const rolesData = await getRoles();
+      console.log('[UsersPage] Roles fetched successfully:', rolesData);
       setRoles(rolesData);
     } catch (error) {
-      console.error('Failed to fetch roles:', error);
+      console.error('[UsersPage] Failed to fetch roles:', error);
+      console.error('[UsersPage] Error type:', typeof error);
+      console.error('[UsersPage] Error keys:', error ? Object.keys(error) : 'null');
+
+      // Don't show error toast for roles fetch failure - silently fail
+      // This prevents UI disruption and infinite loops
+      setRoles([]); // Set empty array as fallback
     }
   }, []);
 

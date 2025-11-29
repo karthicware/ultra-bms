@@ -19,11 +19,16 @@ import {
   RefreshCw,
   Car,
   Landmark,
+  ChevronDown,
+  ChevronRight,
+  CreditCard,
+  CalendarClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { usePermission, useAuth } from '@/contexts/auth-context';
+import { useState } from 'react';
 
 interface NavItem {
   name: string;
@@ -31,6 +36,7 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   permission?: string;
   role?: string;
+  children?: NavItem[];
 }
 
 interface NavSection {
@@ -68,24 +74,32 @@ const navigationSections: NavSection[] = [
         href: '/tenants',
         icon: Users,
         permission: 'tenants:read',
+        children: [
+          {
+            name: 'All Tenants',
+            href: '/tenants',
+            icon: Users,
+            permission: 'tenants:read',
+          },
+          {
+            name: 'Checkouts',
+            href: '/checkouts',
+            icon: LogOutIcon,
+            permission: 'tenants:read',
+          },
+          {
+            name: 'Lease Extensions',
+            href: '/leases/extensions',
+            icon: RefreshCw,
+            permission: 'tenants:read',
+          },
+        ],
       },
       {
         name: 'Parking Spots',
         href: '/parking-spots',
         icon: Car,
         permission: 'properties:read',
-      },
-      {
-        name: 'Checkouts',
-        href: '/checkouts',
-        icon: LogOutIcon,
-        permission: 'tenants:read',
-      },
-      {
-        name: 'Lease Extensions',
-        href: '/leases/extensions',
-        icon: RefreshCw,
-        permission: 'tenants:read',
       },
       {
         name: 'Work Orders',
@@ -99,6 +113,12 @@ const navigationSections: NavSection[] = [
         icon: Truck,
         permission: 'vendor:read',
       },
+      {
+        name: 'PM Schedules',
+        href: '/property-manager/pm-schedules',
+        icon: CalendarClock,
+        permission: 'work-orders:read',
+      },
     ],
   },
   {
@@ -109,6 +129,12 @@ const navigationSections: NavSection[] = [
         href: '/invoices',
         icon: Receipt,
         permission: 'invoices:read',
+      },
+      {
+        name: 'PDC',
+        href: '/pdc',
+        icon: CreditCard,
+        permission: 'pdc:read',
       },
       {
         name: 'Expenses',
@@ -158,13 +184,96 @@ export function Sidebar() {
   const pathname = usePathname();
   const { hasPermission, hasRole } = usePermission();
   const { user, logout } = useAuth();
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
-  const filterItems = (items: NavItem[]) => {
-    return items.filter((item) => {
-      if (item.role && !hasRole(item.role)) return false;
-      if (item.permission && !hasPermission(item.permission)) return false;
-      return true;
-    });
+  const filterItems = (items: NavItem[]): NavItem[] => {
+    return items
+      .filter((item) => {
+        if (item.role && !hasRole(item.role)) return false;
+        if (item.permission && !hasPermission(item.permission)) return false;
+        return true;
+      })
+      .map((item) => ({
+        ...item,
+        children: item.children ? filterItems(item.children) : undefined,
+      }));
+  };
+
+  const isItemActive = (item: NavItem): boolean => {
+    // Exact match only for /settings to prevent parent highlighting when on child routes
+    if (item.href === '/settings') {
+      return pathname === item.href;
+    }
+    return pathname === item.href || pathname.startsWith(item.href + '/');
+  };
+
+  const isChildActive = (item: NavItem): boolean => {
+    if (!item.children) return false;
+    return item.children.some((child) => isItemActive(child));
+  };
+
+  const toggleExpand = (href: string) => {
+    setExpandedItems((prev) =>
+      prev.includes(href) ? prev.filter((h) => h !== href) : [...prev, href]
+    );
+  };
+
+  // Auto-expand items with active children
+  const isExpanded = (item: NavItem): boolean => {
+    return expandedItems.includes(item.href) || isChildActive(item);
+  };
+
+  const renderNavItem = (item: NavItem, isChild = false) => {
+    const Icon = item.icon;
+    const hasChildren = item.children && item.children.length > 0;
+    const active = isItemActive(item);
+    const expanded = hasChildren && isExpanded(item);
+
+    if (hasChildren) {
+      return (
+        <div key={item.href}>
+          <button
+            onClick={() => toggleExpand(item.href)}
+            className={cn(
+              'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+              isChildActive(item)
+                ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+            )}
+          >
+            <Icon className="h-5 w-5" />
+            <span className="flex-1 text-left">{item.name}</span>
+            {expanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+          {expanded && (
+            <div className="ml-4 mt-1 flex flex-col gap-1 border-l pl-2">
+              {item.children!.map((child) => renderNavItem(child, true))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={cn(
+          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+          active
+            ? 'bg-primary text-primary-foreground'
+            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+          isChild && 'text-sm'
+        )}
+      >
+        <Icon className={cn('h-5 w-5', isChild && 'h-4 w-4')} />
+        {item.name}
+      </Link>
+    );
   };
 
   return (
@@ -189,26 +298,7 @@ export function Sidebar() {
                   </h2>
                 )}
                 <div className="flex flex-col gap-1">
-                  {filteredItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                          isActive
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                        )}
-                      >
-                        <Icon className="h-5 w-5" />
-                        {item.name}
-                      </Link>
-                    );
-                  })}
+                  {filteredItems.map((item) => renderNavItem(item))}
                 </div>
               </div>
             );

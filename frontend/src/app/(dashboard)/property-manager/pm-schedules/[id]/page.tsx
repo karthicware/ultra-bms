@@ -116,7 +116,8 @@ export default function PMScheduleDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [scheduleId, router, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scheduleId, router]);
 
   // Fetch history
   const fetchHistory = useCallback(async (page = 0) => {

@@ -12,7 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
+import com.ultrabms.security.CurrentUser;
+import com.ultrabms.security.UserPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -106,11 +107,11 @@ public class CompanyProfileController {
     )
     public ResponseEntity<Map<String, Object>> saveCompanyProfile(
             @Valid @RequestBody CompanyProfileRequest request,
-            Authentication authentication
+            @CurrentUser UserPrincipal currentUser
     ) {
-        LOGGER.debug("Saving company profile by user: {}", authentication.getName());
+        LOGGER.debug("Saving company profile by user: {}", currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         CompanyProfileResponse profile = companyProfileService.saveCompanyProfile(request, userId);
 
         Map<String, Object> response = new HashMap<>();
@@ -140,11 +141,11 @@ public class CompanyProfileController {
     )
     public ResponseEntity<Map<String, Object>> uploadLogo(
             @RequestParam("file") MultipartFile file,
-            Authentication authentication
+            @CurrentUser UserPrincipal currentUser
     ) {
-        LOGGER.debug("Uploading company logo by user: {}", authentication.getName());
+        LOGGER.debug("Uploading company logo by user: {}", currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         CompanyProfileLogoResponse logoResponse = companyProfileService.uploadLogo(file, userId);
 
         Map<String, Object> response = new HashMap<>();
@@ -171,10 +172,10 @@ public class CompanyProfileController {
         summary = "Delete company logo",
         description = "Remove company logo from S3 and clear logo path in profile."
     )
-    public ResponseEntity<Map<String, Object>> deleteLogo(Authentication authentication) {
-        LOGGER.debug("Deleting company logo by user: {}", authentication.getName());
+    public ResponseEntity<Map<String, Object>> deleteLogo(@CurrentUser UserPrincipal currentUser) {
+        LOGGER.debug("Deleting company logo by user: {}", currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         companyProfileService.deleteLogo(userId);
 
         Map<String, Object> response = new HashMap<>();

@@ -277,9 +277,12 @@ export interface VendorExpenseGroupsResponse {
  */
 export interface ExpenseSummary {
   totalExpenses: number;
-  totalPendingAmount: number;
-  totalPaidAmount: number;
-  expensesByCategory: ExpenseCategoryBreakdown[];
+  totalPending: number;
+  totalPaid: number;
+  expenseCount: number;
+  pendingCount: number;
+  paidCount: number;
+  categoryBreakdown: ExpenseCategoryBreakdown[];
   monthlyTrend: MonthlyExpenseTrend[];
 }
 
@@ -287,8 +290,8 @@ export interface ExpenseSummary {
  * Category breakdown for pie chart
  */
 export interface ExpenseCategoryBreakdown {
-  category: ExpenseCategory;
-  categoryLabel: string;
+  category: string;
+  categoryDisplayName: string;
   amount: number;
   count: number;
   percentage: number;
@@ -298,8 +301,9 @@ export interface ExpenseCategoryBreakdown {
  * Monthly trend data for line chart
  */
 export interface MonthlyExpenseTrend {
-  month: string; // YYYY-MM format
-  monthLabel: string; // e.g., "Jan 2025"
+  year: number;
+  month: number;
+  monthName: string;
   totalAmount: number;
   paidAmount: number;
   pendingAmount: number;

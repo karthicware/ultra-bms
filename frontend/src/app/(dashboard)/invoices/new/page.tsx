@@ -145,7 +145,8 @@ function CreateInvoicePageContent() {
     };
 
     loadTenants();
-  }, [searchQuery, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
   // Load preselected tenant details
   useEffect(() => {

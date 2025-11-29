@@ -17,7 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
+import com.ultrabms.security.CurrentUser;
+import com.ultrabms.security.UserPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,10 +61,10 @@ public class TenantPortalController {
      */
     @GetMapping("/dashboard")
     @Operation(summary = "Get tenant dashboard", description = "Retrieve dashboard data with unit info, stats, and quick actions")
-    public ResponseEntity<Map<String, Object>> getDashboard(Authentication authentication) {
-        LOGGER.info("Getting dashboard for user: {}", authentication.getName());
+    public ResponseEntity<Map<String, Object>> getDashboard(@CurrentUser UserPrincipal currentUser) {
+        LOGGER.info("Getting dashboard for user: {}", currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         DashboardResponse dashboard = tenantPortalService.getDashboardData(userId);
 
         Map<String, Object> response = new HashMap<>();
@@ -80,10 +81,10 @@ public class TenantPortalController {
      */
     @GetMapping("/profile")
     @Operation(summary = "Get tenant profile", description = "Retrieve complete profile with personal info, lease, parking, and documents")
-    public ResponseEntity<Map<String, Object>> getProfile(Authentication authentication) {
-        LOGGER.info("Getting profile for user: {}", authentication.getName());
+    public ResponseEntity<Map<String, Object>> getProfile(@CurrentUser UserPrincipal currentUser) {
+        LOGGER.info("Getting profile for user: {}", currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         TenantProfileResponse profile = tenantPortalService.getTenantProfile(userId);
 
         Map<String, Object> response = new HashMap<>();
@@ -102,11 +103,11 @@ public class TenantPortalController {
     @Operation(summary = "Change password", description = "Change the tenant's account password")
     public ResponseEntity<Map<String, Object>> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,
-            Authentication authentication
+            @CurrentUser UserPrincipal currentUser
     ) {
-        LOGGER.info("Changing password for user: {}", authentication.getName());
+        LOGGER.info("Changing password for user: {}", currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         tenantPortalService.changePassword(userId, request);
 
         Map<String, Object> response = new HashMap<>();
@@ -123,10 +124,10 @@ public class TenantPortalController {
      */
     @GetMapping("/lease/download")
     @Operation(summary = "Download lease agreement", description = "Download the signed lease agreement PDF")
-    public ResponseEntity<Resource> downloadLease(Authentication authentication) {
-        LOGGER.info("Downloading lease for user: {}", authentication.getName());
+    public ResponseEntity<Resource> downloadLease(@CurrentUser UserPrincipal currentUser) {
+        LOGGER.info("Downloading lease for user: {}", currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         String filePath = tenantPortalService.getLeasePdfPath(userId);
 
         File file = new File(filePath);
@@ -147,11 +148,11 @@ public class TenantPortalController {
     public ResponseEntity<Map<String, Object>> uploadDocument(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "type", required = false) String documentType,
-            Authentication authentication
+            @CurrentUser UserPrincipal currentUser
     ) {
-        LOGGER.info("Uploading document for user: {}, type: {}", authentication.getName(), documentType);
+        LOGGER.info("Uploading document for user: {}, type: {}", currentUser.getId(), documentType);
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         TenantDocument document = tenantPortalService.uploadDocument(userId, file, documentType);
 
         Map<String, Object> response = new HashMap<>();
@@ -171,11 +172,11 @@ public class TenantPortalController {
     @Operation(summary = "Download document", description = "Download a specific document from tenant's repository")
     public ResponseEntity<Resource> downloadDocument(
             @PathVariable UUID id,
-            Authentication authentication
+            @CurrentUser UserPrincipal currentUser
     ) {
-        LOGGER.info("Downloading document {} for user: {}", id, authentication.getName());
+        LOGGER.info("Downloading document {} for user: {}", id, currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         String filePath = tenantPortalService.getDocumentPath(userId, id);
 
         File file = new File(filePath);
@@ -204,10 +205,10 @@ public class TenantPortalController {
      */
     @GetMapping("/parking/mulkiya/download")
     @Operation(summary = "Download Mulkiya", description = "Download the Mulkiya parking document if available")
-    public ResponseEntity<Resource> downloadMulkiya(Authentication authentication) {
-        LOGGER.info("Downloading Mulkiya for user: {}", authentication.getName());
+    public ResponseEntity<Resource> downloadMulkiya(@CurrentUser UserPrincipal currentUser) {
+        LOGGER.info("Downloading Mulkiya for user: {}", currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         String filePath = tenantPortalService.getMulkiyaPath(userId);
 
         File file = new File(filePath);
@@ -238,11 +239,11 @@ public class TenantPortalController {
     @Operation(summary = "Update preferences", description = "Update tenant's language preference")
     public ResponseEntity<Map<String, Object>> updatePreferences(
             @RequestBody Map<String, String> preferences,
-            Authentication authentication
+            @CurrentUser UserPrincipal currentUser
     ) {
-        LOGGER.info("Updating preferences for user: {}", authentication.getName());
+        LOGGER.info("Updating preferences for user: {}", currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         String language = preferences.get("language");
 
         if (language != null) {

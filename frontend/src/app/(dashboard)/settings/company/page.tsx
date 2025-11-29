@@ -111,7 +111,8 @@ export default function CompanyProfilePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [form, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form]);
 
   useEffect(() => {
     setMounted(true);

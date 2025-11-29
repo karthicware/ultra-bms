@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import com.ultrabms.security.CurrentUser;
+import com.ultrabms.security.UserPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -150,11 +152,11 @@ public class BankAccountController {
     )
     public ResponseEntity<Map<String, Object>> createBankAccount(
             @Valid @RequestBody BankAccountRequest request,
-            Authentication authentication
+            @CurrentUser UserPrincipal currentUser
     ) {
-        LOGGER.debug("Creating bank account by user: {}", authentication.getName());
+        LOGGER.debug("Creating bank account by user: {}", currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         BankAccountResponse account = bankAccountService.create(request, userId);
 
         Map<String, Object> response = new HashMap<>();

@@ -84,13 +84,14 @@ export default function CreatePMSchedulePage() {
       try {
         setLoadingProperties(true);
         const response = await getProperties({ page: 0, size: 100 });
-        setProperties(response.content);
+        setProperties(response.content || []);
       } catch (error) {
         toast({
           title: 'Error',
           description: 'Failed to load properties',
           variant: 'destructive',
         });
+        setProperties([]);
       } finally {
         setLoadingProperties(false);
       }

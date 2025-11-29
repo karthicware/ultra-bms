@@ -103,7 +103,8 @@ export default function ExpensesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm, categoryFilter, statusFilter, sortField, sortDirection, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, searchTerm, categoryFilter, statusFilter, sortField, sortDirection]);
 
   // Fetch summary
   const fetchSummary = useCallback(async () => {
@@ -217,7 +218,7 @@ export default function ExpensesPage() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-green-600">
-            {summary ? formatExpenseCurrency(summary.totalPaidAmount) : <Skeleton className="h-8 w-24" />}
+            {summary ? formatExpenseCurrency(summary.totalPaid) : <Skeleton className="h-8 w-24" />}
           </div>
           <p className="text-xs text-muted-foreground">
             Completed payments
@@ -231,7 +232,7 @@ export default function ExpensesPage() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-amber-600">
-            {summary ? formatExpenseCurrency(summary.totalPendingAmount) : <Skeleton className="h-8 w-24" />}
+            {summary ? formatExpenseCurrency(summary.totalPending) : <Skeleton className="h-8 w-24" />}
           </div>
           <p className="text-xs text-muted-foreground">
             Awaiting payment
@@ -245,7 +246,7 @@ export default function ExpensesPage() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-blue-600">
-            {summary ? formatExpenseCurrency(summary.totalPendingAmount) : <Skeleton className="h-8 w-24" />}
+            {summary ? formatExpenseCurrency(summary.totalPending) : <Skeleton className="h-8 w-24" />}
           </div>
           <p className="text-xs text-muted-foreground">Click to process payments</p>
         </CardContent>

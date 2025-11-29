@@ -120,7 +120,8 @@ function PMSchedulesContent() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, statusFilter, categoryFilter, frequencyFilter, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, statusFilter, categoryFilter, frequencyFilter]);
 
   // Initial load
   useEffect(() => {

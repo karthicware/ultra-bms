@@ -101,7 +101,8 @@ export default function AssetsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm, categoryFilter, statusFilter, sortField, sortDirection, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, searchTerm, categoryFilter, statusFilter, sortField, sortDirection]);
 
   // Debounced search
   const debouncedFetchAssets = useMemo(

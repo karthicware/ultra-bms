@@ -137,7 +137,8 @@ export default function UnassignedWorkOrdersPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedPriority, selectedCategory, searchTerm, sortBy, sortDirection, page, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPriority, selectedCategory, searchTerm, sortBy, sortDirection, page]);
 
   useEffect(() => {
     loadWorkOrders();

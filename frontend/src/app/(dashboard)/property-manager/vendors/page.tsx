@@ -137,7 +137,8 @@ export default function VendorsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedStatus, selectedCategory, searchTerm, sortBy, sortDirection, page, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStatus, selectedCategory, searchTerm, sortBy, sortDirection, page]);
 
   useEffect(() => {
     loadVendors();

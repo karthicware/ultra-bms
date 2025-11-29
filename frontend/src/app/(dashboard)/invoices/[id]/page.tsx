@@ -102,7 +102,8 @@ export default function InvoiceDetailPage({ params }: PageProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [id, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   useEffect(() => {
     fetchInvoice();

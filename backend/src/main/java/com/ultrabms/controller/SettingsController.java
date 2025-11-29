@@ -10,8 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import com.ultrabms.security.CurrentUser;
+import com.ultrabms.security.UserPrincipal;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,7 +48,7 @@ public class SettingsController {
      * Get the current user's appearance settings.
      * GET /api/v1/settings/appearance
      *
-     * @param authentication Spring Security authentication object
+     * @param currentUser the authenticated user principal
      * @return current appearance settings
      */
     @GetMapping("/appearance")
@@ -55,10 +56,10 @@ public class SettingsController {
         summary = "Get appearance settings",
         description = "Retrieve the current user's appearance settings including theme preference"
     )
-    public ResponseEntity<Map<String, Object>> getAppearanceSettings(Authentication authentication) {
-        LOGGER.debug("Getting appearance settings for user: {}", authentication.getName());
+    public ResponseEntity<Map<String, Object>> getAppearanceSettings(@CurrentUser UserPrincipal currentUser) {
+        LOGGER.debug("Getting appearance settings for user: {}", currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         AppearanceSettingsResponse settings = settingsService.getAppearanceSettings(userId);
 
         Map<String, Object> response = new HashMap<>();
@@ -74,7 +75,7 @@ public class SettingsController {
      * PUT /api/v1/settings/appearance
      *
      * @param request the new appearance settings
-     * @param authentication Spring Security authentication object
+     * @param currentUser the authenticated user principal
      * @return updated appearance settings
      */
     @PutMapping("/appearance")
@@ -84,11 +85,11 @@ public class SettingsController {
     )
     public ResponseEntity<Map<String, Object>> updateAppearanceSettings(
             @Valid @RequestBody AppearanceSettingsRequest request,
-            Authentication authentication
+            @CurrentUser UserPrincipal currentUser
     ) {
-        LOGGER.debug("Updating appearance settings for user: {}", authentication.getName());
+        LOGGER.debug("Updating appearance settings for user: {}", currentUser.getId());
 
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = currentUser.getId();
         AppearanceSettingsResponse settings = settingsService.updateAppearanceSettings(userId, request);
 
         Map<String, Object> response = new HashMap<>();
