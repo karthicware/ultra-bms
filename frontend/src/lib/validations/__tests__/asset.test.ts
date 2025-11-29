@@ -677,9 +677,7 @@ describe('Asset Validation Schema', () => {
 // HELPER TEST UTILITIES
 // =================================================================
 
-function getTodayDateString(): string {
-  return new Date().toISOString().split('T')[0];
-}
+// getTodayDateString is imported from '@/lib/validations/asset'
 
 function getFutureDateString(daysInFuture: number): string {
   const date = new Date();

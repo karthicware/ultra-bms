@@ -83,4 +83,12 @@ public interface IEmailService {
     // Asset warranty emails
     void sendWarrantyExpiryReminder(String recipientEmail, String recipientName, Asset asset,
                                      String propertyName, int daysUntilExpiry);
+
+    // Document expiry emails (Story 7.2)
+    void sendDocumentExpiryNotification(String recipientEmail, String recipientName,
+                                         String documentNumber, String documentTitle, String documentType,
+                                         String entityTypeDisplayName, String entityName,
+                                         String accessLevelDisplayName, String accessLevelLower,
+                                         String fileName, String expiryDate, long daysUntilExpiry,
+                                         String portalUrl);
 }

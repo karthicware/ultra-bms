@@ -1989,6 +1989,135 @@ public class EmailService implements IEmailService {
     }
 
     // ========================================================================
+    // Document Expiry Emails (Story 7.2)
+    // ========================================================================
+
+    /**
+     * Send document expiry notification email.
+     * Alerts administrators about documents expiring or expired.
+     *
+     * Story 7.2: Document Management System
+     *
+     * @param recipientEmail Recipient email address
+     * @param recipientName Recipient display name
+     * @param documentNumber Document number (DOC-YYYY-NNNN)
+     * @param documentTitle Document title
+     * @param documentType Document type
+     * @param entityTypeDisplayName Display name for entity type (e.g., "Property", "Tenant")
+     * @param entityName Name of associated entity
+     * @param accessLevelDisplayName Display name for access level
+     * @param accessLevelLower Lowercase access level for CSS class
+     * @param fileName Original file name
+     * @param expiryDate Formatted expiry date
+     * @param daysUntilExpiry Days until expiry (negative if expired)
+     * @param portalUrl URL to view document in portal
+     */
+    @Override
+    public void sendDocumentExpiryNotification(String recipientEmail, String recipientName,
+                                                String documentNumber, String documentTitle, String documentType,
+                                                String entityTypeDisplayName, String entityName,
+                                                String accessLevelDisplayName, String accessLevelLower,
+                                                String fileName, String expiryDate, long daysUntilExpiry,
+                                                String portalUrl) {
+        try {
+            Context context = new Context();
+            context.setVariable("recipientName", recipientName);
+            context.setVariable("documentNumber", documentNumber);
+            context.setVariable("documentTitle", documentTitle);
+            context.setVariable("documentType", documentType);
+            context.setVariable("entityTypeDisplayName", entityTypeDisplayName);
+            context.setVariable("entityName", entityName);
+            context.setVariable("accessLevelDisplayName", accessLevelDisplayName);
+            context.setVariable("accessLevelLower", accessLevelLower);
+            context.setVariable("fileName", fileName);
+            context.setVariable("expiryDate", expiryDate);
+            context.setVariable("daysUntilExpiry", daysUntilExpiry);
+            context.setVariable("portalUrl", portalUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/document-expiry-notification", context);
+
+            // Generate plain text version
+            String textContent = generateDocumentExpiryPlainText(recipientName, documentNumber, documentTitle,
+                    documentType, entityTypeDisplayName, entityName, expiryDate, daysUntilExpiry, portalUrl);
+
+            String urgencyPrefix;
+            String subjectStatus;
+            if (daysUntilExpiry < 0) {
+                urgencyPrefix = "EXPIRED: ";
+                subjectStatus = "has expired";
+            } else if (daysUntilExpiry <= 7) {
+                urgencyPrefix = "URGENT: ";
+                subjectStatus = String.format("expires in %d day%s", daysUntilExpiry, daysUntilExpiry == 1 ? "" : "s");
+            } else {
+                urgencyPrefix = "";
+                subjectStatus = String.format("expires in %d days", daysUntilExpiry);
+            }
+
+            sendEmail(
+                recipientEmail,
+                String.format("%sDocument %s - %s", urgencyPrefix, subjectStatus, documentTitle),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Document expiry notification sent successfully to: {} for document: {} ({} days until expiry)",
+                    recipientEmail, documentNumber, daysUntilExpiry);
+
+        } catch (Exception e) {
+            log.error("Failed to send document expiry notification to: {} for document: {}",
+                    recipientEmail, documentNumber, e);
+        }
+    }
+
+    /**
+     * Generate plain text version of document expiry notification.
+     */
+    private String generateDocumentExpiryPlainText(String recipientName, String documentNumber,
+                                                    String documentTitle, String documentType,
+                                                    String entityTypeDisplayName, String entityName,
+                                                    String expiryDate, long daysUntilExpiry, String portalUrl) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Hi ").append(recipientName).append(",\n\n");
+
+        if (daysUntilExpiry < 0) {
+            sb.append("ALERT: The following document has expired and requires immediate attention.\n\n");
+        } else if (daysUntilExpiry <= 7) {
+            sb.append("URGENT: The following document is expiring very soon.\n\n");
+        } else {
+            sb.append("This is a reminder that the following document will expire within 30 days.\n\n");
+        }
+
+        sb.append("DOCUMENT DETAILS:\n");
+        sb.append("Document Number: ").append(documentNumber).append("\n");
+        sb.append("Title: ").append(documentTitle).append("\n");
+        sb.append("Type: ").append(documentType).append("\n");
+        if (entityName != null && !entityName.isEmpty()) {
+            sb.append(entityTypeDisplayName).append(": ").append(entityName).append("\n");
+        }
+        sb.append("Expiry Date: ").append(expiryDate).append("\n");
+
+        if (daysUntilExpiry < 0) {
+            sb.append("Status: EXPIRED (").append(Math.abs(daysUntilExpiry)).append(" days ago)\n\n");
+        } else {
+            sb.append("Days Until Expiry: ").append(daysUntilExpiry).append("\n\n");
+        }
+
+        sb.append("RECOMMENDED ACTIONS:\n");
+        sb.append("- Obtain the renewed/updated document from the relevant party\n");
+        sb.append("- Upload the new document version to the system\n");
+        sb.append("- Update the expiry date if applicable\n");
+        sb.append("- Notify relevant stakeholders of the document update\n\n");
+
+        sb.append("View Document: ").append(portalUrl).append("\n\n");
+        sb.append("---\n");
+        sb.append("This is an automated notification from Ultra BMS.\n");
+        sb.append("Please do not reply directly to this email.\n");
+
+        return sb.toString();
+    }
+
+    // ========================================================================
     // Email Helper Methods
     // ========================================================================
 

@@ -1,6 +1,6 @@
 # Story 7.2: Document Management System
 
-Status: drafted
+Status: review
 
 ## Story
 
