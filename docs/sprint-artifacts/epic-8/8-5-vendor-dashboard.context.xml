@@ -1,0 +1,318 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>8</epicId>
+    <storyId>5</storyId>
+    <title>Vendor Dashboard</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-8/8-5-vendor-dashboard.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>an administrator or property manager</asA>
+    <iWant>a dedicated vendor dashboard with performance metrics and document tracking</iWant>
+    <soThat>I can monitor vendor performance and manage compliance effectively</soThat>
+    <tasks>
+      <task id="1" name="Create Vendor Dashboard DTOs">
+        <subtasks>
+          <subtask>Create VendorDashboardDto with all fields</subtask>
+          <subtask>Create VendorKpiDto for KPI cards</subtask>
+          <subtask>Create JobsBySpecializationDto for bar chart</subtask>
+          <subtask>Create VendorPerformanceSnapshotDto for scatter plot</subtask>
+          <subtask>Create ExpiringDocumentDto for documents list</subtask>
+          <subtask>Create TopVendorDto for top vendors list</subtask>
+        </subtasks>
+      </task>
+      <task id="2" name="Create VendorDashboardRepository queries">
+        <subtasks>
+          <subtask>Query for active vendors count</subtask>
+          <subtask>Query for average SLA compliance calculation</subtask>
+          <subtask>Query for top performing vendor by rating</subtask>
+          <subtask>Query for documents expiring in 30 days</subtask>
+          <subtask>Query for jobs grouped by specialization</subtask>
+          <subtask>Query for vendor performance snapshot data</subtask>
+          <subtask>Query for vendors with expiring documents</subtask>
+          <subtask>Query for top vendors by jobs completed</subtask>
+        </subtasks>
+      </task>
+      <task id="3" name="Create VendorDashboardService">
+        <subtasks>
+          <subtask>Implement getVendorDashboard() method</subtask>
+          <subtask>Implement getJobsBySpecialization() method</subtask>
+          <subtask>Implement getPerformanceSnapshot() method</subtask>
+          <subtask>Implement getExpiringDocuments() method</subtask>
+          <subtask>Implement getTopVendors() method</subtask>
+          <subtask>Add Ehcache caching with 5-minute TTL</subtask>
+          <subtask>Calculate SLA compliance from vendor ratings</subtask>
+        </subtasks>
+      </task>
+      <task id="4" name="Create VendorDashboardController">
+        <subtasks>
+          <subtask>GET /api/v1/dashboard/vendor</subtask>
+          <subtask>GET /api/v1/dashboard/vendor/jobs-by-specialization</subtask>
+          <subtask>GET /api/v1/dashboard/vendor/performance-snapshot</subtask>
+          <subtask>GET /api/v1/dashboard/vendor/expiring-documents</subtask>
+          <subtask>GET /api/v1/dashboard/vendor/top-vendors</subtask>
+          <subtask>Add @PreAuthorize for authorized roles</subtask>
+        </subtasks>
+      </task>
+      <task id="5" name="Write unit tests for VendorDashboardService">
+        <subtasks>
+          <subtask>Test KPI calculations</subtask>
+          <subtask>Test performance snapshot data aggregation</subtask>
+          <subtask>Test expiring documents query</subtask>
+        </subtasks>
+      </task>
+      <task id="6" name="Create TypeScript types for vendor dashboard">
+        <subtasks>
+          <subtask>Create vendor-dashboard.ts types</subtask>
+          <subtask>Create Zod validation schemas</subtask>
+        </subtasks>
+      </task>
+      <task id="7" name="Create vendor-dashboard.service.ts API client">
+        <subtasks>
+          <subtask>Implement fetchVendorDashboard()</subtask>
+          <subtask>Implement fetchJobsBySpecialization()</subtask>
+          <subtask>Implement fetchPerformanceSnapshot()</subtask>
+          <subtask>Implement fetchExpiringDocuments()</subtask>
+          <subtask>Implement fetchTopVendors()</subtask>
+        </subtasks>
+      </task>
+      <task id="8" name="Create useVendorDashboard React Query hook">
+        <subtasks>
+          <subtask>Implement hook with auto-refresh</subtask>
+          <subtask>Handle loading and error states</subtask>
+        </subtasks>
+      </task>
+      <task id="9" name="Create VendorKpiCards component (AC: #1-4)">
+        <subtasks>
+          <subtask>Display 4 KPI cards in a row</subtask>
+          <subtask>Star rating badge for top vendor</subtask>
+          <subtask>Red highlight for critical expiring docs</subtask>
+          <subtask>Add data-testid attributes</subtask>
+        </subtasks>
+      </task>
+      <task id="10" name="Create JobsBySpecializationChart component (AC: #5)">
+        <subtasks>
+          <subtask>Use Recharts BarChart</subtask>
+          <subtask>Click navigation to vendor list</subtask>
+          <subtask>Color-coded bars</subtask>
+        </subtasks>
+      </task>
+      <task id="11" name="Create VendorPerformanceScatter component (AC: #6, #14, #15, #17)">
+        <subtasks>
+          <subtask>Use Recharts ScatterChart</subtask>
+          <subtask>Bubble size proportional to job count</subtask>
+          <subtask>Custom tooltip with vendor details</subtask>
+          <subtask>Color-code by performance tier</subtask>
+          <subtask>Add hover interactions</subtask>
+        </subtasks>
+      </task>
+      <task id="12" name="Create ExpiringDocumentsTable component (AC: #7)">
+        <subtasks>
+          <subtask>Create sortable data table</subtask>
+          <subtask>Red highlight for less than 7 days</subtask>
+          <subtask>Quick action buttons</subtask>
+          <subtask>Add data-testid attributes</subtask>
+        </subtasks>
+      </task>
+      <task id="13" name="Create TopVendorsTable component (AC: #8)">
+        <subtasks>
+          <subtask>Display top 5 vendors</subtask>
+          <subtask>Star rating component</subtask>
+          <subtask>View Profile quick action</subtask>
+        </subtasks>
+      </task>
+      <task id="14" name="Create Vendor Dashboard page (AC: #14, #19)">
+        <subtasks>
+          <subtask>Create page at app/(dashboard)/vendors/dashboard/page.tsx</subtask>
+          <subtask>Implement responsive grid layout</subtask>
+          <subtask>Add skeleton loaders for all components</subtask>
+          <subtask>Integrate all vendor dashboard components</subtask>
+        </subtasks>
+      </task>
+      <task id="15" name="Write frontend unit tests">
+        <subtasks>
+          <subtask>Test VendorKpiCards component</subtask>
+          <subtask>Test VendorPerformanceScatter with hover</subtask>
+          <subtask>Test ExpiringDocumentsTable component</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1">Dashboard displays Total Active Vendors KPI card showing count of vendors with status = ACTIVE, click navigates to active vendors list</criterion>
+    <criterion id="AC-2">Dashboard displays Avg SLA Compliance KPI card showing percentage across all active vendors, calculated from vendor performance metrics</criterion>
+    <criterion id="AC-3">Dashboard displays Top Performing Vendor KPI card showing vendor name with highest rating, rating badge displayed (star rating)</criterion>
+    <criterion id="AC-4">Dashboard displays Expiring Documents KPI card showing count of documents expiring in next 30 days, red highlight if critical documents expiring, click navigates to expiring documents list</criterion>
+    <criterion id="AC-5">Jobs by Specialization bar chart displays X-axis: Specialization categories, Y-axis: Job count, shows distribution of completed work across specializations, click bar navigates to vendor list by specialization</criterion>
+    <criterion id="AC-6">Vendor Performance scatter plot displays X-axis: SLA Compliance %, Y-axis: Customer Rating (1-5), bubble size: number of completed jobs, hover shows vendor name, SLA %, rating, and job count, color-coded by performance tier</criterion>
+    <criterion id="AC-7">Vendors with Expiring Documents table displays columns: Vendor Name, Document Type, Expiry Date, Days Until Expiry, sorted by expiry date ascending, red highlight for less than 7 days, quick actions: View Vendor, Upload Document</criterion>
+    <criterion id="AC-8">Top Vendors by Jobs table displays columns: Rank, Vendor Name, Jobs Completed (This Month), Avg Rating, top 5 vendors by job volume, star rating display, quick action: View Vendor Profile</criterion>
+    <criterion id="AC-9">Backend provides GET /api/v1/dashboard/vendor endpoint returning all vendor dashboard data</criterion>
+    <criterion id="AC-10">Backend provides GET /api/v1/dashboard/vendor/jobs-by-specialization endpoint</criterion>
+    <criterion id="AC-11">Backend provides GET /api/v1/dashboard/vendor/performance-snapshot endpoint returning scatter plot data</criterion>
+    <criterion id="AC-12">Backend provides GET /api/v1/dashboard/vendor/expiring-documents endpoint</criterion>
+    <criterion id="AC-13">Backend provides GET /api/v1/dashboard/vendor/top-vendors endpoint</criterion>
+    <criterion id="AC-14">Frontend uses Recharts ScatterChart for vendor performance snapshot</criterion>
+    <criterion id="AC-15">Bubble size is proportional to completed job count</criterion>
+    <criterion id="AC-16">Dashboard data cached for 5 minutes using Ehcache</criterion>
+    <criterion id="AC-17">Tooltip shows vendor details on hover for scatter plot</criterion>
+    <criterion id="AC-18">Role-based access for ADMIN, PROPERTY_MANAGER, or MAINTENANCE_SUPERVISOR</criterion>
+    <criterion id="AC-19">All interactive elements have data-testid attributes</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="3.2.2 Operational Dashboards">
+        Vendor Dashboard requirements: SLA compliance, performance snapshot, expiring documents tracking per PRD.
+      </doc>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="3.5.3 Performance Management">
+        SLA compliance monitoring, job completion metrics, quality scores, response time analysis, cost effectiveness tracking, vendor ranking system.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Vendor Performance Scoring">
+        Algorithm: Overall Rating = (Quality * 0.4) + (Timeliness * 0.3) + (Communication * 0.2) + (Cost * 0.1). Performance tiers defined.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Caching Strategy">
+        Use Spring Cache with Caffeine for 5-minute TTL caching. @Cacheable and @CacheEvict annotations.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Decision Summary">
+        Recharts for all charts (bar, line, pie, scatter). shadcn/ui Card components for dashboard layout.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Security Architecture - RBAC">
+        Role-based access with @PreAuthorize. Roles: ADMIN, PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR have dashboard access.
+      </doc>
+      <doc path="docs/epics/epic-8-dashboard-reporting.md" title="Epic 8: Dashboard and Reporting" section="Story 8.5">
+        Full story definition with acceptance criteria, tasks, technical notes, and Stitch design reference.
+      </doc>
+    </docs>
+    <code>
+      <file path="backend/src/main/java/com/ultrabms/entity/Vendor.java" kind="entity" symbol="Vendor" reason="Vendor entity with status, rating fields - source for active vendor count and top vendor queries">
+        <lines>1-100</lines>
+      </file>
+      <file path="backend/src/main/java/com/ultrabms/entity/VendorRating.java" kind="entity" symbol="VendorRating" reason="Rating entity with overallScore, qualityScore, timelinessScore - needed for SLA compliance and performance scatter data">
+        <lines>1-100</lines>
+      </file>
+      <file path="backend/src/main/java/com/ultrabms/entity/VendorDocument.java" kind="entity" symbol="VendorDocument" reason="Document entity with expiryDate - needed for expiring documents KPI and list">
+        <lines>1-100</lines>
+      </file>
+      <file path="backend/src/main/java/com/ultrabms/repository/VendorRatingRepository.java" kind="repository" symbol="VendorRatingRepository" reason="Existing repository with rating calculation queries - reuse for performance snapshot aggregation">
+        <lines>1-204</lines>
+      </file>
+      <file path="backend/src/main/java/com/ultrabms/repository/VendorDocumentRepository.java" kind="repository" symbol="VendorDocumentRepository" reason="Repository with findExpiringDocuments() and countExpiringDocuments() queries - reuse for dashboard">
+        <lines>1-256</lines>
+      </file>
+      <file path="backend/src/main/java/com/ultrabms/repository/VendorRepository.java" kind="repository" symbol="VendorRepository" reason="Vendor CRUD repository - need to add active count and top rated queries">
+        <lines>1-100</lines>
+      </file>
+      <file path="backend/src/main/java/com/ultrabms/dto/vendor/VendorPerformanceDto.java" kind="dto" symbol="VendorPerformanceDto" reason="Existing DTO with performance metrics - can extend for dashboard scatter plot data">
+        <lines>1-89</lines>
+      </file>
+      <file path="backend/src/main/java/com/ultrabms/service/impl/VendorRatingServiceImpl.java" kind="service" symbol="VendorRatingServiceImpl" reason="Service with performance calculation logic - reference for SLA compliance calculation">
+        <lines>1-200</lines>
+      </file>
+      <file path="backend/src/main/java/com/ultrabms/service/impl/VendorDocumentServiceImpl.java" kind="service" symbol="VendorDocumentServiceImpl" reason="Service with document expiry methods - reference for expiring documents dashboard section">
+        <lines>1-200</lines>
+      </file>
+      <file path="frontend/src/types/vendors.ts" kind="types" symbol="Vendor, ServiceCategory, VendorStatus" reason="Existing vendor types including ServiceCategory enum for specialization chart">
+        <lines>1-349</lines>
+      </file>
+      <file path="frontend/src/types/vendor-ratings.ts" kind="types" symbol="VendorPerformance, TopRatedVendor" reason="Existing performance types - reuse for dashboard scatter plot and top vendors list">
+        <lines>1-182</lines>
+      </file>
+      <file path="frontend/src/types/vendor-documents.ts" kind="types" symbol="VendorDocument" reason="Existing document types - reference for expiring documents table">
+        <lines>1-100</lines>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <package name="recharts" version="^3.4.1">Charts library for ScatterChart, BarChart - already installed</package>
+        <package name="@tanstack/react-query" version="^5.90.9">Data fetching with caching - already installed</package>
+        <package name="date-fns" version="^4.1.0">Date calculations for days until expiry - already installed</package>
+        <package name="lucide-react" version="^0.553.0">Icons for KPI cards and actions - already installed</package>
+      </node>
+      <java>
+        <package name="spring-boot-starter-cache">Spring Cache abstraction - already configured</package>
+        <package name="ehcache">Ehcache provider for caching - already configured</package>
+      </java>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface name="VendorRepository.countByStatusAndIsDeletedFalse" kind="jpa-repository" path="backend/src/main/java/com/ultrabms/repository/VendorRepository.java">
+      Query method to count active vendors: countByStatusAndIsDeletedFalse(VendorStatus.ACTIVE)
+    </interface>
+    <interface name="VendorRatingRepository.calculateAverageRatingByVendorId" kind="jpa-repository" path="backend/src/main/java/com/ultrabms/repository/VendorRatingRepository.java">
+      Calculate average rating for SLA compliance: AVG(vr.overallScore) WHERE vr.vendor.id = :vendorId
+    </interface>
+    <interface name="VendorDocumentRepository.countExpiringDocuments" kind="jpa-repository" path="backend/src/main/java/com/ultrabms/repository/VendorDocumentRepository.java">
+      Count documents expiring within days: COUNT(d) WHERE d.expiryDate &lt;= :expiryDate AND d.expiryDate &gt;= CURRENT_DATE
+    </interface>
+    <interface name="VendorDocumentRepository.findExpiringDocuments" kind="jpa-repository" path="backend/src/main/java/com/ultrabms/repository/VendorDocumentRepository.java">
+      Find expiring documents list: SELECT d FROM VendorDocument d JOIN FETCH d.vendor WHERE d.expiryDate &lt;= :expiryDate
+    </interface>
+    <interface name="GET /api/v1/dashboard/vendor" kind="rest-endpoint">
+      Returns VendorDashboardDto with all KPIs and chart data. Role: ADMIN, PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR
+    </interface>
+    <interface name="GET /api/v1/dashboard/vendor/jobs-by-specialization" kind="rest-endpoint">
+      Returns List&lt;JobsBySpecializationDto&gt; for bar chart. Grouped by ServiceCategory.
+    </interface>
+    <interface name="GET /api/v1/dashboard/vendor/performance-snapshot" kind="rest-endpoint">
+      Returns List&lt;VendorPerformanceSnapshotDto&gt; for scatter plot with SLA%, rating, jobCount per vendor.
+    </interface>
+    <interface name="GET /api/v1/dashboard/vendor/expiring-documents" kind="rest-endpoint">
+      Returns List&lt;ExpiringDocumentDto&gt; sorted by expiryDate ASC. Includes vendorName, documentType, expiryDate, daysUntilExpiry.
+    </interface>
+    <interface name="GET /api/v1/dashboard/vendor/top-vendors" kind="rest-endpoint">
+      Returns List&lt;TopVendorDto&gt; top 5 by jobs completed this month with rating.
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint source="architecture">Use Spring Cache with Ehcache for 5-minute caching on dashboard endpoints</constraint>
+    <constraint source="architecture">Use @PreAuthorize for role-based access control on all endpoints</constraint>
+    <constraint source="architecture">Follow controller → service → repository pattern</constraint>
+    <constraint source="architecture">Use UUID for all entity IDs (not Long)</constraint>
+    <constraint source="architecture">Use Recharts for all chart components (ScatterChart, BarChart)</constraint>
+    <constraint source="architecture">Use shadcn/ui Card components for dashboard layout</constraint>
+    <constraint source="story">Performance tiers: Green (rating &gt;= 4 AND SLA &gt;= 80%), Yellow (rating &gt;= 3 OR SLA &gt;= 60%), Red (below thresholds)</constraint>
+    <constraint source="story">Bubble size formula: MIN_SIZE + (job_count / MAX_JOBS) * (MAX_SIZE - MIN_SIZE)</constraint>
+    <constraint source="story">Critical documents: TRADE_LICENSE, INSURANCE - highlight in red if expiring</constraint>
+    <constraint source="story">SLA Compliance calculated from: (on-time completions / total completions) * 100</constraint>
+    <constraint source="retrospective">All interactive elements MUST have data-testid attributes (AI-2-1)</constraint>
+    <constraint source="retrospective">Naming convention: {component}-{element}-{action} for data-testid (AI-2-8)</constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 with Mockito for service tests. Test file naming: {Service}Test.java in src/test/java/com/ultrabms/service/.
+      Frontend: Jest with React Testing Library. Test file naming: {component}.test.tsx or __tests__/{component}.test.ts.
+      Use @BeforeEach for test setup, mock all dependencies, verify method calls with verify().
+      Frontend tests must cover loading states, error states, and data rendering.
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/</location>
+      <location>frontend/src/lib/services/__tests__/</location>
+      <location>frontend/src/components/vendor-dashboard/__tests__/</location>
+      <location>frontend/src/types/__tests__/</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC-1">Test VendorDashboardService.getActiveVendorCount() returns correct count from repository</idea>
+      <idea acRef="AC-2">Test SLA compliance calculation: mock vendor ratings, verify percentage formula</idea>
+      <idea acRef="AC-3">Test getTopPerformingVendor() returns vendor with highest rating</idea>
+      <idea acRef="AC-4">Test countExpiringDocuments(30 days) includes critical document flag</idea>
+      <idea acRef="AC-5">Test getJobsBySpecialization() groups work orders by ServiceCategory correctly</idea>
+      <idea acRef="AC-6">Test getPerformanceSnapshot() returns correct SLA%, rating, jobCount per vendor</idea>
+      <idea acRef="AC-7">Test findExpiringDocuments() sorted by date, calculates daysUntilExpiry correctly</idea>
+      <idea acRef="AC-8">Test getTopVendors() returns top 5 by jobs completed this month</idea>
+      <idea acRef="AC-14">Test VendorPerformanceScatter component renders ScatterChart with correct data</idea>
+      <idea acRef="AC-15">Test bubble size calculation based on job count</idea>
+      <idea acRef="AC-16">Test @Cacheable annotation applies 5-minute cache TTL</idea>
+      <idea acRef="AC-17">Test tooltip renders vendor details on hover</idea>
+      <idea acRef="AC-18">Test @PreAuthorize rejects unauthorized roles</idea>
+      <idea acRef="AC-19">Test all interactive elements have data-testid attributes</idea>
+    </ideas>
+  </tests>
+</story-context>

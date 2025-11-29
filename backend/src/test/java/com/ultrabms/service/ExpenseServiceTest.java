@@ -1,5 +1,7 @@
 package com.ultrabms.service;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.expenses.*;
 import com.ultrabms.entity.Expense;
 import com.ultrabms.entity.Property;
@@ -79,7 +81,7 @@ class ExpenseServiceTest {
     private PdfGenerationService pdfGenerationService;
 
     @Mock
-    private EmailService emailService;
+    private IEmailService emailService;
 
     @InjectMocks
     private ExpenseServiceImpl expenseService;

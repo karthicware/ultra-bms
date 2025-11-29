@@ -1,5 +1,7 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.admin.AdminUserCreateRequest;
 import com.ultrabms.dto.admin.AdminUserResponse;
 import com.ultrabms.dto.admin.AdminUserUpdateRequest;
@@ -13,7 +15,6 @@ import com.ultrabms.repository.RoleRepository;
 import com.ultrabms.repository.UserRepository;
 import com.ultrabms.service.AdminUserService;
 import com.ultrabms.service.AuditLogService;
-import com.ultrabms.service.EmailService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +48,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
-    private final EmailService emailService;
+    private final IEmailService emailService;
 
     // =================================================================
     // LIST USERS

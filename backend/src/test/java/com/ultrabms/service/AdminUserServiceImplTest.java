@@ -1,5 +1,7 @@
 package com.ultrabms.service;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.admin.AdminUserCreateRequest;
 import com.ultrabms.dto.admin.AdminUserResponse;
 import com.ultrabms.dto.admin.AdminUserUpdateRequest;
@@ -60,7 +62,7 @@ class AdminUserServiceImplTest {
     private AuditLogService auditLogService;
 
     @Mock
-    private EmailService emailService;
+    private IEmailService emailService;
 
     @Spy
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);

@@ -1,0 +1,213 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>8</epicId>
+    <storyId>1</storyId>
+    <title>Executive Summary Dashboard</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-8/8-1-executive-summary-dashboard.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>executive or property manager</asA>
+    <iWant>an executive dashboard with key performance indicators</iWant>
+    <soThat>I can quickly understand the overall business health and identify issues</soThat>
+    <tasks>
+      <task id="1" ac="11-17">Create Dashboard DTOs (ExecutiveDashboardDto, KpiCardDto, MaintenanceQueueItemDto, PmJobChartDataDto, LeaseExpirationTimelineDto, AlertDto, PropertyComparisonDto)</task>
+      <task id="2" ac="1-4,19">Create DashboardRepository with aggregation queries for KPIs</task>
+      <task id="3" ac="1-9">Create DashboardService with KPI calculation methods</task>
+      <task id="4" ac="11-17">Create DashboardController with 7 REST endpoints</task>
+      <task id="5" ac="18">Configure Ehcache for dashboard data (5-minute TTL)</task>
+      <task id="6" ac="varies">Write unit tests for DashboardService</task>
+      <task id="7" ac="11-17">Create TypeScript types and Zod schemas for dashboard</task>
+      <task id="8" ac="11-17">Create dashboard.service.ts API client</task>
+      <task id="9" ac="varies">Create useDashboard React Query hook with auto-refresh</task>
+      <task id="10" ac="1-4,24">Create KpiCard component</task>
+      <task id="11" ac="5">Create MaintenanceQueueCard component</task>
+      <task id="12" ac="6">Create PmJobsChart component (Recharts BarChart)</task>
+      <task id="13" ac="7">Create LeaseExpirationTimeline component</task>
+      <task id="14" ac="8">Create AlertsPanel component</task>
+      <task id="15" ac="9">Create PropertyComparisonTable component</task>
+      <task id="16" ac="10">Create DashboardFilters component</task>
+      <task id="17" ac="20-23">Create Executive Dashboard page with responsive layout</task>
+      <task id="18" ac="varies">Write frontend unit tests</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1">Net Profit/Loss KPI card: amount (AED), % change vs last month, trend indicator</criterion>
+    <criterion id="AC-2">Occupancy Rate KPI card: percentage, change vs last month, drill-down to property</criterion>
+    <criterion id="AC-3">Overdue Maintenance KPI card: count (status!=COMPLETED, scheduledDate&lt;today)</criterion>
+    <criterion id="AC-4">Outstanding Receivables KPI card: total unpaid invoices, aging breakdown (current/30+/60+/90+)</criterion>
+    <criterion id="AC-5">Priority Maintenance Queue: top 5 HIGH priority work orders (OPEN/ASSIGNED), red highlight overdue</criterion>
+    <criterion id="AC-6">Upcoming PM Jobs: bar chart by category (30-day view), color-coded by status</criterion>
+    <criterion id="AC-7">Lease Expirations Timeline: 12-month forecast, highlight months with &gt;5 expirations</criterion>
+    <criterion id="AC-8">Critical Alerts Panel: Red (urgent), Yellow (warning), Blue (info) color-coded alerts</criterion>
+    <criterion id="AC-9">Property Performance Table: sortable columns, highlight top/bottom performers</criterion>
+    <criterion id="AC-10">Dashboard Filters: date range, property filter, refresh button, auto-refresh (5min)</criterion>
+    <criterion id="AC-11">GET /api/v1/dashboard/executive - all dashboard data</criterion>
+    <criterion id="AC-12">GET /api/v1/dashboard/kpis - KPI cards only</criterion>
+    <criterion id="AC-13">GET /api/v1/dashboard/maintenance-queue - priority maintenance list</criterion>
+    <criterion id="AC-14">GET /api/v1/dashboard/pm-upcoming - PM jobs chart data</criterion>
+    <criterion id="AC-15">GET /api/v1/dashboard/lease-expirations - lease timeline data</criterion>
+    <criterion id="AC-16">GET /api/v1/dashboard/alerts - critical alerts</criterion>
+    <criterion id="AC-17">GET /api/v1/dashboard/property-comparison - property performance table</criterion>
+    <criterion id="AC-18">Dashboard data cached 5 minutes (Ehcache)</criterion>
+    <criterion id="AC-19">KPIs calculated server-side with database aggregation queries</criterion>
+    <criterion id="AC-20">Frontend uses Recharts for all charts</criterion>
+    <criterion id="AC-21">Frontend uses shadcn/ui Card components</criterion>
+    <criterion id="AC-22">Skeleton loaders while dashboard loads</criterion>
+    <criterion id="AC-23">Responsive layout for tablet devices</criterion>
+    <criterion id="AC-24">KPI cards support drill-down (click to see details)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="3.2 Dashboard &amp; Analytics Module">
+        Executive Summary Dashboard KPIs: Net Profit/Loss (YTD), Overall Occupancy Rate, Overdue Maintenance Jobs, Lead-to-Lease Conversion. Visual components: KPI cards, PM jobs chart, lease expirations, priority maintenance queue, critical alerts panel.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Epic to Architecture Mapping - Dashboard &amp; Analytics">
+        DashboardController, MetricsService, ReportService. Frontend routes: /(dashboard). Uses aggregations from all tables. No external services required.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="API Contracts - Dashboard APIs">
+        GET /api/v1/dashboard/executive returns: netProfitLoss, occupancyRate, overdueMaintenance, leadToLeaseConversion, upcomingPMJobs (array), leaseExpirations (array). Standard response format with success/data/timestamp.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Performance Considerations - Caching Strategy">
+        Use Spring Cache with Caffeine/Ehcache. @Cacheable annotation on service methods. Cache expiry 10 minutes default. Dashboard should use 5-minute TTL per story requirements.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Consistency Rules - API Response Format">
+        ALL APIs must return: {success: boolean, data: object, message: string, timestamp: ISO8601}. Error responses include error.code, error.message, error.field.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="ADR-004 AED Currency Only">
+        Single currency (AED) support. Simplifies financial calculations. All monetary values use AED formatting.
+      </doc>
+      <doc path="docs/epics/epic-8-dashboard-reporting.md" title="Epic 8: Dashboard &amp; Reporting" section="Story 8.1">
+        Complete story definition with KPI cards, visual components, API endpoints, prerequisites, technical notes. Cache 5 minutes, use Recharts, shadcn/ui Cards, skeleton loaders, responsive layout.
+      </doc>
+    </docs>
+
+    <code>
+      <artifact path="backend/src/main/java/com/ultrabms/dto/tenant/DashboardResponse.java" kind="dto" symbol="DashboardResponse" lines="1-72" reason="Existing dashboard DTO pattern showing nested static classes (UnitInfo, DashboardStats, NextPaymentDue, QuickAction). Follow this pattern for ExecutiveDashboardDto."/>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/InvoiceRepository.java" kind="repository" symbol="InvoiceRepository" reason="Query for outstanding receivables: unpaid invoices with aging breakdown. Extend with aggregation methods for dashboard KPIs."/>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/ExpenseRepository.java" kind="repository" symbol="ExpenseRepository" reason="Query for total expenses by date range. Needed for net profit/loss calculation (revenue - expenses)."/>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/WorkOrderRepository.java" kind="repository" symbol="WorkOrderRepository" reason="Query for overdue maintenance count (status!=COMPLETED, scheduledDate&lt;today) and priority maintenance queue (HIGH priority, OPEN/ASSIGNED status)."/>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/UnitRepository.java" kind="repository" symbol="UnitRepository" reason="Query for occupancy rate calculation (occupied units / total units)."/>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/PMScheduleRepository.java" kind="repository" symbol="PMScheduleRepository" reason="Query for upcoming PM jobs by category (next 30 days)."/>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/LeaseExtensionRepository.java" kind="repository" symbol="LeaseExtensionRepository" reason="Query for lease expirations by month (12-month forecast)."/>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/VendorDocumentRepository.java" kind="repository" symbol="VendorDocumentRepository" reason="Query for expired vendor licenses (critical alerts)."/>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/PropertyRepository.java" kind="repository" symbol="PropertyRepository" reason="Query for property performance comparison: occupancy rate, maintenance cost, revenue per property."/>
+      <artifact path="backend/src/main/resources/ehcache.xml" kind="config" lines="1-78" reason="Existing Ehcache configuration. Add new cache alias 'dashboard' with 5-minute TTL as per AC-18."/>
+      <artifact path="frontend/src/components/expenses/ExpenseSummaryCharts.tsx" kind="component" symbol="ExpenseSummaryCharts" lines="1-261" reason="Reference implementation for Recharts usage: PieChart, LineChart, custom tooltips, ResponsiveContainer, skeleton loaders, dark mode support, data-testid attributes."/>
+      <artifact path="frontend/src/components/vendors/RatingDistributionChart.tsx" kind="component" symbol="RatingDistributionChart" reason="Additional Recharts pattern for BarChart with horizontal bars."/>
+      <artifact path="frontend/src/components/tenant/DashboardStatsGrid.tsx" kind="component" symbol="DashboardStatsGrid" reason="Existing dashboard stats grid pattern for KPI card layout."/>
+      <artifact path="frontend/src/hooks/useTenantDashboard.ts" kind="hook" symbol="useTenantDashboard" reason="Existing React Query hook pattern for dashboard data fetching."/>
+      <artifact path="frontend/src/services/expense.service.ts" kind="service" reason="API client pattern with TypeScript types and axios calls."/>
+      <artifact path="frontend/src/types/expense.ts" kind="types" reason="Type definition pattern with enums, interfaces, and formatting utilities."/>
+    </code>
+
+    <dependencies>
+      <backend>
+        <dependency name="spring-boot-starter-cache" version="3.4.x">Spring Cache abstraction</dependency>
+        <dependency name="ehcache" version="3.10.x">Ehcache provider (already configured)</dependency>
+        <dependency name="spring-boot-starter-data-jpa" version="3.4.x">JPA for aggregation queries</dependency>
+        <dependency name="lombok" version="latest">DTO generation with @Data, @Builder</dependency>
+      </backend>
+      <frontend>
+        <dependency name="recharts" version="^3.4.1">Chart library for BarChart, LineChart, PieChart</dependency>
+        <dependency name="@tanstack/react-query" version="^5.90.9">Data fetching with caching and auto-refresh</dependency>
+        <dependency name="date-fns" version="^4.1.0">Date formatting and manipulation</dependency>
+        <dependency name="lucide-react" version="^0.553.0">Icons for KPI cards and alerts</dependency>
+        <dependency name="zod" version="^4.1.12">API response validation schemas</dependency>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture">All monetary amounts in AED only (ADR-004)</constraint>
+    <constraint source="architecture">API responses must use standard format: {success, data, message, timestamp}</constraint>
+    <constraint source="architecture">Use Spring Cache with @Cacheable annotations for caching</constraint>
+    <constraint source="architecture">REST endpoints follow /api/v1/{resource} pattern with kebab-case</constraint>
+    <constraint source="story">Dashboard data must be cached for 5 minutes (AC-18)</constraint>
+    <constraint source="story">KPIs must be calculated server-side using database aggregation queries (AC-19)</constraint>
+    <constraint source="story">Frontend must use Recharts for all charts (AC-20)</constraint>
+    <constraint source="story">Frontend must use shadcn/ui Card components (AC-21)</constraint>
+    <constraint source="story">All interactive elements must have data-testid attributes (retrospective action item AI-2-1)</constraint>
+    <constraint source="architecture">Use constructor injection, never field injection</constraint>
+    <constraint source="architecture">Keep business logic in services, not controllers</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="GET /api/v1/dashboard/executive" kind="REST endpoint">
+      <signature>GET /api/v1/dashboard/executive?startDate={date}&amp;endDate={date}&amp;propertyId={uuid}</signature>
+      <path>backend/controller/DashboardController.java (to be created)</path>
+    </interface>
+    <interface name="GET /api/v1/dashboard/kpis" kind="REST endpoint">
+      <signature>GET /api/v1/dashboard/kpis?startDate={date}&amp;endDate={date}&amp;propertyId={uuid}</signature>
+      <path>backend/controller/DashboardController.java (to be created)</path>
+    </interface>
+    <interface name="GET /api/v1/dashboard/maintenance-queue" kind="REST endpoint">
+      <signature>GET /api/v1/dashboard/maintenance-queue?limit={int}</signature>
+      <path>backend/controller/DashboardController.java (to be created)</path>
+    </interface>
+    <interface name="GET /api/v1/dashboard/pm-upcoming" kind="REST endpoint">
+      <signature>GET /api/v1/dashboard/pm-upcoming?days={int}</signature>
+      <path>backend/controller/DashboardController.java (to be created)</path>
+    </interface>
+    <interface name="GET /api/v1/dashboard/lease-expirations" kind="REST endpoint">
+      <signature>GET /api/v1/dashboard/lease-expirations?months={int}</signature>
+      <path>backend/controller/DashboardController.java (to be created)</path>
+    </interface>
+    <interface name="GET /api/v1/dashboard/alerts" kind="REST endpoint">
+      <signature>GET /api/v1/dashboard/alerts</signature>
+      <path>backend/controller/DashboardController.java (to be created)</path>
+    </interface>
+    <interface name="GET /api/v1/dashboard/property-comparison" kind="REST endpoint">
+      <signature>GET /api/v1/dashboard/property-comparison?startDate={date}&amp;endDate={date}</signature>
+      <path>backend/controller/DashboardController.java (to be created)</path>
+    </interface>
+    <interface name="InvoiceRepository" kind="repository">
+      <signature>@Query aggregation methods for outstanding receivables with aging</signature>
+      <path>backend/src/main/java/com/ultrabms/repository/InvoiceRepository.java</path>
+    </interface>
+    <interface name="WorkOrderRepository" kind="repository">
+      <signature>countByStatusNotAndScheduledDateBefore(), findHighPriorityWorkOrders()</signature>
+      <path>backend/src/main/java/com/ultrabms/repository/WorkOrderRepository.java</path>
+    </interface>
+    <interface name="UnitRepository" kind="repository">
+      <signature>countByStatus() for occupancy calculation</signature>
+      <path>backend/src/main/java/com/ultrabms/repository/UnitRepository.java</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 + Mockito. Service tests mock repositories. Controller tests use @WebMvcTest.
+      Frontend: Jest + React Testing Library. Component tests verify rendering and interactions. Hook tests mock API responses.
+      All interactive elements must have data-testid attributes for E2E testing.
+      Test coverage targets: Backend 80% line / 70% branch, Frontend 70% line / 60% branch.
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/DashboardServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/controller/DashboardControllerTest.java</location>
+      <location>frontend/src/components/dashboard/__tests__/</location>
+      <location>frontend/src/hooks/__tests__/useDashboard.test.ts</location>
+      <location>frontend/src/types/__tests__/dashboard.test.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="1">Test net profit/loss calculation with known revenue and expense values</idea>
+      <idea ac="2">Test occupancy rate calculation with various occupied/total unit ratios</idea>
+      <idea ac="3">Test overdue maintenance count query with different status and date combinations</idea>
+      <idea ac="4">Test receivables aging breakdown (current, 30+, 60+, 90+ days)</idea>
+      <idea ac="5">Test priority maintenance queue returns top 5 HIGH priority items only</idea>
+      <idea ac="6">Test PM jobs chart data groups by category correctly</idea>
+      <idea ac="7">Test lease expiration timeline spans 12 months</idea>
+      <idea ac="8">Test alerts panel groups by severity (urgent/warning/info)</idea>
+      <idea ac="9">Test property comparison table sorting by each column</idea>
+      <idea ac="10">Test auto-refresh triggers every 5 minutes</idea>
+      <idea ac="18">Test cache invalidation after 5 minutes</idea>
+      <idea ac="22">Test skeleton loaders display during loading state</idea>
+      <idea ac="24">Test KPI card click triggers drill-down navigation</idea>
+    </ideas>
+  </tests>
+</story-context>

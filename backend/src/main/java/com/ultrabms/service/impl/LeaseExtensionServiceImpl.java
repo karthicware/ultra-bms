@@ -1,5 +1,7 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.lease.CurrentLeaseSummaryDto;
 import com.ultrabms.dto.lease.ExpiringLeaseDto;
 import com.ultrabms.dto.lease.LeaseExtensionRequest;
@@ -18,7 +20,6 @@ import com.ultrabms.repository.RenewalRequestRepository;
 import com.ultrabms.repository.TenantRepository;
 import com.ultrabms.repository.UserRepository;
 import com.ultrabms.service.AuditLogService;
-import com.ultrabms.service.EmailService;
 import com.ultrabms.service.LeaseExtensionService;
 import com.ultrabms.service.S3Service;
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ public class LeaseExtensionServiceImpl implements LeaseExtensionService {
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final RenewalRequestRepository renewalRequestRepository;
-    private final EmailService emailService;
+    private final IEmailService emailService;
     private final AuditLogService auditLogService;
     private final S3Service s3Service;
 
@@ -60,7 +61,7 @@ public class LeaseExtensionServiceImpl implements LeaseExtensionService {
             TenantRepository tenantRepository,
             UserRepository userRepository,
             RenewalRequestRepository renewalRequestRepository,
-            EmailService emailService,
+            IEmailService emailService,
             AuditLogService auditLogService,
             S3Service s3Service) {
         this.leaseExtensionRepository = leaseExtensionRepository;

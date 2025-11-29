@@ -1,5 +1,7 @@
 package com.ultrabms.service;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.maintenance.CreateMaintenanceRequestDto;
 import com.ultrabms.dto.maintenance.MaintenanceRequestListItemResponse;
 import com.ultrabms.dto.maintenance.MaintenanceRequestResponse;
@@ -58,7 +60,7 @@ class MaintenanceRequestServiceTest {
     private S3Service s3Service;
 
     @Mock
-    private com.ultrabms.service.EmailService emailService;
+    private IEmailService emailService;
 
     @InjectMocks
     private MaintenanceRequestServiceImpl maintenanceRequestService;

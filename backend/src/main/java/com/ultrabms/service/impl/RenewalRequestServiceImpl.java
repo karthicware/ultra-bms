@@ -1,5 +1,7 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.lease.RenewalRequestDto;
 import com.ultrabms.dto.lease.RenewalRequestResponse;
 import com.ultrabms.entity.RenewalRequest;
@@ -12,7 +14,6 @@ import com.ultrabms.repository.RenewalRequestRepository;
 import com.ultrabms.repository.TenantRepository;
 import com.ultrabms.repository.UserRepository;
 import com.ultrabms.service.AuditLogService;
-import com.ultrabms.service.EmailService;
 import com.ultrabms.service.RenewalRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,14 +42,14 @@ public class RenewalRequestServiceImpl implements RenewalRequestService {
     private final RenewalRequestRepository renewalRequestRepository;
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
-    private final EmailService emailService;
+    private final IEmailService emailService;
     private final AuditLogService auditLogService;
 
     public RenewalRequestServiceImpl(
             RenewalRequestRepository renewalRequestRepository,
             TenantRepository tenantRepository,
             UserRepository userRepository,
-            EmailService emailService,
+            IEmailService emailService,
             AuditLogService auditLogService) {
         this.renewalRequestRepository = renewalRequestRepository;
         this.tenantRepository = tenantRepository;

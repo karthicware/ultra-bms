@@ -1,0 +1,263 @@
+<story-context id="8-3-occupancy-dashboard" v="1.0">
+  <metadata>
+    <epicId>8</epicId>
+    <storyId>3</storyId>
+    <title>Occupancy Dashboard</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-8/8-3-occupancy-dashboard.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>property manager</asA>
+    <iWant>a dedicated occupancy dashboard with portfolio metrics and lease tracking</iWant>
+    <soThat>I can monitor occupancy rates and manage lease renewals effectively</soThat>
+    <tasks>
+      <task id="1" status="pending">Create Occupancy Dashboard DTOs (AC: #9-11)</task>
+      <task id="2" status="pending">Create OccupancyDashboardRepository queries (AC: #1-8)</task>
+      <task id="3" status="pending">Create OccupancyDashboardService (AC: #1-8, #12, #15)</task>
+      <task id="4" status="pending">Create OccupancyDashboardController (AC: #9-11, #14)</task>
+      <task id="5" status="pending">Write unit tests for OccupancyDashboardService</task>
+      <task id="6" status="pending">Create TypeScript types for occupancy dashboard</task>
+      <task id="7" status="pending">Create occupancy-dashboard.service.ts API client</task>
+      <task id="8" status="pending">Create useOccupancyDashboard React Query hook</task>
+      <task id="9" status="pending">Create OccupancyKpiCards component (AC: #1-4)</task>
+      <task id="10" status="pending">Create PortfolioOccupancyChart component (AC: #5)</task>
+      <task id="11" status="pending">Create LeaseExpirationBarChart component (AC: #6)</task>
+      <task id="12" status="pending">Create UpcomingLeaseExpirations component (AC: #7)</task>
+      <task id="13" status="pending">Create LeaseActivityFeed component (AC: #8)</task>
+      <task id="14" status="pending">Create Occupancy Dashboard page (AC: #13, #16, #17)</task>
+      <task id="15" status="pending">Write frontend unit tests</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1">Dashboard displays Portfolio Occupancy KPI card showing percentage with visual progress indicator and trend vs. previous period</criterion>
+    <criterion id="AC-2">Dashboard displays Vacant Units KPI card showing count of available/vacant units with click navigation to vacant units list</criterion>
+    <criterion id="AC-3">Dashboard displays Leases Expiring KPI card showing count of leases expiring within configurable period (default: 100 days)</criterion>
+    <criterion id="AC-4">Dashboard displays Average Rent/SqFt KPI card showing currency amount (AED) per square foot calculated from active leases</criterion>
+    <criterion id="AC-5">Portfolio Occupancy donut chart displays segments (Occupied, Vacant, Under Renovation, Notice Period), center shows total units count, legend with percentages, color-coded</criterion>
+    <criterion id="AC-6">Lease Expirations bar chart displays X-axis (next 12 months), Y-axis (count), color-coded bars (renewed vs pending), click navigates to lease list</criterion>
+    <criterion id="AC-7">Upcoming Lease Expirations table displays columns (Tenant, Unit, Property, Expiry Date, Days Remaining), sorted by expiry date, paginated, quick actions (View Lease, Initiate Renewal)</criterion>
+    <criterion id="AC-8">Recent Activity Feed displays timeline of lease-related activities (action type, tenant, unit, timestamp), limited to last 10 items</criterion>
+    <criterion id="AC-9">Backend provides GET /api/v1/dashboard/occupancy endpoint returning all occupancy dashboard data</criterion>
+    <criterion id="AC-10">Backend provides GET /api/v1/dashboard/occupancy/lease-expirations endpoint with configurable days parameter (default: 100)</criterion>
+    <criterion id="AC-11">Backend provides GET /api/v1/dashboard/occupancy/recent-activity endpoint returning last 10 lease activities</criterion>
+    <criterion id="AC-12">Leases Expiring period is configurable via company settings (default: 100 days)</criterion>
+    <criterion id="AC-13">Frontend uses Recharts for donut and bar charts</criterion>
+    <criterion id="AC-14">Backend implements role-based access using @PreAuthorize (PROPERTY_MANAGER or higher)</criterion>
+    <criterion id="AC-15">Dashboard data is cached for 5 minutes using Ehcache</criterion>
+    <criterion id="AC-16">Skeleton loaders are displayed during data fetch</criterion>
+    <criterion id="AC-17">All interactive elements have data-testid attributes</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>3.2.2 Operational Dashboards</section>
+        <snippet>Occupancy Dashboard: Portfolio occupancy, lease expirations, unit availability. Dashboard metrics include Net Profit/Loss, Occupancy Rate, and lease expiration timeline.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Decision Summary - Caching Strategy</section>
+        <snippet>Use Spring Cache with Caffeine (Ehcache) for 5-minute caching. Cache dashboard data to reduce database load. Use @Cacheable and @CacheEvict annotations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>API Response Format</section>
+        <snippet>ALL APIs must return consistent response structure with success, data, message, timestamp fields. Use ResponseEntity wrapper for REST controllers.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Frontend Implementation Patterns</section>
+        <snippet>Use React Query for data fetching with staleTime: 5 * 60 * 1000. Use Recharts for all charts (bar, line, pie). Use shadcn/ui Card components for dashboard layout.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-8-dashboard-reporting.md</path>
+        <title>Epic 8: Dashboard &amp; Reporting</title>
+        <section>Story 8.3: Occupancy Dashboard</section>
+        <snippet>Dedicated occupancy dashboard with KPI cards (Portfolio Occupancy, Vacant Units, Leases Expiring, Average Rent/SqFt), donut chart, bar chart, lease expirations list, and activity feed.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Unit.java</path>
+        <kind>entity</kind>
+        <symbol>Unit</symbol>
+        <reason>Core entity for occupancy calculations. Contains status (UnitStatus enum), propertyId, monthlyRent, areaSqft fields needed for dashboard metrics.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/enums/UnitStatus.java</path>
+        <kind>enum</kind>
+        <symbol>UnitStatus</symbol>
+        <reason>Unit status values: AVAILABLE, RESERVED, OCCUPIED, UNDER_MAINTENANCE. Note: Story AC specifies NOTICE_PERIOD status which may need to be added.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/Tenant.java</path>
+        <kind>entity</kind>
+        <symbol>Tenant</symbol>
+        <reason>Tenant entity with lease information. Contains leaseEndDate for expiration calculations, linked to Unit for occupancy tracking.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/entity/CompanyProfile.java</path>
+        <kind>entity</kind>
+        <symbol>CompanyProfile</symbol>
+        <reason>Single-record company settings entity. May need extension to store configurable lease expiry period (default 100 days) for dashboard.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/repository/UnitRepository.java</path>
+        <kind>repository</kind>
+        <symbol>UnitRepository</symbol>
+        <reason>Existing repository with countByPropertyIdAndStatus, findByStatus methods. Extend with aggregation queries for occupancy dashboard.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/repository/TenantRepository.java</path>
+        <kind>repository</kind>
+        <symbol>TenantRepository</symbol>
+        <reason>Tenant repository for lease expiration queries. Add methods for findByLeaseEndDateBetween, recent activity queries.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/dto/tenant/DashboardResponse.java</path>
+        <kind>dto</kind>
+        <symbol>DashboardResponse</symbol>
+        <reason>Existing dashboard DTO pattern to follow. Create OccupancyDashboardDto with similar structure for occupancy-specific data.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/hooks/useTenantDashboard.ts</path>
+        <kind>hook</kind>
+        <symbol>useTenantDashboard</symbol>
+        <reason>Reference hook pattern using React Query. Create useOccupancyDashboard following same pattern with staleTime: 5 minutes.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/units.ts</path>
+        <kind>types</kind>
+        <symbol>UnitStatus</symbol>
+        <reason>Existing frontend unit types. Create occupancy-dashboard.ts types following same pattern with UnitStatus enum.</reason>
+      </artifact>
+      <artifact>
+        <path>frontend/src/types/tenant-portal.ts</path>
+        <kind>types</kind>
+        <symbol>DashboardData</symbol>
+        <reason>Reference type pattern for dashboard data structures. Create OccupancyDashboardData with KPIs, charts, and lists.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/src/main/java/com/ultrabms/scheduler/LeaseExpirationSchedulerJob.java</path>
+        <kind>scheduler</kind>
+        <symbol>LeaseExpirationSchedulerJob</symbol>
+        <reason>Existing lease expiration logic. Reuse lease date calculations for dashboard expiration queries.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <backend>
+        <framework>Spring Boot 3.4.0</framework>
+        <language>Java 17</language>
+        <packages>
+          <package name="spring-boot-starter-cache" version="3.4.0" />
+          <package name="spring-boot-starter-data-jpa" version="3.4.0" />
+          <package name="spring-boot-starter-security" version="3.4.0" />
+          <package name="spring-boot-starter-validation" version="3.4.0" />
+          <package name="spring-boot-starter-web" version="3.4.0" />
+          <package name="postgresql" version="runtime" />
+          <package name="flyway-core" version="latest" />
+          <package name="lombok" version="latest" />
+        </packages>
+      </backend>
+      <frontend>
+        <framework>Next.js 16.0.2</framework>
+        <language>TypeScript 5.x</language>
+        <packages>
+          <package name="react" version="19.2.0" />
+          <package name="recharts" version="3.4.1" purpose="Charts (PieChart for donut, BarChart for lease expirations)" />
+          <package name="@tanstack/react-query" version="5.90.9" purpose="Data fetching with caching" />
+          <package name="zod" version="4.1.12" purpose="Schema validation" />
+          <package name="date-fns" version="4.1.0" purpose="Date formatting and calculations" />
+          <package name="lucide-react" version="0.553.0" purpose="Icons" />
+          <package name="tailwind-merge" version="3.4.0" purpose="Styling utilities" />
+        </packages>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Follow Spring Boot service-controller-repository pattern as per architecture.md</constraint>
+    <constraint type="pattern">Use constructor injection (never field injection) with @RequiredArgsConstructor</constraint>
+    <constraint type="pattern">Use @Cacheable(value = "occupancyDashboard") with 5-minute TTL as per AC-15</constraint>
+    <constraint type="pattern">Use @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN', 'SUPER_ADMIN')") for controller methods</constraint>
+    <constraint type="api">REST endpoints must follow /api/v1/ prefix convention</constraint>
+    <constraint type="api">Response format: { success: true, data: {...}, message: "...", timestamp: "..." }</constraint>
+    <constraint type="frontend">Use shadcn/ui Card components for dashboard layout</constraint>
+    <constraint type="frontend">Use Recharts PieChart with innerRadius/outerRadius for donut effect</constraint>
+    <constraint type="frontend">All interactive elements must have data-testid attributes (AI-2-1 retrospective action)</constraint>
+    <constraint type="frontend">Use skeleton loaders from shadcn/ui during data loading</constraint>
+    <constraint type="currency">All currency values in AED format using formatCurrency utility</constraint>
+    <constraint type="testing">Backend tests use JUnit 5 + Mockito, target 80% coverage</constraint>
+    <constraint type="testing">Frontend tests use Jest + React Testing Library</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>GET /api/v1/dashboard/occupancy</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping public ResponseEntity&lt;OccupancyDashboardDto&gt; getOccupancyDashboard()</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/OccupancyDashboardController.java (to be created)</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/dashboard/occupancy/lease-expirations</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping("/lease-expirations") public ResponseEntity&lt;List&lt;LeaseExpirationDto&gt;&gt; getLeaseExpirations(@RequestParam(defaultValue = "100") int days)</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/OccupancyDashboardController.java (to be created)</path>
+    </interface>
+    <interface>
+      <name>GET /api/v1/dashboard/occupancy/recent-activity</name>
+      <kind>REST endpoint</kind>
+      <signature>@GetMapping("/recent-activity") public ResponseEntity&lt;List&lt;LeaseActivityDto&gt;&gt; getRecentActivity()</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/OccupancyDashboardController.java (to be created)</path>
+    </interface>
+    <interface>
+      <name>UnitRepository.countByStatus</name>
+      <kind>JPA query method</kind>
+      <signature>long countByStatus(UnitStatus status)</signature>
+      <path>backend/src/main/java/com/ultrabms/repository/UnitRepository.java</path>
+    </interface>
+    <interface>
+      <name>useOccupancyDashboard</name>
+      <kind>React Query hook</kind>
+      <signature>export function useOccupancyDashboard(expiryDays?: number): UseQueryResult&lt;OccupancyDashboardData&gt;</signature>
+      <path>frontend/src/hooks/useOccupancyDashboard.ts (to be created)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 with Mockito for unit tests. Use @WebMvcTest for controller tests, @DataJpaTest for repository tests. Test service methods with mocked repositories. Frontend: Jest with React Testing Library. Test component rendering, user interactions, and data display. Use MSW for API mocking if needed. All tests must pass before story completion (FV-1 through FV-5).
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/OccupancyDashboardServiceTest.java (to be created)</location>
+      <location>backend/src/test/java/com/ultrabms/controller/OccupancyDashboardControllerTest.java (to be created)</location>
+      <location>frontend/src/components/charts/__tests__/ (to be created)</location>
+      <location>frontend/src/app/(dashboard)/occupancy/__tests__/ (to be created)</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC-1">Test portfolio occupancy calculation: (OCCUPIED / TOTAL) * 100</idea>
+      <idea acRef="AC-2">Test vacant units count matches UnitRepository.countByStatus(AVAILABLE)</idea>
+      <idea acRef="AC-3">Test lease expiration count with configurable days parameter</idea>
+      <idea acRef="AC-4">Test average rent/sqft calculation: SUM(rent) / SUM(area) for OCCUPIED units</idea>
+      <idea acRef="AC-5">Test donut chart renders with correct segment percentages</idea>
+      <idea acRef="AC-6">Test bar chart displays 12 months of data with correct counts</idea>
+      <idea acRef="AC-7">Test table sorting by expiry date ascending, pagination works</idea>
+      <idea acRef="AC-8">Test activity feed shows max 10 items ordered by timestamp desc</idea>
+      <idea acRef="AC-14">Test 403 response when user lacks PROPERTY_MANAGER role</idea>
+      <idea acRef="AC-15">Test cache hit on second request within 5 minutes</idea>
+      <idea acRef="AC-16">Test skeleton loaders appear during loading state</idea>
+      <idea acRef="AC-17">Test all interactive elements have data-testid attributes</idea>
+    </ideas>
+  </tests>
+</story-context>

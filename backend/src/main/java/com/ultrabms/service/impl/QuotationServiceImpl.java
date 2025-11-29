@@ -1,5 +1,7 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.leads.LeadConversionResponse;
 import com.ultrabms.dto.quotations.CreateQuotationRequest;
 import com.ultrabms.dto.quotations.QuotationDashboardResponse;
@@ -17,7 +19,6 @@ import com.ultrabms.repository.LeadHistoryRepository;
 import com.ultrabms.repository.LeadRepository;
 import com.ultrabms.repository.QuotationRepository;
 import com.ultrabms.repository.UnitRepository;
-import com.ultrabms.service.EmailService;
 import com.ultrabms.service.QuotationPdfService;
 import com.ultrabms.service.QuotationService;
 import com.ultrabms.util.QuotationNumberGenerator;
@@ -48,7 +49,7 @@ public class QuotationServiceImpl implements QuotationService {
     private final LeadHistoryRepository leadHistoryRepository;
     private final QuotationNumberGenerator quotationNumberGenerator;
     private final QuotationPdfService quotationPdfService;
-    private final EmailService emailService;
+    private final IEmailService emailService;
     private final UnitRepository unitRepository;
 
     @Override

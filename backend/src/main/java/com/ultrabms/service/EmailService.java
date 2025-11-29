@@ -27,7 +27,7 @@ import java.time.format.DateTimeFormatter;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class EmailService {
+public class EmailService implements IEmailService {
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;

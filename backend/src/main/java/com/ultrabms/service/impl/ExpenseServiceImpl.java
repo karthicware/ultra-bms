@@ -1,5 +1,7 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.expenses.*;
 import com.ultrabms.entity.Expense;
 import com.ultrabms.entity.Property;
@@ -15,7 +17,6 @@ import com.ultrabms.repository.ExpenseRepository;
 import com.ultrabms.repository.PropertyRepository;
 import com.ultrabms.repository.VendorRepository;
 import com.ultrabms.repository.WorkOrderRepository;
-import com.ultrabms.service.EmailService;
 import com.ultrabms.service.ExpenseService;
 import com.ultrabms.service.FileStorageService;
 import com.ultrabms.service.PdfGenerationService;
@@ -56,7 +57,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     private final ExpenseMapper expenseMapper;
     private final FileStorageService fileStorageService;
     private final PdfGenerationService pdfGenerationService;
-    private final EmailService emailService;
+    private final IEmailService emailService;
 
     public ExpenseServiceImpl(
             ExpenseRepository expenseRepository,
@@ -66,7 +67,7 @@ public class ExpenseServiceImpl implements ExpenseService {
             ExpenseMapper expenseMapper,
             FileStorageService fileStorageService,
             PdfGenerationService pdfGenerationService,
-            EmailService emailService
+            IEmailService emailService
     ) {
         this.expenseRepository = expenseRepository;
         this.vendorRepository = vendorRepository;

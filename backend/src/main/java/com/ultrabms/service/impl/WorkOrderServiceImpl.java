@@ -1,5 +1,7 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.workorders.AddCommentDto;
 import com.ultrabms.dto.workorders.AddProgressUpdateDto;
 import com.ultrabms.dto.workorders.AssignWorkOrderDto;
@@ -40,7 +42,6 @@ import com.ultrabms.repository.WorkOrderAssignmentRepository;
 import com.ultrabms.repository.WorkOrderCommentRepository;
 import com.ultrabms.repository.WorkOrderProgressRepository;
 import com.ultrabms.repository.WorkOrderRepository;
-import com.ultrabms.service.EmailService;
 import com.ultrabms.service.ExpenseService;
 import com.ultrabms.service.S3Service;
 import com.ultrabms.service.WorkOrderService;
@@ -81,7 +82,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     private final UnitRepository unitRepository;
     private final UserRepository userRepository;
     private final S3Service s3Service;
-    private final EmailService emailService;
+    private final IEmailService emailService;
     private final ExpenseService expenseService;
 
     public WorkOrderServiceImpl(
@@ -93,7 +94,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             UnitRepository unitRepository,
             UserRepository userRepository,
             S3Service s3Service,
-            EmailService emailService,
+            IEmailService emailService,
             ExpenseService expenseService
     ) {
         this.workOrderRepository = workOrderRepository;

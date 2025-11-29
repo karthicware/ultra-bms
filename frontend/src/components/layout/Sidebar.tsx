@@ -17,6 +17,7 @@ import {
   Receipt,
   DollarSign,
   RefreshCw,
+  Car,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -66,6 +67,12 @@ const navigationSections: NavSection[] = [
         href: '/tenants',
         icon: Users,
         permission: 'tenants:read',
+      },
+      {
+        name: 'Parking Spots',
+        href: '/parking-spots',
+        icon: Car,
+        permission: 'properties:read',
       },
       {
         name: 'Checkouts',

@@ -1,5 +1,7 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.maintenance.CreateMaintenanceRequestDto;
 import com.ultrabms.dto.maintenance.MaintenanceRequestListItemResponse;
 import com.ultrabms.dto.maintenance.MaintenanceRequestResponse;
@@ -47,14 +49,14 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final S3Service s3Service;
-    private final com.ultrabms.service.EmailService emailService;
+    private final IEmailService emailService;
 
     public MaintenanceRequestServiceImpl(
             MaintenanceRequestRepository maintenanceRequestRepository,
             TenantRepository tenantRepository,
             UserRepository userRepository,
             S3Service s3Service,
-            com.ultrabms.service.EmailService emailService
+            com.ultrabms.service.IEmailService emailService
     ) {
         this.maintenanceRequestRepository = maintenanceRequestRepository;
         this.tenantRepository = tenantRepository;

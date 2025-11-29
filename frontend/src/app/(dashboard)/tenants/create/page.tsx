@@ -304,6 +304,13 @@ function CreateTenantWizard() {
       if (formData.parkingAllocation.spotNumbers) {
         submitData.append('spotNumbers', formData.parkingAllocation.spotNumbers);
       }
+      // Include spot IDs for parking assignment (Story 3.8 integration)
+      const spotIds = (formData.parkingAllocation as any).spotIds;
+      if (spotIds && Array.isArray(spotIds) && spotIds.length > 0) {
+        spotIds.forEach((spotId: string) => {
+          submitData.append('parkingSpotIds', spotId);
+        });
+      }
 
       // Payment Schedule
       submitData.append('paymentFrequency', formData.paymentSchedule.paymentFrequency);
@@ -455,6 +462,7 @@ function CreateTenantWizard() {
             data={formData.parkingAllocation}
             onComplete={(data) => handleStepComplete(data, 4)}
             onBack={goToPreviousStep}
+            propertyId={formData.leaseInfo.propertyId}
           />
         </TabsContent>
 

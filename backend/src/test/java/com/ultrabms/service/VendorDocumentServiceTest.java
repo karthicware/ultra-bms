@@ -1,5 +1,7 @@
 package com.ultrabms.service;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.vendordocuments.ExpiringDocumentDto;
 import com.ultrabms.dto.vendordocuments.VendorDocumentDto;
 import com.ultrabms.dto.vendordocuments.VendorDocumentListDto;
@@ -67,7 +69,7 @@ class VendorDocumentServiceTest {
     private VendorDocumentMapper documentMapper;
 
     @Mock
-    private EmailService emailService;
+    private IEmailService emailService;
 
     @InjectMocks
     private VendorDocumentServiceImpl documentService;

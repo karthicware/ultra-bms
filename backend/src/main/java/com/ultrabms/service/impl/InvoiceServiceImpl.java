@@ -1,5 +1,7 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.invoices.*;
 import com.ultrabms.entity.*;
 import com.ultrabms.entity.enums.InvoiceStatus;
@@ -8,7 +10,6 @@ import com.ultrabms.exception.EntityNotFoundException;
 import com.ultrabms.exception.ValidationException;
 import com.ultrabms.mapper.InvoiceMapper;
 import com.ultrabms.repository.*;
-import com.ultrabms.service.EmailService;
 import com.ultrabms.service.InvoiceService;
 import com.ultrabms.service.PdfGenerationService;
 import org.slf4j.Logger;
@@ -48,7 +49,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final UserRepository userRepository;
     private final InvoiceMapper invoiceMapper;
     private final PdfGenerationService pdfGenerationService;
-    private final EmailService emailService;
+    private final IEmailService emailService;
 
     @Value("${invoice.late-fee-percentage:5.0}")
     private BigDecimal lateFeePercentage;
@@ -63,7 +64,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             UserRepository userRepository,
             InvoiceMapper invoiceMapper,
             PdfGenerationService pdfGenerationService,
-            EmailService emailService
+            IEmailService emailService
     ) {
         this.invoiceRepository = invoiceRepository;
         this.paymentRepository = paymentRepository;

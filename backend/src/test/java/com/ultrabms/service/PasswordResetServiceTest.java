@@ -1,5 +1,7 @@
 package com.ultrabms.service;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.entity.PasswordResetAttempt;
 import com.ultrabms.entity.PasswordResetToken;
 import com.ultrabms.entity.User;
@@ -44,7 +46,7 @@ class PasswordResetServiceTest {
     private PasswordResetAttemptRepository passwordResetAttemptRepository;
 
     @Mock
-    private EmailService emailService;
+    private IEmailService emailService;
 
     @Mock
     private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;

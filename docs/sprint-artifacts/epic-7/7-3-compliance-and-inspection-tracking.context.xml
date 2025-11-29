@@ -1,0 +1,254 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>3</storyId>
+    <title>Compliance and Inspection Tracking</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-7/7-3-compliance-and-inspection-tracking.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>property manager</asA>
+    <iWant>to track regulatory compliance and inspections</iWant>
+    <soThat>all properties meet legal requirements and avoid violations</soThat>
+    <tasks>
+      <task id="1">Create Compliance TypeScript Types (AC: #40)</task>
+      <task id="2">Create Compliance Zod Validation Schemas (AC: #41)</task>
+      <task id="3">Create Compliance Frontend Service (AC: #42)</task>
+      <task id="4">Create Compliance React Query Hooks (AC: #43)</task>
+      <task id="5">Create Compliance Entities and Enums - Backend (AC: #1-3, #5, #7-8, #10)</task>
+      <task id="6">Create ComplianceSchedule Entity (AC: #4)</task>
+      <task id="7">Create Inspection Entity (AC: #6)</task>
+      <task id="8">Create Violation Entity (AC: #9)</task>
+      <task id="9">Create Database Migrations (AC: #48)</task>
+      <task id="10">Create Compliance Repositories (AC: #44)</task>
+      <task id="11">Create Compliance DTOs and Mappers (AC: #47)</task>
+      <task id="12">Implement Number Generation (AC: #11, #12)</task>
+      <task id="13">Implement ComplianceRequirementService (AC: #45)</task>
+      <task id="14">Implement ComplianceScheduleService (AC: #45)</task>
+      <task id="15">Implement InspectionService (AC: #45)</task>
+      <task id="16">Implement ViolationService (AC: #45)</task>
+      <task id="17">Implement Compliance Dashboard Service (AC: #23)</task>
+      <task id="18">Implement Work Order Integration (AC: #28)</task>
+      <task id="19">Create Compliance Email Template (AC: #49)</task>
+      <task id="20">Implement Scheduler Jobs (AC: #25, #26)</task>
+      <task id="21">Implement Compliance Controllers (AC: #46)</task>
+      <task id="22">Create Compliance Dashboard Page (AC: #29)</task>
+      <task id="23">Create Compliance Requirements List Page (AC: #30)</task>
+      <task id="24">Create Compliance Schedules List Page (AC: #31)</task>
+      <task id="25">Create Requirement Detail Page (AC: #32)</task>
+      <task id="26">Create Compliance Requirement Form (AC: #33)</task>
+      <task id="27">Create Mark Complete Dialog (AC: #34)</task>
+      <task id="28">Create Schedule Inspection Dialog (AC: #35)</task>
+      <task id="29">Create Inspection Results Form (AC: #36)</task>
+      <task id="30">Create Violations List Page (AC: #37)</task>
+      <task id="31">Create Record Violation Dialog (AC: #38)</task>
+      <task id="32">Create Compliance Calendar Component (AC: #39)</task>
+      <task id="33">Create Status Badge Components</task>
+      <task id="34">Write Backend Unit Tests (AC: #50)</task>
+      <task id="35">Write Frontend Unit Tests (AC: #51)</task>
+      <task id="36">Mandatory Test Execution and Build Verification (AC: #52, #53)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">ComplianceRequirement JPA entity with UUID id, requirementNumber (CMP-YYYY-NNNN), requirementName, category enum, description, applicableProperties JSON, frequency enum, authorityAgency, penaltyDescription, status enum, timestamps</criterion>
+    <criterion id="AC2">ComplianceCategory enum: SAFETY, FIRE, ELECTRICAL, PLUMBING, STRUCTURAL, ENVIRONMENTAL, LICENSING, OTHER</criterion>
+    <criterion id="AC3">ComplianceFrequency enum: ONE_TIME, MONTHLY, QUARTERLY, SEMI_ANNUALLY, ANNUALLY, BIANNUALLY with months interval</criterion>
+    <criterion id="AC4">ComplianceSchedule entity with complianceRequirementId, propertyId, dueDate, status, completedDate, completedBy, notes, certificateFilePath</criterion>
+    <criterion id="AC5">ComplianceScheduleStatus enum: UPCOMING, DUE, COMPLETED, OVERDUE, EXEMPT</criterion>
+    <criterion id="AC6">Inspection entity with complianceScheduleId, propertyId, inspectorName, scheduledDate, inspectionDate, status, result, issuesFound, recommendations, certificatePath, nextInspectionDate, remediationWorkOrderId</criterion>
+    <criterion id="AC7">InspectionStatus enum: SCHEDULED, IN_PROGRESS, PASSED, FAILED, CANCELLED</criterion>
+    <criterion id="AC8">InspectionResult enum: PASSED, FAILED, PARTIAL_PASS</criterion>
+    <criterion id="AC9">Violation entity with violationNumber (VIO-YYYY-NNNN), complianceScheduleId, violationDate, description, fineAmount, fineStatus, remediationWorkOrderId, resolutionDate</criterion>
+    <criterion id="AC10">FineStatus enum: PENDING, PAID, APPEALED, WAIVED</criterion>
+    <criterion id="AC11">Requirement number generation: CMP-{YYYY}-{NNNN} format with database sequence</criterion>
+    <criterion id="AC12">Violation number generation: VIO-{YYYY}-{NNNN} format with database sequence</criterion>
+    <criterion id="AC13">POST /api/v1/compliance-requirements - create with auto-schedule generation</criterion>
+    <criterion id="AC14">GET /api/v1/compliance-requirements - list with filters, pagination</criterion>
+    <criterion id="AC15">GET /api/v1/compliance-requirements/{id} - detail with schedules</criterion>
+    <criterion id="AC16">PUT /api/v1/compliance-requirements/{id} - update with schedule recalculation</criterion>
+    <criterion id="AC17">GET /api/v1/compliance-schedules - list with filters</criterion>
+    <criterion id="AC18">PATCH /api/v1/compliance-schedules/{id}/complete - mark complete with next schedule</criterion>
+    <criterion id="AC19">POST /api/v1/inspections - schedule inspection</criterion>
+    <criterion id="AC20">PUT /api/v1/inspections/{id} - update results, create work order if failed</criterion>
+    <criterion id="AC21">POST /api/v1/violations - record violation</criterion>
+    <criterion id="AC22">PUT /api/v1/violations/{id} - update violation</criterion>
+    <criterion id="AC23">GET /api/v1/compliance/dashboard - KPIs and counts</criterion>
+    <criterion id="AC24">GET /api/v1/properties/{id}/compliance-history</criterion>
+    <criterion id="AC25">ComplianceStatusUpdateJob - daily 6AM, update DUE/OVERDUE</criterion>
+    <criterion id="AC26">ComplianceReminderNotificationJob - daily 8AM, email 30-day reminders</criterion>
+    <criterion id="AC27">Auto-generate next schedule on completion for recurring requirements</criterion>
+    <criterion id="AC28">Create remediation work order when inspection FAILED</criterion>
+    <criterion id="AC29">Compliance Dashboard page at /compliance</criterion>
+    <criterion id="AC30">Requirements List page at /compliance/requirements</criterion>
+    <criterion id="AC31">Schedules List page at /compliance/schedules</criterion>
+    <criterion id="AC32">Requirement Detail page at /compliance/requirements/{id}</criterion>
+    <criterion id="AC33">Requirement Form at /compliance/requirements/new and /edit</criterion>
+    <criterion id="AC34">Mark Complete Dialog with certificate upload</criterion>
+    <criterion id="AC35">Schedule Inspection Dialog</criterion>
+    <criterion id="AC36">Inspection Results Form at /compliance/inspections/{id}/results</criterion>
+    <criterion id="AC37">Violations List page at /compliance/violations</criterion>
+    <criterion id="AC38">Record Violation Dialog</criterion>
+    <criterion id="AC39">Compliance Calendar Component with color-coded events</criterion>
+    <criterion id="AC40">TypeScript types in types/compliance.ts</criterion>
+    <criterion id="AC41">Zod validation schemas in lib/validations/compliance.ts</criterion>
+    <criterion id="AC42">Frontend service in services/compliance.service.ts</criterion>
+    <criterion id="AC43">React Query hooks in hooks/useCompliance.ts</criterion>
+    <criterion id="AC44">Repositories with custom queries</criterion>
+    <criterion id="AC45">Service layer with @Transactional</criterion>
+    <criterion id="AC46">Controllers with @PreAuthorize RBAC</criterion>
+    <criterion id="AC47">DTOs and MapStruct mappers</criterion>
+    <criterion id="AC48">Flyway migrations V44-V47</criterion>
+    <criterion id="AC49">Email template compliance-reminder-notification.html</criterion>
+    <criterion id="AC50">Backend unit tests >= 80% coverage</criterion>
+    <criterion id="AC51">Frontend unit tests for all components</criterion>
+    <criterion id="AC52">All tests must pass (mvn test, npm test)</criterion>
+    <criterion id="AC53">Build verification (mvn compile, npm run build, npm run lint)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="3.8 Document and Compliance Module" snippet="Regulatory requirement mapping, license and permit management, inspection scheduling, audit trail maintenance, compliance reporting, violation management"/>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Documents and Compliance" snippet="Compliance requirements entity with category, frequency, next_due_date, property_id, status. Audit logging for all compliance actions."/>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Implementation Patterns" snippet="Controller, Service, Repository patterns. Use @Transactional for write operations. DTOs with MapStruct. Bean validation annotations."/>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Consistency Rules" snippet="REST endpoints use kebab-case, database tables snake_case plural, UTC timestamps, ISO 8601 API format."/>
+      <doc path="docs/epics/epic-7-asset-compliance-management.md" title="Epic 7: Asset and Compliance Management" section="Story 7.3" snippet="Complete acceptance criteria for compliance requirements, schedules, inspections, violations, dashboard, and API endpoints."/>
+    </docs>
+    <code>
+      <!-- Entities to reference -->
+      <artifact path="backend/src/main/java/com/ultrabms/entity/Property.java" kind="entity" symbol="Property" reason="Foreign key for compliance schedules - propertyId references"/>
+      <artifact path="backend/src/main/java/com/ultrabms/entity/WorkOrder.java" kind="entity" symbol="WorkOrder" reason="Integration for remediation work orders when inspection fails"/>
+      <artifact path="backend/src/main/java/com/ultrabms/entity/User.java" kind="entity" symbol="User" reason="Foreign key for completedBy field in compliance schedules"/>
+      <artifact path="backend/src/main/java/com/ultrabms/entity/BaseEntity.java" kind="entity" symbol="BaseEntity" reason="Base class pattern for entities with id, createdAt, updatedAt"/>
+
+      <!-- Enum patterns -->
+      <artifact path="backend/src/main/java/com/ultrabms/entity/enums/WorkOrderCategory.java" kind="enum" symbol="WorkOrderCategory" reason="Pattern for compliance category enum with Javadoc"/>
+      <artifact path="backend/src/main/java/com/ultrabms/entity/enums/VendorStatus.java" kind="enum" symbol="VendorStatus" reason="Pattern for status enum"/>
+
+      <!-- Service patterns -->
+      <artifact path="backend/src/main/java/com/ultrabms/service/WorkOrderService.java" kind="service-interface" symbol="WorkOrderService" reason="Pattern for service interface with Javadoc. Use for work order creation when inspection fails"/>
+      <artifact path="backend/src/main/java/com/ultrabms/service/FileStorageService.java" kind="service" symbol="FileStorageService" reason="Use for certificate file upload to S3"/>
+      <artifact path="backend/src/main/java/com/ultrabms/service/EmailService.java" kind="service" symbol="EmailService" reason="Use for sending compliance reminder notifications"/>
+
+      <!-- Scheduler patterns -->
+      <artifact path="backend/src/main/java/com/ultrabms/scheduler/VendorDocumentExpiryJob.java" kind="scheduler" symbol="VendorDocumentExpiryJob" reason="Pattern for @Scheduled job with cron expression and logging"/>
+      <artifact path="backend/src/main/java/com/ultrabms/scheduler/InvoiceSchedulerJob.java" kind="scheduler" symbol="InvoiceSchedulerJob" reason="Pattern for daily scheduled jobs"/>
+
+      <!-- Frontend patterns -->
+      <artifact path="frontend/src/types/work-orders.ts" kind="types" symbol="WorkOrder types" reason="Pattern for TypeScript interfaces and enums"/>
+      <artifact path="frontend/src/types/vendors.ts" kind="types" symbol="Vendor types" reason="Pattern for entity types with status enum"/>
+      <artifact path="frontend/src/services/work-orders.service.ts" kind="service" symbol="workOrdersService" reason="Pattern for frontend API service using axios"/>
+      <artifact path="frontend/src/services/vendors.service.ts" kind="service" symbol="vendorsService" reason="Pattern for CRUD service methods"/>
+
+      <!-- Database migration patterns -->
+      <artifact path="backend/src/main/resources/db/migration/V33__create_vendors_table.sql" kind="migration" symbol="V33" reason="Pattern for table creation with enums and indexes"/>
+      <artifact path="backend/src/main/resources/db/migration/V35__create_vendor_ratings_table.sql" kind="migration" symbol="V35" reason="Pattern for table with foreign keys"/>
+    </code>
+    <dependencies>
+      <backend>
+        <dependency name="spring-boot-starter-web" version="3.4.0"/>
+        <dependency name="spring-boot-starter-data-jpa" version="3.4.0"/>
+        <dependency name="spring-boot-starter-validation" version="3.4.0"/>
+        <dependency name="spring-boot-starter-security" version="3.4.0"/>
+        <dependency name="spring-boot-starter-mail" version="3.4.0"/>
+        <dependency name="spring-boot-starter-thymeleaf" version="3.4.0"/>
+        <dependency name="postgresql" version="runtime"/>
+        <dependency name="flyway-core" version="latest"/>
+        <dependency name="lombok" version="1.18.36"/>
+        <dependency name="mapstruct" version="1.6.3"/>
+        <dependency name="ehcache" version="3.10.8"/>
+      </backend>
+      <frontend>
+        <dependency name="next" version="16.0.2"/>
+        <dependency name="react" version="19.2.0"/>
+        <dependency name="@tanstack/react-query" version="5.90.9"/>
+        <dependency name="@tanstack/react-table" version="8.21.3"/>
+        <dependency name="axios" version="1.13.2"/>
+        <dependency name="react-hook-form" version="7.66.0"/>
+        <dependency name="@hookform/resolvers" version="5.2.2"/>
+        <dependency name="zod" version="4.1.12"/>
+        <dependency name="date-fns" version="4.1.0"/>
+        <dependency name="lucide-react" version="0.553.0"/>
+        <dependency name="sonner" version="2.0.7"/>
+        <dependency name="react-day-picker" version="9.11.1"/>
+        <dependency name="recharts" version="3.4.1" note="For dashboard charts"/>
+        <note>Calendar library needed: @fullcalendar/react, @fullcalendar/daygrid, @fullcalendar/interaction (AC #39)</note>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint category="number-format">requirementNumber format: CMP-{YYYY}-{NNNN} with database sequence, reset annually</constraint>
+    <constraint category="number-format">violationNumber format: VIO-{YYYY}-{NNNN} with database sequence, reset annually</constraint>
+    <constraint category="business-rule">applicableProperties = null means "All Properties"</constraint>
+    <constraint category="business-rule">ONE_TIME requirements do not generate recurring schedules</constraint>
+    <constraint category="business-rule">COMPLETED and EXEMPT schedules are not affected by status update job</constraint>
+    <constraint category="business-rule">FAILED inspection must create remediation work order via WorkOrderService</constraint>
+    <constraint category="status-colors">Schedule: UPCOMING=yellow, DUE=orange, COMPLETED=green, OVERDUE=red, EXEMPT=gray</constraint>
+    <constraint category="status-colors">Inspection: SCHEDULED=blue, IN_PROGRESS=yellow, PASSED=green, FAILED=red, CANCELLED=gray</constraint>
+    <constraint category="status-colors">Fine: PENDING=yellow, PAID=green, APPEALED=blue, WAIVED=gray</constraint>
+    <constraint category="storage">S3 path: /uploads/compliance/schedules/{scheduleId}/certificate.pdf</constraint>
+    <constraint category="storage">S3 path: /uploads/compliance/inspections/{inspectionId}/certificate.pdf</constraint>
+    <constraint category="frequency-calculation">MONTHLY=+1, QUARTERLY=+3, SEMI_ANNUALLY=+6, ANNUALLY=+12, BIANNUALLY=+24 months</constraint>
+    <constraint category="testing">All data-testid attributes required per AC definitions</constraint>
+    <constraint category="testing">Backend >= 80% code coverage for new code</constraint>
+    <constraint category="rbac">PROPERTY_MANAGER or SUPER_ADMIN role required for compliance management</constraint>
+    <constraint category="db-migration">Next migration version: V44 (after V43__create_parking_spots_table.sql)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="WorkOrderService.createWorkOrder" kind="method" signature="WorkOrderResponseDto createWorkOrder(CreateWorkOrderDto dto, UUID requestedBy, List&lt;MultipartFile&gt; photos)" path="backend/src/main/java/com/ultrabms/service/WorkOrderService.java"/>
+    <interface name="FileStorageService.uploadFile" kind="method" signature="String uploadFile(MultipartFile file, String directory)" path="backend/src/main/java/com/ultrabms/service/FileStorageService.java"/>
+    <interface name="EmailService.sendEmail" kind="method" signature="void sendEmail(String to, String subject, String templateName, Map&lt;String, Object&gt; variables)" path="backend/src/main/java/com/ultrabms/service/EmailService.java"/>
+    <interface name="PropertyRepository.findById" kind="repository" signature="Optional&lt;Property&gt; findById(UUID id)" path="backend/src/main/java/com/ultrabms/repository/PropertyRepository.java"/>
+    <interface name="PropertyRepository.findAll" kind="repository" signature="List&lt;Property&gt; findAll()" path="backend/src/main/java/com/ultrabms/repository/PropertyRepository.java"/>
+    <interface name="REST API" kind="endpoint" signature="POST /api/v1/compliance-requirements" path="Create compliance requirement"/>
+    <interface name="REST API" kind="endpoint" signature="GET /api/v1/compliance-requirements" path="List compliance requirements"/>
+    <interface name="REST API" kind="endpoint" signature="GET /api/v1/compliance-requirements/{id}" path="Get requirement details"/>
+    <interface name="REST API" kind="endpoint" signature="PUT /api/v1/compliance-requirements/{id}" path="Update requirement"/>
+    <interface name="REST API" kind="endpoint" signature="GET /api/v1/compliance-schedules" path="List schedules"/>
+    <interface name="REST API" kind="endpoint" signature="PATCH /api/v1/compliance-schedules/{id}/complete" path="Mark schedule complete"/>
+    <interface name="REST API" kind="endpoint" signature="POST /api/v1/inspections" path="Schedule inspection"/>
+    <interface name="REST API" kind="endpoint" signature="PUT /api/v1/inspections/{id}" path="Update inspection results"/>
+    <interface name="REST API" kind="endpoint" signature="POST /api/v1/violations" path="Create violation"/>
+    <interface name="REST API" kind="endpoint" signature="PUT /api/v1/violations/{id}" path="Update violation"/>
+    <interface name="REST API" kind="endpoint" signature="GET /api/v1/compliance/dashboard" path="Dashboard data"/>
+    <interface name="REST API" kind="endpoint" signature="GET /api/v1/properties/{id}/compliance-history" path="Property compliance history"/>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 + Mockito for unit tests. Use @SpringBootTest for integration tests. Mock external services (S3, Email). Test all service methods, scheduler jobs, and controller endpoints. Follow existing test patterns in backend/src/test/java/com/ultrabms/service/.
+      Frontend: Jest + React Testing Library. Test component rendering, user interactions, form validation, status badge colors. Use @testing-library/user-event for simulating user actions. Mock API calls with jest.mock.
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/ComplianceRequirementServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/service/ComplianceScheduleServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/service/InspectionServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/service/ViolationServiceTest.java</location>
+      <location>frontend/src/lib/validations/__tests__/compliance.test.ts</location>
+      <location>frontend/src/types/__tests__/compliance.test.ts</location>
+      <location>frontend/src/components/compliance/__tests__/</location>
+      <location>frontend/src/app/(dashboard)/compliance/__tests__/</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1,AC11">Test requirement creation with auto-generated number format CMP-YYYY-NNNN</idea>
+      <idea ac="AC13">Test auto-generation of schedules for all applicable properties on requirement create</idea>
+      <idea ac="AC18,AC27">Test completing schedule generates next schedule for recurring requirements</idea>
+      <idea ac="AC18">Test completing ONE_TIME schedule does NOT generate next schedule</idea>
+      <idea ac="AC20,AC28">Test FAILED inspection creates remediation work order with HIGH priority</idea>
+      <idea ac="AC20">Test PASSED inspection marks schedule as COMPLETED and uploads certificate</idea>
+      <idea ac="AC25">Test status update job changes UPCOMING to DUE within 30 days</idea>
+      <idea ac="AC25">Test status update job changes DUE to OVERDUE after due date</idea>
+      <idea ac="AC25">Test status update job skips COMPLETED and EXEMPT schedules</idea>
+      <idea ac="AC26">Test reminder notification job sends emails for schedules due within 30 days</idea>
+      <idea ac="AC29">Test dashboard KPI cards render correct counts</idea>
+      <idea ac="AC39">Test calendar component renders events with correct status colors</idea>
+      <idea ac="AC34">Test mark complete dialog validates completedDate required</idea>
+      <idea ac="AC41">Test Zod validation rejects invalid data (missing required fields, max lengths)</idea>
+    </ideas>
+  </tests>
+</story-context>

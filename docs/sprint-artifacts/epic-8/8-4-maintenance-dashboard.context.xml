@@ -1,0 +1,153 @@
+<story-context id="8-4-maintenance-dashboard" v="1.0">
+  <metadata>
+    <epicId>8</epicId>
+    <storyId>4</storyId>
+    <title>Maintenance Dashboard</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-8/8-4-maintenance-dashboard.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>maintenance supervisor</asA>
+    <iWant>a dedicated maintenance dashboard with job metrics and status tracking</iWant>
+    <soThat>I can monitor work orders and prioritize maintenance activities effectively</soThat>
+    <tasks>
+      <task id="1" status="pending">Create Maintenance Dashboard DTOs (MaintenanceDashboardDto, MaintenanceKpiDto, JobsByStatusDto, JobsByPriorityDto, JobsByCategoryDto, HighPriorityJobDto, RecentlyCompletedJobDto)</task>
+      <task id="2" status="pending">Create MaintenanceDashboardRepository queries (active jobs, overdue jobs, pending jobs, completed this month, jobs by status/priority/category, high priority list, recently completed)</task>
+      <task id="3" status="pending">Create MaintenanceDashboardService with Ehcache caching (5-minute TTL)</task>
+      <task id="4" status="pending">Create MaintenanceDashboardController with 6 REST endpoints and @PreAuthorize for MAINTENANCE_SUPERVISOR role</task>
+      <task id="5" status="pending">Write unit tests for MaintenanceDashboardService</task>
+      <task id="6" status="pending">Create TypeScript types for maintenance dashboard (maintenance-dashboard.ts, Zod validation schemas)</task>
+      <task id="7" status="pending">Create maintenance-dashboard.service.ts API client</task>
+      <task id="8" status="pending">Create useMaintenanceDashboard React Query hook with auto-refresh</task>
+      <task id="9" status="pending">Create MaintenanceKpiCards component (4 KPI cards, red highlight for overdue, click navigation)</task>
+      <task id="10" status="pending">Create JobsByStatusChart component (Recharts PieChart, click-to-filter, color-coded)</task>
+      <task id="11" status="pending">Create JobsByPriorityChart component (Recharts BarChart, color gradient green to red)</task>
+      <task id="12" status="pending">Create JobsByCategoryChart component (Recharts horizontal BarChart, sorted by count)</task>
+      <task id="13" status="pending">Create HighPriorityOverdueTable component (sortable data table, red highlight, quick actions, pagination)</task>
+      <task id="14" status="pending">Create RecentlyCompletedList component (last 5 completed jobs, View Details action)</task>
+      <task id="15" status="pending">Create Maintenance Dashboard page at app/(dashboard)/maintenance/dashboard/page.tsx</task>
+      <task id="16" status="pending">Write frontend unit tests (MaintenanceKpiCards, JobsByStatusChart, HighPriorityOverdueTable)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1">Dashboard displays Active Jobs KPI card showing count of non-completed work orders, click navigates to active jobs list</criterion>
+    <criterion id="AC-2">Dashboard displays Overdue Jobs KPI card with red highlight styling, click navigates to overdue jobs list</criterion>
+    <criterion id="AC-3">Dashboard displays Pending Jobs KPI card (status = OPEN), click navigates to pending jobs list</criterion>
+    <criterion id="AC-4">Dashboard displays Jobs Completed (This Month) KPI card with comparison to previous month</criterion>
+    <criterion id="AC-5">Jobs by Status chart displays pie/donut with segments (Open, Assigned, In Progress, Completed, Cancelled), color-coded, click segment filters list</criterion>
+    <criterion id="AC-6">Jobs by Priority bar chart with X-axis priority levels (LOW, MEDIUM, HIGH, URGENT), color gradient green to red, click bar navigates</criterion>
+    <criterion id="AC-7">Jobs by Category horizontal bar chart with categories sorted by count descending, click navigates to category job list</criterion>
+    <criterion id="AC-8">High Priority &amp; Overdue Jobs table with columns (Job #, Property/Unit, Title, Priority, Status, Assigned To, Days Overdue), quick actions, pagination</criterion>
+    <criterion id="AC-9">Recently Completed Jobs table with last 5 completed jobs and View Details action</criterion>
+    <criterion id="AC-10">Backend provides GET /api/v1/dashboard/maintenance endpoint returning all dashboard data</criterion>
+    <criterion id="AC-11">Backend provides GET /api/v1/dashboard/maintenance/jobs-by-status endpoint</criterion>
+    <criterion id="AC-12">Backend provides GET /api/v1/dashboard/maintenance/jobs-by-priority endpoint</criterion>
+    <criterion id="AC-13">Backend provides GET /api/v1/dashboard/maintenance/jobs-by-category endpoint</criterion>
+    <criterion id="AC-14">Backend provides GET /api/v1/dashboard/maintenance/high-priority-overdue endpoint with pagination</criterion>
+    <criterion id="AC-15">Backend provides GET /api/v1/dashboard/maintenance/recently-completed endpoint</criterion>
+    <criterion id="AC-16">Frontend uses Recharts for pie and bar charts</criterion>
+    <criterion id="AC-17">Click-to-filter functionality implemented on chart segments</criterion>
+    <criterion id="AC-18">Dashboard data cached for 5 minutes using Ehcache</criterion>
+    <criterion id="AC-19">Drill-down navigation to work order list implemented</criterion>
+    <criterion id="AC-20">Role-based access for MAINTENANCE_SUPERVISOR or higher</criterion>
+    <criterion id="AC-21">All interactive elements have data-testid attributes</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Implementation Patterns" snippet="Use Spring Cache with Ehcache for caching, Recharts for all charts, role-based access with @PreAuthorize, REST API conventions with /api/v1 base path."/>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Maintenance Management" snippet="MaintenanceController, WorkOrderService, PMScheduleService with routes /maintenance, /maintenance/jobs/[id], /maintenance/pm"/>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Dashboard APIs" snippet="GET /api/v1/dashboard/executive example showing KPI structure with netProfitLoss, occupancyRate, overdueMaintenance, etc."/>
+      <doc path="docs/epics/epic-8-dashboard-reporting.md" title="Epic 8: Dashboard &amp; Reporting" section="Story 8.4" snippet="Maintenance Dashboard with KPI cards, Jobs by Status pie chart, Jobs by Priority bar chart, Jobs by Category bar chart, High Priority &amp; Overdue Jobs list."/>
+    </docs>
+
+    <code>
+      <!-- Backend Work Order Entities and Enums -->
+      <file path="backend/src/main/java/com/ultrabms/entity/enums/WorkOrderStatus.java" kind="enum" symbol="WorkOrderStatus" reason="Status values: OPEN, ASSIGNED, IN_PROGRESS, COMPLETED, CLOSED - used for dashboard filtering"/>
+      <file path="backend/src/main/java/com/ultrabms/entity/enums/WorkOrderPriority.java" kind="enum" symbol="WorkOrderPriority" reason="Priority values: HIGH, MEDIUM, LOW - used for priority chart and filtering"/>
+      <file path="backend/src/main/java/com/ultrabms/entity/enums/WorkOrderCategory.java" kind="enum" symbol="WorkOrderCategory" reason="Category values: PLUMBING, ELECTRICAL, HVAC, etc. - used for category chart"/>
+      <file path="backend/src/main/java/com/ultrabms/entity/WorkOrder.java" kind="entity" symbol="WorkOrder" reason="Main entity for work orders - dashboard queries against this table"/>
+      <file path="backend/src/main/java/com/ultrabms/repository/WorkOrderRepository.java" kind="repository" symbol="WorkOrderRepository" reason="Existing repository with count queries, status filtering - extend for dashboard metrics"/>
+      <file path="backend/src/main/java/com/ultrabms/service/WorkOrderService.java" kind="service" symbol="WorkOrderService" reason="Existing work order service - reference for patterns"/>
+      <file path="backend/src/main/java/com/ultrabms/service/impl/WorkOrderServiceImpl.java" kind="service-impl" symbol="WorkOrderServiceImpl" reason="Service implementation pattern to follow"/>
+      <file path="backend/src/main/java/com/ultrabms/controller/WorkOrderController.java" kind="controller" symbol="WorkOrderController" reason="Controller pattern reference for REST endpoints"/>
+
+      <!-- Frontend Work Order Types -->
+      <file path="frontend/src/types/work-orders.ts" kind="types" symbol="WorkOrderStatus, WorkOrderPriority, WorkOrderCategory, WorkOrder, WorkOrderListItem" reason="Reuse existing enums and interfaces for dashboard types"/>
+      <file path="frontend/src/services/work-orders.service.ts" kind="service" symbol="workOrdersService" reason="API client pattern to follow for dashboard service"/>
+
+      <!-- Existing Dashboard References -->
+      <file path="frontend/src/app/(dashboard)/layout.tsx" kind="layout" symbol="DashboardLayout" reason="Dashboard layout to integrate with"/>
+    </code>
+
+    <dependencies>
+      <backend>
+        <dependency name="spring-boot-starter-cache" version="3.4.0" purpose="Caching support"/>
+        <dependency name="ehcache" version="3.10.8" purpose="Cache provider for 5-minute TTL"/>
+        <dependency name="spring-boot-starter-data-jpa" version="3.4.0" purpose="JPA for database queries"/>
+        <dependency name="spring-boot-starter-security" version="3.4.0" purpose="@PreAuthorize for role-based access"/>
+        <dependency name="lombok" version="1.18.36" purpose="Annotations for DTOs"/>
+        <dependency name="mapstruct" version="1.6.3" purpose="Entity-DTO mapping"/>
+      </backend>
+      <frontend>
+        <dependency name="recharts" version="^3.4.1" purpose="Charts library for pie and bar charts"/>
+        <dependency name="@tanstack/react-query" version="^5.90.9" purpose="Data fetching with caching"/>
+        <dependency name="@tanstack/react-table" version="^8.21.3" purpose="Data tables for job lists"/>
+        <dependency name="date-fns" version="^4.1.0" purpose="Date calculations for overdue"/>
+        <dependency name="lucide-react" version="^0.553.0" purpose="Icons for KPI cards"/>
+        <dependency name="zod" version="^4.1.12" purpose="Schema validation"/>
+        <dependency name="axios" version="^1.13.2" purpose="HTTP client"/>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture">Use Spring Cache with Ehcache for 5-minute caching [Source: docs/architecture.md#Caching-Strategy]</constraint>
+    <constraint source="architecture">Use Recharts for all charts [Source: docs/architecture.md#Decision-Summary]</constraint>
+    <constraint source="architecture">Role-based access with @PreAuthorize [Source: docs/architecture.md#Role-Based-Access-Control]</constraint>
+    <constraint source="architecture">REST API base path: /api/v1 [Source: docs/architecture.md#REST-API-Conventions]</constraint>
+    <constraint source="dev-notes">Work order statuses: OPEN, ASSIGNED, IN_PROGRESS, COMPLETED, CLOSED (Note: Story mentions CANCELLED but enum has CLOSED)</constraint>
+    <constraint source="dev-notes">Work order priorities: HIGH, MEDIUM, LOW (Note: Story mentions URGENT but enum only has HIGH/MEDIUM/LOW)</constraint>
+    <constraint source="dev-notes">Overdue calculation: scheduledDate &lt; currentDate AND status NOT IN (COMPLETED, CLOSED)</constraint>
+    <constraint source="dev-notes">Chart click interaction should update filter state and re-filter the table</constraint>
+    <constraint source="retrospective">All interactive elements must have data-testid attributes [Source: AI-2-1]</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="GET /api/v1/dashboard/maintenance" kind="REST endpoint" signature="GET /api/v1/dashboard/maintenance -> MaintenanceDashboardDto" path="backend/src/main/java/com/ultrabms/controller/MaintenanceDashboardController.java"/>
+    <interface name="GET /api/v1/dashboard/maintenance/jobs-by-status" kind="REST endpoint" signature="GET /api/v1/dashboard/maintenance/jobs-by-status -> List&lt;JobsByStatusDto&gt;" path="backend/src/main/java/com/ultrabms/controller/MaintenanceDashboardController.java"/>
+    <interface name="GET /api/v1/dashboard/maintenance/jobs-by-priority" kind="REST endpoint" signature="GET /api/v1/dashboard/maintenance/jobs-by-priority -> List&lt;JobsByPriorityDto&gt;" path="backend/src/main/java/com/ultrabms/controller/MaintenanceDashboardController.java"/>
+    <interface name="GET /api/v1/dashboard/maintenance/jobs-by-category" kind="REST endpoint" signature="GET /api/v1/dashboard/maintenance/jobs-by-category -> List&lt;JobsByCategoryDto&gt;" path="backend/src/main/java/com/ultrabms/controller/MaintenanceDashboardController.java"/>
+    <interface name="GET /api/v1/dashboard/maintenance/high-priority-overdue" kind="REST endpoint" signature="GET /api/v1/dashboard/maintenance/high-priority-overdue?page=0&amp;size=10 -> Page&lt;HighPriorityJobDto&gt;" path="backend/src/main/java/com/ultrabms/controller/MaintenanceDashboardController.java"/>
+    <interface name="GET /api/v1/dashboard/maintenance/recently-completed" kind="REST endpoint" signature="GET /api/v1/dashboard/maintenance/recently-completed -> List&lt;RecentlyCompletedJobDto&gt;" path="backend/src/main/java/com/ultrabms/controller/MaintenanceDashboardController.java"/>
+    <interface name="WorkOrderRepository" kind="Spring Data Repository" signature="countByStatus, countByStatusIn, countByPriority, countByCategory" path="backend/src/main/java/com/ultrabms/repository/WorkOrderRepository.java"/>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 + Mockito for unit tests. Use @SpringBootTest for integration tests. Follow existing patterns in WorkOrderServiceTest.java with @Mock for repositories and @InjectMocks for services. Frontend: Jest + React Testing Library. Validation tests use describe/it pattern. Component tests use render() and screen queries. Use data-testid attributes for all interactive elements per AI-2-1 retrospective action item.
+    </standards>
+    <locations>
+      <location pattern="backend/src/test/java/com/ultrabms/service/*Test.java"/>
+      <location pattern="frontend/src/lib/validations/__tests__/*.test.ts"/>
+      <location pattern="frontend/src/services/__tests__/*.test.ts"/>
+      <location pattern="frontend/src/components/**/__tests__/*.test.tsx"/>
+    </locations>
+    <ideas>
+      <idea acId="AC-1,AC-2,AC-3,AC-4">Test KPI calculations: active jobs count excludes COMPLETED/CLOSED, overdue jobs count based on scheduledDate, pending jobs count only OPEN status, completed this month uses date range</idea>
+      <idea acId="AC-5">Test jobs by status aggregation returns correct segment counts for each status</idea>
+      <idea acId="AC-6">Test jobs by priority aggregation returns correct counts for LOW, MEDIUM, HIGH (note: URGENT may need to be mapped to HIGH)</idea>
+      <idea acId="AC-7">Test jobs by category aggregation sorted by count descending</idea>
+      <idea acId="AC-8">Test high priority &amp; overdue list filters correctly and supports pagination</idea>
+      <idea acId="AC-10-15">Test all API endpoints return correct response structure and handle edge cases</idea>
+      <idea acId="AC-17">Test click-to-filter interaction updates table filter state</idea>
+      <idea acId="AC-18">Test Ehcache caching with 5-minute TTL configured correctly</idea>
+      <idea acId="AC-20">Test @PreAuthorize blocks access for non-MAINTENANCE_SUPERVISOR roles</idea>
+      <idea acId="AC-21">Test all interactive elements have data-testid attributes</idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,5 +1,7 @@
 package com.ultrabms.service;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.workorders.*;
 import com.ultrabms.entity.Property;
 import com.ultrabms.entity.Unit;
@@ -80,7 +82,7 @@ class WorkOrderServiceTest {
     private S3Service s3Service;
 
     @Mock
-    private EmailService emailService;
+    private IEmailService emailService;
 
     @Mock
     private SecurityContext securityContext;

@@ -1,5 +1,7 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.vendordocuments.ExpiringDocumentDto;
 import com.ultrabms.dto.vendordocuments.VendorDocumentDto;
 import com.ultrabms.dto.vendordocuments.VendorDocumentListDto;
@@ -12,7 +14,6 @@ import com.ultrabms.exception.ValidationException;
 import com.ultrabms.mapper.VendorDocumentMapper;
 import com.ultrabms.repository.VendorDocumentRepository;
 import com.ultrabms.repository.VendorRepository;
-import com.ultrabms.service.EmailService;
 import com.ultrabms.service.FileStorageService;
 import com.ultrabms.service.VendorDocumentService;
 import org.slf4j.Logger;
@@ -56,14 +57,14 @@ public class VendorDocumentServiceImpl implements VendorDocumentService {
     private final VendorRepository vendorRepository;
     private final FileStorageService fileStorageService;
     private final VendorDocumentMapper documentMapper;
-    private final EmailService emailService;
+    private final IEmailService emailService;
 
     public VendorDocumentServiceImpl(
             VendorDocumentRepository documentRepository,
             VendorRepository vendorRepository,
             FileStorageService fileStorageService,
             VendorDocumentMapper documentMapper,
-            EmailService emailService
+            IEmailService emailService
     ) {
         this.documentRepository = documentRepository;
         this.vendorRepository = vendorRepository;

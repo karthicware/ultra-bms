@@ -1,5 +1,7 @@
 package com.ultrabms.service;
 
+import com.ultrabms.service.IEmailService;
+
 import com.ultrabms.dto.leads.LeadConversionResponse;
 import com.ultrabms.dto.quotations.*;
 import com.ultrabms.entity.Lead;
@@ -58,7 +60,7 @@ class QuotationServiceTest {
     private QuotationPdfService quotationPdfService;
 
     @Mock
-    private EmailService emailService;
+    private IEmailService emailService;
 
     @InjectMocks
     private QuotationServiceImpl quotationService;

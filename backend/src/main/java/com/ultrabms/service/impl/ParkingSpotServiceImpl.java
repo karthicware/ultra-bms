@@ -12,7 +12,7 @@ import com.ultrabms.entity.ParkingSpot;
 import com.ultrabms.entity.Property;
 import com.ultrabms.entity.Tenant;
 import com.ultrabms.entity.enums.ParkingSpotStatus;
-import com.ultrabms.exception.ConflictException;
+import com.ultrabms.exception.DuplicateResourceException;
 import com.ultrabms.exception.ResourceNotFoundException;
 import com.ultrabms.exception.ValidationException;
 import com.ultrabms.repository.ParkingSpotRepository;
@@ -58,7 +58,7 @@ public class ParkingSpotServiceImpl implements ParkingSpotService {
         // Check for duplicate spot number in property
         if (parkingSpotRepository.existsByPropertyIdAndSpotNumberAndActiveTrue(
                 request.getPropertyId(), request.getSpotNumber())) {
-            throw new ConflictException("A parking spot with number '" + request.getSpotNumber() +
+            throw new DuplicateResourceException("A parking spot with number '" + request.getSpotNumber() +
                     "' already exists in this building");
         }
 
@@ -103,7 +103,7 @@ public class ParkingSpotServiceImpl implements ParkingSpotService {
             if (!newSpotNumber.equals(parkingSpot.getSpotNumber()) &&
                     parkingSpotRepository.existsByPropertyIdAndSpotNumberAndActiveTrueAndIdNot(
                             propertyId, newSpotNumber, id)) {
-                throw new ConflictException("A parking spot with number '" + newSpotNumber +
+                throw new DuplicateResourceException("A parking spot with number '" + newSpotNumber +
                         "' already exists in this building");
             }
             parkingSpot.setSpotNumber(newSpotNumber);

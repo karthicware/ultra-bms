@@ -1,5 +1,7 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.service.IEmailService;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ultrabms.dto.checkout.*;
@@ -44,9 +46,10 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
     private final UserRepository userRepository;
     private final InvoiceRepository invoiceRepository;
     private final AuditLogService auditLogService;
-    private final EmailService emailService;
+    private final IEmailService emailService;
     private final S3Service s3Service;
     private final ObjectMapper objectMapper;
+    private final ParkingSpotService parkingSpotService;
 
     public TenantCheckoutServiceImpl(
             TenantCheckoutRepository checkoutRepository,
@@ -55,9 +58,10 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
             UserRepository userRepository,
             InvoiceRepository invoiceRepository,
             AuditLogService auditLogService,
-            EmailService emailService,
+            IEmailService emailService,
             S3Service s3Service,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            ParkingSpotService parkingSpotService) {
         this.checkoutRepository = checkoutRepository;
         this.depositRefundRepository = depositRefundRepository;
         this.tenantRepository = tenantRepository;
@@ -67,6 +71,7 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
         this.emailService = emailService;
         this.s3Service = s3Service;
         this.objectMapper = objectMapper;
+        this.parkingSpotService = parkingSpotService;
     }
 
     // ========================================================================
@@ -635,6 +640,15 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
                 tenantUser.setActive(false);
                 userRepository.save(tenantUser);
             });
+        }
+
+        // Release all parking spots allocated to tenant (Story 3.8 AC#15)
+        try {
+            parkingSpotService.releaseAllParkingSpotsForTenant(tenantId);
+            LOGGER.info("Released parking spots for tenant: {}", tenantId);
+        } catch (Exception e) {
+            LOGGER.error("Failed to release parking spots for tenant {}: {}", tenantId, e.getMessage());
+            // Don't fail checkout if parking release fails
         }
 
         // Update checkout

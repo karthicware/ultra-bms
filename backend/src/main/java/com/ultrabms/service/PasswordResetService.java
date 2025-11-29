@@ -28,7 +28,7 @@ public class PasswordResetService {
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordResetAttemptRepository passwordResetAttemptRepository;
-    private final EmailService emailService;
+    private final IEmailService emailService;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     private final com.ultrabms.repository.AuditLogRepository auditLogRepository;
 

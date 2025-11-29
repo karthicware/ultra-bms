@@ -3,7 +3,7 @@ package com.ultrabms.scheduler;
 import com.ultrabms.entity.Tenant;
 import com.ultrabms.entity.enums.TenantStatus;
 import com.ultrabms.repository.TenantRepository;
-import com.ultrabms.service.EmailService;
+import com.ultrabms.service.IEmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,11 +25,11 @@ public class LeaseExpirationSchedulerJob {
     private static final Logger LOGGER = LoggerFactory.getLogger(LeaseExpirationSchedulerJob.class);
 
     private final TenantRepository tenantRepository;
-    private final EmailService emailService;
+    private final IEmailService emailService;
 
     public LeaseExpirationSchedulerJob(
             TenantRepository tenantRepository,
-            EmailService emailService) {
+            IEmailService emailService) {
         this.tenantRepository = tenantRepository;
         this.emailService = emailService;
     }
