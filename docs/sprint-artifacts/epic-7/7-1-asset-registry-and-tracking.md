@@ -1,6 +1,6 @@
 # Story 7.1: Asset Registry and Tracking
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 

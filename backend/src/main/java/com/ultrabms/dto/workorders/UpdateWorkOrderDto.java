@@ -89,6 +89,12 @@ public class UpdateWorkOrderDto {
     @Size(max = 1000, message = "Follow-up notes must be less than 1000 characters")
     private String followUpNotes;
 
+    /**
+     * Asset linked to this work order (optional)
+     * Story 7.1: Asset Registry and Tracking - AC #16
+     */
+    private UUID assetId;
+
     // Note: Status updates use separate endpoint (UpdateWorkOrderStatusDto)
     // Assignment updates use separate endpoint (AssignWorkOrderDto)
 }

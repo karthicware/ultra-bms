@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Warranty Expiry Reminder</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header.critical {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .countdown-box {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .countdown-box.critical {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .countdown-box .days {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .countdown-box .label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .asset-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #1152D4;
+        }
+        .asset-card h3 {
+            margin: 0 0 15px 0;
+            color: #0A2342;
+            font-size: 18px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 8px 12px;
+            color: #666;
+            font-weight: 500;
+            width: 40%;
+        }
+        .details-table td {
+            padding: 8px 12px;
+            color: #333;
+            font-weight: 600;
+        }
+        .warning-box {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .warning-box.critical {
+            background-color: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        .action-items {
+            background-color: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #1152D4 0%, #0d47a1 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: #e0e7ff;
+            color: #3730a3;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #1152D4;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div th:class="${daysUntilExpiry} &lt;= 7 ? 'header critical' : 'header'">
+            <div class="icon">&#128736;</div>
+            <h1>Asset Warranty Expiry Alert</h1>
+        </div>
+
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${recipientName}">Property Manager</span>,
+            </div>
+
+            <p>
+                <span th:if="${daysUntilExpiry} &lt;= 7">
+                    <strong style="color: #dc2626;">Urgent:</strong> The following asset warranty is expiring very soon.
+                </span>
+                <span th:if="${daysUntilExpiry} &gt; 7">
+                    This is a reminder that the following asset warranty will expire within 30 days.
+                </span>
+            </p>
+
+            <div th:class="${daysUntilExpiry} &lt;= 7 ? 'countdown-box critical' : 'countdown-box'">
+                <div class="days" th:text="${daysUntilExpiry}">30</div>
+                <div class="label" th:text="${daysUntilExpiry} == 1 ? 'Day Until Expiry' : 'Days Until Expiry'">Days Until Expiry</div>
+            </div>
+
+            <div class="asset-card">
+                <h3>
+                    <span th:text="${assetName}">HVAC System</span>
+                    <span class="category-badge" th:text="${categoryDisplayName}">HVAC</span>
+                </h3>
+                <table class="details-table">
+                    <tr>
+                        <th>Asset Number</th>
+                        <td th:text="${assetNumber}">AST-2024-0001</td>
+                    </tr>
+                    <tr>
+                        <th>Property</th>
+                        <td th:text="${propertyName}">Marina Tower</td>
+                    </tr>
+                    <tr>
+                        <th>Location</th>
+                        <td th:text="${location}">Rooftop</td>
+                    </tr>
+                    <tr>
+                        <th>Manufacturer</th>
+                        <td th:text="${manufacturer}">Carrier</td>
+                    </tr>
+                    <tr th:if="${modelNumber}">
+                        <th>Model</th>
+                        <td th:text="${modelNumber}">XYZ-1000</td>
+                    </tr>
+                    <tr>
+                        <th>Warranty Expires</th>
+                        <td style="color: #dc2626; font-weight: 700;" th:text="${warrantyExpiryDate}">Jan 15, 2025</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div th:class="${daysUntilExpiry} &lt;= 7 ? 'warning-box critical' : 'warning-box'">
+                <strong th:text="${daysUntilExpiry} &lt;= 7 ? '&#128680; Action Required' : '&#9888;&#65039; Important Notice'">Important Notice</strong>
+                <p style="margin: 10px 0 0 0; color: #666;">
+                    Once the warranty expires, any repairs or replacements for this asset may incur additional costs.
+                    Review the warranty terms and contact the manufacturer if needed.
+                </p>
+            </div>
+
+            <div class="action-items">
+                <strong>&#9989; Recommended Actions:</strong>
+                <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #666;">
+                    <li>Contact the manufacturer about warranty extension options</li>
+                    <li>Schedule a preventive maintenance check before expiry</li>
+                    <li>Review and upload warranty documentation if not already done</li>
+                    <li>Consider budgeting for potential repair costs</li>
+                </ul>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${portalUrl}" class="button">View Asset Details</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>
+                Questions? Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

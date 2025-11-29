@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDC Deposit Reminder</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .countdown-box {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .countdown-box .days {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .countdown-box .label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .pdc-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .pdc-box strong {
+            color: #1d4ed8;
+            font-size: 20px;
+        }
+        .amount-box {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+            border: 2px solid #e9ecef;
+        }
+        .amount-box .label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .amount-box .amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0A2342;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 40%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: right;
+        }
+        .info-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #1152D4 0%, #0A2342 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .button.primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #1152D4;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+            .details-table th,
+            .details-table td {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">📋</div>
+            <h1>PDC Deposit Reminder</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${adminName}">Admin</span>,
+            </div>
+
+            <p>
+                This is a reminder that the following Post-Dated Cheque(s) are due for deposit soon. Please arrange for bank deposit accordingly.
+            </p>
+
+            <div class="countdown-box">
+                <div class="days" th:text="${pdcCount}">5</div>
+                <div class="label" th:text="${pdcCount} == 1 ? 'PDC Due for Deposit' : 'PDCs Due for Deposit'">PDCs Due for Deposit</div>
+            </div>
+
+            <h3 style="color: #0A2342;">PDC Details</h3>
+
+            <div th:each="pdc : ${pdcList}">
+                <div class="pdc-box">
+                    <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Cheque Number</div>
+                    <strong th:text="${pdc.chequeNumber}">CHQ-001</strong>
+                </div>
+
+                <table class="details-table">
+                    <tr>
+                        <th>Tenant</th>
+                        <td th:text="${pdc.tenantName}">John Doe</td>
+                    </tr>
+                    <tr>
+                        <th>Bank</th>
+                        <td th:text="${pdc.bankName}">Emirates NBD</td>
+                    </tr>
+                    <tr>
+                        <th>Amount</th>
+                        <td th:text="${pdc.formattedAmount}">AED 5,000.00</td>
+                    </tr>
+                    <tr>
+                        <th>Cheque Date</th>
+                        <td th:text="${pdc.chequeDate}">Jan 15, 2025</td>
+                    </tr>
+                </table>
+                <hr style="border: none; border-top: 1px solid #e9ecef; margin: 20px 0;">
+            </div>
+
+            <div class="info-box">
+                <strong>📌 Action Required</strong>
+                <p style="margin: 10px 0 0 0; color: #666;">
+                    Please deposit these cheques to the bank on or before the cheque date. After deposit, update the PDC status in the system.
+                </p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${dashboardUrl}" class="button primary">View PDC Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                Questions? Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

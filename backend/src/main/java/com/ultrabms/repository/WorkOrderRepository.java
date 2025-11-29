@@ -389,4 +389,34 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, UUID> {
      */
     @Query("SELECT COUNT(wo) FROM WorkOrder wo WHERE wo.assignedTo = :vendorId AND wo.status = 'COMPLETED'")
     long countCompletedByVendorId(@Param("vendorId") UUID vendorId);
+
+    // =================================================================
+    // ASSET QUERIES (Story 7.1)
+    // =================================================================
+
+    /**
+     * Find work orders linked to an asset (maintenance history)
+     * Story 7.1: Asset Registry and Tracking - AC #11
+     *
+     * @param assetId Asset UUID
+     * @return List of work orders for the asset, ordered by createdAt desc
+     */
+    List<WorkOrder> findByAssetIdOrderByCreatedAtDesc(UUID assetId);
+
+    /**
+     * Count work orders linked to an asset
+     *
+     * @param assetId Asset UUID
+     * @return Count of work orders
+     */
+    long countByAssetId(UUID assetId);
+
+    /**
+     * Count completed work orders linked to an asset
+     *
+     * @param assetId Asset UUID
+     * @param status Status (COMPLETED)
+     * @return Count of completed work orders
+     */
+    long countByAssetIdAndStatus(UUID assetId, WorkOrderStatus status);
 }

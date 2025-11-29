@@ -1,0 +1,40 @@
+ULTRA BMS - PDC BOUNCED NOTIFICATION
+=====================================
+*** ALERT ***
+
+Hi [(${adminName})],
+
+A Post-Dated Cheque has been returned by the bank. Immediate action is required to collect replacement payment from the tenant.
+
+PDC DETAILS
+-----------
+Cheque Number: [(${chequeNumber})]
+Bank: [(${bankName})]
+Amount: [(${formattedAmount})]
+Cheque Date: [(${chequeDate})]
+Bounced Date: [(${bouncedDate})]
+
+BOUNCE REASON
+-------------
+[(${bounceReason})]
+
+TENANT INFORMATION
+------------------
+Name: [(${tenantName})]
+Email: [(${tenantEmail})]
+Phone: [(${tenantPhone})]
+
+RECOMMENDED ACTIONS
+-------------------
+- Contact the tenant immediately to arrange replacement payment
+- Request a replacement cheque or alternative payment method
+- Update the PDC status in the system once resolved
+- Consider applying any applicable bounced cheque charges
+
+View PDC Details: [(${pdcDetailUrl})]
+View Tenant Profile: [(${tenantProfileUrl})]
+
+---
+Questions? Contact us at [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.

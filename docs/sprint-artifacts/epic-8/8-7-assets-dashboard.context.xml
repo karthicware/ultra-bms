@@ -1,0 +1,176 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>8</epicId>
+    <storyId>7</storyId>
+    <title>Assets Dashboard</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-8/8-7-assets-dashboard.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>administrator or property manager</asA>
+    <iWant>a dedicated assets dashboard with asset metrics and PM tracking</iWant>
+    <soThat>I can monitor asset value and manage preventive maintenance effectively</soThat>
+    <tasks>
+      <task id="1" type="backend">Create Assets Dashboard DTOs (AC: #10-15) - AssetsDashboardDto, AssetKpiDto, AssetsByCategoryDto, TopMaintenanceSpendDto, OverduePmAssetDto, RecentAssetDto, DepreciationSummaryDto</task>
+      <task id="2" type="backend">Create AssetsDashboardRepository queries (AC: #1-9) - Total assets, total value, overdue PM, TCO, category breakdown, top maintenance spend, overdue PM list, recent assets, depreciation summary</task>
+      <task id="3" type="backend">Create AssetsDashboardService (AC: #1-9, #17, #18) - Dashboard methods, TCO calculation, Ehcache 5-min TTL</task>
+      <task id="4" type="backend">Create AssetsDashboardController (AC: #10-15, #20) - 6 REST endpoints with @PreAuthorize</task>
+      <task id="5" type="backend">Write unit tests for AssetsDashboardService</task>
+      <task id="6" type="frontend">Create TypeScript types and Zod schemas for assets dashboard</task>
+      <task id="7" type="frontend">Create assets-dashboard.service.ts API client</task>
+      <task id="8" type="frontend">Create useAssetsDashboard React Query hook</task>
+      <task id="9" type="frontend">Create AssetKpiCards component (AC: #1-4, #21)</task>
+      <task id="10" type="frontend">Create AssetsByCategoryChart donut component (AC: #5, #19)</task>
+      <task id="11" type="frontend">Create TopMaintenanceSpendChart horizontal bar component (AC: #6, #16)</task>
+      <task id="12" type="frontend">Create OverduePmTable component (AC: #7)</task>
+      <task id="13" type="frontend">Create RecentlyAddedAssetsTable component (AC: #8)</task>
+      <task id="14" type="frontend">Create DepreciationSummaryCard component (AC: #9)</task>
+      <task id="15" type="frontend">Create Assets Dashboard page at app/(dashboard)/assets/dashboard/page.tsx (AC: #16, #22)</task>
+      <task id="16" type="frontend">Write frontend unit tests</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1">Dashboard displays Total Registered Assets KPI card - count of all assets, click navigates to asset list</criterion>
+    <criterion id="AC-2">Dashboard displays Total Asset Value KPI card - sum of purchase costs (AED), formatted with currency</criterion>
+    <criterion id="AC-3">Dashboard displays Assets with Overdue PM KPI card - count with red highlight, click navigates to overdue PM list</criterion>
+    <criterion id="AC-4">Dashboard displays Most Expensive Asset (TCO) KPI card - asset name with highest TCO (purchase + maintenance), click navigates to asset details</criterion>
+    <criterion id="AC-5">Assets by Category donut chart - HVAC, Electrical, Plumbing, Mechanical, Other segments with counts/percentages, click segment navigates to category asset list</criterion>
+    <criterion id="AC-6">Top 5 Assets by Maintenance Spend horizontal bar chart - asset name on Y-axis, amount (AED) on X-axis, click navigates to asset details</criterion>
+    <criterion id="AC-7">Overdue PM table - columns: Asset Name, Category, Property, Last PM Date, Days Overdue; sorted by days overdue descending; red highlight > 30 days; Create Work Order quick action</criterion>
+    <criterion id="AC-8">Recently Added Assets table - last 5 assets with columns: Asset Name, Category, Property, Added Date, Value (AED); View Asset quick action</criterion>
+    <criterion id="AC-9">Depreciation Summary card - Original Value, Current Value, Total Depreciation (AED and %), click navigates to detailed report</criterion>
+    <criterion id="AC-10">GET /api/v1/dashboard/assets endpoint returning all dashboard data</criterion>
+    <criterion id="AC-11">GET /api/v1/dashboard/assets/by-category endpoint returning donut chart data</criterion>
+    <criterion id="AC-12">GET /api/v1/dashboard/assets/top-maintenance-spend endpoint returning bar chart data</criterion>
+    <criterion id="AC-13">GET /api/v1/dashboard/assets/overdue-pm endpoint returning overdue PM list</criterion>
+    <criterion id="AC-14">GET /api/v1/dashboard/assets/recently-added endpoint returning recent assets</criterion>
+    <criterion id="AC-15">GET /api/v1/dashboard/assets/depreciation-summary endpoint returning depreciation data</criterion>
+    <criterion id="AC-16">Frontend uses horizontal Recharts BarChart for maintenance spend</criterion>
+    <criterion id="AC-17">TCO calculated as: purchase_cost + SUM(maintenance_cost)</criterion>
+    <criterion id="AC-18">Dashboard data cached for 5 minutes using Ehcache</criterion>
+    <criterion id="AC-19">Drill-down from donut chart to asset list implemented</criterion>
+    <criterion id="AC-20">Role-based access for ADMIN, PROPERTY_MANAGER, or MAINTENANCE_SUPERVISOR</criterion>
+    <criterion id="AC-21">All currency values formatted in AED</criterion>
+    <criterion id="AC-22">All interactive elements have data-testid attributes</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/epics/epic-8-dashboard-reporting.md" title="Epic 8: Dashboard &amp; Reporting" section="Story 8.7: Assets Dashboard">Complete story specification with acceptance criteria, API endpoints, and technical notes for assets dashboard implementation.</doc>
+      <doc path="docs/architecture.md" title="Architecture" section="Caching Strategy">Use Spring Cache with Ehcache for 5-minute caching. Configuration via CacheConfig class with Caffeine.</doc>
+      <doc path="docs/architecture.md" title="Architecture" section="Decision Summary">Recharts for all charts, Tailwind CSS 4.0, shadcn/ui for components, AED currency only (ADR-004).</doc>
+      <doc path="docs/architecture.md" title="Architecture" section="Role-Based Access Control">@PreAuthorize annotations for RBAC. Roles: SUPER_ADMIN, PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR, FINANCE_MANAGER, TENANT, VENDOR.</doc>
+      <doc path="docs/architecture.md" title="Architecture" section="Database Schema - Asset Management">Assets table schema with property_id, unit_id, asset_tag, name, category, manufacturer, model, serial_number, purchase_date, purchase_cost, warranty_expiry, status.</doc>
+      <doc path="docs/prd.md" title="PRD" section="3.7 Asset Management Module">Asset registry, lifecycle management, specifications, warranty tracking, depreciation calculation.</doc>
+      <doc path="docs/prd.md" title="PRD" section="3.2.2 Operational Dashboards">Assets Dashboard: Asset KPIs, category breakdown, PM tracking, depreciation summary.</doc>
+    </docs>
+    <code>
+      <artifact path="backend/src/main/java/com/ultrabms/entity/WorkOrder.java" kind="entity" symbol="WorkOrder" lines="1-355" reason="Work orders track maintenance costs linked to assets. Fields: actualCost, estimatedCost for TCO calculation. pmScheduleId links to preventive maintenance.</artifact>
+      <artifact path="backend/src/main/java/com/ultrabms/entity/PMSchedule.java" kind="entity" symbol="PMSchedule" lines="1-191" reason="Preventive maintenance schedules for assets. Fields: nextGenerationDate, lastGeneratedDate for overdue PM detection.</artifact>
+      <artifact path="backend/src/main/java/com/ultrabms/entity/enums/WorkOrderCategory.java" kind="enum" symbol="WorkOrderCategory" lines="1-59" reason>Asset categories for dashboard: PLUMBING, ELECTRICAL, HVAC, APPLIANCE, CARPENTRY, PEST_CONTROL, CLEANING, PAINTING, LANDSCAPING, OTHER. May need to add MECHANICAL, ELEVATOR, GENERATOR for assets.</artifact>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/WorkOrderRepository.java" kind="repository" symbol="WorkOrderRepository" reason="Reference for aggregate queries. Use similar patterns for asset dashboard queries (SUM, COUNT, GROUP BY).</artifact>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/PMScheduleRepository.java" kind="repository" symbol="PMScheduleRepository" reason="Reference for PM schedule queries. Used to calculate overdue PM assets.</artifact>
+      <artifact path="backend/src/main/java/com/ultrabms/service/PMScheduleService.java" kind="service" symbol="PMScheduleService" reason="Reference implementation for service layer patterns with @Transactional and validation.</artifact>
+      <artifact path="frontend/src/components/expenses/ExpenseSummaryCharts.tsx" kind="component" symbol="ExpenseSummaryCharts" reason="Reference component using Recharts PieChart and LineChart. Use similar patterns for donut and bar charts.</artifact>
+      <artifact path="frontend/src/components/vendors/RatingDistributionChart.tsx" kind="component" symbol="RatingDistributionChart" reason="Reference component for bar chart implementation with Recharts.</artifact>
+      <artifact path="frontend/src/types/work-orders.ts" kind="types" reason="Reference TypeScript type patterns for DTOs with Zod validation.</artifact>
+      <artifact path="frontend/src/app/(dashboard)/dashboard/page.tsx" kind="page" symbol="DashboardPage" reason="Reference dashboard page layout with KPI cards and chart components.</artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package name="recharts" version="^3.4.1">Composable React charts - use PieChart (donut), BarChart (horizontal)</package>
+        <package name="@tanstack/react-query" version="^5.90.9">Data fetching with 5-min staleTime for dashboard caching</package>
+        <package name="lucide-react" version="^0.553.0">Icons for KPI cards and actions</package>
+        <package name="date-fns" version="^4.1.0">Date formatting for Last PM Date, Added Date columns</package>
+        <package name="zod" version="^4.1.12">Schema validation for API response types</package>
+        <package name="@radix-ui/react-dialog" version="^1.1.4">Modal for Create Work Order quick action</package>
+      </node>
+      <java>
+        <dependency group="org.springframework.boot" artifact="spring-boot-starter-cache">Spring Cache abstraction</dependency>
+        <dependency group="org.ehcache" artifact="ehcache">Ehcache provider for 5-minute TTL</dependency>
+        <dependency group="org.springframework.boot" artifact="spring-boot-starter-data-jpa">JPA repository pattern</dependency>
+        <dependency group="org.springframework.boot" artifact="spring-boot-starter-validation">Bean validation</dependency>
+      </java>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture">Use Spring Cache with @Cacheable annotation and 5-minute TTL for dashboard data</constraint>
+    <constraint source="architecture">All currency values must use AED only (ADR-004)</constraint>
+    <constraint source="architecture">Use @PreAuthorize for role-based access control</constraint>
+    <constraint source="architecture">Use Recharts for all chart visualizations</constraint>
+    <constraint source="architecture">Use shadcn/ui Card components for KPI cards and dashboard layout</constraint>
+    <constraint source="story">Asset categories: HVAC, ELECTRICAL, PLUMBING, MECHANICAL, ELEVATOR, GENERATOR, OTHER</constraint>
+    <constraint source="story">TCO = purchase_cost + SUM(all maintenance costs from work orders)</constraint>
+    <constraint source="story">Overdue PM = assets where next_pm_date &lt; today</constraint>
+    <constraint source="story">Depreciation: straight-line method (original_value - (age * annual_depreciation))</constraint>
+    <constraint source="retrospective">All interactive elements MUST have data-testid attributes (AI-2-1)</constraint>
+    <constraint source="retrospective">Add completion notes to story after implementation (AI-2-6)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="AssetsDashboardController" kind="REST controller" path="backend/src/main/java/com/ultrabms/controller/AssetsDashboardController.java">
+      <endpoint method="GET" path="/api/v1/dashboard/assets" description="Get all assets dashboard data"/>
+      <endpoint method="GET" path="/api/v1/dashboard/assets/by-category" description="Get assets grouped by category for donut chart"/>
+      <endpoint method="GET" path="/api/v1/dashboard/assets/top-maintenance-spend" description="Get top 5 assets by maintenance spend"/>
+      <endpoint method="GET" path="/api/v1/dashboard/assets/overdue-pm" description="Get list of assets with overdue PM"/>
+      <endpoint method="GET" path="/api/v1/dashboard/assets/recently-added" description="Get last 5 recently added assets"/>
+      <endpoint method="GET" path="/api/v1/dashboard/assets/depreciation-summary" description="Get depreciation summary totals"/>
+    </interface>
+    <interface name="AssetsDashboardService" kind="service interface" path="backend/src/main/java/com/ultrabms/service/AssetsDashboardService.java">
+      <method signature="AssetsDashboardDto getAssetsDashboard()" description="Get complete dashboard data"/>
+      <method signature="List&lt;AssetsByCategoryDto&gt; getAssetsByCategory()" description="Get category breakdown"/>
+      <method signature="List&lt;TopMaintenanceSpendDto&gt; getTopMaintenanceSpend()" description="Get top 5 by maintenance cost"/>
+      <method signature="List&lt;OverduePmAssetDto&gt; getOverduePmAssets()" description="Get overdue PM assets"/>
+      <method signature="List&lt;RecentAssetDto&gt; getRecentlyAddedAssets()" description="Get recent assets"/>
+      <method signature="DepreciationSummaryDto getDepreciationSummary()" description="Get depreciation totals"/>
+    </interface>
+    <interface name="assetsDashboardService" kind="frontend API client" path="frontend/src/services/assets-dashboard.service.ts">
+      <method signature="fetchAssetsDashboard(): Promise&lt;AssetsDashboardResponse&gt;" description="Fetch all dashboard data"/>
+      <method signature="fetchAssetsByCategory(): Promise&lt;AssetsByCategoryResponse[]&gt;" description="Fetch category breakdown"/>
+      <method signature="fetchTopMaintenanceSpend(): Promise&lt;TopMaintenanceSpendResponse[]&gt;" description="Fetch top 5 maintenance spend"/>
+      <method signature="fetchOverduePmAssets(): Promise&lt;OverduePmAssetResponse[]&gt;" description="Fetch overdue PM list"/>
+      <method signature="fetchRecentlyAddedAssets(): Promise&lt;RecentAssetResponse[]&gt;" description="Fetch recent assets"/>
+      <method signature="fetchDepreciationSummary(): Promise&lt;DepreciationSummaryResponse&gt;" description="Fetch depreciation summary"/>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 + Mockito for unit tests. Use @WebMvcTest for controller tests, mock services. Target 80% line coverage.
+      Frontend: Vitest + React Testing Library. Test component rendering, user interactions, and data-testid selectors. Target 70% line coverage.
+      All interactive elements require data-testid attributes per retrospective action item AI-2-1.
+    </standards>
+    <locations>
+      <location path="backend/src/test/java/com/ultrabms/service/AssetsDashboardServiceTest.java"/>
+      <location path="backend/src/test/java/com/ultrabms/controller/AssetsDashboardControllerTest.java"/>
+      <location path="frontend/src/lib/validations/__tests__/assets-dashboard.test.ts"/>
+      <location path="frontend/src/components/assets/__tests__/"/>
+    </locations>
+    <ideas>
+      <idea acRef="AC-1,AC-2,AC-3,AC-4">Test KPI calculations with known test data - verify counts and sums</idea>
+      <idea acRef="AC-17">Test TCO calculation: purchase_cost + SUM(work_order.actual_cost)</idea>
+      <idea acRef="AC-5,AC-19">Test donut chart renders categories, click navigation to asset list</idea>
+      <idea acRef="AC-6,AC-16">Test horizontal bar chart renders top 5 assets, click navigation</idea>
+      <idea acRef="AC-7">Test overdue PM table sorting, red highlight for > 30 days, Create Work Order action</idea>
+      <idea acRef="AC-9">Test depreciation calculations: original - current = depreciation, percentage calculation</idea>
+      <idea acRef="AC-18">Test caching behavior - verify @Cacheable annotation and 5-min TTL</idea>
+      <idea acRef="AC-20">Test role-based access - verify ADMIN, PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR can access</idea>
+      <idea acRef="AC-22">Test all interactive elements have data-testid attributes</idea>
+    </ideas>
+  </tests>
+
+  <prerequisites>
+    <prerequisite story="7.1" status="ready" title="Asset Registry and Tracking">Provides Asset entity, repository, service, and CRUD operations for the dashboard to query.</prerequisite>
+    <prerequisite story="4.1" status="done" title="Work Order Creation and Management">Provides WorkOrder entity with actual_cost field for maintenance cost calculation in TCO.</prerequisite>
+    <prerequisite story="4.2" status="done" title="Preventive Maintenance Scheduling">Provides PMSchedule entity with next_generation_date for overdue PM detection.</prerequisite>
+  </prerequisites>
+
+  <designReference>
+    <stitch path="docs/archive/stitch_building_maintenance_software/assets_module_dashboard/screen.png" description="Visual reference for assets dashboard layout, KPI cards, donut chart, bar chart, and tables"/>
+  </designReference>
+</story-context>

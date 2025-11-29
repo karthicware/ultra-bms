@@ -80,6 +80,16 @@ public class WorkOrderListDto {
     private Boolean isOverdue;
 
     /**
+     * Asset number (e.g., AST-2025-0001) - Story 7.1
+     */
+    private String assetNumber;
+
+    /**
+     * Asset name - Story 7.1
+     */
+    private String assetName;
+
+    /**
      * When the work order was created
      */
     private LocalDateTime createdAt;

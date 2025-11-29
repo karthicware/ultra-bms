@@ -1,0 +1,555 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Story Context for Story 9.1: Email Notification System
+  Generated: 2025-11-29
+  Epic: 9 - Communication & Notifications
+-->
+<story-context story-id="9.1" epic-id="9">
+  <metadata>
+    <title>Email Notification System</title>
+    <status>drafted</status>
+    <user-story>
+      <as-a>system administrator</as-a>
+      <i-want>an automated email notification system</i-want>
+      <so-that>users are informed of important events and updates via email</so-that>
+    </user-story>
+    <prerequisites>
+      <story ref="2.3">Password reset uses email - DONE</story>
+    </prerequisites>
+  </metadata>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 1: CRITICAL EXISTING INFRASTRUCTURE -->
+  <!-- ================================================================== -->
+  <existing-infrastructure>
+    <critical-finding priority="HIGH">
+      <summary>Comprehensive email infrastructure already exists</summary>
+      <description>
+        The codebase has a fully functional EmailService with 40+ email methods,
+        Thymeleaf template integration, async execution, and 26 email templates.
+        Story 9.1 should ENHANCE this infrastructure, not replace it.
+      </description>
+    </critical-finding>
+
+    <email-service path="backend/src/main/java/com/ultrabms/service/EmailService.java">
+      <description>Main email sending service implementing IEmailService interface</description>
+      <features>
+        <feature>@Async("emailTaskExecutor") for non-blocking sends</feature>
+        <feature>Thymeleaf template rendering (HTML + plain text)</feature>
+        <feature>Attachment support for PDFs</feature>
+        <feature>Logging for success/failure tracking</feature>
+        <feature>40+ specialized email methods for various triggers</feature>
+      </features>
+      <existing-methods>
+        <!-- Authentication -->
+        <method name="sendPasswordResetEmail" template="password-reset-email"/>
+        <method name="sendPasswordChangeConfirmation" template="password-change-confirmation"/>
+        <method name="sendUserWelcomeEmail" template="user-welcome-email"/>
+        <!-- Maintenance -->
+        <method name="sendMaintenanceRequestConfirmation" template="maintenance-request-confirmation"/>
+        <method name="sendMaintenanceRequestNotification" template="maintenance-request-new"/>
+        <method name="sendMaintenanceRequestStatusChange" template="maintenance-request-status-change"/>
+        <!-- Work Orders -->
+        <method name="sendWorkOrderAssignmentEmail" template="work-order-assignment"/>
+        <method name="sendWorkOrderReassignmentEmail" template="work-order-reassignment"/>
+        <method name="sendWorkOrderCompletedEmail" template="work-order-completed"/>
+        <!-- Financial -->
+        <method name="sendInvoiceEmail" template="invoice-sent"/>
+        <method name="sendPaymentReceivedEmail" template="payment-received"/>
+        <method name="sendPaymentReminderEmail" template="payment-reminder"/>
+        <method name="sendOverdueInvoiceEmail" template="invoice-overdue"/>
+        <method name="sendLateFeeAppliedEmail" template="late-fee-applied"/>
+        <!-- Vendor -->
+        <method name="sendDocumentExpiry30DayNotification" template="vendor-document-expiry-30-day"/>
+        <method name="sendVendorSuspendedDueToExpiredDocuments" template="vendor-suspended-expired-documents"/>
+        <!-- Lease -->
+        <method name="sendLeaseExtensionConfirmation" template="lease-extension-confirmation"/>
+        <method name="sendLeaseExpiryReminder" template="lease-expiry-reminder"/>
+        <!-- Checkout -->
+        <method name="sendCheckoutInitiatedNotification" template="checkout-initiated"/>
+        <method name="sendInspectionScheduledNotification" template="inspection-scheduled"/>
+        <method name="sendCheckoutCompletedNotification" template="checkout-completed"/>
+        <!-- PDC -->
+        <method name="sendPDCDepositReminder" template="pdc-deposit-reminder"/>
+        <method name="sendPDCBouncedNotification" template="pdc-bounced"/>
+        <!-- Assets -->
+        <method name="sendWarrantyExpiryReminder" template="warranty-expiry-reminder"/>
+      </existing-methods>
+      <missing-features>
+        <feature>Email notification entity for tracking</feature>
+        <feature>Retry mechanism with exponential backoff</feature>
+        <feature>Email queue processing via scheduled job</feature>
+        <feature>Notification settings management</feature>
+        <feature>Email log table for audit</feature>
+      </missing-features>
+    </email-service>
+
+    <email-config path="backend/src/main/java/com/ultrabms/config/EmailConfig.java">
+      <description>Async configuration for email task executor</description>
+      <bean name="emailTaskExecutor">
+        <core-pool-size>2</core-pool-size>
+        <max-pool-size>5</max-pool-size>
+        <queue-capacity>100</queue-capacity>
+        <thread-prefix>email-</thread-prefix>
+      </bean>
+    </email-config>
+
+    <mail-config path="backend/src/main/java/com/ultrabms/config/MailConfig.java">
+      <description>JavaMailSender bean configuration</description>
+      <properties>
+        <property name="host" source="spring.mail.host" default="localhost"/>
+        <property name="port" source="spring.mail.port" default="1025"/>
+        <property name="username" source="spring.mail.username"/>
+        <property name="password" source="spring.mail.password"/>
+      </properties>
+    </mail-config>
+
+    <existing-templates path="backend/src/main/resources/templates/email/">
+      <count>26</count>
+      <templates>
+        <template>password-reset-email.html</template>
+        <template>password-change-confirmation.html</template>
+        <template>maintenance-request-confirmation.html</template>
+        <template>maintenance-request-new.html</template>
+        <template>maintenance-request-status-change.html</template>
+        <template>work-order-assignment.html</template>
+        <template>work-order-reassignment.html</template>
+        <template>invoice-sent.html</template>
+        <template>payment-received.html</template>
+        <template>payment-reminder.html</template>
+        <template>invoice-overdue.html</template>
+        <template>late-fee-applied.html</template>
+        <template>user-welcome-email.html</template>
+        <template>vendor-payment-notification.html</template>
+        <template>lease-extension-confirmation.html</template>
+        <template>lease-expiry-reminder.html</template>
+        <template>renewal-request-confirmation.html</template>
+        <template>renewal-request-status-update.html</template>
+        <template>checkout-initiated.html</template>
+        <template>inspection-scheduled.html</template>
+        <template>deposit-statement.html</template>
+        <template>refund-processed.html</template>
+        <template>checkout-completed.html</template>
+        <template>pdc-deposit-reminder.html</template>
+        <template>pdc-bounced.html</template>
+        <template>warranty-expiry-reminder.html</template>
+      </templates>
+    </existing-templates>
+
+    <scheduler-jobs path="backend/src/main/java/com/ultrabms/scheduler/">
+      <description>Existing scheduled job patterns to follow</description>
+      <jobs>
+        <job name="InvoiceSchedulerJob" cron="daily">Invoice generation and overdue processing</job>
+        <job name="LeaseExpirationSchedulerJob" cron="daily">Lease expiry reminders</job>
+        <job name="VendorDocumentExpiryJob" cron="daily">Vendor document expiry checks</job>
+        <job name="PMScheduleJob" cron="daily">Preventive maintenance scheduling</job>
+        <job name="PDCSchedulerJob" cron="daily">PDC deposit reminders</job>
+        <job name="AssetWarrantySchedulerJob" cron="daily">Asset warranty expiry reminders</job>
+      </jobs>
+    </scheduler-jobs>
+  </existing-infrastructure>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 2: WHAT NEEDS TO BE BUILT -->
+  <!-- ================================================================== -->
+  <implementation-scope>
+    <summary>
+      This story ENHANCES the existing email infrastructure by adding:
+      1. EmailNotification entity for tracking all email sends
+      2. NotificationSettings entity for configuration
+      3. Retry mechanism with exponential backoff
+      4. Email queue processor scheduled job
+      5. NotificationController for admin API endpoints
+      6. Frontend admin page for email logs
+    </summary>
+
+    <backend-tasks>
+      <task id="1" priority="HIGH">
+        <name>Create EmailNotification Entity</name>
+        <file>backend/src/main/java/com/ultrabms/entity/EmailNotification.java</file>
+        <fields>
+          <field name="id" type="UUID" nullable="false"/>
+          <field name="recipientEmail" type="String" nullable="false"/>
+          <field name="recipientName" type="String" nullable="true"/>
+          <field name="notificationType" type="NotificationType (enum)" nullable="false"/>
+          <field name="subject" type="String" nullable="false"/>
+          <field name="body" type="String (TEXT)" nullable="false"/>
+          <field name="entityType" type="String" nullable="true"/>
+          <field name="entityId" type="UUID" nullable="true"/>
+          <field name="status" type="EmailNotificationStatus (enum)" nullable="false"/>
+          <field name="sentAt" type="LocalDateTime" nullable="true"/>
+          <field name="failedAt" type="LocalDateTime" nullable="true"/>
+          <field name="failureReason" type="String" nullable="true"/>
+          <field name="retryCount" type="Integer" default="0"/>
+          <field name="nextRetryAt" type="LocalDateTime" nullable="true"/>
+          <field name="createdAt" type="LocalDateTime" nullable="false"/>
+        </fields>
+      </task>
+
+      <task id="2" priority="HIGH">
+        <name>Create EmailNotificationStatus Enum</name>
+        <file>backend/src/main/java/com/ultrabms/entity/enums/EmailNotificationStatus.java</file>
+        <values>PENDING, QUEUED, SENT, FAILED</values>
+      </task>
+
+      <task id="3" priority="HIGH">
+        <name>Create NotificationType Enum</name>
+        <file>backend/src/main/java/com/ultrabms/entity/enums/NotificationType.java</file>
+        <values>
+          PASSWORD_RESET, PASSWORD_CHANGED, USER_WELCOME,
+          TENANT_ONBOARDED, LEASE_UPLOADED, LEASE_EXPIRING,
+          MAINTENANCE_SUBMITTED, WORK_ORDER_ASSIGNED, WORK_ORDER_STATUS,
+          INVOICE_GENERATED, PAYMENT_RECEIVED, INVOICE_OVERDUE,
+          PDC_DUE_SOON, PDC_BOUNCED,
+          VENDOR_REGISTERED, VENDOR_DOCUMENT_EXPIRING, VENDOR_SUSPENDED,
+          COMPLIANCE_DUE, COMPLIANCE_OVERDUE, INSPECTION_SCHEDULED,
+          DOCUMENT_UPLOADED, DOCUMENT_EXPIRING, ANNOUNCEMENT
+        </values>
+      </task>
+
+      <task id="4" priority="HIGH">
+        <name>Create EmailNotificationRepository</name>
+        <file>backend/src/main/java/com/ultrabms/repository/EmailNotificationRepository.java</file>
+        <methods>
+          <method>findByStatus(EmailNotificationStatus status)</method>
+          <method>findByStatusAndNextRetryAtBefore(status, LocalDateTime)</method>
+          <method>findByRecipientEmailOrderByCreatedAtDesc(email, Pageable)</method>
+          <method>findByEntityTypeAndEntityId(entityType, entityId)</method>
+          <method>countByStatusAndCreatedAtBetween(status, start, end)</method>
+        </methods>
+      </task>
+
+      <task id="5" priority="HIGH">
+        <name>Create NotificationSettings Entity</name>
+        <file>backend/src/main/java/com/ultrabms/entity/NotificationSettings.java</file>
+        <description>System-level notification configuration (singleton per installation)</description>
+        <fields>
+          <field name="id" type="UUID"/>
+          <field name="notificationType" type="NotificationType"/>
+          <field name="enabled" type="Boolean" default="true"/>
+          <field name="frequency" type="NotificationFrequency (enum)"/>
+          <field name="updatedAt" type="LocalDateTime"/>
+          <field name="updatedBy" type="UUID"/>
+        </fields>
+      </task>
+
+      <task id="6" priority="HIGH">
+        <name>Enhance EmailService with Tracking</name>
+        <file>backend/src/main/java/com/ultrabms/service/EmailService.java</file>
+        <changes>
+          <change>Add EmailNotificationRepository dependency</change>
+          <change>Create private method: createNotificationRecord()</change>
+          <change>Create private method: updateNotificationStatus()</change>
+          <change>Modify sendEmail() to save EmailNotification before send</change>
+          <change>Update status to SENT on success, FAILED on exception</change>
+          <change>Add retry scheduling on failure (set nextRetryAt)</change>
+        </changes>
+        <exponential-backoff>
+          <retry attempt="1" delay="1 minute"/>
+          <retry attempt="2" delay="5 minutes"/>
+          <retry attempt="3" delay="15 minutes"/>
+          <max-retries>3</max-retries>
+        </exponential-backoff>
+      </task>
+
+      <task id="7" priority="MEDIUM">
+        <name>Create EmailQueueProcessorJob</name>
+        <file>backend/src/main/java/com/ultrabms/scheduler/EmailQueueProcessorJob.java</file>
+        <description>Scheduled job to process queued/failed emails</description>
+        <schedule>@Scheduled(fixedRate = 60000) // Every 1 minute</schedule>
+        <logic>
+          1. Find all QUEUED emails
+          2. Find all FAILED emails where nextRetryAt &lt; now AND retryCount &lt; 3
+          3. For each, attempt to send
+          4. Update status accordingly
+        </logic>
+      </task>
+
+      <task id="8" priority="MEDIUM">
+        <name>Create NotificationController</name>
+        <file>backend/src/main/java/com/ultrabms/controller/NotificationController.java</file>
+        <endpoints>
+          <endpoint method="POST" path="/api/v1/notifications/send">Send immediate email</endpoint>
+          <endpoint method="GET" path="/api/v1/notifications">List notification history (paginated)</endpoint>
+          <endpoint method="GET" path="/api/v1/notifications/{id}">Get notification details</endpoint>
+          <endpoint method="POST" path="/api/v1/notifications/retry/{id}">Retry failed notification</endpoint>
+          <endpoint method="GET" path="/api/v1/notifications/settings">Get notification settings</endpoint>
+          <endpoint method="PUT" path="/api/v1/notifications/settings">Update notification settings</endpoint>
+          <endpoint method="GET" path="/api/v1/notifications/stats">Get email statistics</endpoint>
+        </endpoints>
+      </task>
+
+      <task id="9" priority="MEDIUM">
+        <name>Create Database Migration</name>
+        <file>backend/src/main/resources/db/migration/V48__create_email_notifications_table.sql</file>
+        <tables>
+          <table name="email_notifications">
+            <indexes>
+              <index columns="status"/>
+              <index columns="recipient_email"/>
+              <index columns="notification_type"/>
+              <index columns="entity_type, entity_id"/>
+              <index columns="created_at"/>
+              <index columns="next_retry_at"/>
+            </indexes>
+          </table>
+          <table name="notification_settings">
+            <description>One row per NotificationType</description>
+          </table>
+        </tables>
+      </task>
+
+      <task id="10" priority="LOW">
+        <name>Create DTOs</name>
+        <files>
+          <file>backend/src/main/java/com/ultrabms/dto/notification/EmailNotificationDTO.java</file>
+          <file>backend/src/main/java/com/ultrabms/dto/notification/NotificationSettingsDTO.java</file>
+          <file>backend/src/main/java/com/ultrabms/dto/notification/SendEmailRequest.java</file>
+          <file>backend/src/main/java/com/ultrabms/dto/notification/EmailStatsDTO.java</file>
+        </files>
+      </task>
+    </backend-tasks>
+
+    <frontend-tasks>
+      <task id="11" priority="MEDIUM">
+        <name>Create Email Logs Admin Page</name>
+        <file>frontend/src/app/(dashboard)/admin/notifications/page.tsx</file>
+        <features>
+          <feature>DataTable with email notifications list</feature>
+          <feature>Filters: status, type, date range</feature>
+          <feature>Search by recipient email</feature>
+          <feature>View notification details modal</feature>
+          <feature>Retry failed notification button</feature>
+          <feature>Email statistics dashboard cards</feature>
+        </features>
+      </task>
+
+      <task id="12" priority="MEDIUM">
+        <name>Create Notification Settings Page</name>
+        <file>frontend/src/app/(dashboard)/admin/notifications/settings/page.tsx</file>
+        <features>
+          <feature>Toggle enable/disable for each notification type</feature>
+          <feature>Frequency selector (immediate, daily, weekly)</feature>
+          <feature>Test email button</feature>
+        </features>
+      </task>
+
+      <task id="13" priority="LOW">
+        <name>Add Sidebar Navigation</name>
+        <file>frontend/src/components/layout/sidebar.tsx</file>
+        <change>Add "Email Logs" menu item under Admin section</change>
+        <icon>Mail (lucide-react)</icon>
+        <route>/admin/notifications</route>
+        <roles>SUPER_ADMIN, ADMIN</roles>
+      </task>
+
+      <task id="14" priority="LOW">
+        <name>Create Frontend Types and Services</name>
+        <files>
+          <file>frontend/src/types/notification.ts</file>
+          <file>frontend/src/services/notification.service.ts</file>
+          <file>frontend/src/hooks/useNotifications.ts</file>
+        </files>
+      </task>
+    </frontend-tasks>
+  </implementation-scope>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 3: CODE PATTERNS TO FOLLOW -->
+  <!-- ================================================================== -->
+  <code-patterns>
+    <pattern name="Entity Pattern">
+      <reference>backend/src/main/java/com/ultrabms/entity/Invoice.java</reference>
+      <notes>
+        - Extend BaseEntity for id, createdAt, updatedAt
+        - Use @Entity, @Table annotations
+        - Use @Enumerated(EnumType.STRING) for enums
+        - Use @Column with appropriate lengths
+      </notes>
+    </pattern>
+
+    <pattern name="Repository Pattern">
+      <reference>backend/src/main/java/com/ultrabms/repository/InvoiceRepository.java</reference>
+      <notes>
+        - Extend JpaRepository&lt;Entity, UUID&gt;
+        - Use @Query for complex queries
+        - Support Pageable for pagination
+      </notes>
+    </pattern>
+
+    <pattern name="Scheduler Job Pattern">
+      <reference>backend/src/main/java/com/ultrabms/scheduler/InvoiceSchedulerJob.java</reference>
+      <notes>
+        - Use @Component, @RequiredArgsConstructor, @Slf4j
+        - Use @Scheduled annotation
+        - Wrap in try-catch for resilience
+        - Log start/end of job execution
+      </notes>
+    </pattern>
+
+    <pattern name="Controller Pattern">
+      <reference>backend/src/main/java/com/ultrabms/controller/InvoiceController.java</reference>
+      <notes>
+        - Use @RestController, @RequestMapping
+        - Use @PreAuthorize for RBAC
+        - Return ResponseEntity with appropriate status
+        - Use DTO pattern for request/response
+      </notes>
+    </pattern>
+
+    <pattern name="Frontend Admin Page Pattern">
+      <reference>frontend/src/app/(dashboard)/admin/users/page.tsx</reference>
+      <notes>
+        - Use DataTable component for lists
+        - Use Dialog for modals
+        - Use tanstack-query hooks for data fetching
+        - Use zod for form validation
+      </notes>
+    </pattern>
+  </code-patterns>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 4: RBAC REQUIREMENTS -->
+  <!-- ================================================================== -->
+  <rbac>
+    <endpoint path="/api/v1/notifications/**">
+      <access role="SUPER_ADMIN">Full access</access>
+      <access role="ADMIN">Full access</access>
+      <access role="PROPERTY_MANAGER">Read-only (own property emails)</access>
+      <access role="FINANCE_MANAGER">Read-only (financial emails only)</access>
+      <access role="MAINTENANCE_SUPERVISOR">No access</access>
+      <access role="TENANT">No access</access>
+      <access role="VENDOR">No access</access>
+    </endpoint>
+  </rbac>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 5: TESTING REQUIREMENTS -->
+  <!-- ================================================================== -->
+  <testing>
+    <backend-tests>
+      <test type="unit">EmailNotificationRepositoryTest</test>
+      <test type="unit">EmailQueueProcessorJobTest</test>
+      <test type="integration">NotificationControllerTest</test>
+      <test type="integration">EmailService retry mechanism test</test>
+    </backend-tests>
+    <frontend-tests>
+      <test type="component">NotificationListPage tests</test>
+      <test type="component">NotificationSettings tests</test>
+    </frontend-tests>
+    <notes>
+      - All existing tests must pass
+      - Use MailHog for local email testing (already configured)
+      - Test retry mechanism with simulated failures
+    </notes>
+  </testing>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 6: ACCEPTANCE CRITERIA CHECKLIST -->
+  <!-- ================================================================== -->
+  <acceptance-criteria>
+    <criterion id="AC1" category="Email Configuration">
+      Configure Gmail API or SMTP for email sending
+      <status>EXISTING - MailConfig.java already configured</status>
+    </criterion>
+    <criterion id="AC2" category="Notification Triggers">
+      All notification triggers from story implemented
+      <status>MOSTLY EXISTING - 40+ methods in EmailService</status>
+      <gaps>
+        - Tenant onboarded welcome email (add method)
+        - Document uploaded notification (add method)
+        - Compliance notifications (add methods)
+      </gaps>
+    </criterion>
+    <criterion id="AC3" category="Email Notification Entity">
+      Track all email sends with entity
+      <status>TO BE IMPLEMENTED</status>
+    </criterion>
+    <criterion id="AC4" category="Email Templates">
+      HTML templates for all notification types
+      <status>MOSTLY EXISTING - 26 templates</status>
+    </criterion>
+    <criterion id="AC5" category="Async Email Sending">
+      Emails sent asynchronously via @Async
+      <status>EXISTING - emailTaskExecutor configured</status>
+    </criterion>
+    <criterion id="AC6" category="Queue and Retry">
+      Queue emails with exponential backoff retry
+      <status>TO BE IMPLEMENTED</status>
+    </criterion>
+    <criterion id="AC7" category="Notification Settings">
+      System-level notification configuration
+      <status>TO BE IMPLEMENTED</status>
+    </criterion>
+    <criterion id="AC8" category="API Endpoints">
+      All 6 API endpoints from story
+      <status>TO BE IMPLEMENTED</status>
+    </criterion>
+    <criterion id="AC9" category="Frontend Admin UI">
+      Email logs page with resend capability
+      <status>TO BE IMPLEMENTED</status>
+    </criterion>
+  </acceptance-criteria>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 7: TECH STACK -->
+  <!-- ================================================================== -->
+  <tech-stack>
+    <backend>
+      <framework>Spring Boot 3.x</framework>
+      <email>Spring Boot Mail Starter + JavaMailSender</email>
+      <templates>Thymeleaf</templates>
+      <async>@Async with ThreadPoolTaskExecutor</async>
+      <scheduling>@Scheduled</scheduling>
+      <database>PostgreSQL + Flyway migrations</database>
+    </backend>
+    <frontend>
+      <framework>Next.js 16.0.2</framework>
+      <react>React 19.2.0</react>
+      <ui>shadcn/ui + Radix UI</ui>
+      <state>TanStack React Query 5.x</state>
+      <forms>React Hook Form + Zod</forms>
+      <icons>Lucide React</icons>
+    </frontend>
+  </tech-stack>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 8: DEPENDENCIES -->
+  <!-- ================================================================== -->
+  <dependencies>
+    <internal>
+      <dependency story="2.3" status="DONE">Password reset (uses email)</dependency>
+      <dependency story="2.6" status="DONE">User welcome email</dependency>
+      <dependency story="4.3" status="DONE">Work order assignment emails</dependency>
+      <dependency story="6.1" status="DONE">Invoice/payment emails</dependency>
+    </internal>
+    <external>
+      <dependency name="spring-boot-starter-mail">Already included</dependency>
+      <dependency name="thymeleaf">Already included</dependency>
+    </external>
+  </dependencies>
+
+  <!-- ================================================================== -->
+  <!-- SECTION 9: IMPLEMENTATION NOTES -->
+  <!-- ================================================================== -->
+  <implementation-notes>
+    <note priority="CRITICAL">
+      DO NOT refactor existing EmailService methods. Instead:
+      1. Add EmailNotification tracking as a cross-cutting concern
+      2. Enhance the private sendEmail() method to log to entity
+      3. Keep all existing public methods unchanged for backwards compatibility
+    </note>
+    <note priority="HIGH">
+      The scheduled job for queue processing should be idempotent.
+      Use database locking or optimistic locking to prevent duplicate sends.
+    </note>
+    <note priority="MEDIUM">
+      Consider adding a "test email" feature in notification settings
+      to verify SMTP configuration works correctly.
+    </note>
+    <note priority="LOW">
+      Future enhancement: Add email preview before sending
+      (noted in story Technical Notes for future consideration)
+    </note>
+  </implementation-notes>
+</story-context>

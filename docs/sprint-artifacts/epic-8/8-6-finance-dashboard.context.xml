@@ -1,0 +1,175 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>8</epicId>
+    <storyId>6</storyId>
+    <title>Finance Dashboard</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-8/8-6-finance-dashboard.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>finance manager or administrator</asA>
+    <iWant>a dedicated finance dashboard with YTD metrics and transaction tracking</iWant>
+    <soThat>I can monitor financial performance and manage receivables effectively</soThat>
+    <tasks>
+      <task id="1" status="pending">Create Finance Dashboard DTOs (FinanceDashboardDto, FinanceKpiDto, IncomeExpenseChartDto, ExpenseCategoryDto, OutstandingReceivablesDto, RecentTransactionDto, PdcStatusSummaryDto)</task>
+      <task id="2" status="pending">Create FinanceDashboardRepository queries for YTD income, expenses, VAT, monthly data, expense categories, receivables aging, high-value transactions, PDC status</task>
+      <task id="3" status="pending">Create FinanceDashboardService with Ehcache caching (5-minute TTL)</task>
+      <task id="4" status="pending">Create FinanceDashboardController with 6 API endpoints and RBAC for FINANCE_MANAGER or ADMIN</task>
+      <task id="5" status="pending">Write unit tests for FinanceDashboardService</task>
+      <task id="6" status="pending">Create TypeScript types for finance dashboard (finance-dashboard.ts) with Zod validation schemas</task>
+      <task id="7" status="pending">Create finance-dashboard.service.ts API client</task>
+      <task id="8" status="pending">Create useFinanceDashboard React Query hook with auto-refresh</task>
+      <task id="9" status="pending">Create FinanceKpiCards component with trend indicators and AED formatting</task>
+      <task id="10" status="pending">Create IncomeExpenseChart component using Recharts ComposedChart</task>
+      <task id="11" status="pending">Create ExpenseCategoriesDonut component with drill-down navigation</task>
+      <task id="12" status="pending">Create OutstandingReceivablesCard component with aging visualization</task>
+      <task id="13" status="pending">Create RecentTransactionsTable component with color-coded rows</task>
+      <task id="14" status="pending">Create PdcStatusCard component with counts and amounts</task>
+      <task id="15" status="pending">Create Finance Dashboard page at app/(dashboard)/finance/dashboard/page.tsx</task>
+      <task id="16" status="pending">Write frontend unit tests for components</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-1">Dashboard displays Total Income YTD KPI card with currency amount (AED), trend indicator vs. same period last year, click navigates to income transactions</criterion>
+    <criterion id="AC-2">Dashboard displays Total Expenses YTD KPI card with currency amount (AED), trend indicator vs. same period last year, click navigates to expense transactions</criterion>
+    <criterion id="AC-3">Dashboard displays Net Profit/Loss YTD KPI card with currency amount (AED) as income - expenses, green for profit, red for loss, percentage margin displayed</criterion>
+    <criterion id="AC-4">Dashboard displays VAT Paid YTD KPI card with currency amount (AED), click navigates to VAT report</criterion>
+    <criterion id="AC-5">Income vs Expense chart displays last 12 months with stacked bars (Income green, Expenses red), line overlay for net profit/loss trend, click bar navigates to monthly details</criterion>
+    <criterion id="AC-6">Top Expense Categories donut chart displays segments (Maintenance, Utilities, Salaries, Insurance, Other) with percentages and amounts, click drills down to expense list</criterion>
+    <criterion id="AC-7">Outstanding Receivables card displays total amount with aging breakdown (Current, 30+, 60+, 90+ days), horizontal stacked bar visualization, click navigates to invoice list</criterion>
+    <criterion id="AC-8">Recent High-Value Transactions table displays Date, Type, Description, Amount, Category for last 10 transactions above threshold, color-coded by type</criterion>
+    <criterion id="AC-9">PDC Status Summary card displays Due This Week (count/amount), Due This Month (count/amount), Awaiting Clearance (count/amount), click navigates to PDC management</criterion>
+    <criterion id="AC-10">Backend provides GET /api/v1/dashboard/finance endpoint returning all finance dashboard data</criterion>
+    <criterion id="AC-11">Backend provides GET /api/v1/dashboard/finance/income-vs-expense endpoint returning monthly chart data</criterion>
+    <criterion id="AC-12">Backend provides GET /api/v1/dashboard/finance/expense-categories endpoint returning donut chart data</criterion>
+    <criterion id="AC-13">Backend provides GET /api/v1/dashboard/finance/outstanding-receivables endpoint returning aging breakdown</criterion>
+    <criterion id="AC-14">Backend provides GET /api/v1/dashboard/finance/recent-transactions endpoint with optional threshold parameter</criterion>
+    <criterion id="AC-15">Backend provides GET /api/v1/dashboard/finance/pdc-status endpoint returning PDC summary</criterion>
+    <criterion id="AC-16">Frontend uses Recharts ComposedChart for income vs expense with line overlay</criterion>
+    <criterion id="AC-17">Net profit/loss color-coded (green positive, red negative)</criterion>
+    <criterion id="AC-18">Dashboard data cached for 5 minutes using Ehcache</criterion>
+    <criterion id="AC-19">Drill-down from donut chart to expense list implemented</criterion>
+    <criterion id="AC-20">Role-based access for FINANCE_MANAGER or ADMIN only</criterion>
+    <criterion id="AC-21">All currency values formatted in AED with proper number formatting</criterion>
+    <criterion id="AC-22">All interactive elements have data-testid attributes</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="3.6 Financial Management, 3.2.2 Operational Dashboards">
+        Finance Dashboard requirements: Income vs. expense analysis, receivables, PDC status. Revenue management with automated invoicing, rent collection, late fee calculation. Expense management with vendor payments, maintenance costs, budget analysis. PDC management with registration, tracking, bounce handling.
+      </doc>
+      <doc path="docs/architecture.md" title="System Architecture" section="Novel Architectural Patterns, ADR-004">
+        PDC Management MENA pattern with state machine (RECEIVED → DEPOSITED → CLEARED/BOUNCED). AED currency only (ADR-004). Use Recharts for all charts. Spring Cache with Caffeine for caching. Dashboard APIs return consistent response structure.
+      </doc>
+      <doc path="docs/epics/epic-8-dashboard-reporting.md" title="Epic 8: Dashboard & Reporting" section="Story 8.6: Finance Dashboard">
+        Complete story specification including KPI cards, Income vs Expense chart, Expense Categories donut, Outstanding Receivables card, Recent Transactions list, PDC Status summary. Technical notes: ComposedChart for chart overlay, 5-minute cache, drill-down from donut.
+      </doc>
+    </docs>
+    <code>
+      <artifact path="frontend/src/types/invoice.ts" kind="types" symbol="Invoice, InvoiceStatus, InvoiceListItem" reason="Reuse invoice types for receivables aging and income tracking">
+        <interface>InvoiceStatus: DRAFT | SENT | PARTIALLY_PAID | PAID | OVERDUE | CANCELLED</interface>
+      </artifact>
+      <artifact path="frontend/src/types/expense.ts" kind="types" symbol="Expense, ExpenseCategory, PaymentStatus" reason="Reuse expense types for expense categories donut and YTD calculations">
+        <interface>ExpenseCategory: MAINTENANCE | UTILITIES | SALARIES | SUPPLIES | INSURANCE | TAXES | OTHER</interface>
+      </artifact>
+      <artifact path="frontend/src/types/pdc.ts" kind="types" symbol="PDC, PDCStatus, PDCListItem" reason="Reuse PDC types for PDC status summary card">
+        <interface>PDCStatus: RECEIVED | DUE | DEPOSITED | CLEARED | BOUNCED | CANCELLED | REPLACED | WITHDRAWN</interface>
+      </artifact>
+      <artifact path="backend/src/main/java/com/ultrabms/service/InvoiceService.java" kind="service" symbol="InvoiceService" reason="Existing service for invoice queries needed for receivables aging">
+        <interface>Query methods for invoice aggregations</interface>
+      </artifact>
+      <artifact path="backend/src/main/java/com/ultrabms/service/ExpenseService.java" kind="service" symbol="ExpenseService" reason="Existing service for expense queries needed for YTD and category breakdown">
+        <interface>Query methods for expense aggregations</interface>
+      </artifact>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/InvoiceRepository.java" kind="repository" symbol="InvoiceRepository" reason="Data access for invoice aggregations, aging calculations">
+        <interface>JpaRepository with custom query methods</interface>
+      </artifact>
+      <artifact path="backend/src/main/java/com/ultrabms/repository/ExpenseRepository.java" kind="repository" symbol="ExpenseRepository" reason="Data access for expense aggregations by category and date">
+        <interface>JpaRepository with custom query methods</interface>
+      </artifact>
+    </code>
+    <dependencies>
+      <backend>
+        <dependency name="spring-boot-starter" version="3.4.0">Spring Boot framework</dependency>
+        <dependency name="spring-boot-starter-cache">Caching support for Ehcache</dependency>
+        <dependency name="ehcache" version="3.10.8">Ehcache for 5-minute dashboard caching</dependency>
+        <dependency name="spring-boot-starter-data-jpa">JPA for database queries</dependency>
+        <dependency name="spring-boot-starter-security">Security for @PreAuthorize RBAC</dependency>
+        <dependency name="lombok" version="1.18.36">Boilerplate reduction</dependency>
+        <dependency name="mapstruct" version="1.6.3">DTO mapping</dependency>
+      </backend>
+      <frontend>
+        <dependency name="react" version="19.2.0">React library</dependency>
+        <dependency name="next" version="16.0.2">Next.js framework</dependency>
+        <dependency name="recharts" version="3.4.1">ComposedChart for stacked bar + line overlay</dependency>
+        <dependency name="@tanstack/react-query" version="5.90.9">Data fetching and caching</dependency>
+        <dependency name="zod" version="4.1.12">Schema validation</dependency>
+        <dependency name="date-fns" version="4.1.0">Date formatting</dependency>
+        <dependency name="lucide-react" version="0.553.0">Icons</dependency>
+        <dependency name="axios" version="1.13.2">HTTP client</dependency>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="Architecture">RBAC: Only FINANCE_MANAGER or ADMIN roles can access finance dashboard (@PreAuthorize annotation)</constraint>
+    <constraint source="Architecture ADR-004">AED currency only - all amounts displayed and calculated in AED</constraint>
+    <constraint source="Story">Dashboard data must be cached for 5 minutes using Ehcache to reduce database load</constraint>
+    <constraint source="Story">Use Recharts ComposedChart for income vs expense chart with line overlay</constraint>
+    <constraint source="Epic 2 Retrospective">All interactive elements must have data-testid attributes following naming convention</constraint>
+    <constraint source="Architecture">API endpoints must return consistent JSON response structure with success, data, message, timestamp</constraint>
+    <constraint source="Architecture">YTD calculations run from January 1st of current year to current date</constraint>
+    <constraint source="Architecture">Aging buckets: Current (0-30 days), 30+ (31-60), 60+ (61-90), 90+ (>90)</constraint>
+    <constraint source="Story">High-value transaction threshold default 10,000 AED, configurable via query parameter</constraint>
+    <constraint source="Architecture">Responsive grid layout for dashboard components</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="FinanceDashboardController" kind="REST API" path="backend/src/main/java/com/ultrabms/controller/FinanceDashboardController.java">
+      <endpoint method="GET" path="/api/v1/dashboard/finance">Returns complete finance dashboard data</endpoint>
+      <endpoint method="GET" path="/api/v1/dashboard/finance/income-vs-expense">Returns monthly income vs expense chart data</endpoint>
+      <endpoint method="GET" path="/api/v1/dashboard/finance/expense-categories">Returns expense category breakdown for donut</endpoint>
+      <endpoint method="GET" path="/api/v1/dashboard/finance/outstanding-receivables">Returns receivables aging breakdown</endpoint>
+      <endpoint method="GET" path="/api/v1/dashboard/finance/recent-transactions?threshold=10000">Returns recent high-value transactions</endpoint>
+      <endpoint method="GET" path="/api/v1/dashboard/finance/pdc-status">Returns PDC status summary</endpoint>
+    </interface>
+    <interface name="Recharts ComposedChart" kind="React Component" path="node_modules/recharts">
+      <signature>ComposedChart with Bar (stacked), Line overlay for trend</signature>
+    </interface>
+    <interface name="Recharts PieChart" kind="React Component" path="node_modules/recharts">
+      <signature>PieChart with donut configuration (innerRadius, outerRadius)</signature>
+    </interface>
+    <interface name="formatCurrency" kind="Utility Function" path="frontend/src/lib/utils.ts">
+      <signature>formatCurrency(amount: number): string - returns AED formatted currency</signature>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 with Mockito for unit tests. Use @MockitoExtension for service tests. Test all service methods including edge cases. Minimum 80% line coverage, 70% branch coverage per JaCoCo rules.
+      Frontend: Jest with React Testing Library. Test component rendering, user interactions, data-testid selectors. Mock API calls with MSW or jest mocks. Test loading states, error states, empty states.
+    </standards>
+    <locations>
+      <location path="backend/src/test/java/com/ultrabms/service">FinanceDashboardServiceTest.java</location>
+      <location path="frontend/src/__tests__/components/finance">Finance dashboard component tests</location>
+      <location path="frontend/src/__tests__/hooks">useFinanceDashboard hook tests</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-1,AC-2,AC-3,AC-4">Test YTD calculations with known data for income, expenses, VAT</idea>
+      <idea ac="AC-5">Test monthly aggregation for income vs expense chart data</idea>
+      <idea ac="AC-6">Test expense category grouping and percentage calculations</idea>
+      <idea ac="AC-7">Test receivables aging bucket calculations (0-30, 31-60, 61-90, 90+)</idea>
+      <idea ac="AC-8">Test transaction threshold filtering</idea>
+      <idea ac="AC-9">Test PDC status aggregation by week/month</idea>
+      <idea ac="AC-18">Test cache hit/miss behavior with 5-minute TTL</idea>
+      <idea ac="AC-20">Test unauthorized access returns 403 for non-FINANCE_MANAGER/ADMIN</idea>
+      <idea ac="AC-21">Test AED currency formatting with various amounts</idea>
+      <idea ac="AC-22">Test all interactive elements have data-testid attributes</idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -86,6 +86,22 @@ public class WorkOrderResponseDto {
     private String maintenanceRequestNumber;
 
     /**
+     * Asset linked to this work order (nullable)
+     * Story 7.1: Asset Registry and Tracking - AC #16
+     */
+    private UUID assetId;
+
+    /**
+     * Asset number (e.g., AST-2025-0001)
+     */
+    private String assetNumber;
+
+    /**
+     * Asset name
+     */
+    private String assetName;
+
+    /**
      * Category of maintenance work
      */
     private WorkOrderCategory category;

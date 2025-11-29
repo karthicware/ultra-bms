@@ -1,0 +1,30 @@
+ULTRA BMS - PDC DEPOSIT REMINDER
+=================================
+
+Hi [(${adminName})],
+
+This is a reminder that the following Post-Dated Cheque(s) are due for deposit soon. Please arrange for bank deposit accordingly.
+
+PDCs DUE FOR DEPOSIT: [(${pdcCount})]
+
+[# th:each="pdc : ${pdcList}"]
+PDC DETAILS
+-----------
+Cheque Number: [(${pdc.chequeNumber})]
+Tenant: [(${pdc.tenantName})]
+Bank: [(${pdc.bankName})]
+Amount: [(${pdc.formattedAmount})]
+Cheque Date: [(${pdc.chequeDate})]
+
+[/]
+
+ACTION REQUIRED
+---------------
+Please deposit these cheques to the bank on or before the cheque date. After deposit, update the PDC status in the system.
+
+View PDC Dashboard: [(${dashboardUrl})]
+
+---
+Questions? Contact us at [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.

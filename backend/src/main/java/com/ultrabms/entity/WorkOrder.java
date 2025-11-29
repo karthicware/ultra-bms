@@ -52,7 +52,8 @@ import java.util.UUID;
         @Index(name = "idx_work_orders_scheduled_date", columnList = "scheduled_date"),
         @Index(name = "idx_work_orders_requested_by", columnList = "requested_by"),
         @Index(name = "idx_work_orders_work_order_number", columnList = "work_order_number"),
-        @Index(name = "idx_work_orders_pm_schedule_id", columnList = "pm_schedule_id")
+        @Index(name = "idx_work_orders_pm_schedule_id", columnList = "pm_schedule_id"),
+        @Index(name = "idx_work_orders_asset_id", columnList = "asset_id")
     }
 )
 @Data
@@ -129,6 +130,13 @@ public class WorkOrder extends BaseEntity {
      */
     @Column(name = "pm_schedule_id")
     private UUID pmScheduleId;
+
+    /**
+     * Asset linked to this work order (nullable for work not related to an asset)
+     * Story 7.1: Asset Registry and Tracking - AC #16
+     */
+    @Column(name = "asset_id")
+    private UUID assetId;
 
     // =================================================================
     // WORK ORDER DETAILS

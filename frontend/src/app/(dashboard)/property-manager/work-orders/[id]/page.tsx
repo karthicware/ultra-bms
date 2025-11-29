@@ -108,6 +108,7 @@ import {
   MessageSquarePlus,
   CheckCircle,
   AlertTriangle,
+  Package,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useUser } from '@/contexts/auth-context';
@@ -661,6 +662,16 @@ export default function WorkOrderDetailPage() {
                     <div className="flex items-center gap-2">
                       <Home className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Unit {workOrder.unitNumber}</span>
+                    </div>
+                  </div>
+                )}
+                {/* Story 7.1: Asset Registry and Tracking - AC #16 */}
+                {workOrder.assetId && workOrder.assetName && (
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Linked Asset</div>
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{workOrder.assetNumber} - {workOrder.assetName}</span>
                     </div>
                   </div>
                 )}

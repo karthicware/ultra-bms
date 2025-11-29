@@ -1,6 +1,8 @@
 # Story 9.1: Email Notification System
 
-Status: drafted
+Status: ready-for-dev
+
+Story Context: [9-1-email-notification-system.context.xml](./9-1-email-notification-system.context.xml)
 
 ## Story
 

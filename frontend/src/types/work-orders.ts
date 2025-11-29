@@ -57,6 +57,11 @@ export interface WorkOrder {
   maintenanceRequestId?: string;
   maintenanceRequestNumber?: string;
 
+  // Asset link (Story 7.1: Asset Registry and Tracking - AC #16)
+  assetId?: string;
+  assetNumber?: string;
+  assetName?: string;
+
   // Work Order Details
   category: WorkOrderCategory;
   priority: WorkOrderPriority;
@@ -119,6 +124,10 @@ export interface WorkOrderListItem {
   assigneeName?: string;
   isOverdue?: boolean;
   createdAt: string;
+
+  // Asset link (Story 7.1: Asset Registry and Tracking - AC #16)
+  assetNumber?: string;
+  assetName?: string;
 }
 
 /**
@@ -154,6 +163,9 @@ export interface CreateWorkOrderDto {
   accessInstructions?: string;
   estimatedCost?: number;
   maintenanceRequestId?: string;
+
+  // Asset link (Story 7.1: Asset Registry and Tracking - AC #16)
+  assetId?: string;
 }
 
 /**
@@ -172,6 +184,9 @@ export interface UpdateWorkOrderDto {
   totalHours?: number;
   completionNotes?: string;
   followUpNotes?: string;
+
+  // Asset link (Story 7.1: Asset Registry and Tracking - AC #16)
+  assetId?: string;
 }
 
 /**

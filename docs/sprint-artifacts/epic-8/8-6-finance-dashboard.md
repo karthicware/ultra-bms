@@ -1,6 +1,6 @@
 # Story 8.6: Finance Dashboard
 
-Status: drafted
+Status: ready-for-dev
 
 ## Story
 
@@ -270,7 +270,7 @@ Execute lint check: `npm run lint`
 
 ### Context Reference
 
-<!-- Path(s) to story context XML will be added here by context workflow -->
+- docs/sprint-artifacts/epic-8/8-6-finance-dashboard.context.xml
 
 ### Agent Model Used
 

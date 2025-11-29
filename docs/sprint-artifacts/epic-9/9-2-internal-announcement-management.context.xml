@@ -1,0 +1,381 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>9</epicId>
+    <storyId>2</storyId>
+    <title>Internal Announcement Management</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-29</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-9/9-2-internal-announcement-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>property manager</asA>
+    <iWant>to create and publish internal announcements</iWant>
+    <soThat>I can communicate important information to all tenants via email and website</soThat>
+    <tasks>
+      <task id="1" name="Create database migration and entities">
+        <subtask id="1.1">Create V48__create_announcements_table.sql migration</subtask>
+        <subtask id="1.2">Create Announcement entity with all fields</subtask>
+        <subtask id="1.3">Create AnnouncementTemplate enum (OFFICE_CLOSURE, MAINTENANCE_SCHEDULE, POLICY_UPDATE)</subtask>
+        <subtask id="1.4">Create AnnouncementStatus enum (DRAFT, PUBLISHED, EXPIRED, ARCHIVED)</subtask>
+        <subtask id="1.5">Create AnnouncementRepository with query methods</subtask>
+        <subtask id="1.6">Add announcementNumber generation logic (ANN-YYYY-####)</subtask>
+      </task>
+      <task id="2" name="Implement AnnouncementService">
+        <subtask id="2.1">Create AnnouncementService with CRUD operations</subtask>
+        <subtask id="2.2">Implement createAnnouncement (creates as DRAFT)</subtask>
+        <subtask id="2.3">Implement updateAnnouncement (only DRAFT allowed)</subtask>
+        <subtask id="2.4">Implement copyAnnouncement (creates new draft with [Copy] prefix)</subtask>
+        <subtask id="2.5">Implement publishAnnouncement (validates, sends emails, updates status)</subtask>
+        <subtask id="2.6">Implement archiveAnnouncement</subtask>
+        <subtask id="2.7">Implement deleteAnnouncement</subtask>
+        <subtask id="2.8">Integrate with IEmailService for publish emails</subtask>
+      </task>
+      <task id="3" name="Implement attachment upload">
+        <subtask id="3.1">Add attachment upload endpoint</subtask>
+        <subtask id="3.2">Validate PDF only, max 5MB</subtask>
+        <subtask id="3.3">Store in S3: /uploads/announcements/{id}/</subtask>
+        <subtask id="3.4">Update Announcement with attachmentFilePath</subtask>
+      </task>
+      <task id="4" name="Implement PDF generation">
+        <subtask id="4.1">Create AnnouncementPdfService or extend PdfGenerationService</subtask>
+        <subtask id="4.2">Use iTextPDF for PDF generation</subtask>
+        <subtask id="4.3">Include company letterhead from CompanyProfile</subtask>
+        <subtask id="4.4">Include announcement title, date, message with formatting</subtask>
+        <subtask id="4.5">Implement GET /api/v1/announcements/{id}/pdf endpoint</subtask>
+      </task>
+      <task id="5" name="Create expiry job">
+        <subtask id="5.1">Create AnnouncementExpiryJob scheduled task</subtask>
+        <subtask id="5.2">Run daily at midnight: @Scheduled(cron = "0 0 0 * * *")</subtask>
+        <subtask id="5.3">Update expired announcements status to EXPIRED</subtask>
+        <subtask id="5.4">Add logging for expired announcements</subtask>
+      </task>
+      <task id="6" name="Create REST API endpoints">
+        <subtask id="6.1">Create AnnouncementController</subtask>
+        <subtask id="6.2">POST /api/v1/announcements</subtask>
+        <subtask id="6.3">GET /api/v1/announcements (paginated, filtered)</subtask>
+        <subtask id="6.4">GET /api/v1/announcements/{id}</subtask>
+        <subtask id="6.5">PUT /api/v1/announcements/{id}</subtask>
+        <subtask id="6.6">POST /api/v1/announcements/{id}/copy</subtask>
+        <subtask id="6.7">PATCH /api/v1/announcements/{id}/publish</subtask>
+        <subtask id="6.8">PATCH /api/v1/announcements/{id}/archive</subtask>
+        <subtask id="6.9">DELETE /api/v1/announcements/{id}</subtask>
+        <subtask id="6.10">Create TenantAnnouncementController</subtask>
+        <subtask id="6.11">GET /api/v1/tenant/announcements</subtask>
+        <subtask id="6.12">Update dashboard stats to include announcementCount</subtask>
+      </task>
+      <task id="7" name="Create email template">
+        <subtask id="7.1">Create announcement.html and announcement.txt email templates</subtask>
+        <subtask id="7.2">Add template variables support (title, message, companyName, publishDate)</subtask>
+        <subtask id="7.3">Include company logo and "View Online" link</subtask>
+      </task>
+      <task id="8" name="Backend testing">
+        <subtask id="8.1">Create AnnouncementServiceTest (20+ test cases)</subtask>
+        <subtask id="8.2">Create AnnouncementExpiryJobTest</subtask>
+        <subtask id="8.3">Create AnnouncementControllerTest</subtask>
+      </task>
+      <task id="9" name="Create TypeScript types and validation">
+        <subtask id="9.1">Create announcement.ts types</subtask>
+        <subtask id="9.2">Create announcement validation schemas with Zod</subtask>
+        <subtask id="9.3">Create announcement.service.ts API client</subtask>
+      </task>
+      <task id="10" name="Create announcement management pages">
+        <subtask id="10.1">Create /admin/announcements page layout with tabs</subtask>
+        <subtask id="10.2">Create Active tab component</subtask>
+        <subtask id="10.3">Create Drafts tab component</subtask>
+        <subtask id="10.4">Create History tab component</subtask>
+        <subtask id="10.5">Create announcement data table with columns and actions</subtask>
+        <subtask id="10.6">Add "Create New Announcement" button</subtask>
+      </task>
+      <task id="11" name="Create announcement form">
+        <subtask id="11.1">Create /admin/announcements/new page</subtask>
+        <subtask id="11.2">Create /admin/announcements/[id]/edit page</subtask>
+        <subtask id="11.3">Install rich text editor (TipTap)</subtask>
+        <subtask id="11.4">Implement template selector dropdown</subtask>
+        <subtask id="11.5">Implement expiry date picker (future dates only)</subtask>
+        <subtask id="11.6">Implement PDF attachment upload (max 5MB)</subtask>
+      </task>
+      <task id="12" name="Create announcement detail page">
+        <subtask id="12.1">Create /admin/announcements/[id] page</subtask>
+        <subtask id="12.2">Display announcement content with formatting</subtask>
+        <subtask id="12.3">Add "Publish" button for drafts</subtask>
+        <subtask id="12.4">Add "Print Preview" button</subtask>
+        <subtask id="12.5">Add "Download PDF" button</subtask>
+        <subtask id="12.6">Add "Copy", "Archive", "Delete" actions</subtask>
+      </task>
+      <task id="13" name="Create tenant portal view">
+        <subtask id="13.1">Create /tenant/announcements page</subtask>
+        <subtask id="13.2">List active announcements (sorted by publishedAt DESC)</subtask>
+        <subtask id="13.3">Create announcement view dialog/page</subtask>
+        <subtask id="13.4">Add attachment download button</subtask>
+      </task>
+      <task id="14" name="Create dashboard widget">
+        <subtask id="14.1">Create AnnouncementsCard component</subtask>
+        <subtask id="14.2">Display active announcement count</subtask>
+        <subtask id="14.3">Add click navigation to /admin/announcements</subtask>
+        <subtask id="14.4">Use Megaphone icon from Lucide</subtask>
+      </task>
+      <task id="15" name="Update sidebar navigation">
+        <subtask id="15.1">Add "Announcements" menu item to sidebar</subtask>
+        <subtask id="15.2">Use Megaphone icon</subtask>
+        <subtask id="15.3">Route to /admin/announcements</subtask>
+      </task>
+      <task id="16" name="Frontend testing">
+        <subtask id="16.1">Create announcement validation tests</subtask>
+        <subtask id="16.2">Create AnnouncementForm component tests</subtask>
+        <subtask id="16.3">Create AnnouncementList component tests</subtask>
+        <subtask id="16.4">Create TenantAnnouncementView tests</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <group name="Announcement Entity" range="AC 1-8">
+      <ac id="1">Announcement entity with: id (UUID), announcementNumber (unique, format: ANN-2025-0001), title (max 200 chars), message (HTML), templateUsed (nullable enum), expiresAt (datetime, required), status (DRAFT/PUBLISHED/EXPIRED/ARCHIVED), publishedAt (nullable), attachmentFilePath (nullable), createdBy (userId), createdAt, updatedAt</ac>
+      <ac id="2">AnnouncementTemplate enum: OFFICE_CLOSURE, MAINTENANCE_SCHEDULE, POLICY_UPDATE</ac>
+      <ac id="3">AnnouncementStatus enum: DRAFT, PUBLISHED, EXPIRED, ARCHIVED</ac>
+      <ac id="4">announcements table with Flyway migration (V48 - next available)</ac>
+      <ac id="5">Indexes on status, expiresAt, createdBy</ac>
+      <ac id="6">AnnouncementRepository with query methods</ac>
+    </group>
+    <group name="Announcement Creation Form" range="AC 9-14">
+      <ac id="7">Create announcement form with: title (required, max 200), message (rich text editor), template selector (optional dropdown), expiry date (required, future date), attachment (optional, PDF, max 5MB)</ac>
+      <ac id="8">Rich text editor with: Bold, Italic, Underline, Lists, Headings, Tables, Images</ac>
+      <ac id="9">Template selector populates default content when selected</ac>
+      <ac id="10">Validation: title required, expiry date must be future, attachment max 5MB PDF only</ac>
+    </group>
+    <group name="Copy/Duplicate Announcement" range="AC 15-18">
+      <ac id="11">"Copy" action available on existing announcements (any status)</ac>
+      <ac id="12">Creates new draft with "[Copy] Original Title"</ac>
+      <ac id="13">Copies: title, message, template, attachment (NOT expiry date)</ac>
+      <ac id="14">Redirects to edit form for new draft</ac>
+    </group>
+    <group name="Multiple Drafts Support" range="AC 19-21">
+      <ac id="15">Multiple announcements can exist in DRAFT status simultaneously</ac>
+      <ac id="16">Drafts tab shows all unpublished announcements</ac>
+      <ac id="17">Each draft can be edited, published, or deleted independently</ac>
+    </group>
+    <group name="Announcement Publishing" range="AC 22-26">
+      <ac id="18">"Publish" button on draft detail page</ac>
+      <ac id="19">On publish: status = PUBLISHED, publishedAt = now</ac>
+      <ac id="20">Email sent to ALL active tenants with subject "Announcement: {title}"</ac>
+      <ac id="21">Email includes: rendered message HTML, attachment if present</ac>
+      <ac id="22">Cannot edit published announcements (only archive/delete)</ac>
+    </group>
+    <group name="Expiry Handling" range="AC 27-30">
+      <ac id="23">AnnouncementExpiryJob runs daily at midnight</ac>
+      <ac id="24">Announcements with expiresAt &lt; now AND status = PUBLISHED set to EXPIRED</ac>
+      <ac id="25">Expired announcements hidden from tenant portal</ac>
+      <ac id="26">Expired announcements visible in History tab (manager view)</ac>
+    </group>
+    <group name="Announcement List Page - Manager View" range="AC 31-38">
+      <ac id="27">Route: /admin/announcements</ac>
+      <ac id="28">Tabs: Active | Drafts | History</ac>
+      <ac id="29">Active tab: PUBLISHED announcements not yet expired</ac>
+      <ac id="30">Drafts tab: DRAFT announcements (multiple allowed)</ac>
+      <ac id="31">History tab: EXPIRED and ARCHIVED announcements</ac>
+      <ac id="32">Table columns: Number, Title, Published Date, Expires, Status, Actions</ac>
+      <ac id="33">Actions: View, Edit (if draft), Copy, Archive, Delete, Print/Download PDF</ac>
+      <ac id="34">"Create New Announcement" button (top right)</ac>
+    </group>
+    <group name="Print/PDF Support" range="AC 39-43">
+      <ac id="35">"Print Preview" button on announcement detail page</ac>
+      <ac id="36">"Download PDF" button</ac>
+      <ac id="37">PDF includes: company letterhead (from company profile - Story 2.8), announcement title and date, full message body with formatting preserved</ac>
+      <ac id="38">Professional layout suitable for physical distribution</ac>
+      <ac id="39">Use iTextPDF (existing library from Story 6.1)</ac>
+    </group>
+    <group name="Dashboard Widget" range="AC 44-46">
+      <ac id="40">Admin dashboard shows "Announcements" card</ac>
+      <ac id="41">Displays count: "{n} Active Announcements"</ac>
+      <ac id="42">Click navigates to announcements list page</ac>
+      <ac id="43">Icon: campaign (Lucide: Megaphone)</ac>
+    </group>
+    <group name="Tenant Portal View" range="AC 47-51">
+      <ac id="44">Route: /tenant/announcements (or dashboard section)</ac>
+      <ac id="45">Shows list of PUBLISHED (non-expired) announcements only</ac>
+      <ac id="46">List columns: Title, Date Published</ac>
+      <ac id="47">Click to view full announcement</ac>
+      <ac id="48">Download attachment if available</ac>
+      <ac id="49">Sorted by publishedAt DESC (newest first)</ac>
+    </group>
+    <group name="API Endpoints" range="AC 52-62">
+      <ac id="50">POST /api/v1/announcements - Create announcement (draft)</ac>
+      <ac id="51">GET /api/v1/announcements - List all announcements (manager, with filters: status, page, size)</ac>
+      <ac id="52">GET /api/v1/announcements/{id} - Get announcement details</ac>
+      <ac id="53">PUT /api/v1/announcements/{id} - Update announcement (if draft)</ac>
+      <ac id="54">POST /api/v1/announcements/{id}/copy - Duplicate announcement as new draft</ac>
+      <ac id="55">PATCH /api/v1/announcements/{id}/publish - Publish announcement</ac>
+      <ac id="56">PATCH /api/v1/announcements/{id}/archive - Archive announcement</ac>
+      <ac id="57">DELETE /api/v1/announcements/{id} - Delete announcement</ac>
+      <ac id="58">GET /api/v1/announcements/{id}/pdf - Download PDF</ac>
+      <ac id="59">GET /api/v1/tenant/announcements - List active announcements for tenant</ac>
+      <ac id="60">Dashboard stats endpoint includes announcementCount</ac>
+    </group>
+    <group name="Email Template" range="AC 63-65">
+      <ac id="61">Create announcement email template at: /resources/email-templates/announcement.html</ac>
+      <ac id="62">Template variables: {{title}}, {{message}}, {{companyName}}, {{publishDate}}</ac>
+      <ac id="63">Include company logo and "View Online" link to tenant portal</ac>
+    </group>
+    <group name="Sidebar Navigation" range="AC 66-68">
+      <ac id="64">Add "Announcements" menu item under main navigation</ac>
+      <ac id="65">Icon: campaign (Lucide: Megaphone)</ac>
+      <ac id="66">Route: /admin/announcements</ac>
+    </group>
+    <group name="RBAC" range="AC 69-71">
+      <ac id="67">SUPER_ADMIN, ADMIN, PROPERTY_MANAGER: Full CRUD</ac>
+      <ac id="68">FINANCE_MANAGER, MAINTENANCE_SUPERVISOR: Read-only</ac>
+      <ac id="69">TENANT: Read active announcements only (via tenant portal)</ac>
+      <ac id="70">VENDOR: No access</ac>
+    </group>
+    <group name="Testing" range="AC 72-74">
+      <ac id="71">AnnouncementServiceTest with unit tests: CRUD, copy, publish, expiry job</ac>
+      <ac id="72">Frontend: Validation tests, component tests</ac>
+      <ac id="73">All existing tests must pass</ac>
+    </group>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="3.11 Communication &amp; Notifications">
+        Internal announcements for all tenants (no targeting), rich text formatting with print/PDF support, template-based creation, announcement expiry with auto-archive, dashboard widget, email delivery on publish.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Communication &amp; Notifications Module">
+        NotificationController, EmailService, SMSService, AnnouncementService. Frontend routes: /announcements, /api/notifications. Database: announcements, notifications tables. External: Email (Gmail API), SMS (Twilio).
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Async Processing">
+        Use Spring @Async + @Scheduled for notifications, jobs, reports. ThreadPoolTaskExecutor for async email sending.
+      </doc>
+      <doc path="docs/epics/epic-9-communication-notifications.md" title="Epic 9: Communication &amp; Notifications" section="Story 9.2">
+        Complete story specification with simplified scope (SCP #6): Email + Website only, all tenants, no targeting, expiry with auto-archive, printable/PDF, dashboard widget, copy/duplicate, multiple drafts.
+      </doc>
+      <doc path="docs/sprint-artifacts/epic-9/9-1-email-notification-system.md" title="Story 9.1: Email Notification System" section="Prerequisites">
+        Story 9.1 provides EmailService with 40+ methods and 26 templates. Announcement publishing depends on this for sending emails to all active tenants.
+      </doc>
+    </docs>
+
+    <code>
+      <file path="backend/src/main/java/com/ultrabms/service/IEmailService.java" kind="interface" symbol="IEmailService" lines="1-86" reason="Primary email service interface. Add sendAnnouncementEmail method for publishing announcements to all tenants."/>
+      <file path="backend/src/main/java/com/ultrabms/service/EmailService.java" kind="service" symbol="EmailService" reason="Email service implementation with Thymeleaf templates. Implement announcement email method here."/>
+      <file path="backend/src/main/java/com/ultrabms/service/PdfGenerationService.java" kind="interface" symbol="PdfGenerationService" lines="1-79" reason="PDF generation interface using iTextPDF. Add generateAnnouncementPdf method for announcement PDF export."/>
+      <file path="backend/src/main/java/com/ultrabms/service/impl/PdfGenerationServiceImpl.java" kind="implementation" symbol="PdfGenerationServiceImpl" reason="PDF generation implementation. Follow existing patterns for invoice/expense PDFs."/>
+      <file path="backend/src/main/java/com/ultrabms/entity/CompanyProfile.java" kind="entity" symbol="CompanyProfile" reason="Company profile entity with logo and company details for PDF letterhead."/>
+      <file path="backend/src/main/java/com/ultrabms/service/CompanyProfileService.java" kind="service" symbol="CompanyProfileService" reason="Service to fetch company profile for PDF letterhead generation."/>
+      <file path="backend/src/main/java/com/ultrabms/scheduler/InvoiceSchedulerJob.java" kind="scheduler" symbol="InvoiceSchedulerJob" lines="1-108" reason="Reference pattern for @Scheduled jobs. Use same pattern for AnnouncementExpiryJob."/>
+      <file path="backend/src/main/java/com/ultrabms/scheduler/VendorDocumentExpiryJob.java" kind="scheduler" symbol="VendorDocumentExpiryJob" reason="Reference pattern for daily expiry checking scheduler job."/>
+      <file path="backend/src/main/java/com/ultrabms/controller/InvoiceController.java" kind="controller" symbol="InvoiceController" reason="Reference pattern for REST controller with CRUD, PDF download, and RBAC."/>
+      <file path="backend/src/main/java/com/ultrabms/controller/TenantPortalController.java" kind="controller" symbol="TenantPortalController" reason="Tenant portal controller pattern. Add tenant announcements endpoint here or create TenantAnnouncementController."/>
+      <file path="frontend/src/types/invoice.ts" kind="types" symbol="Invoice, InvoiceStatus" lines="1-100" reason="Reference pattern for TypeScript types with enums and interfaces."/>
+      <file path="frontend/src/lib/validations/invoice.ts" kind="validation" symbol="createInvoiceSchema" reason="Reference pattern for Zod validation schemas."/>
+      <file path="frontend/src/services/invoice.service.ts" kind="service" symbol="invoiceService" reason="Reference pattern for API service with CRUD operations and PDF download."/>
+      <file path="frontend/src/components/layout/Sidebar.tsx" kind="component" symbol="Sidebar, navigationSections" lines="1-150" reason="Sidebar navigation. Add Announcements menu item with Megaphone icon to Main section."/>
+      <file path="frontend/src/app/(dashboard)/invoices/page.tsx" kind="page" symbol="InvoicesPage" reason="Reference pattern for list page with tabs and data table."/>
+      <file path="frontend/src/app/(dashboard)/expenses/page.tsx" kind="page" symbol="ExpensesPage" reason="Reference pattern for tabbed list page with CRUD actions."/>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="@tiptap/react" version="^2.x" reason="Rich text editor for announcement message"/>
+        <package name="@tiptap/starter-kit" version="^2.x" reason="TipTap starter kit with basic extensions"/>
+        <package name="@tiptap/extension-table" version="^2.x" reason="Table extension for rich text"/>
+        <package name="@tiptap/extension-image" version="^2.x" reason="Image extension for rich text"/>
+        <package name="dompurify" version="^3.x" reason="HTML sanitization to prevent XSS"/>
+        <package name="@types/dompurify" version="^3.x" reason="TypeScript types for DOMPurify" dev="true"/>
+        <package name="lucide-react" version="existing" reason="Already installed - Megaphone icon for announcements"/>
+        <package name="recharts" version="existing" reason="Already installed - for dashboard widget if needed"/>
+      </node>
+      <java>
+        <dependency name="spring-boot-starter-mail" scope="existing" reason="Email sending - already configured"/>
+        <dependency name="thymeleaf" scope="existing" reason="Email template rendering - already configured"/>
+        <dependency name="itextpdf" scope="existing" reason="PDF generation - already in pom.xml"/>
+        <dependency name="aws-java-sdk-s3" scope="existing" reason="S3 file storage - already configured"/>
+      </java>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern" source="docs/architecture.md">Use Spring Data JPA repository pattern with @Repository annotation</constraint>
+    <constraint type="pattern" source="docs/architecture.md">Use @Service annotation for business logic services</constraint>
+    <constraint type="pattern" source="docs/architecture.md">Use @RestController with @RequestMapping for API endpoints</constraint>
+    <constraint type="pattern" source="docs/architecture.md">Use @Async for non-blocking email sending</constraint>
+    <constraint type="pattern" source="docs/architecture.md">Use @Scheduled(cron = "...") for scheduled jobs</constraint>
+    <constraint type="layer" source="dev-notes">Backend package: com.ultrabms.announcement.* (or com.ultrabms.entity, .service, .controller, .repository, .scheduler)</constraint>
+    <constraint type="layer" source="dev-notes">Frontend routes: /admin/announcements, /tenant/announcements</constraint>
+    <constraint type="layer" source="dev-notes">Email templates: resources/templates/email/announcement.html, announcement.txt</constraint>
+    <constraint type="layer" source="dev-notes">S3 storage path: /uploads/announcements/{id}/</constraint>
+    <constraint type="security" source="dev-notes">Sanitize HTML input with DOMPurify to prevent XSS attacks</constraint>
+    <constraint type="security" source="dev-notes">RBAC: SUPER_ADMIN, ADMIN, PROPERTY_MANAGER = full CRUD; others = read-only or no access</constraint>
+    <constraint type="naming" source="dev-notes">announcementNumber format: ANN-{year}-{4-digit-sequence} e.g., ANN-2025-0001</constraint>
+    <constraint type="validation" source="dev-notes">Title: required, max 200 characters</constraint>
+    <constraint type="validation" source="dev-notes">Expiry date: required, must be future date</constraint>
+    <constraint type="validation" source="dev-notes">Attachment: optional, PDF only, max 5MB</constraint>
+    <constraint type="testing" source="story-template">All interactive elements must have data-testid attributes</constraint>
+    <constraint type="testing" source="story-template">Backend: mvn test must pass with zero failures</constraint>
+    <constraint type="testing" source="story-template">Frontend: npm test must pass with zero failures</constraint>
+    <constraint type="testing" source="story-template">Frontend: npm run build must succeed with zero TypeScript/lint errors</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="AnnouncementController" kind="REST Controller">
+      <endpoint method="POST" path="/api/v1/announcements" description="Create announcement (draft)"/>
+      <endpoint method="GET" path="/api/v1/announcements" description="List all announcements (paginated, filtered by status)"/>
+      <endpoint method="GET" path="/api/v1/announcements/{id}" description="Get announcement details"/>
+      <endpoint method="PUT" path="/api/v1/announcements/{id}" description="Update announcement (if draft)"/>
+      <endpoint method="POST" path="/api/v1/announcements/{id}/copy" description="Duplicate announcement as new draft"/>
+      <endpoint method="PATCH" path="/api/v1/announcements/{id}/publish" description="Publish announcement"/>
+      <endpoint method="PATCH" path="/api/v1/announcements/{id}/archive" description="Archive announcement"/>
+      <endpoint method="DELETE" path="/api/v1/announcements/{id}" description="Delete announcement"/>
+      <endpoint method="GET" path="/api/v1/announcements/{id}/pdf" description="Download announcement PDF"/>
+      <endpoint method="POST" path="/api/v1/announcements/{id}/attachment" description="Upload attachment (PDF, max 5MB)"/>
+    </interface>
+    <interface name="TenantAnnouncementController" kind="REST Controller">
+      <endpoint method="GET" path="/api/v1/tenant/announcements" description="List active (non-expired) announcements for tenant"/>
+      <endpoint method="GET" path="/api/v1/tenant/announcements/{id}" description="Get announcement details for tenant"/>
+    </interface>
+    <interface name="IEmailService" kind="Java Interface">
+      <method signature="void sendAnnouncementEmail(List&lt;Tenant&gt; tenants, Announcement announcement)" description="Send announcement email to all active tenants with HTML content and optional attachment"/>
+    </interface>
+    <interface name="PdfGenerationService" kind="Java Interface">
+      <method signature="byte[] generateAnnouncementPdf(Announcement announcement)" description="Generate PDF with company letterhead, title, date, and formatted message body"/>
+    </interface>
+    <interface name="AnnouncementService" kind="Java Interface">
+      <method signature="AnnouncementDto createAnnouncement(CreateAnnouncementRequest request)" description="Create new announcement as draft"/>
+      <method signature="AnnouncementDto updateAnnouncement(UUID id, UpdateAnnouncementRequest request)" description="Update draft announcement"/>
+      <method signature="AnnouncementDto copyAnnouncement(UUID id)" description="Copy announcement as new draft with [Copy] prefix"/>
+      <method signature="void publishAnnouncement(UUID id)" description="Publish draft, send emails to all active tenants"/>
+      <method signature="void archiveAnnouncement(UUID id)" description="Archive announcement"/>
+      <method signature="void deleteAnnouncement(UUID id)" description="Delete announcement"/>
+      <method signature="Page&lt;AnnouncementDto&gt; getAnnouncements(AnnouncementStatus status, Pageable pageable)" description="List announcements with optional status filter"/>
+      <method signature="AnnouncementDto getAnnouncementById(UUID id)" description="Get announcement by ID"/>
+      <method signature="List&lt;AnnouncementDto&gt; getActiveAnnouncementsForTenant()" description="Get non-expired published announcements for tenant portal"/>
+      <method signature="int expireOverdueAnnouncements()" description="Expire announcements past their expiresAt date"/>
+      <method signature="long getActiveAnnouncementCount()" description="Get count of active announcements for dashboard widget"/>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend uses JUnit 5 with Mockito for unit tests. All services should have comprehensive test coverage. Controllers tested with MockMvc. Use @MockBean for mocking dependencies. Frontend uses Jest with React Testing Library. Zod validation schemas should have dedicated test files. Components tested for rendering and user interactions. All tests must pass before marking story complete.
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/AnnouncementServiceTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/scheduler/AnnouncementExpiryJobTest.java</location>
+      <location>backend/src/test/java/com/ultrabms/controller/AnnouncementControllerTest.java</location>
+      <location>frontend/src/lib/validations/__tests__/announcement.test.ts</location>
+      <location>frontend/src/components/announcements/__tests__/*.test.tsx</location>
+      <location>frontend/src/app/(dashboard)/admin/announcements/__tests__/*.test.tsx</location>
+    </locations>
+    <ideas>
+      <idea ac="1-6">Test Announcement entity creation with all required fields, announcementNumber generation sequence, status transitions</idea>
+      <idea ac="7-10">Test form validation: title required/max length, expiry date must be future, attachment PDF only/5MB max</idea>
+      <idea ac="11-14">Test copy functionality: new draft created, [Copy] prefix added, expiry date NOT copied</idea>
+      <idea ac="15-17">Test multiple drafts: create multiple, edit independently, delete one doesn't affect others</idea>
+      <idea ac="18-22">Test publish: status change to PUBLISHED, publishedAt timestamp set, emails sent to all active tenants, cannot edit after publish</idea>
+      <idea ac="23-26">Test expiry job: announcements past expiresAt changed to EXPIRED, tenant portal hides expired, history tab shows expired</idea>
+      <idea ac="35-39">Test PDF generation: includes letterhead, title, date, formatted message, professional layout</idea>
+      <idea ac="50-60">Test all API endpoints: CRUD operations, copy, publish, archive, tenant-specific endpoints</idea>
+      <idea ac="67-70">Test RBAC: ADMIN/PM full access, FINANCE_MANAGER read-only, TENANT only active via portal, VENDOR no access</idea>
+    </ideas>
+  </tests>
+</story-context>

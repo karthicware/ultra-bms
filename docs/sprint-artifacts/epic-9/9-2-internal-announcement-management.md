@@ -1,6 +1,6 @@
 # Story 9.2: Internal Announcement Management
 
-Status: drafted
+Status: ready-for-dev
 
 ## Story
 
@@ -316,7 +316,7 @@ Execute lint check: `npm run lint`
 
 ### Context Reference
 
-<!-- Path(s) to story context XML will be added here by context workflow -->
+- docs/sprint-artifacts/epic-9/9-2-internal-announcement-management.context.xml
 
 ### Agent Model Used
 

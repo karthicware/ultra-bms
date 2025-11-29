@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDC Withdrawal Confirmation</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #0A2342;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #fff7ed;
+            color: #ea580c;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .pdc-box {
+            background-color: #fff7ed;
+            border-left: 4px solid #f97316;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .pdc-box strong {
+            color: #ea580c;
+            font-size: 20px;
+        }
+        .amount-box {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+            border: 2px solid #e9ecef;
+        }
+        .amount-box .label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .amount-box .amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0A2342;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #0A2342;
+            font-weight: 600;
+            width: 40%;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: right;
+        }
+        .info-box {
+            background-color: #fff7ed;
+            border-left: 4px solid #f97316;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .info-box.warning {
+            background-color: #fffbeb;
+            border-left-color: #f59e0b;
+        }
+        .alternative-payment {
+            background-color: #f0fdf4;
+            border: 2px solid #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .alternative-payment h4 {
+            margin: 0 0 15px 0;
+            color: #059669;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #1152D4 0%, #0A2342 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #1152D4;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+            .details-table th,
+            .details-table td {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">↩️</div>
+            <h1>PDC Withdrawal Confirmation</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi <span th:text="${adminName}">Admin</span>,
+            </div>
+
+            <p>
+                This is to confirm that the following Post-Dated Cheque has been withdrawn from the system and returned to the tenant.
+            </p>
+
+            <div style="text-align: center; margin: 20px 0;">
+                <span class="status-badge">Withdrawn</span>
+            </div>
+
+            <div class="pdc-box">
+                <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Cheque Number</div>
+                <strong th:text="${chequeNumber}">CHQ-001</strong>
+            </div>
+
+            <div class="amount-box">
+                <div class="label">Original Cheque Amount</div>
+                <div class="amount" th:text="${formattedAmount}">AED 5,000.00</div>
+            </div>
+
+            <h3 style="color: #0A2342;">Withdrawal Details</h3>
+
+            <table class="details-table">
+                <tr>
+                    <th>Tenant</th>
+                    <td th:text="${tenantName}">John Doe</td>
+                </tr>
+                <tr>
+                    <th>Bank</th>
+                    <td th:text="${bankName}">Emirates NBD</td>
+                </tr>
+                <tr>
+                    <th>Original Cheque Date</th>
+                    <td th:text="${chequeDate}">Jan 15, 2025</td>
+                </tr>
+                <tr>
+                    <th>Withdrawal Date</th>
+                    <td th:text="${withdrawalDate}">Jan 10, 2025</td>
+                </tr>
+                <tr>
+                    <th>Withdrawal Reason</th>
+                    <td th:text="${withdrawalReason}">Tenant requested return</td>
+                </tr>
+                <tr th:if="${invoiceNumber != null}">
+                    <th>Linked Invoice</th>
+                    <td th:text="${invoiceNumber}">INV-2025-001</td>
+                </tr>
+            </table>
+
+            <!-- Alternative Payment Section (if applicable) -->
+            <div th:if="${newPaymentMethod != null}" class="alternative-payment">
+                <h4>💰 Alternative Payment Received</h4>
+                <table class="details-table" style="margin: 15px 0 0 0;">
+                    <tr>
+                        <th>New Payment Method</th>
+                        <td th:text="${newPaymentMethodDisplay}">Bank Transfer</td>
+                    </tr>
+                    <tr th:if="${transactionId != null}">
+                        <th>Transaction ID</th>
+                        <td th:text="${transactionId}">TXN-123456</td>
+                    </tr>
+                    <tr th:if="${paymentAmount != null}">
+                        <th>Payment Amount</th>
+                        <td th:text="${formattedPaymentAmount}">AED 5,000.00</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div th:if="${newPaymentMethod == null}" class="info-box warning">
+                <strong>⚠️ Payment Reminder</strong>
+                <p style="margin: 10px 0 0 0; color: #666;">
+                    The withdrawn PDC has been returned to the tenant without receiving alternative payment. Please follow up with the tenant to arrange for alternative payment if applicable.
+                </p>
+            </div>
+
+            <div class="info-box">
+                <strong>📋 Record Keeping</strong>
+                <p style="margin: 10px 0 0 0; color: #666;">
+                    This withdrawal has been recorded in the PDC history. The cheque is no longer active in the system and can be found in the Withdrawal History report.
+                </p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a th:href="${withdrawalHistoryUrl}" class="button">View Withdrawal History</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                Questions? Contact us at <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@ultrabms.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated notification from Ultra BMS.<br>
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -85,4 +85,22 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
      * @return true if email exists, false otherwise
      */
     boolean existsByEmail(String email);
+
+    /**
+     * Find all active users with a specific role.
+     * Useful for sending notifications to admins.
+     *
+     * @param role the user role to filter by
+     * @return list of active users with the specified role
+     */
+    List<User> findByRoleAndActiveTrue(UserRole role);
+
+    /**
+     * Find all users with any of the specified roles.
+     * Useful for sending notifications to multiple user types.
+     *
+     * @param roles the list of user roles to filter by
+     * @return list of users with any of the specified roles
+     */
+    List<User> findByRoleIn(List<UserRole> roles);
 }

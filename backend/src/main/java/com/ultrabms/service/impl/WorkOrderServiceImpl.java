@@ -35,6 +35,8 @@ import com.ultrabms.entity.enums.WorkOrderPriority;
 import com.ultrabms.entity.enums.WorkOrderStatus;
 import com.ultrabms.exception.EntityNotFoundException;
 import com.ultrabms.exception.ValidationException;
+import com.ultrabms.entity.Asset;
+import com.ultrabms.repository.AssetRepository;
 import com.ultrabms.repository.PropertyRepository;
 import com.ultrabms.repository.UnitRepository;
 import com.ultrabms.repository.UserRepository;
@@ -81,6 +83,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     private final PropertyRepository propertyRepository;
     private final UnitRepository unitRepository;
     private final UserRepository userRepository;
+    private final AssetRepository assetRepository;
     private final S3Service s3Service;
     private final IEmailService emailService;
     private final ExpenseService expenseService;
@@ -93,6 +96,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             PropertyRepository propertyRepository,
             UnitRepository unitRepository,
             UserRepository userRepository,
+            AssetRepository assetRepository,
             S3Service s3Service,
             IEmailService emailService,
             ExpenseService expenseService
@@ -104,6 +108,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         this.propertyRepository = propertyRepository;
         this.unitRepository = unitRepository;
         this.userRepository = userRepository;
+        this.assetRepository = assetRepository;
         this.s3Service = s3Service;
         this.emailService = emailService;
         this.expenseService = expenseService;
@@ -141,6 +146,16 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         // Generate unique work order number
         String workOrderNumber = generateWorkOrderNumber();
 
+        // Validate asset if provided (Story 7.1: Asset Registry and Tracking)
+        if (dto.getAssetId() != null) {
+            Asset asset = assetRepository.findById(dto.getAssetId())
+                    .orElseThrow(() -> new EntityNotFoundException("Asset not found: " + dto.getAssetId()));
+            // Verify asset belongs to the same property
+            if (!asset.getPropertyId().equals(dto.getPropertyId())) {
+                throw new ValidationException("Asset does not belong to the specified property");
+            }
+        }
+
         // Create work order entity
         WorkOrder workOrder = WorkOrder.builder()
                 .workOrderNumber(workOrderNumber)
@@ -156,6 +171,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                 .accessInstructions(dto.getAccessInstructions())
                 .estimatedCost(dto.getEstimatedCost())
                 .maintenanceRequestId(dto.getMaintenanceRequestId())
+                .assetId(dto.getAssetId())
                 .attachments(new ArrayList<>())
                 .build();
 
@@ -310,6 +326,16 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         }
         if (dto.getFollowUpNotes() != null) {
             workOrder.setFollowUpNotes(dto.getFollowUpNotes());
+        }
+        // Handle assetId update (Story 7.1)
+        if (dto.getAssetId() != null) {
+            Asset asset = assetRepository.findById(dto.getAssetId())
+                    .orElseThrow(() -> new EntityNotFoundException("Asset not found: " + dto.getAssetId()));
+            // Verify asset belongs to the same property
+            if (!asset.getPropertyId().equals(workOrder.getPropertyId())) {
+                throw new ValidationException("Asset does not belong to the work order's property");
+            }
+            workOrder.setAssetId(dto.getAssetId());
         }
 
         workOrder = workOrderRepository.save(workOrder);
@@ -1085,6 +1111,17 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         // Fetch maintenance request number if linked
         String maintenanceRequestNumber = null; // TODO: Implement if MaintenanceRequest link needed
 
+        // Fetch asset info if linked (Story 7.1)
+        String assetNumber = null;
+        String assetName = null;
+        if (workOrder.getAssetId() != null) {
+            Asset asset = assetRepository.findById(workOrder.getAssetId()).orElse(null);
+            if (asset != null) {
+                assetNumber = asset.getAssetNumber();
+                assetName = asset.getAssetName();
+            }
+        }
+
         return WorkOrderResponseDto.builder()
                 .id(workOrder.getId())
                 .workOrderNumber(workOrder.getWorkOrderNumber())
@@ -1098,6 +1135,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                 .assigneeName(assigneeName)
                 .maintenanceRequestId(workOrder.getMaintenanceRequestId())
                 .maintenanceRequestNumber(maintenanceRequestNumber)
+                .assetId(workOrder.getAssetId())
+                .assetNumber(assetNumber)
+                .assetName(assetName)
                 .category(workOrder.getCategory())
                 .priority(workOrder.getPriority())
                 .title(workOrder.getTitle())
@@ -1146,6 +1186,17 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                 && workOrder.getStatus() != WorkOrderStatus.COMPLETED
                 && workOrder.getStatus() != WorkOrderStatus.CLOSED;
 
+        // Fetch asset info if linked (Story 7.1)
+        String assetNumber = null;
+        String assetName = null;
+        if (workOrder.getAssetId() != null) {
+            Asset asset = assetRepository.findById(workOrder.getAssetId()).orElse(null);
+            if (asset != null) {
+                assetNumber = asset.getAssetNumber();
+                assetName = asset.getAssetName();
+            }
+        }
+
         return WorkOrderListDto.builder()
                 .id(workOrder.getId())
                 .workOrderNumber(workOrder.getWorkOrderNumber())
@@ -1158,6 +1209,8 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                 .scheduledDate(workOrder.getScheduledDate())
                 .assigneeName(assigneeName)
                 .isOverdue(isOverdue)
+                .assetNumber(assetNumber)
+                .assetName(assetName)
                 .createdAt(workOrder.getCreatedAt())
                 .build();
     }

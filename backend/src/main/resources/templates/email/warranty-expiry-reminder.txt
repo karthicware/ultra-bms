@@ -1,0 +1,32 @@
+ASSET WARRANTY EXPIRY ALERT
+==========================
+
+Hi [(${recipientName})],
+
+[(${daysUntilExpiry <= 7 ? 'URGENT: ' : ''})]The following asset warranty will expire in [(${daysUntilExpiry})] days.
+
+ASSET DETAILS
+-------------
+Asset Number: [(${assetNumber})]
+Asset Name: [(${assetName})]
+Category: [(${categoryDisplayName})]
+Property: [(${propertyName})]
+Location: [(${location})]
+Manufacturer: [(${manufacturer})]
+[# th:if="${modelNumber}"]Model: [(${modelNumber})][/]
+Warranty Expiry Date: [(${warrantyExpiryDate})]
+
+RECOMMENDED ACTIONS
+-------------------
+* Contact the manufacturer about warranty extension options
+* Schedule a preventive maintenance check before expiry
+* Review and upload warranty documentation if not already done
+* Consider budgeting for potential repair costs
+
+View asset details: [(${portalUrl})]
+
+---
+Questions? Contact us at [(${supportEmail})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

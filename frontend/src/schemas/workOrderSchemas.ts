@@ -59,7 +59,9 @@ export const createWorkOrderSchema = z.object({
     .optional()
     .or(z.literal('')),
   estimatedCost: positiveNumberSchema,
-  maintenanceRequestId: uuidSchema.optional().or(z.literal(''))
+  maintenanceRequestId: uuidSchema.optional().or(z.literal('')),
+  // Asset link (Story 7.1: Asset Registry and Tracking - AC #16)
+  assetId: uuidSchema.optional().or(z.literal(''))
 });
 
 export type CreateWorkOrderFormData = z.infer<typeof createWorkOrderSchema>;
@@ -105,7 +107,9 @@ export const updateWorkOrderSchema = z.object({
     .max(1000, 'Follow-up notes must be less than 1000 characters')
     .trim()
     .optional()
-    .or(z.literal(''))
+    .or(z.literal('')),
+  // Asset link (Story 7.1: Asset Registry and Tracking - AC #16)
+  assetId: uuidSchema.optional().or(z.literal(''))
 });
 
 export type UpdateWorkOrderFormData = z.infer<typeof updateWorkOrderSchema>;

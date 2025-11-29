@@ -47,9 +47,11 @@ import { useToast } from '@/hooks/use-toast';
 import { createWorkOrder } from '@/services/work-orders.service';
 import { getProperties } from '@/services/properties.service';
 import { getUnits } from '@/services/units.service';
+import { getAssetsForDropdown } from '@/services/asset.service';
 import { createWorkOrderSchema, type CreateWorkOrderFormData } from '@/schemas/workOrderSchemas';
 import { WorkOrderCategory, WorkOrderPriority } from '@/types/work-orders';
 import type { Property, Unit } from '@/types';
+import type { AssetListItem } from '@/types/asset';
 
 export default function CreateWorkOrderPage() {
   const router = useRouter();
@@ -57,8 +59,10 @@ export default function CreateWorkOrderPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [properties, setProperties] = useState<Property[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
+  const [assets, setAssets] = useState<AssetListItem[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
   const [loadingUnits, setLoadingUnits] = useState(false);
+  const [loadingAssets, setLoadingAssets] = useState(false);
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
 
   const form = useForm<CreateWorkOrderFormData>({
@@ -66,6 +70,7 @@ export default function CreateWorkOrderPage() {
     defaultValues: {
       propertyId: '',
       unitId: '',
+      assetId: '',
       category: '',
       priority: WorkOrderPriority.MEDIUM,
       title: '',
@@ -122,6 +127,31 @@ export default function CreateWorkOrderPage() {
     };
 
     fetchUnits();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedPropertyId]);
+
+  // Load assets when property changes (Story 7.1: Asset Registry and Tracking)
+  useEffect(() => {
+    const fetchAssets = async () => {
+      if (!watchedPropertyId) {
+        setAssets([]);
+        form.setValue('assetId', '');
+        return;
+      }
+
+      try {
+        setLoadingAssets(true);
+        const assetList = await getAssetsForDropdown(watchedPropertyId);
+        setAssets(assetList || []);
+      } catch (error) {
+        console.error('Failed to load assets:', error);
+        setAssets([]);
+      } finally {
+        setLoadingAssets(false);
+      }
+    };
+
+    fetchAssets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedPropertyId]);
 
@@ -186,6 +216,8 @@ export default function CreateWorkOrderPage() {
         accessInstructions: data.accessInstructions || undefined,
         estimatedCost: data.estimatedCost || undefined,
         maintenanceRequestId: data.maintenanceRequestId || undefined,
+        // Asset link (Story 7.1: Asset Registry and Tracking - AC #16)
+        assetId: data.assetId || undefined,
       };
 
       const workOrder = await createWorkOrder(dto, photoFiles.length > 0 ? photoFiles : undefined);
@@ -284,6 +316,49 @@ export default function CreateWorkOrderPage() {
                       </SelectContent>
                     </Select>
                     <FormDescription>Leave empty for property-wide work orders</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Asset Link - Story 7.1: Asset Registry and Tracking - AC #16 */}
+              <FormField
+                control={form.control}
+                name="assetId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Linked Asset</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={!watchedPropertyId || loadingAssets}
+                    >
+                      <FormControl>
+                        <SelectTrigger data-testid="select-asset">
+                          <SelectValue
+                            placeholder={
+                              !watchedPropertyId
+                                ? 'Select property first'
+                                : loadingAssets
+                                ? 'Loading...'
+                                : assets.length === 0
+                                ? 'No assets available'
+                                : 'Select asset (optional)'
+                            }
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {assets.map((asset) => (
+                          <SelectItem key={asset.id} value={asset.id}>
+                            {asset.assetNumber} - {asset.assetName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Link this work order to a property asset (e.g., HVAC unit, elevator)
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

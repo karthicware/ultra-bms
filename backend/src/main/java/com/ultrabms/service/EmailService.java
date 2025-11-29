@@ -1832,6 +1832,163 @@ public class EmailService implements IEmailService {
     }
 
     // ========================================================================
+    // PDC Email Methods
+    // ========================================================================
+
+    /**
+     * Send PDC deposit reminder email to admin.
+     * Story 6.3: PDC Management
+     * AC #29: Email reminder for PDCs due for deposit
+     *
+     * @param adminEmail Admin email address
+     * @param adminName Admin name
+     * @param pdcList List of PDC details
+     */
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendPDCDepositReminder(
+            String adminEmail,
+            String adminName,
+            java.util.List<java.util.Map<String, Object>> pdcList
+    ) {
+        try {
+            Context context = new Context();
+            context.setVariable("adminName", adminName);
+            context.setVariable("pdcCount", pdcList.size());
+            context.setVariable("pdcList", pdcList);
+            context.setVariable("dashboardUrl", frontendUrl + "/pdcs");
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/pdc-deposit-reminder", context);
+            String textContent = templateEngine.process("email/pdc-deposit-reminder.txt", context);
+
+            sendEmail(
+                adminEmail,
+                String.format("PDC Deposit Reminder - %d PDC(s) Due", pdcList.size()),
+                textContent,
+                htmlContent
+            );
+
+            log.info("PDC deposit reminder sent successfully to: {} with {} PDCs", adminEmail, pdcList.size());
+
+        } catch (Exception e) {
+            log.error("Failed to send PDC deposit reminder to: {}", adminEmail, e);
+        }
+    }
+
+    /**
+     * Send PDC bounced notification email to admin.
+     * Story 6.3: PDC Management
+     * AC #30: Email notification when PDC bounces
+     *
+     * @param adminEmail Admin email address
+     * @param pdc Bounced PDC entity
+     */
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendPDCBouncedNotification(String adminEmail, com.ultrabms.entity.PDC pdc) {
+        try {
+            String tenantName = pdc.getTenant() != null
+                    ? pdc.getTenant().getFirstName() + " " + pdc.getTenant().getLastName()
+                    : "Unknown";
+            String tenantEmail = pdc.getTenant() != null ? pdc.getTenant().getEmail() : "N/A";
+            String tenantPhone = pdc.getTenant() != null ? pdc.getTenant().getPhone() : "N/A";
+
+            Context context = new Context();
+            context.setVariable("adminName", "Admin");
+            context.setVariable("chequeNumber", pdc.getChequeNumber());
+            context.setVariable("bankName", pdc.getBankName());
+            context.setVariable("formattedAmount", "AED " + String.format("%,.2f", pdc.getAmount()));
+            context.setVariable("chequeDate", pdc.getChequeDate() != null
+                    ? pdc.getChequeDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                    : "N/A");
+            context.setVariable("bouncedDate", pdc.getBouncedDate() != null
+                    ? pdc.getBouncedDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                    : "N/A");
+            context.setVariable("bounceReason", pdc.getBounceReason());
+            context.setVariable("tenantName", tenantName);
+            context.setVariable("tenantEmail", tenantEmail);
+            context.setVariable("tenantPhone", tenantPhone);
+            context.setVariable("pdcDetailUrl", frontendUrl + "/pdcs/" + pdc.getId());
+            context.setVariable("tenantProfileUrl", frontendUrl + "/tenants/" + (pdc.getTenant() != null ? pdc.getTenant().getId() : ""));
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/pdc-bounced", context);
+            String textContent = templateEngine.process("email/pdc-bounced.txt", context);
+
+            sendEmail(
+                adminEmail,
+                String.format("PDC Bounced Alert - %s", pdc.getChequeNumber()),
+                textContent,
+                htmlContent
+            );
+
+            log.info("PDC bounced notification sent successfully to: {} for PDC: {}", adminEmail, pdc.getChequeNumber());
+
+        } catch (Exception e) {
+            log.error("Failed to send PDC bounced notification to: {} for PDC: {}", adminEmail, pdc.getChequeNumber(), e);
+        }
+    }
+
+    // ========================================================================
+    // Asset Warranty Email Methods (Story 7.1: Asset Registry and Tracking)
+    // ========================================================================
+
+    /**
+     * Send warranty expiry reminder email asynchronously.
+     * Notifies property managers about assets with expiring warranties.
+     * Story 7.1: Asset Registry and Tracking (AC #17)
+     *
+     * @param recipientEmail Property manager email
+     * @param recipientName Property manager name
+     * @param asset Asset entity with expiring warranty
+     * @param propertyName Name of the property where asset is located
+     * @param daysUntilExpiry Days until warranty expires
+     */
+    @Async("emailTaskExecutor")
+    public void sendWarrantyExpiryReminder(String recipientEmail, String recipientName,
+                                            com.ultrabms.entity.Asset asset, String propertyName,
+                                            int daysUntilExpiry) {
+        try {
+            String assetUrl = frontendUrl + "/assets/" + asset.getId();
+
+            Context context = new Context();
+            context.setVariable("recipientName", recipientName);
+            context.setVariable("assetNumber", asset.getAssetNumber());
+            context.setVariable("assetName", asset.getAssetName());
+            context.setVariable("categoryDisplayName", asset.getCategory() != null ? asset.getCategory().getDisplayName() : "N/A");
+            context.setVariable("propertyName", propertyName);
+            context.setVariable("location", asset.getLocation());
+            context.setVariable("manufacturer", asset.getManufacturer() != null ? asset.getManufacturer() : "N/A");
+            context.setVariable("modelNumber", asset.getModelNumber());
+            context.setVariable("warrantyExpiryDate", asset.getWarrantyExpiryDate() != null
+                    ? asset.getWarrantyExpiryDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                    : "N/A");
+            context.setVariable("daysUntilExpiry", daysUntilExpiry);
+            context.setVariable("portalUrl", assetUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/warranty-expiry-reminder", context);
+            String textContent = templateEngine.process("email/warranty-expiry-reminder.txt", context);
+
+            String urgencyPrefix = daysUntilExpiry <= 7 ? "URGENT: " : "";
+            sendEmail(
+                recipientEmail,
+                String.format("%sAsset Warranty Expiring - %s (%d days)", urgencyPrefix, asset.getAssetName(), daysUntilExpiry),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Warranty expiry reminder sent successfully to: {} for asset: {} ({} days until expiry)",
+                    recipientEmail, asset.getAssetNumber(), daysUntilExpiry);
+
+        } catch (Exception e) {
+            log.error("Failed to send warranty expiry reminder to: {} for asset: {}",
+                    recipientEmail, asset.getAssetNumber(), e);
+        }
+    }
+
+    // ========================================================================
     // Email Helper Methods
     // ========================================================================
 

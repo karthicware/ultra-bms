@@ -85,6 +85,12 @@ public class CreateWorkOrderDto {
      */
     private UUID maintenanceRequestId;
 
+    /**
+     * Asset linked to this work order (optional)
+     * Story 7.1: Asset Registry and Tracking - AC #16
+     */
+    private UUID assetId;
+
     // Note: Photos are sent separately as MultipartFile[] in controller
     // requestedBy is auto-filled from authenticated user context
 }

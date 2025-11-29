@@ -75,4 +75,12 @@ public interface IEmailService {
     void sendCheckoutInitiatedNotification(Tenant tenant, TenantCheckout checkout);
     void sendInspectionScheduledNotification(Tenant tenant, TenantCheckout checkout);
     void sendCheckoutCompletedNotification(Tenant tenant, TenantCheckout checkout);
+
+    // PDC emails
+    void sendPDCDepositReminder(String adminEmail, String adminName, List<Map<String, Object>> pdcList);
+    void sendPDCBouncedNotification(String adminEmail, PDC pdc);
+
+    // Asset warranty emails
+    void sendWarrantyExpiryReminder(String recipientEmail, String recipientName, Asset asset,
+                                     String propertyName, int daysUntilExpiry);
 }
