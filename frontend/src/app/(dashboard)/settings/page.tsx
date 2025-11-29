@@ -35,10 +35,10 @@ const settingsSections: SettingsSection[] = [
   },
   {
     title: 'Notifications',
-    description: 'Configure your notification preferences',
+    description: 'Manage email notification settings and view logs',
     href: '/settings/notifications',
     icon: Bell,
-    comingSoon: true,
+    requiresRole: ['SUPER_ADMIN', 'ADMIN'],
   },
   {
     title: 'Appearance',
