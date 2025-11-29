@@ -1,8 +1,12 @@
 package com.ultrabms.controller;
 
+import com.ultrabms.dto.ApiResponse;
+import com.ultrabms.dto.documents.DocumentListDto;
 import com.ultrabms.dto.tenant.CreateTenantRequest;
 import com.ultrabms.dto.tenant.CreateTenantResponse;
 import com.ultrabms.dto.tenant.TenantResponse;
+import com.ultrabms.entity.enums.DocumentEntityType;
+import com.ultrabms.service.DocumentService;
 import com.ultrabms.service.TenantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,7 +14,9 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,9 +47,11 @@ public class TenantController {
     private static final Logger LOGGER = LoggerFactory.getLogger(TenantController.class);
 
     private final TenantService tenantService;
+    private final DocumentService documentService;
 
-    public TenantController(TenantService tenantService) {
+    public TenantController(TenantService tenantService, DocumentService documentService) {
         this.tenantService = tenantService;
+        this.documentService = documentService;
     }
 
     /**
@@ -164,5 +172,31 @@ public class TenantController {
         responseBody.put("timestamp", java.time.LocalDateTime.now());
 
         return ResponseEntity.ok(responseBody);
+    }
+
+    // =================================================================
+    // DOCUMENT ENDPOINTS (Story 7.2)
+    // =================================================================
+
+    /**
+     * Get documents for a tenant
+     * GET /api/v1/tenants/{tenantId}/documents
+     */
+    @GetMapping("/{tenantId}/documents")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'PROPERTY_MANAGER', 'ADMIN')")
+    @Operation(summary = "Get tenant documents", description = "Get all documents associated with a tenant")
+    public ResponseEntity<ApiResponse<Page<DocumentListDto>>> getTenantDocuments(
+            @PathVariable UUID tenantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "uploadedAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection
+    ) {
+        LOGGER.info("Getting documents for tenant: {}", tenantId);
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Page<DocumentListDto> documents = documentService.getDocumentsByEntity(
+                DocumentEntityType.TENANT, tenantId, pageable);
+        return ResponseEntity.ok(ApiResponse.success(documents, "Tenant documents retrieved successfully"));
     }
 }

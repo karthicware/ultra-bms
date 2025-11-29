@@ -15,7 +15,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Building2, Phone, Briefcase, CreditCard, AlertCircle, CheckCircle2 } from 'lucide-react';
 
@@ -45,7 +45,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-import { vendorSchema, type VendorFormData, type VendorFormInput } from '@/lib/validations/vendor';
+import { vendorSchema, type VendorFormData } from '@/lib/validations/vendor';
 import { checkEmailAvailability } from '@/services/vendors.service';
 import {
   PaymentTerms,
@@ -98,23 +98,26 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
   const [emailCheckStatus, setEmailCheckStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const [emailCheckTimeout, setEmailCheckTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  const form = useForm<VendorFormInput>({
-    resolver: zodResolver(vendorSchema),
-    defaultValues: {
-      companyName: initialData?.companyName || '',
-      contactPersonName: initialData?.contactPersonName || '',
-      emiratesIdOrTradeLicense: initialData?.emiratesIdOrTradeLicense || '',
-      trn: initialData?.trn || '',
-      email: initialData?.email || '',
-      phoneNumber: initialData?.phoneNumber || '',
-      secondaryPhoneNumber: initialData?.secondaryPhoneNumber || '',
-      address: initialData?.address || '',
-      serviceCategories: initialData?.serviceCategories || [],
-      serviceAreas: initialData?.serviceAreas || [],
-      hourlyRate: initialData?.hourlyRate || 0,
-      emergencyCalloutFee: initialData?.emergencyCalloutFee || undefined,
-      paymentTerms: initialData?.paymentTerms || PaymentTerms.NET_30,
-    },
+  // Build default values with explicit types to satisfy TypeScript
+  const defaultValues: VendorFormData = {
+    companyName: initialData?.companyName ?? '',
+    contactPersonName: initialData?.contactPersonName ?? '',
+    emiratesIdOrTradeLicense: initialData?.emiratesIdOrTradeLicense ?? '',
+    trn: initialData?.trn ?? '',
+    email: initialData?.email ?? '',
+    phoneNumber: initialData?.phoneNumber ?? '',
+    secondaryPhoneNumber: initialData?.secondaryPhoneNumber ?? '',
+    address: initialData?.address ?? '',
+    serviceCategories: initialData?.serviceCategories ?? [],
+    serviceAreas: initialData?.serviceAreas ?? [],
+    hourlyRate: initialData?.hourlyRate ?? 0,
+    emergencyCalloutFee: initialData?.emergencyCalloutFee ?? null,
+    paymentTerms: initialData?.paymentTerms ?? PaymentTerms.NET_30,
+  };
+
+  const form = useForm<VendorFormData>({
+    resolver: zodResolver(vendorSchema) as Resolver<VendorFormData>,
+    defaultValues,
   });
 
   const email = form.watch('email');
@@ -178,9 +181,7 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
   };
 
   // Form submission handler
-  const handleSubmit = async (data: VendorFormInput) => {
-    // After zod validation, data has all defaults applied - safe to cast to output type
-    const validatedData = data as VendorFormData;
+  const handleSubmit = async (data: VendorFormData) => {
 
     // Check email availability before submission
     if (emailCheckStatus === 'taken') {
@@ -193,19 +194,19 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
     }
 
     const vendorRequest: VendorRequest = {
-      companyName: validatedData.companyName,
-      contactPersonName: validatedData.contactPersonName,
-      emiratesIdOrTradeLicense: validatedData.emiratesIdOrTradeLicense,
-      trn: validatedData.trn || undefined,
-      email: validatedData.email,
-      phoneNumber: validatedData.phoneNumber,
-      secondaryPhoneNumber: validatedData.secondaryPhoneNumber || undefined,
-      address: validatedData.address,
-      serviceCategories: validatedData.serviceCategories,
-      serviceAreas: validatedData.serviceAreas || [],
-      hourlyRate: validatedData.hourlyRate,
-      emergencyCalloutFee: validatedData.emergencyCalloutFee || undefined,
-      paymentTerms: validatedData.paymentTerms,
+      companyName: data.companyName,
+      contactPersonName: data.contactPersonName,
+      emiratesIdOrTradeLicense: data.emiratesIdOrTradeLicense,
+      trn: data.trn || undefined,
+      email: data.email,
+      phoneNumber: data.phoneNumber,
+      secondaryPhoneNumber: data.secondaryPhoneNumber || undefined,
+      address: data.address,
+      serviceCategories: data.serviceCategories,
+      serviceAreas: data.serviceAreas,
+      hourlyRate: data.hourlyRate,
+      emergencyCalloutFee: data.emergencyCalloutFee || undefined,
+      paymentTerms: data.paymentTerms,
     };
 
     await onSubmit(vendorRequest);

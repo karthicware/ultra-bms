@@ -1,6 +1,7 @@
 package com.ultrabms.controller;
 
 import com.ultrabms.dto.ApiResponse;
+import com.ultrabms.dto.documents.DocumentListDto;
 import com.ultrabms.dto.properties.CreatePropertyRequest;
 import com.ultrabms.dto.properties.OccupancyResponse;
 import com.ultrabms.dto.properties.PropertyImageResponse;
@@ -8,8 +9,10 @@ import com.ultrabms.dto.properties.PropertyResponse;
 import com.ultrabms.dto.properties.UpdatePropertyRequest;
 import com.ultrabms.dto.units.CreateUnitRequest;
 import com.ultrabms.dto.units.UnitResponse;
+import com.ultrabms.entity.enums.DocumentEntityType;
 import com.ultrabms.entity.enums.PropertyStatus;
 import com.ultrabms.entity.enums.PropertyType;
+import com.ultrabms.service.DocumentService;
 import com.ultrabms.service.PropertyService;
 import com.ultrabms.service.UnitService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,6 +56,7 @@ public class PropertyController {
 
     private final PropertyService propertyService;
     private final UnitService unitService;
+    private final DocumentService documentService;
 
     @PostMapping
     @Operation(summary = "Create a new property")
@@ -236,6 +240,31 @@ public class PropertyController {
     public ResponseEntity<ApiResponse<PropertyResponse>> restoreProperty(@PathVariable UUID id) {
         PropertyResponse response = propertyService.restoreProperty(id);
         return ResponseEntity.ok(ApiResponse.success(response, "Property restored successfully"));
+    }
+
+    // =================================================================
+    // DOCUMENT ENDPOINTS (Story 7.2)
+    // =================================================================
+
+    /**
+     * Get documents for a property
+     * GET /api/v1/properties/{propertyId}/documents
+     */
+    @GetMapping("/{propertyId}/documents")
+    @Operation(summary = "Get property documents", description = "Get all documents associated with a property")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'MAINTENANCE_SUPERVISOR')")
+    public ResponseEntity<ApiResponse<Page<DocumentListDto>>> getPropertyDocuments(
+            @PathVariable UUID propertyId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "uploadedAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection
+    ) {
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Page<DocumentListDto> documents = documentService.getDocumentsByEntity(
+                DocumentEntityType.PROPERTY, propertyId, pageable);
+        return ResponseEntity.ok(ApiResponse.success(documents, "Property documents retrieved successfully"));
     }
 
     /**

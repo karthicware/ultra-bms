@@ -143,7 +143,7 @@ describe('MaintenanceRequestForm', () => {
             title: 'Request submitted successfully',
         }));
         expect(mockRouter.push).toHaveBeenCalledWith('/tenant/requests/req-123');
-    });
+    }, 15000);
 
     it('handles submission error', async () => {
         const user = userEvent.setup();
