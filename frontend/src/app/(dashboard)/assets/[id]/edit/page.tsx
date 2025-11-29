@@ -176,7 +176,7 @@ export default function EditAssetPage() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-testid="form-asset-edit">
           {/* Basic Information */}
           <Card>
             <CardHeader>

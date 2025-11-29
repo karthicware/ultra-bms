@@ -150,7 +150,7 @@ export default function AssetsPage() {
   // Warranty status badge helper
   const getWarrantyBadge = (warrantyStatus: string | null, daysRemaining: number | null) => {
     if (!warrantyStatus || warrantyStatus === 'NO_WARRANTY') {
-      return <span className="text-gray-400 text-sm">No warranty</span>;
+      return <span className="text-gray-400 text-sm" data-testid="badge-warranty-status">No warranty</span>;
     }
 
     const badgeConfig: Record<string, { className: string; icon: React.ReactNode }> = {
@@ -176,7 +176,7 @@ export default function AssetsPage() {
         : warrantyStatus.replace('_', ' ');
 
     return (
-      <Badge className={`${config.className} border flex items-center`}>
+      <Badge className={`${config.className} border flex items-center`} data-testid="badge-warranty-status">
         {config.icon}
         {label}
       </Badge>
@@ -193,7 +193,7 @@ export default function AssetsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="page-assets">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>

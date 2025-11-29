@@ -79,7 +79,7 @@ export default function CreatePropertyPage() {
     };
 
     fetchManagers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const onSubmit = async (data: CreatePropertyFormData) => {

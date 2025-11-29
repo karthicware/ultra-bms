@@ -55,6 +55,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { AssetStatusDialog } from '@/components/assets/AssetStatusDialog';
+import { AssetDocumentUploadDialog } from '@/components/assets/AssetDocumentUploadDialog';
+import { RefreshCw } from 'lucide-react';
 
 export default function AssetDetailPage() {
   const params = useParams();
@@ -62,11 +65,13 @@ export default function AssetDetailPage() {
   const { toast } = useToast();
   const assetId = params.id as string;
 
-  const { data: asset, isLoading, error } = useAsset(assetId);
+  const { data: asset, isLoading, error, refetch } = useAsset(assetId);
   const { data: maintenanceHistory } = useAssetMaintenanceHistory(assetId);
   const deleteAsset = useDeleteAsset();
 
   const [activeTab, setActiveTab] = useState('details');
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   // Delete handler
   const handleDelete = async () => {
@@ -104,7 +109,7 @@ export default function AssetDetailPage() {
   // Warranty badge
   const getWarrantyBadge = (warrantyStatus: string | null, daysRemaining: number | null) => {
     if (!warrantyStatus || warrantyStatus === 'NO_WARRANTY') {
-      return <Badge variant="outline" className="text-gray-500">No Warranty</Badge>;
+      return <Badge variant="outline" className="text-gray-500" data-testid="badge-warranty-status">No Warranty</Badge>;
     }
 
     const config: Record<string, { className: string; icon: React.ReactNode; label: string }> = {
@@ -127,7 +132,7 @@ export default function AssetDetailPage() {
 
     const c = config[warrantyStatus] || config.EXPIRED;
     return (
-      <Badge className={`${c.className} border flex items-center`}>
+      <Badge className={`${c.className} border flex items-center`} data-testid="badge-warranty-status">
         {c.icon}
         {c.label}
       </Badge>
@@ -164,7 +169,7 @@ export default function AssetDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="page-asset-detail">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
@@ -181,10 +186,20 @@ export default function AssetDetailPage() {
         </div>
         <div className="flex gap-2">
           {asset.editable && (
-            <Button variant="outline" onClick={() => router.push(`/assets/${assetId}/edit`)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setShowStatusDialog(true)}
+                data-testid="btn-change-status"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Change Status
+              </Button>
+              <Button variant="outline" onClick={() => router.push(`/assets/${assetId}/edit`)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+            </>
           )}
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -397,15 +412,63 @@ export default function AssetDetailPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">Documents</CardTitle>
-              <Button>
+              <Button
+                onClick={() => setShowUploadDialog(true)}
+                data-testid="btn-upload-document"
+              >
                 <Upload className="mr-2 h-4 w-4" />
                 Upload Document
               </Button>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-500 text-center py-8">
-                No documents uploaded yet. Upload manuals, warranty documents, or invoices.
-              </p>
+              {asset.documents && asset.documents.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Size</TableHead>
+                      <TableHead>Uploaded</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {asset.documents.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-gray-400" />
+                            {doc.fileName}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{doc.documentType}</Badge>
+                        </TableCell>
+                        <TableCell>{doc.fileSize ? `${Math.round(doc.fileSize / 1024)} KB` : '-'}</TableCell>
+                        <TableCell>
+                          {doc.uploadedAt && format(new Date(doc.uploadedAt), 'MMM dd, yyyy')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={async () => {
+                              const url = await assetService.getDocumentDownloadUrl(asset.id, doc.id);
+                              window.open(url, '_blank');
+                            }}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-gray-500 text-center py-8">
+                  No documents uploaded yet. Upload manuals, warranty documents, or invoices.
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -456,6 +519,27 @@ export default function AssetDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Status Change Dialog */}
+      {asset && (
+        <AssetStatusDialog
+          open={showStatusDialog}
+          onOpenChange={setShowStatusDialog}
+          asset={asset}
+          onSuccess={() => refetch()}
+        />
+      )}
+
+      {/* Document Upload Dialog */}
+      {asset && (
+        <AssetDocumentUploadDialog
+          open={showUploadDialog}
+          onOpenChange={setShowUploadDialog}
+          assetId={asset.id}
+          assetName={asset.assetName}
+          onSuccess={() => refetch()}
+        />
+      )}
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
   DollarSign,
   RefreshCw,
   Car,
+  Landmark,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -114,6 +115,12 @@ const navigationSections: NavSection[] = [
         href: '/expenses',
         icon: DollarSign,
         permission: 'expenses:read',
+      },
+      {
+        name: 'Bank Accounts',
+        href: '/settings/bank-accounts',
+        icon: Landmark,
+        role: 'ADMIN',
       },
     ],
   },

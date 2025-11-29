@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/preserve-manual-memoization */
+/* eslint-disable react-hooks/preserve-manual-memoization */
 'use client';
 
 /**

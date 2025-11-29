@@ -1,6 +1,6 @@
 # Story 9.1: Email Notification System
 
-Status: review
+Status: done
 
 Story Context: [9-1-email-notification-system.context.xml](./9-1-email-notification-system.context.xml)
 
@@ -304,4 +304,60 @@ N/A
 
 **Frontend Files Modified:**
 - `frontend/src/app/(dashboard)/settings/page.tsx` (enabled notifications section)
+
+---
+
+## Code Review Notes
+
+**Review Date:** 2025-11-29
+**Reviewer:** Dev Agent (claude-opus-4-5-20251101)
+**Verdict:** ✅ APPROVED
+
+### AC Validation Summary (43/43 PASSED)
+
+| Category | ACs | Status |
+|----------|-----|--------|
+| Backend Infrastructure | AC 1-8 | ✅ |
+| Notification Types | AC 9-12 | ✅ |
+| Email Templates | AC 13-14 | ✅ |
+| Async Processing | AC 15-20 | ✅ |
+| Attachments | AC 21-22 | ✅ |
+| Notification Settings | AC 23-26 | ✅ |
+| REST API | AC 27-32 | ✅ |
+| Admin UI | AC 33-36 | ✅ |
+| Security/RBAC | AC 37-39 | ✅ |
+| Unit Tests | AC 40-43 | ✅ |
+
+### Key Evidence
+
+| AC | File | Line | Evidence |
+|----|------|------|----------|
+| AC3 | `EmailHealthIndicator.java` | 33 | `@EventListener(ApplicationReadyEvent.class)` |
+| AC15 | `EmailNotificationService.java` | 124 | `@Async("emailTaskExecutor")` |
+| AC18 | `EmailSenderJob.java` | 42 | `@Scheduled(fixedRate = 60000)` |
+| AC19 | `EmailSenderJob.java` | 97-107 | exponential backoff retry |
+| AC27 | `NotificationController.java` | 61-90 | `POST /send` endpoint |
+| AC28 | `NotificationController.java` | 96-129 | `GET /` with filters |
+| AC33 | `/settings/notifications/page.tsx` | 369-452 | notifications table |
+| AC35 | `/settings/notifications/page.tsx` | 433-445 | retry button |
+| AC36 | `/settings/notifications/page.tsx` | 587-627 | test email dialog |
+| AC37-39 | `NotificationController.java` | 62,97,136,159 | `@PreAuthorize` annotations |
+
+### Security Review
+
+- ✅ RBAC: All endpoints protected with `@PreAuthorize`
+- ✅ SQL Injection: Parameterized queries via Spring Data JPA
+- ✅ Credentials: SMTP password from env var `GMAIL_APP_PASSWORD`
+- ✅ Logging: No sensitive data logged
+
+### Code Quality
+
+- Clean separation of concerns (entity/repo/service/controller)
+- Proper `@Transactional` usage
+- Comprehensive error handling
+- Well-documented code with Javadoc
+
+### Recommendations
+
+None. Implementation meets all acceptance criteria and follows best practices.
 

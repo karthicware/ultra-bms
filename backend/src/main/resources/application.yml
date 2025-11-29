@@ -12,3 +12,9 @@ aws:
   s3:
     bucket-name: ultrabms-storage
     region: me-central-1
+
+# Encryption Configuration (Story 6.5: Bank Account Management)
+# Key must be 256 bits (32 bytes), Base64 encoded
+# Generate with: openssl rand -base64 32
+encryption:
+  key: ${ENCRYPTION_KEY:}

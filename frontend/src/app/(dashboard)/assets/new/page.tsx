@@ -119,7 +119,7 @@ export default function NewAssetPage() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-testid="form-asset-create">
           {/* Basic Information */}
           <Card>
             <CardHeader>

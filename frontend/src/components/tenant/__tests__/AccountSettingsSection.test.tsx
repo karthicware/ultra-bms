@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, react/display-name */
+/* eslint-disable react/display-name */
 /**
  * Tests for AccountSettingsSection component
  */

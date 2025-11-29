@@ -442,6 +442,22 @@ public interface PDCRepository extends JpaRepository<PDC, UUID> {
     List<PDC> findReplacementChain(@Param("pdcId") UUID pdcId);
 
     // =================================================================
+    // BANK ACCOUNT QUERIES (Story 6.5)
+    // =================================================================
+
+    /**
+     * Count active PDCs linked to a bank account.
+     * Active statuses: RECEIVED, DUE, DEPOSITED
+     * Used for bank account delete validation.
+     *
+     * @param bankAccountId Bank account UUID
+     * @return Count of active PDCs
+     */
+    @Query("SELECT COUNT(p) FROM PDC p WHERE p.bankAccountId = :bankAccountId " +
+           "AND p.status IN ('RECEIVED', 'DUE', 'DEPOSITED')")
+    long countActivePDCsByBankAccount(@Param("bankAccountId") UUID bankAccountId);
+
+    // =================================================================
     // BANK NAME QUERIES
     // =================================================================
 
