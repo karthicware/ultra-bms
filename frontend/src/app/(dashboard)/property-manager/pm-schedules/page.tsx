@@ -13,7 +13,6 @@ import { format } from 'date-fns';
 import {
   Plus,
   Search,
-  Filter,
   Calendar,
   Play,
   Pause,

@@ -74,4 +74,12 @@ public class CreateComplianceRequirementDto {
      * Active status (defaults to ACTIVE)
      */
     private RequirementStatus status;
+
+    /**
+     * Get name alias for requirementName
+     * @return the requirement name
+     */
+    public String getName() {
+        return requirementName;
+    }
 }

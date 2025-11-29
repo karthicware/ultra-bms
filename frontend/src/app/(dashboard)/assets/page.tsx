@@ -9,7 +9,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { debounce } from 'lodash';
-import { format } from 'date-fns';
 import {
   Table,
   TableBody,
@@ -28,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { assetService } from '@/services/asset.service';
@@ -38,20 +37,15 @@ import {
   AssetStatus,
   ASSET_CATEGORY_OPTIONS,
   ASSET_STATUS_OPTIONS,
-  calculateWarrantyStatus,
-  WarrantyStatus,
 } from '@/types/asset';
 import {
   Plus,
   Search,
   Eye,
   ArrowUpDown,
-  Wrench,
   AlertTriangle,
   Package,
   Shield,
-  CheckCircle,
-  Clock,
   XCircle,
 } from 'lucide-react';
 

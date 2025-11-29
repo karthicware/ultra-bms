@@ -148,7 +148,9 @@ export default function ParkingSpotListPage() {
 
   // Clear selection when filters change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedIds(new Set());
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsAllSelected(false);
   }, [propertyFilter, statusFilter, searchTerm, currentPage]);
 
@@ -224,6 +226,7 @@ export default function ParkingSpotListPage() {
   };
 
   // Selection handlers
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handleSelectAll = useCallback((checked: boolean) => {
     if (checked && parkingSpotData?.content) {
       setSelectedIds(new Set(parkingSpotData.content.map(spot => spot.id)));

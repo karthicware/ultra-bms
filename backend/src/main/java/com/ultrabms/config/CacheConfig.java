@@ -21,7 +21,9 @@ public class CacheConfig {
             // Company profile cache
             "companyProfile",
             // Financial dashboard cache
-            "financialDashboard"
+            "financialDashboard",
+            // Login attempt tracking cache
+            "loginAttemptsCache"
         );
     }
 }

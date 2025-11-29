@@ -7,9 +7,9 @@
  * AC #15: Edit vendor information with pre-populated form
  */
 
-import { useState, use } from 'react';
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle } from 'lucide-react';
 
 import {
   Breadcrumb,

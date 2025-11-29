@@ -21,9 +21,17 @@ public record PaymentFilterDto(
 ) {
     public PaymentFilterDto {
         // Default values
-        if (page == null) page = 0;
-        if (size == null) size = 20;
-        if (sortBy == null) sortBy = "paymentDate";
-        if (sortDirection == null) sortDirection = "DESC";
+        if (page == null) {
+            page = 0;
+        }
+        if (size == null) {
+            size = 20;
+        }
+        if (sortBy == null) {
+            sortBy = "paymentDate";
+        }
+        if (sortDirection == null) {
+            sortDirection = "DESC";
+        }
     }
 }

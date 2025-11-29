@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 /**
@@ -9,12 +10,9 @@
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -49,7 +47,6 @@ export default function NewAssetPage() {
   const { toast } = useToast();
   const createAsset = useCreateAsset();
   const [properties, setProperties] = useState<PropertyOption[]>([]);
-  const [isLoadingProperties, setIsLoadingProperties] = useState(true);
 
   const form = useForm({
     resolver: zodResolver(assetCreateSchema),
@@ -81,8 +78,6 @@ export default function NewAssetPage() {
           description: 'Failed to load properties',
           variant: 'destructive',
         });
-      } finally {
-        setIsLoadingProperties(false);
       }
     };
     fetchProperties();

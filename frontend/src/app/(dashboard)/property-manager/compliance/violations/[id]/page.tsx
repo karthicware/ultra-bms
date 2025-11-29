@@ -12,7 +12,6 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   ChevronLeft,
-  Loader2,
   Calendar,
   Building2,
   DollarSign,
@@ -21,8 +20,6 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  FileText,
-  Building,
 } from 'lucide-react';
 
 import {

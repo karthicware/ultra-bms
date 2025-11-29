@@ -36,4 +36,4 @@ public record PaymentResponseDto(
 
     // Metadata
     LocalDateTime createdAt
-) {}
+) { }

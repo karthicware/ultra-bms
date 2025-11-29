@@ -42,7 +42,7 @@ import {
   getLeadHistory,
 } from '@/services/leads.service';
 import { getQuotationsByLeadId, convertToTenant } from '@/services/quotations.service';
-import type { Lead, LeadDocument, LeadHistory, Quotation, LeadDocumentType, QuotationStatus } from '@/types';
+import type { Lead, LeadDocument, LeadHistory, Quotation, LeadDocumentType } from '@/types';
 import {
   FileText,
   Download,

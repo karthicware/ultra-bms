@@ -56,7 +56,7 @@ public interface ViolationRepository extends JpaRepository<Violation, UUID> {
      * @param complianceScheduleId Schedule UUID
      * @return List of violations
      */
-    List<Violation> findByComplianceScheduleId(UUID complianceScheduleId);
+    List<Violation> findByComplianceSchedule_Id(UUID complianceScheduleId);
 
     // =================================================================
     // STATUS-BASED QUERIES
@@ -189,7 +189,7 @@ public interface ViolationRepository extends JpaRepository<Violation, UUID> {
      * @param complianceScheduleId Schedule UUID
      * @return Count
      */
-    long countByComplianceScheduleId(UUID complianceScheduleId);
+    long countByComplianceSchedule_Id(UUID complianceScheduleId);
 
     // =================================================================
     // SOFT DELETE AWARE QUERIES

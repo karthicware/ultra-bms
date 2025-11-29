@@ -34,7 +34,7 @@ public interface ComplianceScheduleRepository extends JpaRepository<ComplianceSc
      * @param complianceRequirementId Requirement UUID
      * @return List of schedules
      */
-    List<ComplianceSchedule> findByComplianceRequirementId(UUID complianceRequirementId);
+    List<ComplianceSchedule> findByComplianceRequirement_Id(UUID complianceRequirementId);
 
     /**
      * Find schedules by property
@@ -42,7 +42,7 @@ public interface ComplianceScheduleRepository extends JpaRepository<ComplianceSc
      * @param propertyId Property UUID
      * @return List of schedules
      */
-    List<ComplianceSchedule> findByPropertyId(UUID propertyId);
+    List<ComplianceSchedule> findByProperty_Id(UUID propertyId);
 
     /**
      * Find schedules by property and status
@@ -51,7 +51,7 @@ public interface ComplianceScheduleRepository extends JpaRepository<ComplianceSc
      * @param status     Schedule status
      * @return List of schedules
      */
-    List<ComplianceSchedule> findByPropertyIdAndStatus(UUID propertyId, ComplianceScheduleStatus status);
+    List<ComplianceSchedule> findByProperty_IdAndStatus(UUID propertyId, ComplianceScheduleStatus status);
 
     /**
      * Find schedules by requirement and property
@@ -60,7 +60,7 @@ public interface ComplianceScheduleRepository extends JpaRepository<ComplianceSc
      * @param propertyId              Property UUID
      * @return List of schedules
      */
-    List<ComplianceSchedule> findByComplianceRequirementIdAndPropertyId(UUID complianceRequirementId, UUID propertyId);
+    List<ComplianceSchedule> findByComplianceRequirement_IdAndProperty_Id(UUID complianceRequirementId, UUID propertyId);
 
     // =================================================================
     // STATUS-BASED QUERIES
@@ -213,7 +213,7 @@ public interface ComplianceScheduleRepository extends JpaRepository<ComplianceSc
      * @param status     Schedule status
      * @return Count
      */
-    long countByPropertyIdAndStatus(UUID propertyId, ComplianceScheduleStatus status);
+    long countByProperty_IdAndStatus(UUID propertyId, ComplianceScheduleStatus status);
 
     /**
      * Count overdue schedules for a property
@@ -222,7 +222,7 @@ public interface ComplianceScheduleRepository extends JpaRepository<ComplianceSc
      * @return Count of overdue schedules
      */
     default long countOverdueByProperty(UUID propertyId) {
-        return countByPropertyIdAndStatus(propertyId, ComplianceScheduleStatus.OVERDUE);
+        return countByProperty_IdAndStatus(propertyId, ComplianceScheduleStatus.OVERDUE);
     }
 
     // =================================================================
@@ -284,7 +284,7 @@ public interface ComplianceScheduleRepository extends JpaRepository<ComplianceSc
      */
     @Query("""
         SELECT COUNT(cs) FROM ComplianceSchedule cs
-        JOIN cs.requirement cr
+        JOIN cs.complianceRequirement cr
         WHERE cr.category = :category
         AND cs.isDeleted = false
         """)
@@ -295,7 +295,7 @@ public interface ComplianceScheduleRepository extends JpaRepository<ComplianceSc
      */
     @Query("""
         SELECT cs FROM ComplianceSchedule cs
-        JOIN cs.requirement cr
+        JOIN cs.complianceRequirement cr
         WHERE cs.isDeleted = false
         AND (:propertyId IS NULL OR cs.property.id = :propertyId)
         AND (:category IS NULL OR cr.category = :category)
@@ -329,7 +329,7 @@ public interface ComplianceScheduleRepository extends JpaRepository<ComplianceSc
     @Query("""
         SELECT COUNT(cs) > 0 FROM ComplianceSchedule cs
         WHERE cs.property.id = :propertyId
-        AND cs.requirement.id = :requirementId
+        AND cs.complianceRequirement.id = :requirementId
         AND cs.status <> :excludeStatus
         AND cs.isDeleted = false
         """)
@@ -345,7 +345,7 @@ public interface ComplianceScheduleRepository extends JpaRepository<ComplianceSc
     @Query("""
         SELECT COUNT(cs) > 0 FROM ComplianceSchedule cs
         WHERE cs.property.id = :propertyId
-        AND cs.requirement.id = :requirementId
+        AND cs.complianceRequirement.id = :requirementId
         AND cs.dueDate = :dueDate
         AND cs.isDeleted = false
         """)

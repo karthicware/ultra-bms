@@ -46,8 +46,6 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  AlertCircle,
-  Building2,
   User,
   Calendar,
   MessageSquare,

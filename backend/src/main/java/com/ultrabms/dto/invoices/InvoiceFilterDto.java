@@ -23,9 +23,17 @@ public record InvoiceFilterDto(
 ) {
     public InvoiceFilterDto {
         // Default values
-        if (page == null) page = 0;
-        if (size == null) size = 20;
-        if (sortBy == null) sortBy = "createdAt";
-        if (sortDirection == null) sortDirection = "DESC";
+        if (page == null) {
+            page = 0;
+        }
+        if (size == null) {
+            size = 20;
+        }
+        if (sortBy == null) {
+            sortBy = "createdAt";
+        }
+        if (sortDirection == null) {
+            sortDirection = "DESC";
+        }
     }
 }

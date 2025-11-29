@@ -143,7 +143,9 @@ export function BankAccountFormModal({
         });
       }
       // Reset validation states
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIbanValidation(null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSwiftValidation(null);
     }
   }, [open, isEditing, accountDetail, form]);

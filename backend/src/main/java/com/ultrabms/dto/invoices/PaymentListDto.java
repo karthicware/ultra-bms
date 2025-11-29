@@ -18,4 +18,4 @@ public record PaymentListDto(
     PaymentMethod paymentMethod,
     LocalDate paymentDate,
     String transactionReference
-) {}
+) { }

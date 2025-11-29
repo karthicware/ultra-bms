@@ -11,7 +11,6 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   ChevronLeft,
-  Loader2,
   Calendar,
   Building2,
   User,

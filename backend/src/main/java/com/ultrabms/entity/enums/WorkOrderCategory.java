@@ -53,6 +53,11 @@ public enum WorkOrderCategory {
     LANDSCAPING,
 
     /**
+     * Inspection-related remediation work from compliance failures
+     */
+    INSPECTION,
+
+    /**
      * Other maintenance work not covered by specific categories
      */
     OTHER

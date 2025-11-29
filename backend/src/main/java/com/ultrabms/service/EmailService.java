@@ -2186,6 +2186,102 @@ public class EmailService implements IEmailService {
     }
 
     // ========================================================================
+    // Compliance Reminder Emails (Story 7.3: Compliance and Inspection Tracking)
+    // ========================================================================
+
+    /**
+     * Send compliance reminder notification email asynchronously.
+     * Notifies property managers about upcoming compliance items.
+     * Story 7.3: Compliance and Inspection Tracking (AC #26, AC #49)
+     *
+     * @param recipientEmail Property manager email
+     * @param recipientName Property manager name
+     * @param scheduleNumber Compliance schedule number
+     * @param requirementName Name of the compliance requirement
+     * @param categoryDisplayName Display name for the compliance category
+     * @param propertyName Name of the property
+     * @param dueDate Formatted due date string
+     * @param daysUntilDue Days until the compliance is due
+     * @param portalUrl URL to view the compliance schedule
+     */
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendComplianceReminderNotification(String recipientEmail, String recipientName,
+                                                    String scheduleNumber, String requirementName, String categoryDisplayName,
+                                                    String propertyName, String dueDate, long daysUntilDue,
+                                                    String portalUrl) {
+        try {
+            Context context = new Context();
+            context.setVariable("recipientName", recipientName);
+            context.setVariable("scheduleNumber", scheduleNumber);
+            context.setVariable("requirementName", requirementName);
+            context.setVariable("categoryDisplayName", categoryDisplayName);
+            context.setVariable("propertyName", propertyName);
+            context.setVariable("dueDate", dueDate);
+            context.setVariable("daysUntilDue", daysUntilDue);
+            context.setVariable("portalUrl", portalUrl);
+            context.setVariable("supportEmail", supportEmail);
+
+            String htmlContent = templateEngine.process("email/compliance-reminder-notification", context);
+            String textContent = buildComplianceReminderPlainText(recipientName, scheduleNumber, requirementName,
+                    categoryDisplayName, propertyName, dueDate, daysUntilDue, portalUrl);
+
+            String urgencyPrefix = daysUntilDue <= 7 ? "URGENT: " : "";
+            sendEmail(
+                recipientEmail,
+                String.format("%sCompliance Due - %s (%d days)", urgencyPrefix, requirementName, daysUntilDue),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Compliance reminder notification sent successfully to: {} for schedule: {} ({} days until due)",
+                    recipientEmail, scheduleNumber, daysUntilDue);
+
+        } catch (Exception e) {
+            log.error("Failed to send compliance reminder notification to: {} for schedule: {}",
+                    recipientEmail, scheduleNumber, e);
+        }
+    }
+
+    /**
+     * Build plain text version of compliance reminder notification.
+     */
+    private String buildComplianceReminderPlainText(String recipientName, String scheduleNumber,
+                                                     String requirementName, String categoryDisplayName,
+                                                     String propertyName, String dueDate, long daysUntilDue,
+                                                     String portalUrl) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Hi ").append(recipientName).append(",\n\n");
+
+        if (daysUntilDue <= 7) {
+            sb.append("URGENT: The following compliance item is due very soon.\n\n");
+        } else {
+            sb.append("This is a reminder that the following compliance item is due within 14 days.\n\n");
+        }
+
+        sb.append("COMPLIANCE DETAILS:\n");
+        sb.append("Schedule Number: ").append(scheduleNumber).append("\n");
+        sb.append("Requirement: ").append(requirementName).append("\n");
+        sb.append("Category: ").append(categoryDisplayName).append("\n");
+        sb.append("Property: ").append(propertyName).append("\n");
+        sb.append("Due Date: ").append(dueDate).append("\n");
+        sb.append("Days Until Due: ").append(daysUntilDue).append("\n\n");
+
+        sb.append("RECOMMENDED ACTIONS:\n");
+        sb.append("- Schedule an inspection if required\n");
+        sb.append("- Prepare necessary documentation\n");
+        sb.append("- Contact relevant authorities if needed\n");
+        sb.append("- Upload certificates upon completion\n\n");
+
+        sb.append("View in Portal: ").append(portalUrl).append("\n\n");
+        sb.append("---\n");
+        sb.append("This is an automated notification from Ultra BMS.\n");
+        sb.append("Please do not reply directly to this email.\n");
+
+        return sb.toString();
+    }
+
+    // ========================================================================
     // Email Helper Methods
     // ========================================================================
 

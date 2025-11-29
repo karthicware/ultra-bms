@@ -24,7 +24,6 @@ import {
 import {
   ExpenseSummary,
   ExpenseCategory,
-  EXPENSE_CATEGORY_LABELS,
   formatExpenseCurrency,
 } from '@/types/expense';
 

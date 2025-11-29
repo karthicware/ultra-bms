@@ -54,8 +54,6 @@ import {
   ACCESS_LEVEL_OPTIONS,
   COMMON_DOCUMENT_TYPES,
   formatFileSize,
-  getEntityTypeLabel,
-  getAccessLevelLabel
 } from '@/types/document';
 import { EntityTypeBadge } from '@/components/documents';
 import { cn } from '@/lib/utils';

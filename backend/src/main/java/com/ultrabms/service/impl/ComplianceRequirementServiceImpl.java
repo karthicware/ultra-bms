@@ -47,7 +47,7 @@ public class ComplianceRequirementServiceImpl implements ComplianceRequirementSe
         LOGGER.info("Creating compliance requirement: {}", dto.getName());
 
         ComplianceRequirement requirement = ComplianceRequirement.builder()
-                .name(dto.getName())
+                .requirementName(dto.getName())
                 .description(dto.getDescription())
                 .category(dto.getCategory())
                 .frequency(dto.getFrequency())
@@ -94,11 +94,8 @@ public class ComplianceRequirementServiceImpl implements ComplianceRequirementSe
 
         Page<ComplianceRequirement> requirementPage;
 
-        if (hasFilters(search, category, status)) {
-            requirementPage = requirementRepository.findWithFilters(search, category, status, pageable);
-        } else {
-            requirementPage = requirementRepository.findByIsDeletedFalse(pageable);
-        }
+        // Always use findWithFilters - when no filters, pass nulls
+        requirementPage = requirementRepository.findWithFilters(category, status, search, pageable);
 
         List<ComplianceRequirementDto> dtoList = requirementPage.getContent().stream()
                 .map(ComplianceRequirementDto::fromEntity)
@@ -122,7 +119,7 @@ public class ComplianceRequirementServiceImpl implements ComplianceRequirementSe
 
         // Update fields if provided
         if (dto.getName() != null) {
-            requirement.setName(dto.getName());
+            requirement.setRequirementName(dto.getName());
         }
         if (dto.getDescription() != null) {
             requirement.setDescription(dto.getDescription());
@@ -174,8 +171,10 @@ public class ComplianceRequirementServiceImpl implements ComplianceRequirementSe
     public List<ComplianceRequirementDto> getRequirementsForProperty(UUID propertyId) {
         LOGGER.debug("Getting compliance requirements for property: {}", propertyId);
 
+        // Convert UUID to JSON format for JSONB query
+        String propertyIdJson = "[\"" + propertyId.toString() + "\"]";
         List<ComplianceRequirement> requirements = requirementRepository
-                .findActiveRequirementsForProperty(propertyId);
+                .findActiveRequirementsForProperty(propertyIdJson);
 
         return requirements.stream()
                 .map(ComplianceRequirementDto::fromEntity)

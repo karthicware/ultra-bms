@@ -22,4 +22,4 @@ public record InvoiceListDto(
     LocalDate dueDate,
     InvoiceStatus status,
     boolean isOverdue
-) {}
+) { }

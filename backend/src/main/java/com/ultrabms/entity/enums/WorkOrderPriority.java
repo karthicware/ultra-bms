@@ -8,6 +8,13 @@ package com.ultrabms.entity.enums;
  */
 public enum WorkOrderPriority {
     /**
+     * Urgent priority - Critical compliance violations and safety issues
+     * Requires immediate action
+     * Examples: Compliance violations, fire safety issues, critical repairs
+     */
+    URGENT,
+
+    /**
      * High priority - Emergency repairs, safety issues
      * Requires immediate attention
      * Examples: Gas leak, flooding, electrical hazards, AC failure in extreme weather

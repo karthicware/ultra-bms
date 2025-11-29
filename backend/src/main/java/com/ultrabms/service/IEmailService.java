@@ -94,4 +94,10 @@ public interface IEmailService {
 
     // Announcement emails (Story 9.2)
     void sendAnnouncementEmail(Tenant tenant, Announcement announcement);
+
+    // Compliance reminder emails (Story 7.3)
+    void sendComplianceReminderNotification(String recipientEmail, String recipientName,
+                                             String scheduleNumber, String requirementName, String categoryDisplayName,
+                                             String propertyName, String dueDate, long daysUntilDue,
+                                             String portalUrl);
 }

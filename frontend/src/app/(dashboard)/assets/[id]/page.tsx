@@ -42,7 +42,6 @@ import {
   MapPin,
   Building,
   DollarSign,
-  Clock,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -82,7 +81,7 @@ export default function AssetDetailPage() {
         description: 'Asset deleted successfully',
       });
       router.push('/assets');
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to delete asset',

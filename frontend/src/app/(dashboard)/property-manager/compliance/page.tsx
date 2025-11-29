@@ -12,7 +12,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Search,
   ArrowUpDown,
   Loader2,
   RefreshCw,

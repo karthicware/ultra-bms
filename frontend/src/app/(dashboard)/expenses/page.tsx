@@ -50,7 +50,6 @@ import {
   DollarSign,
   Clock,
   CheckCircle,
-  TrendingUp,
   FileText,
   CreditCard,
 } from 'lucide-react';

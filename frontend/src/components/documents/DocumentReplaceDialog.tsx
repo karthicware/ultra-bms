@@ -29,7 +29,6 @@ import { Progress } from '@/components/ui/progress';
 import { useReplaceDocument } from '@/hooks/useDocuments';
 import {
   formatFileSize,
-  ALLOWED_DOCUMENT_FILE_TYPES,
   ALLOWED_DOCUMENT_FILE_EXTENSIONS,
   MAX_DOCUMENT_FILE_SIZE,
   MAX_DOCUMENT_FILE_SIZE_MB,

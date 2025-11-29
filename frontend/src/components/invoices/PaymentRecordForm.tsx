@@ -31,7 +31,6 @@ import {
 import { Loader2 } from 'lucide-react';
 import { recordPayment } from '@/services/invoice.service';
 import {
-  paymentCreateSchema,
   createPaymentSchemaWithMaxAmount,
   paymentCreateDefaults,
   type PaymentCreateFormData,

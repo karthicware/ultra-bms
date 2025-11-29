@@ -11,16 +11,12 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import {
   Search,
-  Filter,
   Calendar,
-  Building2,
-  User,
   Clock,
   CheckCircle2,
   AlertCircle,
   XCircle,
   Loader2,
-  Plus,
   Eye,
   FileText,
   DollarSign,
@@ -51,7 +47,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

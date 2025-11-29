@@ -54,4 +54,15 @@ public class UpdateInspectionDto {
      * Next recommended inspection date
      */
     private LocalDate nextInspectionDate;
+
+    /**
+     * General notes about the inspection
+     */
+    @Size(max = 1000, message = "Notes must be less than 1000 characters")
+    private String notes;
+
+    /**
+     * Whether to create a remediation work order for failed inspection
+     */
+    private Boolean createRemediationWorkOrder;
 }

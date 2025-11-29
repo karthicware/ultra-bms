@@ -35,7 +35,6 @@ import {
   Search,
   Eye,
   Download,
-  ArrowUpDown,
   FileText,
   AlertTriangle,
   Clock,
@@ -46,14 +45,12 @@ import {
   Wrench,
   Package,
   FolderOpen,
-  Filter,
   Lock,
   Unlock,
   ShieldCheck,
 } from 'lucide-react';
 import { useDocuments, useDownloadDocument } from '@/hooks/useDocuments';
 import {
-  DocumentListItem,
   DocumentEntityType,
   DocumentAccessLevel,
   DocumentExpiryStatus,

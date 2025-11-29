@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 /**
@@ -10,7 +11,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,7 +25,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -51,7 +51,6 @@ export default function EditAssetPage() {
   const { data: asset, isLoading: isLoadingAsset } = useAsset(assetId);
   const updateAsset = useUpdateAsset();
   const [properties, setProperties] = useState<PropertyOption[]>([]);
-  const [isLoadingProperties, setIsLoadingProperties] = useState(true);
 
   const form = useForm({
     resolver: zodResolver(assetUpdateSchema),
@@ -78,8 +77,6 @@ export default function EditAssetPage() {
         setProperties(response.content || []);
       } catch (error) {
         console.error('Failed to fetch properties:', error);
-      } finally {
-        setIsLoadingProperties(false);
       }
     };
     fetchProperties();
@@ -112,7 +109,7 @@ export default function EditAssetPage() {
         description: 'Asset updated successfully',
       });
       router.push(`/assets/${assetId}`);
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to update asset',

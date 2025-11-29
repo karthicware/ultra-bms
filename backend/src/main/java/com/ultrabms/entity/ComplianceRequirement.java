@@ -134,8 +134,50 @@ public class ComplianceRequirement extends BaseEntity {
     private RequirementStatus status = RequirementStatus.ACTIVE;
 
     // =================================================================
+    // SOFT DELETE FIELDS
+    // =================================================================
+
+    /**
+     * Flag indicating if this requirement is soft deleted
+     */
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false;
+
+    /**
+     * User who deleted this requirement
+     */
+    @Column(name = "deleted_by")
+    private UUID deletedBy;
+
+    /**
+     * Soft delete this requirement
+     * @param userId User performing the delete
+     */
+    public void softDelete(UUID userId) {
+        this.isDeleted = true;
+        this.deletedBy = userId;
+    }
+
+    // =================================================================
     // HELPER METHODS
     // =================================================================
+
+    /**
+     * Get name alias for requirementName
+     * @return the requirement name
+     */
+    public String getName() {
+        return requirementName;
+    }
+
+    /**
+     * Set name alias for requirementName
+     * @param name the requirement name
+     */
+    public void setName(String name) {
+        this.requirementName = name;
+    }
 
     /**
      * Check if requirement applies to all properties

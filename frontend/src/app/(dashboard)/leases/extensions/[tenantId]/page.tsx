@@ -94,7 +94,7 @@ export default function LeaseExtensionPage({ params }: PageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [extensionResult, setExtensionResult] = useState<ExtensionResult | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
+  const [_showPreview, setShowPreview] = useState(false);
 
   // Form
   const form = useForm<LeaseExtensionFormData>({

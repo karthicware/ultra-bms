@@ -17,17 +17,14 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import {
   ArrowLeft,
-  ArrowRight,
   Building2,
   Calendar,
   CheckCircle2,
   ClipboardList,
   Calculator,
   FileCheck,
-  Loader2,
   AlertCircle,
   User,
-  Home,
   DollarSign,
   Download,
   Check,
@@ -229,12 +226,6 @@ export default function CheckoutWizardPage({ params }: PageProps) {
   const handleBack = () => {
     if (canGoBack) {
       setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (canGoForward) {
-      setCurrentStep(currentStep + 1);
     }
   };
 

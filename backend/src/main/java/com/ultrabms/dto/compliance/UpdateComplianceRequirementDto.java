@@ -69,4 +69,12 @@ public class UpdateComplianceRequirementDto {
      * Active status (optional)
      */
     private RequirementStatus status;
+
+    /**
+     * Get name alias for requirementName
+     * @return the requirement name
+     */
+    public String getName() {
+        return requirementName;
+    }
 }

@@ -34,7 +34,7 @@ public interface InspectionRepository extends JpaRepository<Inspection, UUID> {
      * @param complianceScheduleId Schedule UUID
      * @return List of inspections
      */
-    List<Inspection> findByComplianceScheduleId(UUID complianceScheduleId);
+    List<Inspection> findByComplianceSchedule_Id(UUID complianceScheduleId);
 
     /**
      * Find inspections by property
@@ -42,7 +42,7 @@ public interface InspectionRepository extends JpaRepository<Inspection, UUID> {
      * @param propertyId Property UUID
      * @return List of inspections
      */
-    List<Inspection> findByPropertyId(UUID propertyId);
+    List<Inspection> findByProperty_Id(UUID propertyId);
 
     /**
      * Find inspections by property and status
@@ -51,7 +51,7 @@ public interface InspectionRepository extends JpaRepository<Inspection, UUID> {
      * @param status     Inspection status
      * @return List of inspections
      */
-    List<Inspection> findByPropertyIdAndStatus(UUID propertyId, InspectionStatus status);
+    List<Inspection> findByProperty_IdAndStatus(UUID propertyId, InspectionStatus status);
 
     // =================================================================
     // STATUS-BASED QUERIES

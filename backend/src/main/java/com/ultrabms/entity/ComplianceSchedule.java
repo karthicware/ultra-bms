@@ -202,4 +202,30 @@ public class ComplianceSchedule extends BaseEntity {
     public UUID getPropertyId() {
         return property != null ? property.getId() : null;
     }
+
+    // =================================================================
+    // SOFT DELETE FIELDS
+    // =================================================================
+
+    /**
+     * Flag indicating if this schedule is soft deleted
+     */
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false;
+
+    /**
+     * User who deleted this schedule
+     */
+    @Column(name = "deleted_by")
+    private UUID deletedBy;
+
+    /**
+     * Soft delete this schedule
+     * @param userId User performing the delete
+     */
+    public void softDelete(UUID userId) {
+        this.isDeleted = true;
+        this.deletedBy = userId;
+    }
 }

@@ -192,4 +192,30 @@ public class Violation extends BaseEntity {
     public UUID getComplianceScheduleId() {
         return complianceSchedule != null ? complianceSchedule.getId() : null;
     }
+
+    // =================================================================
+    // SOFT DELETE FIELDS
+    // =================================================================
+
+    /**
+     * Flag indicating if this violation is soft deleted
+     */
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false;
+
+    /**
+     * User who deleted this violation
+     */
+    @Column(name = "deleted_by")
+    private UUID deletedBy;
+
+    /**
+     * Soft delete this violation
+     * @param userId User performing the delete
+     */
+    public void softDelete(UUID userId) {
+        this.isDeleted = true;
+        this.deletedBy = userId;
+    }
 }
