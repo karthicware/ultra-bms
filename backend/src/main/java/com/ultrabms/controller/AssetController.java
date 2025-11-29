@@ -160,10 +160,10 @@ public class AssetController {
 
     /**
      * Update asset status
-     * PUT /api/v1/assets/{id}/status
+     * PATCH /api/v1/assets/{id}/status
      * AC #10: Status update with notes
      */
-    @PutMapping("/{id}/status")
+    @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Update asset status",

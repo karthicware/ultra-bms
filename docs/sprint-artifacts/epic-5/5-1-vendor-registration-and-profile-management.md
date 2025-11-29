@@ -1,6 +1,6 @@
 # Story 5.1: Vendor Registration and Profile Management
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

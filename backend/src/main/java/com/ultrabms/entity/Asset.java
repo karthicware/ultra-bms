@@ -202,6 +202,6 @@ public class Asset extends BaseEntity {
      * Get property name from the associated property entity
      */
     public String getPropertyName() {
-        return property != null ? property.getPropertyName() : null;
+        return property != null ? property.getName() : null;
     }
 }

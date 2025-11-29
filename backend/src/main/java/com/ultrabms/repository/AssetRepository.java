@@ -38,6 +38,14 @@ public interface AssetRepository extends JpaRepository<Asset, UUID> {
     Optional<Asset> findByAssetNumber(String assetNumber);
 
     /**
+     * Find asset by ID (excluding soft-deleted)
+     *
+     * @param id Asset UUID
+     * @return Optional asset if exists and not soft-deleted
+     */
+    Optional<Asset> findByIdAndIsDeletedFalse(UUID id);
+
+    /**
      * Find asset by ID (non-disposed only)
      *
      * @param id Asset UUID

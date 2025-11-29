@@ -1441,4 +1441,490 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
             case CANCELLED -> new DeviceRgb(107, 114, 128); // Gray
         };
     }
+
+    // ============================================================
+    // FINANCIAL REPORT PDF METHODS - Story 6.4
+    // ============================================================
+
+    @Override
+    public byte[] generateIncomeStatementPdf(com.ultrabms.dto.reports.IncomeStatementDto incomeStatement) {
+        LOGGER.info("Generating Income Statement PDF for period {} to {}", incomeStatement.startDate(), incomeStatement.endDate());
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+
+            // Report Header
+            addReportHeader(document, "Income Statement (P&L)", incomeStatement.propertyName(),
+                    incomeStatement.startDate().format(DATE_FORMATTER) + " - " + incomeStatement.endDate().format(DATE_FORMATTER),
+                    boldFont, regularFont);
+
+            // Revenue Section
+            document.add(new Paragraph("Revenue").setFont(boldFont).setFontSize(14).setMarginTop(20));
+            Table revenueTable = new Table(UnitValue.createPercentArray(new float[]{60, 25, 15})).useAllAvailableWidth();
+            addTableHeader(revenueTable, new String[]{"Category", "Amount", "% of Total"}, boldFont);
+
+            for (var revenue : incomeStatement.revenueBreakdown()) {
+                revenueTable.addCell(createCell(revenue.category(), regularFont, TextAlignment.LEFT));
+                revenueTable.addCell(createCell(formatCurrency(revenue.amount()), regularFont, TextAlignment.RIGHT));
+                revenueTable.addCell(createCell(revenue.percentage() + "%", regularFont, TextAlignment.RIGHT));
+            }
+            revenueTable.addCell(createCell("Total Revenue", boldFont, TextAlignment.LEFT).setBackgroundColor(HEADER_BG));
+            revenueTable.addCell(createCell(formatCurrency(incomeStatement.totalRevenue()), boldFont, TextAlignment.RIGHT).setBackgroundColor(HEADER_BG));
+            revenueTable.addCell(createCell("100%", boldFont, TextAlignment.RIGHT).setBackgroundColor(HEADER_BG));
+            document.add(revenueTable);
+
+            // Expense Section
+            document.add(new Paragraph("Expenses").setFont(boldFont).setFontSize(14).setMarginTop(20));
+            Table expenseTable = new Table(UnitValue.createPercentArray(new float[]{60, 25, 15})).useAllAvailableWidth();
+            addTableHeader(expenseTable, new String[]{"Category", "Amount", "% of Total"}, boldFont);
+
+            for (var expense : incomeStatement.expenseBreakdown()) {
+                expenseTable.addCell(createCell(expense.categoryLabel(), regularFont, TextAlignment.LEFT));
+                expenseTable.addCell(createCell(formatCurrency(expense.amount()), regularFont, TextAlignment.RIGHT));
+                expenseTable.addCell(createCell(expense.percentage() + "%", regularFont, TextAlignment.RIGHT));
+            }
+            expenseTable.addCell(createCell("Total Expenses", boldFont, TextAlignment.LEFT).setBackgroundColor(HEADER_BG));
+            expenseTable.addCell(createCell(formatCurrency(incomeStatement.totalExpenses()), boldFont, TextAlignment.RIGHT).setBackgroundColor(HEADER_BG));
+            expenseTable.addCell(createCell("100%", boldFont, TextAlignment.RIGHT).setBackgroundColor(HEADER_BG));
+            document.add(expenseTable);
+
+            // Net Income Summary
+            document.add(new Paragraph("Summary").setFont(boldFont).setFontSize(14).setMarginTop(20));
+            Table summaryTable = new Table(UnitValue.createPercentArray(new float[]{60, 40})).useAllAvailableWidth();
+            summaryTable.addCell(createCell("Net Income", boldFont, TextAlignment.LEFT));
+            summaryTable.addCell(createCell(formatCurrency(incomeStatement.netIncome()), boldFont, TextAlignment.RIGHT)
+                    .setFontColor(incomeStatement.netIncome().compareTo(java.math.BigDecimal.ZERO) >= 0 ? new DeviceRgb(22, 163, 74) : new DeviceRgb(220, 38, 38)));
+            summaryTable.addCell(createCell("Net Margin", regularFont, TextAlignment.LEFT));
+            summaryTable.addCell(createCell(incomeStatement.netMargin() + "%", regularFont, TextAlignment.RIGHT));
+            document.add(summaryTable);
+
+            // MoM Comparison
+            if (incomeStatement.previousPeriodRevenue() != null) {
+                document.add(new Paragraph("Month-over-Month Comparison").setFont(boldFont).setFontSize(14).setMarginTop(20));
+                Table momTable = new Table(UnitValue.createPercentArray(new float[]{40, 30, 30})).useAllAvailableWidth();
+                addTableHeader(momTable, new String[]{"Metric", "Change", "% Change"}, boldFont);
+                momTable.addCell(createCell("Revenue", regularFont, TextAlignment.LEFT));
+                momTable.addCell(createCell(formatCurrency(incomeStatement.totalRevenue().subtract(incomeStatement.previousPeriodRevenue())), regularFont, TextAlignment.RIGHT));
+                momTable.addCell(createCell(formatChangePercent(incomeStatement.revenueChange()), regularFont, TextAlignment.RIGHT));
+                momTable.addCell(createCell("Expenses", regularFont, TextAlignment.LEFT));
+                momTable.addCell(createCell(formatCurrency(incomeStatement.totalExpenses().subtract(incomeStatement.previousPeriodExpenses())), regularFont, TextAlignment.RIGHT));
+                momTable.addCell(createCell(formatChangePercent(incomeStatement.expenseChange()), regularFont, TextAlignment.RIGHT));
+                momTable.addCell(createCell("Net Income", regularFont, TextAlignment.LEFT));
+                momTable.addCell(createCell(formatCurrency(incomeStatement.netIncome().subtract(incomeStatement.previousPeriodNetIncome())), regularFont, TextAlignment.RIGHT));
+                momTable.addCell(createCell(formatChangePercent(incomeStatement.netIncomeChange()), regularFont, TextAlignment.RIGHT));
+                document.add(momTable);
+            }
+
+            addReportFooter(document, incomeStatement.generatedAt(), regularFont);
+            document.close();
+
+            LOGGER.info("Successfully generated Income Statement PDF");
+            return baos.toByteArray();
+        } catch (Exception e) {
+            LOGGER.error("Error generating Income Statement PDF", e);
+            throw new RuntimeException("Failed to generate Income Statement PDF", e);
+        }
+    }
+
+    @Override
+    public byte[] generateCashFlowPdf(com.ultrabms.dto.reports.CashFlowSummaryDto cashFlow) {
+        LOGGER.info("Generating Cash Flow PDF for period {} to {}", cashFlow.startDate(), cashFlow.endDate());
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+
+            addReportHeader(document, "Cash Flow Summary", cashFlow.propertyName(),
+                    cashFlow.startDate().format(DATE_FORMATTER) + " - " + cashFlow.endDate().format(DATE_FORMATTER),
+                    boldFont, regularFont);
+
+            // Summary Section
+            document.add(new Paragraph("Cash Flow Overview").setFont(boldFont).setFontSize(14).setMarginTop(20));
+            Table summaryTable = new Table(UnitValue.createPercentArray(new float[]{50, 50})).useAllAvailableWidth();
+            summaryTable.addCell(createCell("Total Cash Inflows", regularFont, TextAlignment.LEFT));
+            summaryTable.addCell(createCell(formatCurrency(cashFlow.totalInflows()), regularFont, TextAlignment.RIGHT)
+                    .setFontColor(new DeviceRgb(22, 163, 74)));
+            summaryTable.addCell(createCell("Total Cash Outflows", regularFont, TextAlignment.LEFT));
+            summaryTable.addCell(createCell(formatCurrency(cashFlow.totalOutflows()), regularFont, TextAlignment.RIGHT)
+                    .setFontColor(new DeviceRgb(220, 38, 38)));
+            summaryTable.addCell(createCell("Net Cash Flow", boldFont, TextAlignment.LEFT).setBackgroundColor(HEADER_BG));
+            summaryTable.addCell(createCell(formatCurrency(cashFlow.netCashFlow()), boldFont, TextAlignment.RIGHT).setBackgroundColor(HEADER_BG)
+                    .setFontColor(cashFlow.netCashFlow().compareTo(java.math.BigDecimal.ZERO) >= 0 ? new DeviceRgb(22, 163, 74) : new DeviceRgb(220, 38, 38)));
+            document.add(summaryTable);
+
+            // Monthly Breakdown
+            if (cashFlow.monthlyCashFlows() != null && !cashFlow.monthlyCashFlows().isEmpty()) {
+                document.add(new Paragraph("Monthly Breakdown").setFont(boldFont).setFontSize(14).setMarginTop(20));
+                Table monthlyTable = new Table(UnitValue.createPercentArray(new float[]{25, 25, 25, 25})).useAllAvailableWidth();
+                addTableHeader(monthlyTable, new String[]{"Month", "Inflows", "Outflows", "Net"}, boldFont);
+
+                for (var monthly : cashFlow.monthlyCashFlows()) {
+                    monthlyTable.addCell(createCell(monthly.month(), regularFont, TextAlignment.LEFT));
+                    monthlyTable.addCell(createCell(formatCurrency(monthly.inflows()), regularFont, TextAlignment.RIGHT));
+                    monthlyTable.addCell(createCell(formatCurrency(monthly.outflows()), regularFont, TextAlignment.RIGHT));
+                    monthlyTable.addCell(createCell(formatCurrency(monthly.net()), regularFont, TextAlignment.RIGHT)
+                            .setFontColor(monthly.net().compareTo(java.math.BigDecimal.ZERO) >= 0 ? new DeviceRgb(22, 163, 74) : new DeviceRgb(220, 38, 38)));
+                }
+                document.add(monthlyTable);
+            }
+
+            addReportFooter(document, cashFlow.generatedAt(), regularFont);
+            document.close();
+
+            LOGGER.info("Successfully generated Cash Flow PDF");
+            return baos.toByteArray();
+        } catch (Exception e) {
+            LOGGER.error("Error generating Cash Flow PDF", e);
+            throw new RuntimeException("Failed to generate Cash Flow PDF", e);
+        }
+    }
+
+    @Override
+    public byte[] generateARAgingPdf(com.ultrabms.dto.reports.ARAgingDto arAging) {
+        LOGGER.info("Generating AR Aging PDF as of {}", arAging.asOfDate());
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+
+            addReportHeader(document, "Accounts Receivable Aging Report", arAging.propertyName(),
+                    "As of " + arAging.asOfDate().format(DATE_FORMATTER), boldFont, regularFont);
+
+            // Summary
+            document.add(new Paragraph("Summary").setFont(boldFont).setFontSize(14).setMarginTop(20));
+            Table summaryTable = new Table(UnitValue.createPercentArray(new float[]{50, 50})).useAllAvailableWidth();
+            summaryTable.addCell(createCell("Total Outstanding", boldFont, TextAlignment.LEFT));
+            summaryTable.addCell(createCell(formatCurrency(arAging.totalOutstanding()), boldFont, TextAlignment.RIGHT));
+            summaryTable.addCell(createCell("Total Invoices", regularFont, TextAlignment.LEFT));
+            summaryTable.addCell(createCell(String.valueOf(arAging.totalInvoiceCount()), regularFont, TextAlignment.RIGHT));
+            summaryTable.addCell(createCell("Average Days Outstanding", regularFont, TextAlignment.LEFT));
+            summaryTable.addCell(createCell(arAging.averageDaysOutstanding() + " days", regularFont, TextAlignment.RIGHT));
+            document.add(summaryTable);
+
+            // Aging Buckets
+            document.add(new Paragraph("Aging Buckets").setFont(boldFont).setFontSize(14).setMarginTop(20));
+            Table bucketsTable = new Table(UnitValue.createPercentArray(new float[]{30, 25, 20, 25})).useAllAvailableWidth();
+            addTableHeader(bucketsTable, new String[]{"Bucket", "Amount", "Count", "% of Total"}, boldFont);
+
+            for (var bucket : arAging.agingBuckets()) {
+                bucketsTable.addCell(createCell(bucket.getBucketLabel(), regularFont, TextAlignment.LEFT));
+                bucketsTable.addCell(createCell(formatCurrency(bucket.amount()), regularFont, TextAlignment.RIGHT));
+                bucketsTable.addCell(createCell(String.valueOf(bucket.count()), regularFont, TextAlignment.CENTER));
+                bucketsTable.addCell(createCell(bucket.percentage() + "%", regularFont, TextAlignment.RIGHT));
+            }
+            document.add(bucketsTable);
+
+            // Tenant Details
+            if (arAging.tenantDetails() != null && !arAging.tenantDetails().isEmpty()) {
+                document.add(new Paragraph("Tenant Details").setFont(boldFont).setFontSize(14).setMarginTop(20));
+                Table tenantTable = new Table(UnitValue.createPercentArray(new float[]{20, 15, 12, 12, 12, 12, 12, 5})).useAllAvailableWidth();
+                addTableHeader(tenantTable, new String[]{"Tenant", "Total", "Current", "1-30", "31-60", "61-90", "90+", "#"}, boldFont);
+
+                for (var tenant : arAging.tenantDetails()) {
+                    tenantTable.addCell(createCell(tenant.tenantName(), regularFont, TextAlignment.LEFT).setFontSize(8));
+                    tenantTable.addCell(createCell(formatCurrency(tenant.totalOutstanding()), regularFont, TextAlignment.RIGHT).setFontSize(8));
+                    tenantTable.addCell(createCell(formatCurrency(tenant.currentAmount()), regularFont, TextAlignment.RIGHT).setFontSize(8));
+                    tenantTable.addCell(createCell(formatCurrency(tenant.days1to30()), regularFont, TextAlignment.RIGHT).setFontSize(8));
+                    tenantTable.addCell(createCell(formatCurrency(tenant.days31to60()), regularFont, TextAlignment.RIGHT).setFontSize(8));
+                    tenantTable.addCell(createCell(formatCurrency(tenant.days61to90()), regularFont, TextAlignment.RIGHT).setFontSize(8));
+                    tenantTable.addCell(createCell(formatCurrency(tenant.over90Days()), regularFont, TextAlignment.RIGHT).setFontSize(8));
+                    tenantTable.addCell(createCell(String.valueOf(tenant.invoiceCount()), regularFont, TextAlignment.CENTER).setFontSize(8));
+                }
+                document.add(tenantTable);
+            }
+
+            addReportFooter(document, arAging.generatedAt(), regularFont);
+            document.close();
+
+            LOGGER.info("Successfully generated AR Aging PDF");
+            return baos.toByteArray();
+        } catch (Exception e) {
+            LOGGER.error("Error generating AR Aging PDF", e);
+            throw new RuntimeException("Failed to generate AR Aging PDF", e);
+        }
+    }
+
+    @Override
+    public byte[] generateRevenueBreakdownPdf(com.ultrabms.dto.reports.RevenueBreakdownDto revenueBreakdown) {
+        LOGGER.info("Generating Revenue Breakdown PDF for period {} to {}", revenueBreakdown.startDate(), revenueBreakdown.endDate());
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+
+            addReportHeader(document, "Revenue Breakdown Report", revenueBreakdown.propertyName(),
+                    revenueBreakdown.startDate().format(DATE_FORMATTER) + " - " + revenueBreakdown.endDate().format(DATE_FORMATTER),
+                    boldFont, regularFont);
+
+            // Total Revenue
+            document.add(new Paragraph("Total Revenue: " + formatCurrency(revenueBreakdown.totalRevenue()))
+                    .setFont(boldFont).setFontSize(16).setMarginTop(20).setFontColor(new DeviceRgb(22, 163, 74)));
+
+            // Revenue by Property
+            if (revenueBreakdown.revenueByProperty() != null && !revenueBreakdown.revenueByProperty().isEmpty()) {
+                document.add(new Paragraph("Revenue by Property").setFont(boldFont).setFontSize(14).setMarginTop(20));
+                Table propertyTable = new Table(UnitValue.createPercentArray(new float[]{50, 30, 20})).useAllAvailableWidth();
+                addTableHeader(propertyTable, new String[]{"Property", "Amount", "% of Total"}, boldFont);
+
+                for (var property : revenueBreakdown.revenueByProperty()) {
+                    propertyTable.addCell(createCell(property.propertyName(), regularFont, TextAlignment.LEFT));
+                    propertyTable.addCell(createCell(formatCurrency(property.amount()), regularFont, TextAlignment.RIGHT));
+                    propertyTable.addCell(createCell(property.percentage() + "%", regularFont, TextAlignment.RIGHT));
+                }
+                document.add(propertyTable);
+            }
+
+            // Revenue by Type
+            if (revenueBreakdown.revenueByType() != null && !revenueBreakdown.revenueByType().isEmpty()) {
+                document.add(new Paragraph("Revenue by Type").setFont(boldFont).setFontSize(14).setMarginTop(20));
+                Table typeTable = new Table(UnitValue.createPercentArray(new float[]{50, 30, 20})).useAllAvailableWidth();
+                addTableHeader(typeTable, new String[]{"Revenue Type", "Amount", "% of Total"}, boldFont);
+
+                for (var type : revenueBreakdown.revenueByType()) {
+                    typeTable.addCell(createCell(type.typeLabel(), regularFont, TextAlignment.LEFT));
+                    typeTable.addCell(createCell(formatCurrency(type.amount()), regularFont, TextAlignment.RIGHT));
+                    typeTable.addCell(createCell(type.percentage() + "%", regularFont, TextAlignment.RIGHT));
+                }
+                document.add(typeTable);
+            }
+
+            // Monthly Trend
+            if (revenueBreakdown.monthlyTrend() != null && !revenueBreakdown.monthlyTrend().isEmpty()) {
+                document.add(new Paragraph("Monthly Trend").setFont(boldFont).setFontSize(14).setMarginTop(20));
+                Table trendTable = new Table(UnitValue.createPercentArray(new float[]{50, 50})).useAllAvailableWidth();
+                addTableHeader(trendTable, new String[]{"Month", "Revenue"}, boldFont);
+
+                for (var trend : revenueBreakdown.monthlyTrend()) {
+                    trendTable.addCell(createCell(trend.month(), regularFont, TextAlignment.LEFT));
+                    trendTable.addCell(createCell(formatCurrency(trend.amount()), regularFont, TextAlignment.RIGHT));
+                }
+                document.add(trendTable);
+            }
+
+            addReportFooter(document, revenueBreakdown.generatedAt(), regularFont);
+            document.close();
+
+            LOGGER.info("Successfully generated Revenue Breakdown PDF");
+            return baos.toByteArray();
+        } catch (Exception e) {
+            LOGGER.error("Error generating Revenue Breakdown PDF", e);
+            throw new RuntimeException("Failed to generate Revenue Breakdown PDF", e);
+        }
+    }
+
+    @Override
+    public byte[] generateExpenseBreakdownPdf(com.ultrabms.dto.reports.ExpenseBreakdownDto expenseBreakdown) {
+        LOGGER.info("Generating Expense Breakdown PDF for period {} to {}", expenseBreakdown.startDate(), expenseBreakdown.endDate());
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+
+            addReportHeader(document, "Expense Breakdown Report", expenseBreakdown.propertyName(),
+                    expenseBreakdown.startDate().format(DATE_FORMATTER) + " - " + expenseBreakdown.endDate().format(DATE_FORMATTER),
+                    boldFont, regularFont);
+
+            // Total Expenses
+            document.add(new Paragraph("Total Expenses: " + formatCurrency(expenseBreakdown.totalExpenses()))
+                    .setFont(boldFont).setFontSize(16).setMarginTop(20).setFontColor(new DeviceRgb(220, 38, 38)));
+
+            // Expense by Category
+            if (expenseBreakdown.expenseByCategory() != null && !expenseBreakdown.expenseByCategory().isEmpty()) {
+                document.add(new Paragraph("Expenses by Category").setFont(boldFont).setFontSize(14).setMarginTop(20));
+                Table categoryTable = new Table(UnitValue.createPercentArray(new float[]{50, 30, 20})).useAllAvailableWidth();
+                addTableHeader(categoryTable, new String[]{"Category", "Amount", "% of Total"}, boldFont);
+
+                for (var category : expenseBreakdown.expenseByCategory()) {
+                    categoryTable.addCell(createCell(category.categoryLabel(), regularFont, TextAlignment.LEFT));
+                    categoryTable.addCell(createCell(formatCurrency(category.amount()), regularFont, TextAlignment.RIGHT));
+                    categoryTable.addCell(createCell(category.percentage() + "%", regularFont, TextAlignment.RIGHT));
+                }
+                document.add(categoryTable);
+            }
+
+            // Top Vendors
+            if (expenseBreakdown.topVendors() != null && !expenseBreakdown.topVendors().isEmpty()) {
+                document.add(new Paragraph("Top Vendors").setFont(boldFont).setFontSize(14).setMarginTop(20));
+                Table vendorTable = new Table(UnitValue.createPercentArray(new float[]{50, 30, 20})).useAllAvailableWidth();
+                addTableHeader(vendorTable, new String[]{"Vendor", "Amount", "% of Total"}, boldFont);
+
+                for (var vendor : expenseBreakdown.topVendors()) {
+                    vendorTable.addCell(createCell(vendor.vendorName(), regularFont, TextAlignment.LEFT));
+                    vendorTable.addCell(createCell(formatCurrency(vendor.amount()), regularFont, TextAlignment.RIGHT));
+                    vendorTable.addCell(createCell(vendor.percentage() + "%", regularFont, TextAlignment.RIGHT));
+                }
+                document.add(vendorTable);
+            }
+
+            // Monthly Trend
+            if (expenseBreakdown.monthlyTrend() != null && !expenseBreakdown.monthlyTrend().isEmpty()) {
+                document.add(new Paragraph("Monthly Trend").setFont(boldFont).setFontSize(14).setMarginTop(20));
+                Table trendTable = new Table(UnitValue.createPercentArray(new float[]{50, 50})).useAllAvailableWidth();
+                addTableHeader(trendTable, new String[]{"Month", "Expenses"}, boldFont);
+
+                for (var trend : expenseBreakdown.monthlyTrend()) {
+                    trendTable.addCell(createCell(trend.month(), regularFont, TextAlignment.LEFT));
+                    trendTable.addCell(createCell(formatCurrency(trend.amount()), regularFont, TextAlignment.RIGHT));
+                }
+                document.add(trendTable);
+            }
+
+            addReportFooter(document, expenseBreakdown.generatedAt(), regularFont);
+            document.close();
+
+            LOGGER.info("Successfully generated Expense Breakdown PDF");
+            return baos.toByteArray();
+        } catch (Exception e) {
+            LOGGER.error("Error generating Expense Breakdown PDF", e);
+            throw new RuntimeException("Failed to generate Expense Breakdown PDF", e);
+        }
+    }
+
+    @Override
+    public byte[] generateFinancialDashboardPdf(com.ultrabms.dto.reports.FinancialDashboardDto dashboard) {
+        LOGGER.info("Generating Financial Dashboard PDF");
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+
+            addReportHeader(document, "Financial Dashboard", dashboard.propertyName(),
+                    dashboard.currentMonth(), boldFont, regularFont);
+
+            // KPIs Section
+            document.add(new Paragraph("Key Performance Indicators").setFont(boldFont).setFontSize(14).setMarginTop(20));
+            Table kpiTable = new Table(UnitValue.createPercentArray(new float[]{50, 30, 20})).useAllAvailableWidth();
+            addTableHeader(kpiTable, new String[]{"Metric", "Value", "Growth"}, boldFont);
+
+            var kpis = dashboard.kpis();
+            kpiTable.addCell(createCell("Total Revenue", regularFont, TextAlignment.LEFT));
+            kpiTable.addCell(createCell(formatCurrency(kpis.totalRevenue()), regularFont, TextAlignment.RIGHT));
+            kpiTable.addCell(createCell(formatChangePercent(kpis.revenueGrowth()), regularFont, TextAlignment.RIGHT));
+
+            kpiTable.addCell(createCell("Total Expenses", regularFont, TextAlignment.LEFT));
+            kpiTable.addCell(createCell(formatCurrency(kpis.totalExpenses()), regularFont, TextAlignment.RIGHT));
+            kpiTable.addCell(createCell(formatChangePercent(kpis.expenseGrowth()), regularFont, TextAlignment.RIGHT));
+
+            kpiTable.addCell(createCell("Net Profit/Loss", boldFont, TextAlignment.LEFT));
+            kpiTable.addCell(createCell(formatCurrency(kpis.netProfitLoss()), boldFont, TextAlignment.RIGHT)
+                    .setFontColor(kpis.netProfitLoss().compareTo(java.math.BigDecimal.ZERO) >= 0 ? new DeviceRgb(22, 163, 74) : new DeviceRgb(220, 38, 38)));
+            kpiTable.addCell(createCell("", regularFont, TextAlignment.RIGHT));
+
+            kpiTable.addCell(createCell("Collection Rate", regularFont, TextAlignment.LEFT));
+            kpiTable.addCell(createCell(kpis.collectionRate() + "%", regularFont, TextAlignment.RIGHT));
+            kpiTable.addCell(createCell("", regularFont, TextAlignment.RIGHT));
+
+            kpiTable.addCell(createCell("Outstanding Receivables", regularFont, TextAlignment.LEFT));
+            kpiTable.addCell(createCell(formatCurrency(kpis.outstandingReceivables()), regularFont, TextAlignment.RIGHT));
+            kpiTable.addCell(createCell("", regularFont, TextAlignment.RIGHT));
+            document.add(kpiTable);
+
+            // Insights Section
+            if (dashboard.insights() != null) {
+                document.add(new Paragraph("Insights").setFont(boldFont).setFontSize(14).setMarginTop(20));
+
+                if (dashboard.insights().topPerformingProperty() != null) {
+                    var topProperty = dashboard.insights().topPerformingProperty();
+                    document.add(new Paragraph("Top Performing Property: " + topProperty.propertyName() +
+                            " (" + formatCurrency(topProperty.revenue()) + ")")
+                            .setFont(regularFont).setFontSize(11));
+                }
+
+                if (dashboard.insights().highestExpenseCategory() != null) {
+                    var highestExpense = dashboard.insights().highestExpenseCategory();
+                    document.add(new Paragraph("Highest Expense Category: " + highestExpense.categoryLabel() +
+                            " (" + formatCurrency(highestExpense.amount()) + ")")
+                            .setFont(regularFont).setFontSize(11));
+                }
+            }
+
+            addReportFooter(document, dashboard.cachedAt(), regularFont);
+            document.close();
+
+            LOGGER.info("Successfully generated Financial Dashboard PDF");
+            return baos.toByteArray();
+        } catch (Exception e) {
+            LOGGER.error("Error generating Financial Dashboard PDF", e);
+            throw new RuntimeException("Failed to generate Financial Dashboard PDF", e);
+        }
+    }
+
+    // Helper methods for report PDF generation
+    private void addReportHeader(Document document, String title, String propertyName, String dateRange,
+                                  PdfFont boldFont, PdfFont regularFont) {
+        document.add(new Paragraph(title)
+                .setFont(boldFont)
+                .setFontSize(20)
+                .setFontColor(PRIMARY_COLOR)
+                .setTextAlignment(TextAlignment.CENTER));
+
+        if (propertyName != null && !propertyName.isEmpty()) {
+            document.add(new Paragraph(propertyName)
+                    .setFont(regularFont)
+                    .setFontSize(12)
+                    .setTextAlignment(TextAlignment.CENTER));
+        }
+
+        document.add(new Paragraph(dateRange)
+                .setFont(regularFont)
+                .setFontSize(11)
+                .setFontColor(new DeviceRgb(107, 114, 128))
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(20));
+    }
+
+    private void addReportFooter(Document document, java.time.LocalDateTime generatedAt, PdfFont regularFont) {
+        document.add(new Paragraph("Generated: " + generatedAt.format(java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")))
+                .setFont(regularFont)
+                .setFontSize(9)
+                .setFontColor(new DeviceRgb(107, 114, 128))
+                .setTextAlignment(TextAlignment.RIGHT)
+                .setMarginTop(30));
+    }
+
+    private void addTableHeader(Table table, String[] headers, PdfFont boldFont) {
+        for (String header : headers) {
+            table.addHeaderCell(createCell(header, boldFont, TextAlignment.CENTER)
+                    .setBackgroundColor(HEADER_BG));
+        }
+    }
+
+    private Cell createCell(String content, PdfFont font, TextAlignment alignment) {
+        return new Cell()
+                .add(new Paragraph(content).setFont(font).setFontSize(10))
+                .setTextAlignment(alignment)
+                .setBorder(Border.NO_BORDER)
+                .setPadding(5);
+    }
+
+    private String formatChangePercent(java.math.BigDecimal change) {
+        if (change == null) return "";
+        String sign = change.compareTo(java.math.BigDecimal.ZERO) >= 0 ? "+" : "";
+        return sign + change + "%";
+    }
 }

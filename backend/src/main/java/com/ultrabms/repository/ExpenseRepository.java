@@ -374,4 +374,105 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
      */
     @Query("SELECT COUNT(e) FROM Expense e WHERE e.id IN :ids AND e.paymentStatus = 'PENDING' AND e.isDeleted = false")
     long countPendingByIdIn(@Param("ids") List<UUID> ids);
+
+    // =================================================================
+    // FINANCIAL REPORTING QUERIES (Story 6.4)
+    // =================================================================
+
+    /**
+     * Get expense breakdown by category with optional property filter
+     */
+    @Query("SELECT e.category, COALESCE(SUM(e.amount), 0), COUNT(e) " +
+            "FROM Expense e " +
+            "WHERE e.isDeleted = false AND e.expenseDate BETWEEN :fromDate AND :toDate " +
+            "AND (:propertyId IS NULL OR e.property.id = :propertyId) " +
+            "GROUP BY e.category ORDER BY SUM(e.amount) DESC")
+    List<Object[]> getCategoryBreakdownByProperty(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("propertyId") UUID propertyId);
+
+    /**
+     * Get monthly expense trend with optional property filter
+     */
+    @Query(value = "SELECT EXTRACT(YEAR FROM e.expense_date) as year, " +
+            "EXTRACT(MONTH FROM e.expense_date) as month, " +
+            "COALESCE(SUM(e.amount), 0) as total_amount " +
+            "FROM expenses e " +
+            "WHERE e.is_deleted = false AND e.expense_date BETWEEN :fromDate AND :toDate " +
+            "AND (:propertyId IS NULL OR e.property_id = :propertyId) " +
+            "GROUP BY EXTRACT(YEAR FROM e.expense_date), EXTRACT(MONTH FROM e.expense_date) " +
+            "ORDER BY year ASC, month ASC", nativeQuery = true)
+    List<Object[]> getMonthlyExpenseTrend(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("propertyId") UUID propertyId);
+
+    /**
+     * Get top vendors by payment amount
+     * Returns: [vendorId, vendorName, totalPaid]
+     */
+    @Query("SELECT e.vendor.id, e.vendor.companyName, COALESCE(SUM(e.amount), 0) " +
+            "FROM Expense e " +
+            "WHERE e.isDeleted = false AND e.paymentStatus = 'PAID' " +
+            "AND e.vendor IS NOT NULL " +
+            "AND e.paymentDate BETWEEN :fromDate AND :toDate " +
+            "AND (:propertyId IS NULL OR e.property.id = :propertyId) " +
+            "GROUP BY e.vendor.id, e.vendor.companyName " +
+            "ORDER BY SUM(e.amount) DESC " +
+            "LIMIT 5")
+    List<Object[]> getTopVendorsByPayment(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("propertyId") UUID propertyId);
+
+    /**
+     * Get maintenance cost by property
+     */
+    @Query("SELECT e.property.id, e.property.name, COALESCE(SUM(e.amount), 0) " +
+            "FROM Expense e " +
+            "WHERE e.isDeleted = false AND e.category = 'MAINTENANCE' " +
+            "AND e.expenseDate BETWEEN :fromDate AND :toDate " +
+            "GROUP BY e.property.id, e.property.name " +
+            "ORDER BY SUM(e.amount) DESC")
+    List<Object[]> getMaintenanceCostByProperty(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * Get total expense amount with optional property filter
+     */
+    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e " +
+            "WHERE e.isDeleted = false AND e.expenseDate BETWEEN :fromDate AND :toDate " +
+            "AND (:propertyId IS NULL OR e.property.id = :propertyId)")
+    BigDecimal getTotalExpensesInPeriodByProperty(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("propertyId") UUID propertyId);
+
+    /**
+     * Get total paid expense amount with optional property filter (for cash outflows)
+     */
+    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e " +
+            "WHERE e.isDeleted = false AND e.paymentStatus = 'PAID' " +
+            "AND e.paymentDate BETWEEN :fromDate AND :toDate " +
+            "AND (:propertyId IS NULL OR e.property.id = :propertyId)")
+    BigDecimal getTotalPaidExpensesInPeriodByProperty(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("propertyId") UUID propertyId);
+
+    /**
+     * Get highest expense category
+     * Returns: [category, totalAmount]
+     */
+    @Query("SELECT e.category, COALESCE(SUM(e.amount), 0) " +
+            "FROM Expense e " +
+            "WHERE e.isDeleted = false AND e.expenseDate BETWEEN :fromDate AND :toDate " +
+            "AND (:propertyId IS NULL OR e.property.id = :propertyId) " +
+            "GROUP BY e.category " +
+            "ORDER BY SUM(e.amount) DESC " +
+            "LIMIT 1")
+    Object[] getHighestExpenseCategory(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("propertyId") UUID propertyId);
 }

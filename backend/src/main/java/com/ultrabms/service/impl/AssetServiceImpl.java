@@ -86,7 +86,7 @@ public class AssetServiceImpl implements AssetService {
         Asset savedAsset = assetRepository.save(asset);
         LOGGER.info("Asset created: {} with number: {}", savedAsset.getId(), savedAsset.getAssetNumber());
 
-        return enrichResponseDto(assetMapper.toResponseDto(savedAsset), property.getPropertyName());
+        return enrichResponseDto(assetMapper.toResponseDto(savedAsset), property.getName());
     }
 
     @Override
@@ -102,7 +102,7 @@ public class AssetServiceImpl implements AssetService {
 
         // Enrich with property name
         if (property != null) {
-            responseDto = enrichResponseDto(responseDto, property.getPropertyName());
+            responseDto = enrichResponseDto(responseDto, property.getName());
         }
 
         // Add maintenance summary
@@ -132,7 +132,7 @@ public class AssetServiceImpl implements AssetService {
                 .toList();
 
         Map<UUID, String> propertyNames = propertyRepository.findAllById(propertyIds).stream()
-                .collect(Collectors.toMap(Property::getId, Property::getPropertyName));
+                .collect(Collectors.toMap(Property::getId, Property::getName));
 
         return assetsPage.map(asset -> {
             AssetListDto dto = assetMapper.toListDto(asset);
@@ -168,7 +168,7 @@ public class AssetServiceImpl implements AssetService {
 
         AssetResponseDto responseDto = assetMapper.toResponseDto(updatedAsset);
         if (property != null) {
-            responseDto = enrichResponseDto(responseDto, property.getPropertyName());
+            responseDto = enrichResponseDto(responseDto, property.getName());
         }
         return enrichWithMaintenanceSummary(responseDto, id);
     }
@@ -190,7 +190,7 @@ public class AssetServiceImpl implements AssetService {
 
         AssetResponseDto responseDto = assetMapper.toResponseDto(updatedAsset);
         if (property != null) {
-            responseDto = enrichResponseDto(responseDto, property.getPropertyName());
+            responseDto = enrichResponseDto(responseDto, property.getName());
         }
         return enrichWithMaintenanceSummary(responseDto, id);
     }
@@ -349,7 +349,7 @@ public class AssetServiceImpl implements AssetService {
                 .toList();
 
         Map<UUID, String> propertyNames = propertyRepository.findAllById(propertyIds).stream()
-                .collect(Collectors.toMap(Property::getId, Property::getPropertyName));
+                .collect(Collectors.toMap(Property::getId, Property::getName));
 
         return assets.stream()
                 .map(asset -> enrichExpiringWarrantyDto(
@@ -447,25 +447,29 @@ public class AssetServiceImpl implements AssetService {
                 dto.assetName(),
                 dto.category(),
                 dto.categoryDisplayName(),
+                dto.status(),
+                dto.statusDisplayName(),
+                dto.statusColor(),
                 dto.propertyId(),
                 propertyName,
+                dto.propertyAddress(),
                 dto.location(),
                 dto.manufacturer(),
                 dto.modelNumber(),
                 dto.serialNumber(),
                 dto.installationDate(),
                 dto.warrantyExpiryDate(),
-                dto.warrantyStatus(),
-                dto.warrantyDaysRemaining(),
-                dto.purchaseCost(),
-                dto.estimatedUsefulLife(),
-                dto.status(),
-                dto.statusDisplayName(),
-                dto.statusColor(),
                 dto.lastMaintenanceDate(),
                 dto.nextMaintenanceDate(),
-                dto.statusNotes(),
+                dto.purchaseCost(),
+                dto.estimatedUsefulLife(),
+                dto.warrantyStatus(),
+                dto.warrantyDaysRemaining(),
+                dto.documents(),
                 dto.maintenanceSummary(),
+                dto.statusNotes(),
+                dto.createdBy(),
+                dto.createdByName(),
                 dto.createdAt(),
                 dto.updatedAt(),
                 dto.editable(),
@@ -478,7 +482,6 @@ public class AssetServiceImpl implements AssetService {
      */
     private AssetResponseDto enrichWithMaintenanceSummary(AssetResponseDto dto, UUID assetId) {
         long totalWorkOrders = workOrderRepository.countByAssetId(assetId);
-        long completedWorkOrders = workOrderRepository.countByAssetIdAndStatus(assetId, WorkOrderStatus.COMPLETED);
 
         // Calculate total maintenance cost from completed work orders
         List<WorkOrder> completedWOs = workOrderRepository.findByAssetIdOrderByCreatedAtDesc(assetId).stream()
@@ -489,10 +492,13 @@ public class AssetServiceImpl implements AssetService {
                 .map(WorkOrder::getActualCost)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // Get last maintenance description
+        String lastDescription = completedWOs.isEmpty() ? null : completedWOs.get(0).getDescription();
+
         AssetResponseDto.MaintenanceSummaryDto summary = new AssetResponseDto.MaintenanceSummaryDto(
-                totalWorkOrders,
-                completedWorkOrders,
-                totalCost
+                (int) totalWorkOrders,
+                totalCost,
+                lastDescription
         );
 
         return new AssetResponseDto(
@@ -501,25 +507,29 @@ public class AssetServiceImpl implements AssetService {
                 dto.assetName(),
                 dto.category(),
                 dto.categoryDisplayName(),
+                dto.status(),
+                dto.statusDisplayName(),
+                dto.statusColor(),
                 dto.propertyId(),
                 dto.propertyName(),
+                dto.propertyAddress(),
                 dto.location(),
                 dto.manufacturer(),
                 dto.modelNumber(),
                 dto.serialNumber(),
                 dto.installationDate(),
                 dto.warrantyExpiryDate(),
-                dto.warrantyStatus(),
-                dto.warrantyDaysRemaining(),
-                dto.purchaseCost(),
-                dto.estimatedUsefulLife(),
-                dto.status(),
-                dto.statusDisplayName(),
-                dto.statusColor(),
                 dto.lastMaintenanceDate(),
                 dto.nextMaintenanceDate(),
-                dto.statusNotes(),
+                dto.purchaseCost(),
+                dto.estimatedUsefulLife(),
+                dto.warrantyStatus(),
+                dto.warrantyDaysRemaining(),
+                dto.documents(),
                 summary,
+                dto.statusNotes(),
+                dto.createdBy(),
+                dto.createdByName(),
                 dto.createdAt(),
                 dto.updatedAt(),
                 dto.editable(),

@@ -76,4 +76,62 @@ public interface PdfGenerationService {
      * @return PDF content as byte array
      */
     byte[] generateRefundReceiptPdf(CheckoutResponse checkout, DepositRefundDto depositRefund);
+
+    // ============================================================
+    // FINANCIAL REPORT PDF METHODS - Story 6.4
+    // ============================================================
+
+    /**
+     * Generate Income Statement PDF report
+     * Story 6.4 AC #16: PDF export for reports
+     *
+     * @param incomeStatement Income statement data
+     * @return PDF content as byte array
+     */
+    byte[] generateIncomeStatementPdf(com.ultrabms.dto.reports.IncomeStatementDto incomeStatement);
+
+    /**
+     * Generate Cash Flow Summary PDF report
+     * Story 6.4 AC #16: PDF export for reports
+     *
+     * @param cashFlow Cash flow summary data
+     * @return PDF content as byte array
+     */
+    byte[] generateCashFlowPdf(com.ultrabms.dto.reports.CashFlowSummaryDto cashFlow);
+
+    /**
+     * Generate AR Aging PDF report
+     * Story 6.4 AC #16: PDF export for reports
+     *
+     * @param arAging AR aging data
+     * @return PDF content as byte array
+     */
+    byte[] generateARAgingPdf(com.ultrabms.dto.reports.ARAgingDto arAging);
+
+    /**
+     * Generate Revenue Breakdown PDF report
+     * Story 6.4 AC #16: PDF export for reports
+     *
+     * @param revenueBreakdown Revenue breakdown data
+     * @return PDF content as byte array
+     */
+    byte[] generateRevenueBreakdownPdf(com.ultrabms.dto.reports.RevenueBreakdownDto revenueBreakdown);
+
+    /**
+     * Generate Expense Breakdown PDF report
+     * Story 6.4 AC #16: PDF export for reports
+     *
+     * @param expenseBreakdown Expense breakdown data
+     * @return PDF content as byte array
+     */
+    byte[] generateExpenseBreakdownPdf(com.ultrabms.dto.reports.ExpenseBreakdownDto expenseBreakdown);
+
+    /**
+     * Generate Financial Dashboard PDF report
+     * Story 6.4 AC #16: PDF export for reports
+     *
+     * @param dashboard Financial dashboard data
+     * @return PDF content as byte array
+     */
+    byte[] generateFinancialDashboardPdf(com.ultrabms.dto.reports.FinancialDashboardDto dashboard);
 }

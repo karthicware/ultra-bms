@@ -129,12 +129,12 @@ public class AssetWarrantySchedulerJob {
                 .collect(Collectors.toMap(Property::getId, p -> p));
 
         // Get admin/property manager users to notify
-        List<User> managers = userRepository.findByRoleIn(List.of(UserRole.ADMIN, UserRole.PROPERTY_MANAGER));
+        List<User> managers = userRepository.findByRoleIn(List.of(UserRole.SUPER_ADMIN, UserRole.PROPERTY_MANAGER));
 
         int sentCount = 0;
         for (Asset asset : assets) {
             Property property = propertyMap.get(asset.getPropertyId());
-            String propertyName = property != null ? property.getPropertyName() : "Unknown Property";
+            String propertyName = property != null ? property.getName() : "Unknown Property";
 
             int daysUntilExpiry = (int) ChronoUnit.DAYS.between(today, asset.getWarrantyExpiryDate());
 

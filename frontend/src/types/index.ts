@@ -48,3 +48,4 @@ export * from './checkout';
 export * from './parking';
 export * from './pdc';
 export * from './asset';
+export * from './reports';

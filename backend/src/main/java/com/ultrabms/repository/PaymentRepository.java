@@ -333,4 +333,38 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
      */
     @Query("SELECT p FROM Payment p WHERE p.invoice.property.id = :propertyId ORDER BY p.createdAt DESC")
     List<Payment> findRecentPaymentsByProperty(@Param("propertyId") UUID propertyId, Pageable pageable);
+
+    // =================================================================
+    // FINANCIAL REPORTING QUERIES (Story 6.4)
+    // =================================================================
+
+    /**
+     * Get total cash inflows (payments) with optional property filter
+     * Used for cash flow report
+     */
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p " +
+            "WHERE p.paymentDate BETWEEN :fromDate AND :toDate " +
+            "AND (:propertyId IS NULL OR p.invoice.property.id = :propertyId)")
+    BigDecimal getTotalCashInflowsInPeriodByProperty(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("propertyId") UUID propertyId);
+
+    /**
+     * Get monthly cash inflows
+     * Returns: [year, month, totalAmount]
+     */
+    @Query(value = "SELECT EXTRACT(YEAR FROM p.payment_date) as year, " +
+            "EXTRACT(MONTH FROM p.payment_date) as month, " +
+            "COALESCE(SUM(p.amount), 0) as total_amount " +
+            "FROM payments p " +
+            "JOIN invoices i ON p.invoice_id = i.id " +
+            "WHERE p.payment_date BETWEEN :fromDate AND :toDate " +
+            "AND (:propertyId IS NULL OR i.property_id = :propertyId) " +
+            "GROUP BY EXTRACT(YEAR FROM p.payment_date), EXTRACT(MONTH FROM p.payment_date) " +
+            "ORDER BY year ASC, month ASC", nativeQuery = true)
+    List<Object[]> getMonthlyCashInflows(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("propertyId") UUID propertyId);
 }

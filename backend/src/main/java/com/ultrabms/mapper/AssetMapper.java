@@ -111,11 +111,12 @@ public class AssetMapper {
         }
 
         entity.setStatus(dto.status());
-        entity.setStatusNotes(dto.statusNotes());
+        entity.setStatusNotes(dto.notes());
     }
 
     /**
      * Convert Asset entity to AssetResponseDto (full detail)
+     * Note: propertyName and propertyAddress are resolved by service layer
      *
      * @param entity Asset entity
      * @return AssetResponseDto
@@ -135,25 +136,29 @@ public class AssetMapper {
                 entity.getAssetName(),
                 entity.getCategory(),
                 entity.getCategory() != null ? entity.getCategory().getDisplayName() : null,
+                entity.getStatus(),
+                entity.getStatus() != null ? entity.getStatus().getDisplayName() : null,
+                entity.getStatus() != null ? entity.getStatus().getColor() : null,
                 entity.getPropertyId(),
-                entity.getPropertyName(),
+                null, // propertyName - resolved by service
+                null, // propertyAddress - resolved by service
                 entity.getLocation(),
                 entity.getManufacturer(),
                 entity.getModelNumber(),
                 entity.getSerialNumber(),
                 entity.getInstallationDate(),
                 entity.getWarrantyExpiryDate(),
-                warrantyStatus,
-                warrantyDaysRemaining,
-                entity.getPurchaseCost(),
-                entity.getEstimatedUsefulLife(),
-                entity.getStatus(),
-                entity.getStatus() != null ? entity.getStatus().getDisplayName() : null,
-                entity.getStatus() != null ? entity.getStatus().getColor() : null,
                 entity.getLastMaintenanceDate(),
                 entity.getNextMaintenanceDate(),
-                entity.getStatusNotes(),
+                entity.getPurchaseCost(),
+                entity.getEstimatedUsefulLife(),
+                warrantyStatus,
+                warrantyDaysRemaining,
+                null, // documents - populated by service if needed
                 null, // maintenanceSummary - populated by service
+                entity.getStatusNotes(),
+                entity.getCreatedBy(),
+                null, // createdByName - resolved by service if needed
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
                 entity.isEditable(),
@@ -163,6 +168,7 @@ public class AssetMapper {
 
     /**
      * Convert Asset entity to AssetListDto (summary for list view)
+     * Note: propertyName is resolved by service layer
      *
      * @param entity Asset entity
      * @return AssetListDto
@@ -185,7 +191,7 @@ public class AssetMapper {
                 entity.getStatus() != null ? entity.getStatus().getDisplayName() : null,
                 entity.getStatus() != null ? entity.getStatus().getColor() : null,
                 entity.getPropertyId(),
-                entity.getPropertyName(),
+                null, // propertyName - resolved by service
                 entity.getLocation(),
                 entity.getWarrantyExpiryDate(),
                 warrantyStatus,
@@ -280,7 +286,7 @@ public class AssetMapper {
                 workOrder.getCreatedAt(),
                 workOrder.getDescription(),
                 workOrder.getStatus() != null ? workOrder.getStatus().name() : null,
-                workOrder.getStatus() != null ? workOrder.getStatus().getDisplayName() : null,
+                workOrder.getStatus() != null ? formatEnumDisplayName(workOrder.getStatus().name()) : null,
                 workOrder.getActualCost(),
                 workOrder.getAssignedTo(),  // Vendor UUID (if assigneeType is EXTERNAL_VENDOR)
                 null, // vendorName - resolved by service
@@ -306,7 +312,7 @@ public class AssetMapper {
                 workOrder.getCreatedAt(),
                 workOrder.getDescription(),
                 workOrder.getStatus() != null ? workOrder.getStatus().name() : null,
-                workOrder.getStatus() != null ? workOrder.getStatus().getDisplayName() : null,
+                workOrder.getStatus() != null ? formatEnumDisplayName(workOrder.getStatus().name()) : null,
                 workOrder.getActualCost(),
                 workOrder.getAssignedTo(),
                 vendorName,
@@ -356,7 +362,7 @@ public class AssetMapper {
                 entity.getCategory(),
                 entity.getCategory() != null ? entity.getCategory().getDisplayName() : null,
                 entity.getPropertyId(),
-                entity.getPropertyName(),
+                null, // propertyName - resolved by service
                 entity.getWarrantyExpiryDate(),
                 daysUntilExpiry
         );
@@ -440,5 +446,29 @@ public class AssetMapper {
         } else {
             return String.format("%.1f GB", bytes / (1024.0 * 1024 * 1024));
         }
+    }
+
+    /**
+     * Format enum name to display name (e.g., IN_PROGRESS -> In Progress)
+     *
+     * @param enumName Enum name in UPPER_SNAKE_CASE
+     * @return Display name in Title Case with spaces
+     */
+    private String formatEnumDisplayName(String enumName) {
+        if (enumName == null || enumName.isEmpty()) {
+            return null;
+        }
+        String[] words = enumName.toLowerCase().split("_");
+        StringBuilder result = new StringBuilder();
+        for (String word : words) {
+            if (!result.isEmpty()) {
+                result.append(" ");
+            }
+            result.append(Character.toUpperCase(word.charAt(0)));
+            if (word.length() > 1) {
+                result.append(word.substring(1));
+            }
+        }
+        return result.toString();
     }
 }

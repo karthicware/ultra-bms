@@ -387,4 +387,164 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
             "EXTRACT(MONTH FROM i.invoice_date) = :month AND EXTRACT(YEAR FROM i.invoice_date) = :year)",
             nativeQuery = true)
     List<UUID> findTenantsNeedingInvoice(@Param("dayOfMonth") int dayOfMonth, @Param("month") int month, @Param("year") int year);
+
+    // =================================================================
+    // FINANCIAL REPORTING QUERIES (Story 6.4)
+    // =================================================================
+
+    /**
+     * Get revenue breakdown by invoice line item type
+     * Returns: [type, amount] for each revenue type (baseRent, serviceCharges, parkingFees, lateFee, additionalCharges)
+     */
+    @Query(value = "SELECT " +
+            "COALESCE(SUM(i.base_rent), 0) as rental_income, " +
+            "COALESCE(SUM(i.service_charges), 0) as service_charges, " +
+            "COALESCE(SUM(i.parking_fees), 0) as parking_fees, " +
+            "COALESCE(SUM(CASE WHEN i.late_fee_applied THEN COALESCE(i.late_fee, 0) ELSE 0 END), 0) as late_fees, " +
+            "COALESCE(SUM(i.additional_charges_total), 0) as other_income " +
+            "FROM invoices i " +
+            "WHERE i.status != 'CANCELLED' " +
+            "AND i.invoice_date BETWEEN :fromDate AND :toDate " +
+            "AND (:propertyId IS NULL OR i.property_id = :propertyId)", nativeQuery = true)
+    Object[] getRevenueBreakdownByType(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("propertyId") UUID propertyId);
+
+    /**
+     * Get revenue by property
+     * Returns: [propertyId, propertyName, totalAmount]
+     */
+    @Query("SELECT i.property.id, i.property.name, COALESCE(SUM(i.totalAmount), 0) " +
+            "FROM Invoice i " +
+            "WHERE i.status != 'CANCELLED' AND i.invoiceDate BETWEEN :fromDate AND :toDate " +
+            "GROUP BY i.property.id, i.property.name " +
+            "ORDER BY SUM(i.totalAmount) DESC")
+    List<Object[]> getRevenueByProperty(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * Get monthly revenue trend
+     * Returns: [year, month, totalAmount]
+     */
+    @Query(value = "SELECT EXTRACT(YEAR FROM i.invoice_date) as year, " +
+            "EXTRACT(MONTH FROM i.invoice_date) as month, " +
+            "COALESCE(SUM(i.total_amount), 0) as total_amount " +
+            "FROM invoices i " +
+            "WHERE i.status != 'CANCELLED' AND i.invoice_date BETWEEN :fromDate AND :toDate " +
+            "AND (:propertyId IS NULL OR i.property_id = :propertyId) " +
+            "GROUP BY EXTRACT(YEAR FROM i.invoice_date), EXTRACT(MONTH FROM i.invoice_date) " +
+            "ORDER BY year ASC, month ASC", nativeQuery = true)
+    List<Object[]> getMonthlyRevenueTrend(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("propertyId") UUID propertyId);
+
+    /**
+     * Get year-over-year revenue
+     * Returns: [year, totalAmount]
+     */
+    @Query(value = "SELECT EXTRACT(YEAR FROM i.invoice_date) as year, " +
+            "COALESCE(SUM(i.total_amount), 0) as total_amount " +
+            "FROM invoices i " +
+            "WHERE i.status != 'CANCELLED' " +
+            "AND (:propertyId IS NULL OR i.property_id = :propertyId) " +
+            "GROUP BY EXTRACT(YEAR FROM i.invoice_date) " +
+            "ORDER BY year DESC " +
+            "LIMIT 5", nativeQuery = true)
+    List<Object[]> getYearOverYearRevenue(@Param("propertyId") UUID propertyId);
+
+    /**
+     * Get AR aging buckets
+     * Returns: [bucket, count, amount] for Current, 1-30, 31-60, 61-90, 90+ days
+     */
+    @Query(value = "SELECT " +
+            "CASE " +
+            "  WHEN i.due_date >= :asOfDate THEN 'CURRENT' " +
+            "  WHEN :asOfDate - i.due_date BETWEEN 1 AND 30 THEN 'DAYS_1_30' " +
+            "  WHEN :asOfDate - i.due_date BETWEEN 31 AND 60 THEN 'DAYS_31_60' " +
+            "  WHEN :asOfDate - i.due_date BETWEEN 61 AND 90 THEN 'DAYS_61_90' " +
+            "  ELSE 'DAYS_90_PLUS' " +
+            "END as bucket, " +
+            "COUNT(*) as count, " +
+            "COALESCE(SUM(i.balance_amount), 0) as amount " +
+            "FROM invoices i " +
+            "WHERE i.status IN ('SENT', 'PARTIALLY_PAID', 'OVERDUE') " +
+            "AND (:propertyId IS NULL OR i.property_id = :propertyId) " +
+            "GROUP BY " +
+            "CASE " +
+            "  WHEN i.due_date >= :asOfDate THEN 'CURRENT' " +
+            "  WHEN :asOfDate - i.due_date BETWEEN 1 AND 30 THEN 'DAYS_1_30' " +
+            "  WHEN :asOfDate - i.due_date BETWEEN 31 AND 60 THEN 'DAYS_31_60' " +
+            "  WHEN :asOfDate - i.due_date BETWEEN 61 AND 90 THEN 'DAYS_61_90' " +
+            "  ELSE 'DAYS_90_PLUS' " +
+            "END " +
+            "ORDER BY bucket", nativeQuery = true)
+    List<Object[]> getAgingBuckets(@Param("asOfDate") LocalDate asOfDate, @Param("propertyId") UUID propertyId);
+
+    /**
+     * Get total outstanding amount for AR aging
+     */
+    @Query("SELECT COALESCE(SUM(i.balanceAmount), 0) FROM Invoice i " +
+            "WHERE i.status IN ('SENT', 'PARTIALLY_PAID', 'OVERDUE') " +
+            "AND (:propertyId IS NULL OR i.property.id = :propertyId)")
+    BigDecimal getTotalOutstandingForAging(@Param("propertyId") UUID propertyId);
+
+    /**
+     * Get total invoiced amount with optional property filter
+     */
+    @Query("SELECT COALESCE(SUM(i.totalAmount), 0) FROM Invoice i " +
+            "WHERE i.status != 'CANCELLED' AND i.invoiceDate BETWEEN :fromDate AND :toDate " +
+            "AND (:propertyId IS NULL OR i.property.id = :propertyId)")
+    BigDecimal getTotalInvoicedInPeriodByProperty(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("propertyId") UUID propertyId);
+
+    /**
+     * Get total collected amount with optional property filter
+     */
+    @Query("SELECT COALESCE(SUM(i.paidAmount), 0) FROM Invoice i " +
+            "WHERE i.status != 'CANCELLED' AND i.invoiceDate BETWEEN :fromDate AND :toDate " +
+            "AND (:propertyId IS NULL OR i.property.id = :propertyId)")
+    BigDecimal getTotalCollectedInPeriodByProperty(
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            @Param("propertyId") UUID propertyId);
+
+    /**
+     * Get top performing property by revenue
+     */
+    @Query("SELECT i.property.id, i.property.name, COALESCE(SUM(i.totalAmount), 0) " +
+            "FROM Invoice i " +
+            "WHERE i.status != 'CANCELLED' AND i.invoiceDate BETWEEN :fromDate AND :toDate " +
+            "GROUP BY i.property.id, i.property.name " +
+            "ORDER BY SUM(i.totalAmount) DESC " +
+            "LIMIT 1")
+    Object[] getTopPerformingProperty(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * Get AR aging details by tenant for drill-down
+     * Story 6.4 AC #5: Tenant-level AR detail drill-down
+     * Returns: [tenantId, firstName, lastName, totalOutstanding, currentAmount, days1to30, days31to60, days61to90, over90Days, invoiceCount]
+     */
+    @Query(value = "SELECT " +
+            "t.id as tenant_id, " +
+            "t.first_name, " +
+            "t.last_name, " +
+            "COALESCE(SUM(i.balance_due), 0) as total_outstanding, " +
+            "COALESCE(SUM(CASE WHEN i.due_date >= :asOfDate THEN i.balance_due ELSE 0 END), 0) as current_amount, " +
+            "COALESCE(SUM(CASE WHEN i.due_date < :asOfDate AND i.due_date >= :asOfDate - INTERVAL '30 days' THEN i.balance_due ELSE 0 END), 0) as days_1_30, " +
+            "COALESCE(SUM(CASE WHEN i.due_date < :asOfDate - INTERVAL '30 days' AND i.due_date >= :asOfDate - INTERVAL '60 days' THEN i.balance_due ELSE 0 END), 0) as days_31_60, " +
+            "COALESCE(SUM(CASE WHEN i.due_date < :asOfDate - INTERVAL '60 days' AND i.due_date >= :asOfDate - INTERVAL '90 days' THEN i.balance_due ELSE 0 END), 0) as days_61_90, " +
+            "COALESCE(SUM(CASE WHEN i.due_date < :asOfDate - INTERVAL '90 days' THEN i.balance_due ELSE 0 END), 0) as over_90_days, " +
+            "COUNT(i.id) as invoice_count " +
+            "FROM invoices i " +
+            "JOIN tenants t ON i.tenant_id = t.id " +
+            "WHERE i.status IN ('SENT', 'OVERDUE', 'PARTIALLY_PAID') " +
+            "AND i.balance_due > 0 " +
+            "AND (:propertyId IS NULL OR i.property_id = :propertyId) " +
+            "GROUP BY t.id, t.first_name, t.last_name " +
+            "HAVING SUM(i.balance_due) > 0 " +
+            "ORDER BY SUM(i.balance_due) DESC", nativeQuery = true)
+    List<Object[]> getAgingDetailsByTenant(@Param("asOfDate") LocalDate asOfDate, @Param("propertyId") UUID propertyId);
 }
