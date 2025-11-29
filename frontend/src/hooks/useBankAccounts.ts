@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * React Query Hooks for Bank Account Management
  * Story 6.5: Bank Account Management
@@ -10,6 +9,28 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { AxiosError } from 'axios';
+
+/** API error response structure */
+interface ApiErrorResponse {
+  message?: string;
+  error?: { message?: string };
+}
+
+/**
+ * Extract error message from an error object (handles both Axios and generic errors)
+ */
+function getErrorMessage(error: Error, fallback: string): string {
+  if (error instanceof AxiosError) {
+    const axiosError = error as AxiosError<ApiErrorResponse>;
+    return (
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error?.message ||
+      fallback
+    );
+  }
+  return error.message || fallback;
+}
 import {
   getBankAccounts,
   getBankAccountById,
@@ -165,12 +186,8 @@ export function useCreateBankAccount(options?: { onSuccess?: () => void }) {
       // Call optional success callback
       options?.onSuccess?.();
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        error.response?.data?.error?.message ||
-        'Failed to create bank account';
-      toast.error(message);
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, 'Failed to create bank account'));
     }
   });
 }
@@ -226,12 +243,8 @@ export function useUpdateBankAccount(options?: { onSuccess?: () => void }) {
       // Call optional success callback
       options?.onSuccess?.();
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        error.response?.data?.error?.message ||
-        'Failed to update bank account';
-      toast.error(message);
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, 'Failed to update bank account'));
     }
   });
 }
@@ -287,12 +300,8 @@ export function useDeleteBankAccount(options?: { onSuccess?: () => void }) {
       // Call optional success callback
       options?.onSuccess?.();
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        error.response?.data?.error?.message ||
-        'Failed to delete bank account';
-      toast.error(message);
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, 'Failed to delete bank account'));
     }
   });
 }
@@ -346,12 +355,8 @@ export function useSetPrimaryBankAccount() {
       // Show success toast
       toast.success(`"${data.bankName}" set as primary bank account!`);
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        error.response?.data?.error?.message ||
-        'Failed to set primary bank account';
-      toast.error(message);
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error, 'Failed to set primary bank account'));
     }
   });
 }

@@ -1,6 +1,6 @@
 # Story 6.5: Bank Account Management
 
-Status: done
+Status: done (Code Review APPROVED + All Fixes Applied 2025-11-29)
 
 ## Story
 
@@ -677,15 +677,15 @@ Story 6.5 implementation is **solid and production-ready**. The code demonstrate
 ### Action Items
 
 **Code Changes Required:**
-- [ ] [Med] Add `data-testid="page-bank-accounts"` to page container div (AC #1) [file: frontend/src/app/(dashboard)/settings/bank-accounts/page.tsx:138]
-- [ ] [Med] Add `data-testid="form-bank-account"` to form element (AC #3) [file: frontend/src/components/bank-accounts/BankAccountFormModal.tsx:218]
-- [ ] [Med] Rename edit button testid to `btn-edit-bank-account-${id}` (AC #4) [file: frontend/src/app/(dashboard)/settings/bank-accounts/page.tsx:325]
-- [ ] [Med] Rename delete button testid to `btn-delete-bank-account-${id}` (AC #5) [file: frontend/src/app/(dashboard)/settings/bank-accounts/page.tsx:345]
+- [x] [Med] Add `data-testid="page-bank-accounts"` to page container div (AC #1) ✅ FIXED
+- [x] [Med] Add `data-testid="form-bank-account"` to form element (AC #3) ✅ FIXED
+- [x] [Med] Rename edit button testid to `btn-edit-bank-account-${id}` (AC #4) ✅ FIXED
+- [x] [Med] Rename delete button testid to `btn-delete-bank-account-${id}` (AC #5) ✅ FIXED
 
 **Advisory Notes:**
-- Note: Consider using Combobox instead of Select for bank name to allow custom entries (L1)
-- Note: Consider replacing eslint-disable with proper TS typing for error handling (L2)
-- Note: Add production profile check in EncryptionConverter to fail-fast if key missing
+- [x] (L1) Bank name Select → Input with datalist for autocomplete ✅ FIXED
+- [x] (L2) eslint-disable → proper TS typing with `getErrorMessage` helper ✅ FIXED
+- Note: Add production profile check in EncryptionConverter to fail-fast if key missing (advisory only)
 
 ---
 
@@ -696,3 +696,4 @@ Story 6.5 implementation is **solid and production-ready**. The code demonstrate
 | 2025-11-29 | 1.0 | SM Agent (Bob) | Initial story draft created from Epic 6 acceptance criteria |
 | 2025-11-29 | 2.0 | Dev Agent (Claude) | Story completed - All 31 ACs met, 19 tasks complete, 690 backend tests pass, 51 frontend tests pass |
 | 2025-11-29 | 2.1 | Dev Agent (Amelia) | Senior Developer Review (AI) - APPROVED with minor data-testid findings |
+| 2025-11-29 | 2.2 | Dev Agent (Amelia) | Fixed all 4 MEDIUM and 2 LOW severity findings from code review |

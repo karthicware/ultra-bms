@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 /**
@@ -10,7 +9,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
@@ -107,7 +106,7 @@ export function BankAccountFormModal({
   };
 
   const form = useForm<BankAccountFormData>({
-    resolver: zodResolver(isEditing ? updateBankAccountSchema : createBankAccountSchema) as any,
+    resolver: zodResolver(isEditing ? updateBankAccountSchema : createBankAccountSchema) as Resolver<BankAccountFormData>,
     defaultValues: {
       bankName: '',
       accountName: '',
@@ -215,7 +214,7 @@ export function BankAccountFormModal({
           </div>
         ) : (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" data-testid="form-bank-account">
               {/* Bank Name */}
               <FormField
                 control={form.control}
@@ -223,24 +222,22 @@ export function BankAccountFormModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Bank Name *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isSubmitting}
-                    >
-                      <FormControl>
-                        <SelectTrigger data-testid="select-bank-name">
-                          <SelectValue placeholder="Select or type bank name" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {UAE_BANKS.map((bank) => (
-                          <SelectItem key={bank} value={bank}>
-                            {bank}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <>
+                        <Input
+                          placeholder="Select or type bank name"
+                          {...field}
+                          disabled={isSubmitting}
+                          list="uae-banks-list"
+                          data-testid="input-bank-name"
+                        />
+                        <datalist id="uae-banks-list">
+                          {UAE_BANKS.map((bank) => (
+                            <option key={bank} value={bank} />
+                          ))}
+                        </datalist>
+                      </>
+                    </FormControl>
                     <FormDescription>
                       Select from common UAE banks or enter a custom name
                     </FormDescription>

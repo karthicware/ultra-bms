@@ -135,7 +135,7 @@ export default function BankAccountsPage() {
   const accounts = bankAccounts || [];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6" data-testid="page-bank-accounts">
       {/* Breadcrumb Navigation */}
       <Breadcrumb>
         <BreadcrumbList>
@@ -322,7 +322,7 @@ export default function BankAccountsPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 onClick={() => handleEditAccount(account)}
-                                data-testid={`btn-edit-${account.id}`}
+                                data-testid={`btn-edit-bank-account-${account.id}`}
                               >
                                 <Pencil className="h-4 w-4 mr-2" />
                                 Edit
@@ -342,7 +342,7 @@ export default function BankAccountsPage() {
                                 onClick={() => handleDeleteAccount(account)}
                                 disabled={!canDelete}
                                 className="text-destructive focus:text-destructive"
-                                data-testid={`btn-delete-${account.id}`}
+                                data-testid={`btn-delete-bank-account-${account.id}`}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete
