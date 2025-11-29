@@ -2118,6 +2118,74 @@ public class EmailService implements IEmailService {
     }
 
     // ========================================================================
+    // Announcement Emails (Story 9.2)
+    // ========================================================================
+
+    /**
+     * Send announcement email to tenant asynchronously.
+     * Email contains the announcement title and message content.
+     *
+     * @param tenant The tenant to send the email to
+     * @param announcement The announcement entity
+     */
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendAnnouncementEmail(com.ultrabms.entity.Tenant tenant, com.ultrabms.entity.Announcement announcement) {
+        try {
+            // Build Thymeleaf context with template variables
+            Context context = new Context();
+            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("announcementTitle", announcement.getTitle());
+            context.setVariable("announcementMessage", announcement.getMessage());
+            context.setVariable("publishedDate", announcement.getPublishedAt() != null
+                    ? announcement.getPublishedAt().format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+                    : "");
+            context.setVariable("portalUrl", frontendUrl + "/tenant/announcements/" + announcement.getId());
+            context.setVariable("hasAttachment", announcement.hasAttachment());
+            context.setVariable("supportEmail", supportEmail);
+
+            // Render HTML and plain text templates
+            String htmlContent = templateEngine.process("email/announcement-notification", context);
+            String textContent = buildAnnouncementEmailText(tenant, announcement);
+
+            // Send email
+            sendEmail(
+                tenant.getEmail(),
+                "New Announcement: " + announcement.getTitle(),
+                textContent,
+                htmlContent
+            );
+
+            log.info("Announcement email sent to tenant: {} ({})", tenant.getId(), tenant.getEmail());
+
+        } catch (Exception e) {
+            log.error("Failed to send announcement email to tenant: {} ({})", tenant.getId(), tenant.getEmail(), e);
+        }
+    }
+
+    /**
+     * Build plain text version of announcement email
+     */
+    private String buildAnnouncementEmailText(com.ultrabms.entity.Tenant tenant, com.ultrabms.entity.Announcement announcement) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Dear ").append(tenant.getFirstName()).append(",\n\n");
+        sb.append("A new announcement has been published.\n\n");
+        sb.append("Title: ").append(announcement.getTitle()).append("\n\n");
+        sb.append("Message:\n");
+        // Strip HTML tags for plain text version
+        String plainMessage = announcement.getMessage().replaceAll("<[^>]*>", "");
+        sb.append(plainMessage).append("\n\n");
+        if (announcement.hasAttachment()) {
+            sb.append("This announcement includes an attachment. Please visit the tenant portal to download it.\n\n");
+        }
+        sb.append("View in Portal: ").append(frontendUrl).append("/tenant/announcements/").append(announcement.getId()).append("\n\n");
+        sb.append("---\n");
+        sb.append("This is an automated notification from Ultra BMS.\n");
+        sb.append("Please do not reply directly to this email.\n");
+        return sb.toString();
+    }
+
+    // ========================================================================
     // Email Helper Methods
     // ========================================================================
 

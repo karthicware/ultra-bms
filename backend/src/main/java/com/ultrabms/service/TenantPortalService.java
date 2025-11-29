@@ -80,4 +80,31 @@ public interface TenantPortalService {
      * @param language Language code ('en' or 'ar')
      */
     void updateLanguagePreference(UUID userId, String language);
+
+    // =================================================================
+    // ANNOUNCEMENTS (Story 9.2)
+    // =================================================================
+
+    /**
+     * Get active announcements for tenant portal
+     *
+     * @return List of active announcements
+     */
+    java.util.List<com.ultrabms.dto.announcements.TenantAnnouncementDto> getActiveAnnouncements();
+
+    /**
+     * Get single announcement for tenant portal
+     *
+     * @param announcementId Announcement UUID
+     * @return Announcement details
+     */
+    com.ultrabms.dto.announcements.TenantAnnouncementDto getAnnouncementForTenant(UUID announcementId);
+
+    /**
+     * Get presigned URL for downloading announcement attachment
+     *
+     * @param announcementId Announcement UUID
+     * @return Presigned download URL
+     */
+    String getAnnouncementAttachmentDownloadUrl(UUID announcementId);
 }

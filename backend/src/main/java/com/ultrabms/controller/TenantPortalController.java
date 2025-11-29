@@ -257,4 +257,73 @@ public class TenantPortalController {
 
         return ResponseEntity.ok(response);
     }
+
+    // =================================================================
+    // ANNOUNCEMENTS (Story 9.2)
+    // =================================================================
+
+    /**
+     * Get active announcements for tenant
+     * GET /api/v1/tenant/announcements
+     * AC #59
+     */
+    @GetMapping("/announcements")
+    @Operation(summary = "Get announcements", description = "Retrieve active announcements for tenant portal")
+    public ResponseEntity<Map<String, Object>> getAnnouncements(@CurrentUser UserPrincipal currentUser) {
+        LOGGER.info("Getting announcements for tenant user: {}", currentUser.getId());
+
+        var announcements = tenantPortalService.getActiveAnnouncements();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", announcements);
+        response.put("timestamp", LocalDateTime.now());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get single announcement for tenant
+     * GET /api/v1/tenant/announcements/{id}
+     */
+    @GetMapping("/announcements/{id}")
+    @Operation(summary = "Get announcement", description = "Retrieve single announcement detail for tenant portal")
+    public ResponseEntity<Map<String, Object>> getAnnouncement(
+            @PathVariable UUID id,
+            @CurrentUser UserPrincipal currentUser
+    ) {
+        LOGGER.info("Getting announcement {} for tenant user: {}", id, currentUser.getId());
+
+        var announcement = tenantPortalService.getAnnouncementForTenant(id);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", announcement);
+        response.put("timestamp", LocalDateTime.now());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get presigned URL for downloading announcement attachment
+     * GET /api/v1/tenant/announcements/{id}/attachment/download
+     */
+    @GetMapping("/announcements/{id}/attachment/download")
+    @Operation(summary = "Download announcement attachment", description = "Get presigned URL for downloading announcement attachment")
+    public ResponseEntity<Map<String, Object>> getAnnouncementAttachmentDownloadUrl(
+            @PathVariable UUID id,
+            @CurrentUser UserPrincipal currentUser
+    ) {
+        LOGGER.info("Getting announcement attachment download URL for announcement {} by tenant: {}", id, currentUser.getId());
+
+        String downloadUrl = tenantPortalService.getAnnouncementAttachmentDownloadUrl(id);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", Map.of("downloadUrl", downloadUrl));
+        response.put("message", "Download URL generated successfully");
+        response.put("timestamp", LocalDateTime.now());
+
+        return ResponseEntity.ok(response);
+    }
 }

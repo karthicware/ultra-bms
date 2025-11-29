@@ -34,7 +34,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useCreateAsset } from '@/hooks/useAssets';
 import { assetCreateSchema, type AssetCreateInput } from '@/lib/validations/asset';
-import { ASSET_CATEGORY_OPTIONS } from '@/types/asset';
+import { ASSET_CATEGORY_OPTIONS, type AssetCreateRequest, AssetCategory } from '@/types/asset';
 import { ArrowLeft, Save, Package } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getProperties } from '@/services/properties.service';
@@ -88,18 +88,34 @@ export default function NewAssetPage() {
     fetchProperties();
   }, [toast]);
 
-  const onSubmit = async (data: Record<string, any>) => {
+  const onSubmit = async (data: AssetCreateInput) => {
     try {
-      await createAsset.mutateAsync(data as any);
+      // Transform form data to API request format
+      const requestData: AssetCreateRequest = {
+        assetName: data.assetName,
+        category: data.category as AssetCategory,
+        propertyId: data.propertyId,
+        location: data.location,
+        manufacturer: data.manufacturer || undefined,
+        modelNumber: data.modelNumber || undefined,
+        serialNumber: data.serialNumber || undefined,
+        installationDate: data.installationDate || undefined,
+        warrantyExpiryDate: data.warrantyExpiryDate || undefined,
+        purchaseCost: data.purchaseCost ?? undefined,
+        estimatedUsefulLife: data.estimatedUsefulLife ?? undefined,
+      };
+
+      await createAsset.mutateAsync(requestData);
       toast({
         title: 'Success',
         description: 'Asset created successfully',
       });
       router.push('/assets');
-    } catch (error) {
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.response?.data?.error?.message || 'Failed to create asset';
       toast({
         title: 'Error',
-        description: 'Failed to create asset',
+        description: message,
         variant: 'destructive',
       });
     }
@@ -151,7 +167,7 @@ export default function NewAssetPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Category *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select category" />
@@ -178,7 +194,7 @@ export default function NewAssetPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Property *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select property" />

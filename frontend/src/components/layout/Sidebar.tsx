@@ -23,6 +23,9 @@ import {
   ChevronRight,
   CreditCard,
   CalendarClock,
+  Package,
+  Megaphone,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -119,6 +122,18 @@ const navigationSections: NavSection[] = [
         icon: CalendarClock,
         permission: 'work-orders:read',
       },
+      {
+        name: 'Assets',
+        href: '/assets',
+        icon: Package,
+        permission: 'properties:read',
+      },
+      {
+        name: 'Compliance',
+        href: '/property-manager/compliance',
+        icon: ShieldCheck,
+        permission: 'properties:read',
+      },
     ],
   },
   {
@@ -169,6 +184,12 @@ const navigationSections: NavSection[] = [
         href: '/settings/users',
         icon: UserCog,
         permission: 'users:read',
+      },
+      {
+        name: 'Announcements',
+        href: '/announcements',
+        icon: Megaphone,
+        role: 'ADMIN',
       },
       {
         name: 'Settings',

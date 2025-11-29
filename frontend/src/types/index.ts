@@ -49,6 +49,8 @@ export * from './parking';
 export * from './pdc';
 export * from './asset';
 export * from './reports';
+export * from './compliance';
+export * from './announcement';
 // Exclude conflicting types from document.ts that are already exported from vendor-documents.ts
 // (ExpiringDocument, ExpiringDocumentsFilter, ExpiringDocumentsResponse)
 export {

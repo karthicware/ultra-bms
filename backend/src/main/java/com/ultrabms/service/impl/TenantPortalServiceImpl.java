@@ -1,5 +1,6 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.dto.announcements.TenantAnnouncementDto;
 import com.ultrabms.dto.tenant.ChangePasswordRequest;
 import com.ultrabms.dto.tenant.DashboardResponse;
 import com.ultrabms.dto.tenant.TenantProfileResponse;
@@ -12,6 +13,7 @@ import com.ultrabms.exception.ValidationException;
 import com.ultrabms.repository.TenantDocumentRepository;
 import com.ultrabms.repository.TenantRepository;
 import com.ultrabms.repository.UserRepository;
+import com.ultrabms.service.AnnouncementService;
 import com.ultrabms.service.S3Service;
 import com.ultrabms.service.TenantPortalService;
 import org.slf4j.Logger;
@@ -43,19 +45,22 @@ public class TenantPortalServiceImpl implements TenantPortalService {
     private final TenantDocumentRepository documentRepository;
     private final S3Service s3Service;
     private final PasswordEncoder passwordEncoder;
+    private final AnnouncementService announcementService;
 
     public TenantPortalServiceImpl(
             TenantRepository tenantRepository,
             UserRepository userRepository,
             TenantDocumentRepository documentRepository,
             S3Service s3Service,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            AnnouncementService announcementService
     ) {
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
         this.documentRepository = documentRepository;
         this.s3Service = s3Service;
         this.passwordEncoder = passwordEncoder;
+        this.announcementService = announcementService;
     }
 
     @Override
@@ -325,5 +330,30 @@ public class TenantPortalServiceImpl implements TenantPortalService {
                 .build());
 
         return actions;
+    }
+
+    // =================================================================
+    // ANNOUNCEMENTS (Story 9.2)
+    // =================================================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TenantAnnouncementDto> getActiveAnnouncements() {
+        LOGGER.info("Getting active announcements for tenant portal");
+        return announcementService.getActiveAnnouncementsForTenants();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TenantAnnouncementDto getAnnouncementForTenant(UUID announcementId) {
+        LOGGER.info("Getting announcement {} for tenant portal", announcementId);
+        return announcementService.getAnnouncementForTenant(announcementId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getAnnouncementAttachmentDownloadUrl(UUID announcementId) {
+        LOGGER.info("Getting announcement attachment download URL for: {}", announcementId);
+        return announcementService.getAttachmentDownloadUrl(announcementId);
     }
 }

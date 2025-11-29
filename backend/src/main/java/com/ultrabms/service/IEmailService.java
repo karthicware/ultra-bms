@@ -91,4 +91,7 @@ public interface IEmailService {
                                          String accessLevelDisplayName, String accessLevelLower,
                                          String fileName, String expiryDate, long daysUntilExpiry,
                                          String portalUrl);
+
+    // Announcement emails (Story 9.2)
+    void sendAnnouncementEmail(Tenant tenant, Announcement announcement);
 }
