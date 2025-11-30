@@ -31,6 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.ultrabms.entity.Announcement;
+import com.ultrabms.service.PdfGenerationService;
+
 /**
  * REST Controller for Internal Announcement Management.
  * Handles announcement CRUD, publishing, and lifecycle operations.
@@ -48,15 +51,18 @@ public class AnnouncementController {
     private final AnnouncementService announcementService;
     private final AnnouncementServiceImpl announcementServiceImpl;
     private final UserRepository userRepository;
+    private final PdfGenerationService pdfGenerationService;
 
     public AnnouncementController(
             AnnouncementService announcementService,
             AnnouncementServiceImpl announcementServiceImpl,
-            UserRepository userRepository
+            UserRepository userRepository,
+            PdfGenerationService pdfGenerationService
     ) {
         this.announcementService = announcementService;
         this.announcementServiceImpl = announcementServiceImpl;
         this.userRepository = userRepository;
+        this.pdfGenerationService = pdfGenerationService;
     }
 
     // =================================================================
@@ -69,7 +75,7 @@ public class AnnouncementController {
      * AC #50
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Create announcement",
             description = "Create a new announcement as draft"
@@ -158,7 +164,7 @@ public class AnnouncementController {
      * AC #53
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Update announcement",
             description = "Update announcement (DRAFT status only)"
@@ -183,7 +189,7 @@ public class AnnouncementController {
      * AC #57
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Delete announcement",
             description = "Delete announcement"
@@ -213,7 +219,7 @@ public class AnnouncementController {
      * AC #54
      */
     @PostMapping("/{id}/copy")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Copy announcement",
             description = "Create a copy of an announcement as a new draft"
@@ -241,7 +247,7 @@ public class AnnouncementController {
      * AC #55
      */
     @PatchMapping("/{id}/publish")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Publish announcement",
             description = "Publish announcement and send emails to all active tenants"
@@ -265,7 +271,7 @@ public class AnnouncementController {
      * AC #56
      */
     @PatchMapping("/{id}/archive")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Archive announcement",
             description = "Archive announcement"
@@ -293,7 +299,7 @@ public class AnnouncementController {
      * AC #7, #10
      */
     @PostMapping(value = "/{id}/attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Upload attachment",
             description = "Upload PDF attachment for announcement (max 5MB)"
@@ -334,7 +340,7 @@ public class AnnouncementController {
      * DELETE /api/v1/announcements/{id}/attachment
      */
     @DeleteMapping("/{id}/attachment")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(
             summary = "Delete attachment",
             description = "Delete attachment from announcement"
@@ -373,6 +379,35 @@ public class AnnouncementController {
         responseBody.put("data", Map.of("downloadUrl", downloadUrl));
         responseBody.put("message", "Download URL generated successfully");
         return ResponseEntity.ok(responseBody);
+    }
+
+    // =================================================================
+    // PDF GENERATION - Story 9.2 AC #35-39
+    // =================================================================
+
+    /**
+     * Generate and download announcement PDF
+     * GET /api/v1/announcements/{id}/pdf
+     * AC #58
+     */
+    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
+    @Operation(
+            summary = "Download PDF",
+            description = "Generate and download announcement as PDF"
+    )
+    public ResponseEntity<byte[]> downloadAnnouncementPdf(@PathVariable UUID id) {
+        LOGGER.info("Generating PDF for announcement: {}", id);
+
+        Announcement announcement = announcementServiceImpl.getAnnouncementEntity(id);
+        byte[] pdfContent = pdfGenerationService.generateAnnouncementPdf(announcement);
+
+        String filename = "Announcement-" + announcement.getAnnouncementNumber() + ".pdf";
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .header("Content-Type", MediaType.APPLICATION_PDF_VALUE)
+                .body(pdfContent);
     }
 
     // =================================================================

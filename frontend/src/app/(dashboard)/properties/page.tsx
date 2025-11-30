@@ -118,7 +118,7 @@ export default function PropertiesPage() {
       setProperties(response.content || []);
       setTotalPages(response.totalPages || 0);
       setTotalElements(response.totalElements || 0);
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to load properties. Please try again.',

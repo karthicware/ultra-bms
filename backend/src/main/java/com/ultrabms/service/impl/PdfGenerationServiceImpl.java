@@ -1927,4 +1927,135 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         String sign = change.compareTo(java.math.BigDecimal.ZERO) >= 0 ? "+" : "";
         return sign + change + "%";
     }
+
+    // ============================================================
+    // ANNOUNCEMENT PDF GENERATION - Story 9.2
+    // ============================================================
+
+    /**
+     * Generate announcement PDF
+     * Story 9.2 AC #35-39: Printable announcement with company letterhead
+     *
+     * @param announcement The announcement to generate PDF for
+     * @return PDF content as byte array
+     */
+    @Override
+    public byte[] generateAnnouncementPdf(com.ultrabms.entity.Announcement announcement) {
+        LOGGER.info("Generating PDF for announcement: {}", announcement.getAnnouncementNumber());
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+
+            // Header with announcement number and company name
+            document.add(new Paragraph("ANNOUNCEMENT")
+                    .setFont(boldFont)
+                    .setFontSize(24)
+                    .setFontColor(PRIMARY_COLOR)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setMarginBottom(5));
+
+            document.add(new Paragraph(announcement.getAnnouncementNumber())
+                    .setFont(regularFont)
+                    .setFontSize(12)
+                    .setFontColor(new DeviceRgb(107, 114, 128))
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setMarginBottom(20));
+
+            // Date information
+            Table dateTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
+                    .useAllAvailableWidth()
+                    .setMarginBottom(20);
+
+            if (announcement.getPublishedAt() != null) {
+                dateTable.addCell(new Cell()
+                        .add(new Paragraph("Published: " + announcement.getPublishedAt().format(DATE_FORMATTER))
+                                .setFont(regularFont).setFontSize(11))
+                        .setBorder(Border.NO_BORDER));
+            } else {
+                dateTable.addCell(new Cell()
+                        .add(new Paragraph("Status: DRAFT")
+                                .setFont(regularFont).setFontSize(11))
+                        .setBorder(Border.NO_BORDER));
+            }
+
+            dateTable.addCell(new Cell()
+                    .add(new Paragraph("Expires: " + announcement.getExpiresAt().format(DATE_FORMATTER))
+                            .setFont(regularFont).setFontSize(11))
+                    .setTextAlignment(TextAlignment.RIGHT)
+                    .setBorder(Border.NO_BORDER));
+
+            document.add(dateTable);
+
+            // Divider
+            document.add(new Paragraph("")
+                    .setBorderBottom(new com.itextpdf.layout.borders.SolidBorder(new DeviceRgb(229, 231, 235), 1))
+                    .setMarginBottom(20));
+
+            // Title
+            document.add(new Paragraph(announcement.getTitle())
+                    .setFont(boldFont)
+                    .setFontSize(18)
+                    .setMarginBottom(15));
+
+            // Message content - strip HTML for PDF
+            String plainMessage = stripHtmlTags(announcement.getMessage());
+            document.add(new Paragraph(plainMessage)
+                    .setFont(regularFont)
+                    .setFontSize(12)
+                    .setMultipliedLeading(1.5f));
+
+            // Attachment info if present
+            if (announcement.getAttachmentFileName() != null) {
+                document.add(new Paragraph("")
+                        .setBorderBottom(new com.itextpdf.layout.borders.SolidBorder(new DeviceRgb(229, 231, 235), 1))
+                        .setMarginTop(20)
+                        .setMarginBottom(10));
+
+                document.add(new Paragraph("Attachment: " + announcement.getAttachmentFileName())
+                        .setFont(regularFont)
+                        .setFontSize(10)
+                        .setFontColor(new DeviceRgb(107, 114, 128)));
+            }
+
+            // Footer
+            document.add(new Paragraph("")
+                    .setMarginTop(40));
+            document.add(new Paragraph("Generated on " + java.time.LocalDateTime.now().format(
+                    java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")))
+                    .setFont(regularFont)
+                    .setFontSize(9)
+                    .setFontColor(new DeviceRgb(107, 114, 128))
+                    .setTextAlignment(TextAlignment.RIGHT));
+
+            document.close();
+
+            LOGGER.info("Successfully generated PDF for announcement: {}", announcement.getAnnouncementNumber());
+            return baos.toByteArray();
+        } catch (Exception e) {
+            LOGGER.error("Error generating announcement PDF for: {}", announcement.getAnnouncementNumber(), e);
+            throw new RuntimeException("Failed to generate announcement PDF", e);
+        }
+    }
+
+    /**
+     * Helper method to strip HTML tags from content for plain text PDF
+     */
+    private String stripHtmlTags(String html) {
+        if (html == null) return "";
+        // Remove HTML tags and decode entities
+        return html
+                .replaceAll("<[^>]*>", "")
+                .replaceAll("&nbsp;", " ")
+                .replaceAll("&amp;", "&")
+                .replaceAll("&lt;", "<")
+                .replaceAll("&gt;", ">")
+                .replaceAll("&quot;", "\"")
+                .replaceAll("&#39;", "'")
+                .trim();
+    }
 }

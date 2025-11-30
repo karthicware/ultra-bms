@@ -3,8 +3,11 @@ package com.ultrabms.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ultrabms.dto.settings.AppearanceSettingsRequest;
 import com.ultrabms.dto.settings.AppearanceSettingsResponse;
+import com.ultrabms.entity.Role;
+import com.ultrabms.entity.User;
 import com.ultrabms.entity.enums.ThemePreference;
 import com.ultrabms.exception.EntityNotFoundException;
+import com.ultrabms.repository.UserRepository;
 import com.ultrabms.service.SettingsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +21,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -48,6 +53,9 @@ class SettingsControllerTest {
     @MockitoBean
     private SettingsService settingsService;
 
+    @MockitoBean
+    private UserRepository userRepository;
+
     private UUID testUserId;
     private AppearanceSettingsResponse settingsResponse;
     private AppearanceSettingsRequest settingsRequest;
@@ -63,6 +71,30 @@ class SettingsControllerTest {
         settingsRequest = AppearanceSettingsRequest.builder()
                 .themePreference(ThemePreference.DARK)
                 .build();
+
+        // Mock UserRepository for all test user IDs used in @WithMockUser annotations
+        setupUserMock("550e8400-e29b-41d4-a716-446655440000");
+        setupUserMock("550e8400-e29b-41d4-a716-446655440001");
+        setupUserMock("550e8400-e29b-41d4-a716-446655440002");
+        setupUserMock("550e8400-e29b-41d4-a716-446655440003");
+    }
+
+    private void setupUserMock(String userId) {
+        UUID id = UUID.fromString(userId);
+        Role userRole = new Role();
+        userRole.setId(2L);
+        userRole.setName("USER");
+        userRole.setPermissions(new HashSet<>());
+
+        User user = new User();
+        user.setId(id);
+        user.setEmail(userId); // username in @WithMockUser
+        user.setFirstName("Test");
+        user.setLastName("User");
+        user.setRole(userRole);
+        user.setActive(true);
+
+        when(userRepository.findByEmail(userId)).thenReturn(Optional.of(user));
     }
 
     // ==================== GET APPEARANCE SETTINGS TESTS ====================

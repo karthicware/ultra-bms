@@ -259,10 +259,13 @@ export default function WorkOrderDetailPage() {
   };
 
   const handleStatusUpdate = (newStatus: WorkOrderStatus) => {
-    // TODO: Implement status update dialog
+    // Status transitions are workflow-based per Story 4.4:
+    // - OPEN → ASSIGNED: Use "Assign" button to assign vendor/staff
+    // - ASSIGNED → IN_PROGRESS: Use "Start Work" button when work begins
+    // - IN_PROGRESS → COMPLETED: Use "Mark Complete" button when work is done
     toast({
-      title: 'Coming Soon',
-      description: 'Status update functionality will be implemented next',
+      title: 'Use Action Buttons',
+      description: 'Please use the action buttons (Assign, Start Work, Mark Complete) to update the work order status.',
     });
   };
 

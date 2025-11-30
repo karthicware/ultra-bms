@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth-context';
 import { getAppearanceSettings, updateAppearanceSettings } from '@/services/settings.service';
 import {
-  ThemePreference,
   themePreferenceToNextTheme,
   nextThemeToThemePreference,
 } from '@/types/settings';

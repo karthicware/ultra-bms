@@ -149,16 +149,19 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Global error handling with detailed logging
-    console.error('API Error Details:', {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      message: error.message,
-      code: error.code,
-    });
+    // Global error handling - only log server errors (5xx)
+    // 4xx errors and auth-related errors are handled by component-level handlers
+    const status = error.response?.status;
+    const isServerError = status && status >= 500;
+
+    if (isServerError) {
+      console.error('API Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        status,
+        message: error.message,
+      });
+    }
     return Promise.reject(error);
   }
 );

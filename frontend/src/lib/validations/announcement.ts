@@ -8,7 +8,7 @@ import { AnnouncementTemplate } from '@/types/announcement';
 
 /**
  * Create/Update Announcement Schema
- * AC #8: Title max 150 characters
+ * AC #8: Title max 200 characters (aligned with backend entity)
  * AC #9: Message max 5000 characters
  * AC #10: Expiry date required and must be in future
  */
@@ -16,7 +16,7 @@ export const announcementFormSchema = z.object({
   title: z
     .string()
     .min(1, 'Title is required')
-    .max(150, 'Title must be 150 characters or less'),
+    .max(200, 'Title must be 200 characters or less'),
   message: z
     .string()
     .min(1, 'Message is required')

@@ -33,12 +33,15 @@ const floorSchema = z
 
 /**
  * Bedroom count validation
+ * Allows half increments for studio with den (e.g., 0.5, 1.5, 2.5)
  */
 const bedroomCountSchema = z
   .number()
-  .int('Bedroom count must be a whole number')
   .min(0, 'Bedroom count cannot be negative')
-  .max(20, 'Bedroom count cannot exceed 20');
+  .max(20, 'Bedroom count cannot exceed 20')
+  .refine((val) => val % 0.5 === 0, {
+    message: 'Bedroom count must be in 0.5 increments (e.g., 0.5, 1, 1.5)',
+  });
 
 /**
  * Bathroom count validation

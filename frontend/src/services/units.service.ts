@@ -166,11 +166,11 @@ export async function getUnitsByProperty(
   propertyId: string,
   filters?: UnitSearchParams
 ): Promise<Unit[]> {
-  const response = await apiClient.get<{ data: Unit[] }>(
+  const response = await apiClient.get<{ data: { content: Unit[] } }>(
     `${UNITS_BASE_PATH}/property/${propertyId}`,
-    { params: filters }
+    { params: { ...filters, size: 1000 } } // Fetch all units for the property
   );
-  return response.data.data;
+  return response.data.data.content;
 }
 
 /**

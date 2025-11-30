@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +48,8 @@ import {
   uploadAttachment,
   deleteAttachment,
   getAttachmentDownloadUrl,
+  openAnnouncementPrintPreview,
+  downloadAnnouncementPdfWithFilename,
 } from '@/services/announcement.service';
 import {
   announcementFormSchema,
@@ -77,6 +79,8 @@ import {
   Download,
   Eye,
   CheckCircle,
+  Printer,
+  FileDown,
 } from 'lucide-react';
 
 // Wrapper for Suspense
@@ -418,7 +422,7 @@ function AnnouncementDetailContent() {
   const hasAttachment = announcement.attachmentFilePath || newAttachment;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="announcement-detail-page">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -443,32 +447,49 @@ function AnnouncementDetailContent() {
         {/* Actions */}
         <div className="flex items-center gap-2">
           {isDraft && !isEditing && (
-            <Button variant="outline" onClick={() => setIsEditing(true)}>
+            <Button variant="outline" onClick={() => setIsEditing(true)} data-testid="announcement-edit-btn">
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </Button>
           )}
           {isDraft && (
-            <Button onClick={() => setShowPublishDialog(true)}>
+            <Button onClick={() => setShowPublishDialog(true)} data-testid="announcement-publish-btn">
               <Send className="mr-2 h-4 w-4" />
               Publish
             </Button>
           )}
           {(isPublished || isExpired) && (
-            <Button variant="outline" onClick={() => setShowArchiveDialog(true)}>
+            <Button variant="outline" onClick={() => setShowArchiveDialog(true)} data-testid="announcement-archive-btn">
               <Archive className="mr-2 h-4 w-4" />
               Archive
             </Button>
           )}
-          <Button variant="outline" onClick={handleCopy}>
+          <Button variant="outline" onClick={handleCopy} data-testid="announcement-copy-btn">
             <Copy className="mr-2 h-4 w-4" />
             Copy
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => openAnnouncementPrintPreview(announcement.id)}
+            data-testid="announcement-print-preview-btn"
+          >
+            <Printer className="mr-2 h-4 w-4" />
+            Print Preview
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => downloadAnnouncementPdfWithFilename(announcement.id, announcement.announcementNumber)}
+            data-testid="announcement-download-pdf-btn"
+          >
+            <FileDown className="mr-2 h-4 w-4" />
+            Download PDF
           </Button>
           {isDraft && (
             <Button
               variant="outline"
               className="text-red-600 hover:text-red-700"
               onClick={() => setShowDeleteDialog(true)}
+              data-testid="announcement-delete-btn"
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete
@@ -496,12 +517,12 @@ function AnnouncementDetailContent() {
                         <FormItem>
                           <FormLabel>Title *</FormLabel>
                           <FormControl>
-                            <Input maxLength={150} {...field} />
+                            <Input maxLength={200} data-testid="announcement-title-input" {...field} />
                           </FormControl>
                           <div className="flex justify-between">
                             <FormMessage />
                             <span className="text-xs text-muted-foreground">
-                              {titleValue?.length || 0}/150
+                              {titleValue?.length || 0}/200
                             </span>
                           </div>
                         </FormItem>
@@ -517,20 +538,15 @@ function AnnouncementDetailContent() {
                         <FormItem>
                           <FormLabel>Message *</FormLabel>
                           <FormControl>
-                            <Textarea
-                              className="min-h-[300px] font-mono text-sm"
+                            <RichTextEditor
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Write your announcement message here..."
+                              minHeight="300px"
                               maxLength={5000}
-                              {...field}
+                              data-testid="announcement-message-editor"
                             />
                           </FormControl>
-                          <div className="flex justify-between">
-                            <FormDescription>
-                              Supports basic HTML tags for formatting
-                            </FormDescription>
-                            <span className="text-xs text-muted-foreground">
-                              {messageValue?.length || 0}/5000
-                            </span>
-                          </div>
                           <FormMessage />
                         </FormItem>
                       )}

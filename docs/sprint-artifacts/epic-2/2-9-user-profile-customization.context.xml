@@ -1,0 +1,267 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>9</storyId>
+    <title>User Profile Customization</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-30</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic-2/2-9-user-profile-customization.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>an authenticated staff user (Admin, Super Admin, Property Manager, Finance Manager)</asA>
+    <iWant>to customize my user profile (display name, avatar, phone)</iWant>
+    <soThat>my identity is personalized across the platform</soThat>
+    <tasks>
+      <task id="1" ac="#8,#9">Database Migration - Create V56__add_user_profile_fields.sql with displayName, avatarFilePath, contactPhone columns</task>
+      <task id="2" ac="#8">Update User Entity - Add displayName, avatarFilePath, contactPhone fields with JPA annotations</task>
+      <task id="3" ac="#10,#11">Create Profile DTOs - UserProfileResponse and UserProfileUpdateRequest</task>
+      <task id="4" ac="#10,#11,#12,#13">Create UserProfileService - getProfile, updateProfile, uploadAvatar, deleteAvatar methods</task>
+      <task id="5" ac="#10,#11,#12,#13">Create UserProfileController - REST endpoints at /api/v1/users/me</task>
+      <task id="6" ac="#15">Create Frontend Types - types/user-profile.ts</task>
+      <task id="7" ac="#15">Create Frontend Validation - lib/validations/user-profile.ts with Zod schemas</task>
+      <task id="8" ac="#10,#11,#12,#13">Create Frontend Service - services/user-profile.service.ts</task>
+      <task id="9" ac="#1,#2,#3,#4,#5,#6,#7">Create Profile Settings Page - app/(dashboard)/settings/profile/page.tsx</task>
+      <task id="10" ac="#14">Update Navbar with Avatar - Modify Sidebar user profile section</task>
+      <task id="11" ac="#1">Add Settings Navigation Link - My Profile link in Settings</task>
+      <task id="12" ac="#16">Backend Unit Tests - UserProfileServiceTest</task>
+      <task id="13" ac="#17">Frontend Unit Tests - validation and component tests</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">Profile Settings Page: Settings > Profile page accessible to all authenticated staff users (not TENANT role). Page title: "My Profile".</criterion>
+    <criterion id="AC2">Display Name Field: Editable display name field (max 100 chars). Defaults to firstName + lastName. Shown in navbar, comments, activity logs.</criterion>
+    <criterion id="AC3">Avatar/Profile Photo: Upload profile photo (PNG/JPG, max 2MB). Square crop preview. Stored in S3 at /uploads/users/{userId}/avatar.{ext}. Default avatar shows initials if no photo.</criterion>
+    <criterion id="AC4">Contact Phone (Optional): Optional personal phone number field. Not validated to specific format (international support). Displayed in user directory.</criterion>
+    <criterion id="AC5">Email Display (Read-Only): Show user's email address as read-only. Email cannot be changed from profile.</criterion>
+    <criterion id="AC6">Role Display (Read-Only): Show user's current role as badge (read-only). Role changes require admin action.</criterion>
+    <criterion id="AC7">Save Functionality: "Save Changes" button persists profile updates. Success toast on save. Validation errors inline.</criterion>
+    <criterion id="AC8">User Entity Update: Add fields: displayName (VARCHAR 100), avatarFilePath (VARCHAR 500), contactPhone (VARCHAR 30) - all nullable.</criterion>
+    <criterion id="AC9">Flyway Migration: V56__add_user_profile_fields.sql adds new columns to users table.</criterion>
+    <criterion id="AC10">GET Profile Endpoint: GET /api/v1/users/me/profile returns current user's profile data with presigned avatar URL.</criterion>
+    <criterion id="AC11">PUT Profile Endpoint: PUT /api/v1/users/me/profile updates displayName, contactPhone. Users can only update their own profile.</criterion>
+    <criterion id="AC12">Avatar Upload Endpoint: POST /api/v1/users/me/avatar accepts multipart file. Validates PNG/JPG, max 2MB. Deletes old avatar on new upload.</criterion>
+    <criterion id="AC13">Avatar Delete Endpoint: DELETE /api/v1/users/me/avatar removes avatar from S3, clears avatarFilePath.</criterion>
+    <criterion id="AC14">Navbar Avatar Integration: User avatar (or initials fallback) displayed in sidebar user profile section. Currently at Sidebar.tsx:331-349.</criterion>
+    <criterion id="AC15">Frontend Zod Validation: Zod schemas for profile form - displayName (string, max 100), contactPhone (string, max 30), avatar (file type PNG/JPG, max 2MB).</criterion>
+    <criterion id="AC16">Unit Tests (Backend): Tests for UserProfileService methods. Test avatar upload/delete. Test profile update.</criterion>
+    <criterion id="AC17">Unit Tests (Frontend): Tests for profile form component. Tests for validation schemas. Tests for avatar upload component.</criterion>
+    <criterion id="AC18">Build Verification: Backend (mvn compile) and frontend (npm run build) complete with zero errors.</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>3.1 Authentication &amp; Access Control</section>
+        <snippet>Defines user roles (SUPER_ADMIN, PROPERTY_MANAGER, MAINTENANCE_SUPERVISOR, FINANCE_MANAGER, TENANT, VENDOR) and RBAC requirements.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Data Architecture - Users &amp; Authentication</section>
+        <snippet>Users table schema with id, email, passwordHash, firstName, lastName, phone, role_id, themePreference. S3 integration for file storage.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Backend Implementation Patterns</section>
+        <snippet>Controller/Service/Repository pattern with @RequiredArgsConstructor, @Transactional. REST endpoints use /api/v1 prefix, kebab-case URLs.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics/epic-2-authentication-user-management.md</path>
+        <title>Epic 2: Authentication &amp; User Management</title>
+        <section>Story 2.8: Company Profile Settings</section>
+        <snippet>Reference implementation for logo/avatar upload using FileStorageService, S3 presigned URLs, multipart file handling.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic-2/2-8-company-profile-settings.md</path>
+        <title>Story 2.8 - Company Profile Settings</title>
+        <section>Implementation Reference</section>
+        <snippet>Completed pattern: logo upload to S3, presigned URL generation, validation (PNG/JPG ≤2MB), frontend service with FormData.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>backend/src/main/java/com/ultrabms/entity/User.java</path>
+        <kind>entity</kind>
+        <symbol>User</symbol>
+        <lines>1-198</lines>
+        <reason>Target entity for new profile fields. Currently has: email, passwordHash, firstName, lastName, phone, role, active, mfaEnabled, accountLocked, status, themePreference. Must add: displayName, avatarFilePath, contactPhone.</reason>
+      </file>
+      <file>
+        <path>backend/src/main/java/com/ultrabms/service/FileStorageService.java</path>
+        <kind>service-interface</kind>
+        <symbol>FileStorageService</symbol>
+        <lines>1-69</lines>
+        <reason>S3 file storage interface. Use storeFile(file, directory), deleteFile(filePath), getDownloadUrl(filePath) for avatar operations.</reason>
+      </file>
+      <file>
+        <path>backend/src/main/java/com/ultrabms/service/impl/FileStorageServiceImpl.java</path>
+        <kind>service-impl</kind>
+        <symbol>FileStorageServiceImpl</symbol>
+        <reason>S3 implementation with presigned URLs (5-minute expiry). LocalStack for dev.</reason>
+      </file>
+      <file>
+        <path>backend/src/main/java/com/ultrabms/service/impl/CompanyProfileServiceImpl.java</path>
+        <kind>service-impl</kind>
+        <symbol>CompanyProfileServiceImpl</symbol>
+        <lines>1-100</lines>
+        <reason>Reference implementation for logo upload pattern. Uses FileStorageService, validates file type/size, stores in S3, generates presigned URL.</reason>
+      </file>
+      <file>
+        <path>backend/src/main/java/com/ultrabms/controller/CompanyProfileController.java</path>
+        <kind>controller</kind>
+        <symbol>CompanyProfileController</symbol>
+        <reason>Reference for multipart file upload endpoints. POST /logo accepts MultipartFile.</reason>
+      </file>
+      <file>
+        <path>frontend/src/services/company-profile.service.ts</path>
+        <kind>service</kind>
+        <symbol>CompanyProfileService</symbol>
+        <lines>1-186</lines>
+        <reason>Reference for frontend upload pattern. Uses FormData with 'Content-Type': 'multipart/form-data'. Pattern for logo upload/delete.</reason>
+      </file>
+      <file>
+        <path>frontend/src/components/layout/Sidebar.tsx</path>
+        <kind>component</kind>
+        <symbol>Sidebar</symbol>
+        <lines>331-349</lines>
+        <reason>User profile section in sidebar. Currently shows initials fallback (div with bg-primary/10). Must update to use Avatar component with avatarUrl.</reason>
+      </file>
+      <file>
+        <path>frontend/src/components/ui/avatar.tsx</path>
+        <kind>ui-component</kind>
+        <symbol>Avatar, AvatarImage, AvatarFallback</symbol>
+        <lines>1-54</lines>
+        <reason>shadcn/ui Avatar component. Use for profile photo display with initials fallback.</reason>
+      </file>
+      <file>
+        <path>frontend/src/contexts/auth-context.tsx</path>
+        <kind>context</kind>
+        <symbol>AuthContext</symbol>
+        <reason>Auth context provides user object. May need to extend user type with displayName, avatarUrl.</reason>
+      </file>
+      <file>
+        <path>frontend/src/app/(dashboard)/settings/company/page.tsx</path>
+        <kind>page</kind>
+        <symbol>CompanyProfilePage</symbol>
+        <reason>Reference implementation for settings page with logo upload. Pattern for form structure, file input, preview, remove button.</reason>
+      </file>
+      <file>
+        <path>frontend/src/app/(dashboard)/settings/page.tsx</path>
+        <kind>page</kind>
+        <symbol>SettingsPage</symbol>
+        <reason>Settings index page. Add "My Profile" link here.</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <backend>
+        <dependency>Spring Boot 3.4.0</dependency>
+        <dependency>Spring Data JPA</dependency>
+        <dependency>Spring Security</dependency>
+        <dependency>Spring Validation</dependency>
+        <dependency>Flyway</dependency>
+        <dependency>PostgreSQL</dependency>
+        <dependency>Lombok</dependency>
+        <dependency>AWS SDK S3 (via FileStorageService)</dependency>
+        <dependency>Ehcache (for caching)</dependency>
+      </backend>
+      <frontend>
+        <dependency>Next.js 16.0.2</dependency>
+        <dependency>React 19.2.0</dependency>
+        <dependency>TypeScript 5.x</dependency>
+        <dependency>@radix-ui/react-avatar 1.1.11</dependency>
+        <dependency>react-hook-form 7.66.0</dependency>
+        <dependency>@hookform/resolvers 5.2.2</dependency>
+        <dependency>zod 4.1.12</dependency>
+        <dependency>axios 1.13.2</dependency>
+        <dependency>sonner 2.0.7 (toasts)</dependency>
+        <dependency>lucide-react 0.553.0</dependency>
+        <dependency>tailwindcss 4</dependency>
+      </frontend>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Follow existing Entity/Repository/Service/Controller pattern from CompanyProfileService.</constraint>
+    <constraint type="pattern">Use @AuthenticationPrincipal for current user context in controller endpoints.</constraint>
+    <constraint type="pattern">S3 storage path: /uploads/users/{userId}/avatar.{ext}</constraint>
+    <constraint type="pattern">Presigned URLs for avatar display (5-minute expiry via FileStorageService.getDownloadUrl).</constraint>
+    <constraint type="validation">Avatar: PNG/JPG only, max 2MB (reuse CompanyProfile validation pattern).</constraint>
+    <constraint type="validation">displayName: max 100 chars, optional trim.</constraint>
+    <constraint type="validation">contactPhone: max 30 chars, no format validation (international support).</constraint>
+    <constraint type="security">Users can only update their own profile (/me endpoints).</constraint>
+    <constraint type="security">TENANT role cannot access profile settings page.</constraint>
+    <constraint type="database">Flyway migration V56 - V55 was announcements, V56 is next available.</constraint>
+    <constraint type="testing">Backend: JUnit 5, Mockito. Frontend: Jest, React Testing Library.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>GET /api/v1/users/me/profile</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/v1/users/me/profile → UserProfileResponse { id, email, displayName, avatarUrl, contactPhone, role, firstName, lastName }</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/UserProfileController.java</path>
+    </interface>
+    <interface>
+      <name>PUT /api/v1/users/me/profile</name>
+      <kind>REST endpoint</kind>
+      <signature>PUT /api/v1/users/me/profile (body: UserProfileUpdateRequest { displayName?, contactPhone? }) → UserProfileResponse</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/UserProfileController.java</path>
+    </interface>
+    <interface>
+      <name>POST /api/v1/users/me/avatar</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/users/me/avatar (multipart: file) → { avatarUrl, message }</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/UserProfileController.java</path>
+    </interface>
+    <interface>
+      <name>DELETE /api/v1/users/me/avatar</name>
+      <kind>REST endpoint</kind>
+      <signature>DELETE /api/v1/users/me/avatar → 204 No Content</signature>
+      <path>backend/src/main/java/com/ultrabms/controller/UserProfileController.java</path>
+    </interface>
+    <interface>
+      <name>FileStorageService</name>
+      <kind>Java Interface</kind>
+      <signature>storeFile(MultipartFile file, String directory) → String filePath; deleteFile(String filePath); getDownloadUrl(String filePath) → String presignedUrl</signature>
+      <path>backend/src/main/java/com/ultrabms/service/FileStorageService.java</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Backend: JUnit 5 + Mockito. Tests in src/test/java/com/ultrabms. Service tests mock repositories. Controller tests use @WebMvcTest.
+      Frontend: Jest + React Testing Library. Tests in __tests__ folders. Validation tests use describe/it pattern with edge cases. Component tests render and assert.
+    </standards>
+    <locations>
+      <location>backend/src/test/java/com/ultrabms/service/</location>
+      <location>frontend/src/lib/validations/__tests__/</location>
+      <location>frontend/src/components/**/__tests__/</location>
+      <location>frontend/src/app/(dashboard)/settings/**/__tests__/</location>
+    </locations>
+    <ideas>
+      <idea ac="AC10">Test getProfile returns presigned avatar URL when avatarFilePath exists</idea>
+      <idea ac="AC10">Test getProfile returns null avatarUrl when no avatar uploaded</idea>
+      <idea ac="AC11">Test updateProfile persists displayName and contactPhone</idea>
+      <idea ac="AC11">Test updateProfile validates max length constraints</idea>
+      <idea ac="AC12">Test uploadAvatar stores file in S3 at correct path</idea>
+      <idea ac="AC12">Test uploadAvatar rejects non-PNG/JPG files</idea>
+      <idea ac="AC12">Test uploadAvatar rejects files over 2MB</idea>
+      <idea ac="AC12">Test uploadAvatar deletes old avatar before storing new</idea>
+      <idea ac="AC13">Test deleteAvatar removes from S3 and clears avatarFilePath</idea>
+      <idea ac="AC15">Test Zod schema validates displayName max 100 chars</idea>
+      <idea ac="AC15">Test Zod schema validates contactPhone max 30 chars</idea>
+      <idea ac="AC15">Test Zod avatar schema validates file type and size</idea>
+      <idea ac="AC17">Test profile form renders with user data</idea>
+      <idea ac="AC17">Test profile form shows validation errors</idea>
+      <idea ac="AC17">Test avatar upload component with drag-drop</idea>
+    </ideas>
+  </tests>
+</story-context>

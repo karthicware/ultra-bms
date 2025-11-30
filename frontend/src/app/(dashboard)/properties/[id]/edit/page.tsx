@@ -34,10 +34,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { getPropertyById, updateProperty } from '@/services/properties.service';
+import { getPropertyById, updateProperty, getPropertyImages } from '@/services/properties.service';
 import { getPropertyManagers, type PropertyManager } from '@/services/users.service';
 import { updatePropertySchema, type UpdatePropertyFormData } from '@/lib/validations/properties';
-import { PropertyType } from '@/types/properties';
+import { PropertyType, type PropertyImage } from '@/types/properties';
+import { PropertyImageUpload } from '@/components/properties/PropertyImageUpload';
 import { Building2, X } from 'lucide-react';
 
 export default function EditPropertyPage() {
@@ -52,6 +53,8 @@ export default function EditPropertyPage() {
   const [amenities, setAmenities] = useState<string[]>([]);
   const [managers, setManagers] = useState<PropertyManager[]>([]);
   const [isLoadingManagers, setIsLoadingManagers] = useState(true);
+  const [existingImages, setExistingImages] = useState<PropertyImage[]>([]);
+  const [imagesRefetchTrigger, setImagesRefetchTrigger] = useState(0);
 
   const form = useForm<UpdatePropertyFormData>({
     resolver: zodResolver(updatePropertySchema),
@@ -88,7 +91,7 @@ export default function EditPropertyPage() {
         if (property.amenities) {
           setAmenities(property.amenities);
         }
-      } catch (error) {
+      } catch {
         toast({
           title: 'Error',
           description: 'Failed to load property data',
@@ -121,6 +124,27 @@ export default function EditPropertyPage() {
 
     fetchManagers();
   }, []);
+
+  // Fetch property images
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const images = await getPropertyImages(propertyId);
+        setExistingImages(images);
+      } catch {
+        // Silently fail - images are optional
+        console.error('Failed to fetch property images');
+      }
+    };
+
+    if (propertyId) {
+      fetchImages();
+    }
+  }, [propertyId, imagesRefetchTrigger]);
+
+  const handleImagesUpdate = () => {
+    setImagesRefetchTrigger((prev) => prev + 1);
+  };
 
   const onSubmit = async (data: UpdatePropertyFormData) => {
     try {
@@ -433,6 +457,23 @@ export default function EditPropertyPage() {
                   </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Property Images */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Property Images</CardTitle>
+              <CardDescription>Manage property images (JPG/PNG/WebP, max 10MB each)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PropertyImageUpload
+                propertyId={propertyId}
+                existingImages={existingImages}
+                mode="edit"
+                onImagesUpdate={handleImagesUpdate}
+                maxImages={5}
+              />
             </CardContent>
           </Card>
 

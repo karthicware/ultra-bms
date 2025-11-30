@@ -8,18 +8,11 @@
 
 import { apiClient } from '@/lib/api';
 import type {
-  ComplianceRequirement,
   ComplianceRequirementDetail,
-  ComplianceRequirementListItem,
-  ComplianceSchedule,
   ComplianceScheduleDetail,
   ComplianceScheduleListItem,
-  ComplianceInspection,
   InspectionDetail,
-  InspectionListItem,
-  Violation,
   ViolationDetail,
-  ViolationListItem,
   ComplianceDashboard,
   PropertyComplianceHistoryItem,
   CreateComplianceRequirementDto,

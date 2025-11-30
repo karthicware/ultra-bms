@@ -18,12 +18,11 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Play, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import type { WorkOrder } from '@/types/work-orders';
-import { compressImages, formatFileSize } from '@/lib/utils/image-compression';
+import { compressImages } from '@/lib/utils/image-compression';
 
 interface StartWorkDialogProps {
   open: boolean;
@@ -90,7 +89,7 @@ export function StartWorkDialog({
       const newPreviewUrls = compressedFiles.map((file) => URL.createObjectURL(file));
       setPhotoPreviewUrls([...photoPreviewUrls, ...newPreviewUrls]);
       setBeforePhotos([...beforePhotos, ...compressedFiles]);
-    } catch (err) {
+    } catch {
       setError('Failed to process images. Please try again.');
     } finally {
       setIsCompressing(false);
@@ -112,7 +111,7 @@ export function StartWorkDialog({
       setBeforePhotos([]);
       setPhotoPreviewUrls([]);
       setError(null);
-    } catch (err) {
+    } catch {
       // Error handled by parent
     }
   };

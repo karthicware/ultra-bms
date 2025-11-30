@@ -393,7 +393,7 @@ export default function AnnouncementsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="announcements-page">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -402,7 +402,7 @@ export default function AnnouncementsPage() {
             Manage internal announcements for tenants
           </p>
         </div>
-        <Button onClick={handleCreateAnnouncement}>
+        <Button onClick={handleCreateAnnouncement} data-testid="create-announcement-btn">
           <Plus className="mr-2 h-4 w-4" />
           Create Announcement
         </Button>
@@ -414,15 +414,15 @@ export default function AnnouncementsPage() {
       {/* Tabs and Content */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-          <TabsTrigger value="ACTIVE" className="flex items-center gap-2">
+          <TabsTrigger value="ACTIVE" className="flex items-center gap-2" data-testid="tab-active">
             <Megaphone className="h-4 w-4" />
             Active
           </TabsTrigger>
-          <TabsTrigger value="DRAFTS" className="flex items-center gap-2">
+          <TabsTrigger value="DRAFTS" className="flex items-center gap-2" data-testid="tab-drafts">
             <FileText className="h-4 w-4" />
             Drafts
           </TabsTrigger>
-          <TabsTrigger value="HISTORY" className="flex items-center gap-2">
+          <TabsTrigger value="HISTORY" className="flex items-center gap-2" data-testid="tab-history">
             <Clock className="h-4 w-4" />
             History
           </TabsTrigger>
@@ -453,6 +453,7 @@ export default function AnnouncementsPage() {
                       setSearchTerm(e.target.value);
                       setCurrentPage(0);
                     }}
+                    data-testid="announcement-search-input"
                   />
                 </div>
               </div>
@@ -531,7 +532,7 @@ export default function AnnouncementsPage() {
                       </TableHeader>
                       <TableBody>
                         {announcements.map((announcement) => (
-                          <TableRow key={announcement.id}>
+                          <TableRow key={announcement.id} data-testid={`announcement-row-${announcement.id}`}>
                             <TableCell className="font-medium">
                               {announcement.announcementNumber}
                             </TableCell>

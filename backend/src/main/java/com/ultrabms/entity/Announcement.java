@@ -221,6 +221,22 @@ public class Announcement extends BaseEntity {
     }
 
     /**
+     * Get the filename from the attachment file path
+     * Extracts the filename from the S3 path (e.g., "/uploads/announcements/{id}/file.pdf" -> "file.pdf")
+     * @return filename or null if no attachment
+     */
+    public String getAttachmentFileName() {
+        if (this.attachmentFilePath == null || this.attachmentFilePath.isBlank()) {
+            return null;
+        }
+        int lastSlashIndex = this.attachmentFilePath.lastIndexOf('/');
+        if (lastSlashIndex >= 0 && lastSlashIndex < this.attachmentFilePath.length() - 1) {
+            return this.attachmentFilePath.substring(lastSlashIndex + 1);
+        }
+        return this.attachmentFilePath;
+    }
+
+    /**
      * Publish the announcement
      */
     public void publish() {

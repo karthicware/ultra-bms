@@ -51,7 +51,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  Calendar,
   User,
   Building,
 } from 'lucide-react';

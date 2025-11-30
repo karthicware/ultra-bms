@@ -105,7 +105,7 @@ export default function PMScheduleDetailPage() {
       setLoading(true);
       const data = await getPMScheduleById(scheduleId);
       setSchedule(data);
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to load PM schedule details',

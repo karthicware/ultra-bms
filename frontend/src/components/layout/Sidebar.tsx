@@ -30,8 +30,11 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePermission, useAuth } from '@/contexts/auth-context';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getMyProfile } from '@/services/user-profile.service';
+import { getUserInitials, getDisplayNameOrFullName } from '@/types/user-profile';
 
 interface NavItem {
   name: string;
@@ -204,8 +207,29 @@ const navigationSections: NavSection[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const { hasPermission, hasRole } = usePermission();
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading: authLoading, isAuthenticated } = useAuth();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  // Fetch user profile for avatar and display name (Story 2.9)
+  useEffect(() => {
+    const fetchProfile = async () => {
+      // Only fetch for authenticated staff users (not tenants) after auth is fully loaded
+      if (authLoading || !isAuthenticated || !user || user.role === 'TENANT') return;
+
+      try {
+        const profile = await getMyProfile();
+        setAvatarUrl(profile.avatarUrl);
+        setDisplayName(profile.displayName);
+      } catch (error) {
+        // Silently fail - will show initials fallback
+        console.debug('Could not fetch user profile for avatar:', error);
+      }
+    };
+
+    fetchProfile();
+  }, [user, authLoading, isAuthenticated]);
 
   const filterItems = (items: NavItem[]): NavItem[] => {
     return items
@@ -327,18 +351,20 @@ export function Sidebar() {
         </nav>
       </ScrollArea>
 
-      {/* User Profile Section */}
+      {/* User Profile Section - Story 2.9: Avatar Integration */}
       <div className="border-t p-4">
         <div className="flex items-center gap-3 mb-3">
-          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-sm font-medium">
-              {user?.firstName?.[0]}
-              {user?.lastName?.[0]}
-            </span>
-          </div>
+          <Avatar className="h-9 w-9" data-testid="sidebar-user-avatar">
+            {avatarUrl ? (
+              <AvatarImage src={avatarUrl} alt="Profile photo" />
+            ) : null}
+            <AvatarFallback className="bg-primary/10 text-sm font-medium">
+              {user ? getUserInitials(displayName, user.firstName, user.lastName) : '?'}
+            </AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">
-              {user?.firstName} {user?.lastName}
+              {user ? getDisplayNameOrFullName(displayName, user.firstName, user.lastName) : 'User'}
             </p>
             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             {user?.role && (

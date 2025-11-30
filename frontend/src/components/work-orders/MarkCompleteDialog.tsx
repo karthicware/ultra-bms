@@ -157,7 +157,7 @@ export function MarkCompleteDialog({
       const newPreviewUrls = compressedFiles.map((file) => URL.createObjectURL(file));
       setPhotoPreviewUrls([...photoPreviewUrls, ...newPreviewUrls]);
       setAfterPhotos([...afterPhotos, ...compressedFiles]);
-    } catch (err) {
+    } catch {
       setPhotoError('Failed to process images. Please try again.');
     } finally {
       setIsCompressing(false);
@@ -194,7 +194,7 @@ export function MarkCompleteDialog({
       setPhotoPreviewUrls([]);
       setPhotoError(null);
       form.reset();
-    } catch (err) {
+    } catch {
       // Error handled by parent
     }
   };

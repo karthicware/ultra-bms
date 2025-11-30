@@ -20,12 +20,6 @@ import {
 } from '@/services/vendor-ratings.service';
 import type {
   VendorRatingRequest,
-  VendorRatingResponse,
-  VendorRating,
-  VendorPerformance,
-  VendorRatingPage,
-  VendorComparison,
-  TopRatedVendor,
   VendorRankingFilters
 } from '@/types/vendor-ratings';
 import type { ServiceCategory } from '@/types/vendors';

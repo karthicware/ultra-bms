@@ -10,7 +10,6 @@ import { apiClient } from '@/lib/api';
 import type {
   PDC,
   PDCDetail,
-  PDCListItem,
   PDCFilter,
   PDCCreateRequest,
   PDCBulkCreateRequest,
@@ -21,7 +20,6 @@ import type {
   PDCWithdrawRequest,
   PDCDashboard,
   PDCWithdrawalFilter,
-  PDCWithdrawalHistoryItem,
   CreatePDCResponse,
   BulkCreatePDCResponse,
   GetPDCResponse,

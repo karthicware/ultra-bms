@@ -4,7 +4,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { uploadDocument } from '@/services/tenant-portal.service';
-import type { TenantDocument } from '@/types/tenant';
 
 export function useUploadDocument() {
   const queryClient = useQueryClient();

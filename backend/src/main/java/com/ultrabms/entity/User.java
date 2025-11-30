@@ -145,6 +145,35 @@ public class User extends BaseEntity {
     private ThemePreference themePreference = ThemePreference.SYSTEM;
 
     /**
+     * User's customizable display name for personalization.
+     * If null, falls back to firstName + lastName.
+     * Story 2.9: User Profile Customization
+     */
+    @Size(max = 100, message = "Display name must not exceed 100 characters")
+    @Column(name = "display_name", length = 100)
+    private String displayName;
+
+    /**
+     * S3 key for user's avatar/profile photo.
+     * Format: /uploads/users/{userId}/avatar.{ext}
+     * If null, UI shows initials fallback.
+     * Story 2.9: User Profile Customization
+     */
+    @Size(max = 500, message = "Avatar file path must not exceed 500 characters")
+    @Column(name = "avatar_file_path", length = 500)
+    private String avatarFilePath;
+
+    /**
+     * Optional personal contact phone for internal directory.
+     * Distinct from registration 'phone' field.
+     * No format validation - supports international formats.
+     * Story 2.9: User Profile Customization
+     */
+    @Size(max = 30, message = "Contact phone must not exceed 30 characters")
+    @Column(name = "contact_phone", length = 30)
+    private String contactPhone;
+
+    /**
      * Get user authorities (permissions) for Spring Security.
      * Converts role permissions to GrantedAuthority collection.
      * SUPER_ADMIN always has all permissions.
@@ -193,5 +222,19 @@ public class User extends BaseEntity {
      */
     public boolean hasRole(String roleName) {
         return role != null && role.getName().equals(roleName);
+    }
+
+    /**
+     * Get display name or fall back to full name.
+     * Returns displayName if set, otherwise returns firstName + lastName.
+     * Story 2.9: User Profile Customization
+     *
+     * @return display name or full name
+     */
+    public String getDisplayNameOrFullName() {
+        if (displayName != null && !displayName.isBlank()) {
+            return displayName;
+        }
+        return firstName + " " + lastName;
     }
 }

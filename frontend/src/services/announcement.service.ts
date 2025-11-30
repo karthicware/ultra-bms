@@ -9,7 +9,6 @@
 import { apiClient } from '@/lib/api';
 import type {
   Announcement,
-  AnnouncementListItem,
   AnnouncementFilter,
   CreateAnnouncementRequest,
   UpdateAnnouncementRequest,
@@ -265,6 +264,59 @@ export async function getAttachmentDownloadUrl(id: string): Promise<string> {
     `${ANNOUNCEMENTS_BASE_PATH}/${id}/attachment/download`
   );
   return response.data.data.downloadUrl;
+}
+
+// ============================================================================
+// PDF GENERATION - Story 9.2 AC #35-39
+// ============================================================================
+
+/**
+ * Download announcement as PDF
+ *
+ * @param id - Announcement UUID
+ *
+ * @returns Promise that resolves to Blob containing PDF content
+ */
+export async function downloadAnnouncementPdf(id: string): Promise<Blob> {
+  const response = await apiClient.get(
+    `${ANNOUNCEMENTS_BASE_PATH}/${id}/pdf`,
+    {
+      responseType: 'blob'
+    }
+  );
+  return response.data;
+}
+
+/**
+ * Open announcement PDF in new tab for print preview
+ *
+ * @param id - Announcement UUID
+ */
+export async function openAnnouncementPrintPreview(id: string): Promise<void> {
+  const blob = await downloadAnnouncementPdf(id);
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+}
+
+/**
+ * Download announcement PDF with proper filename
+ *
+ * @param id - Announcement UUID
+ * @param announcementNumber - Announcement number for filename
+ */
+export async function downloadAnnouncementPdfWithFilename(
+  id: string,
+  announcementNumber: string
+): Promise<void> {
+  const blob = await downloadAnnouncementPdf(id);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `Announcement-${announcementNumber}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 // ============================================================================

@@ -9,7 +9,6 @@
 import { apiClient } from '@/lib/api';
 import type {
   WorkOrder,
-  WorkOrderListItem,
   WorkOrderComment,
   CreateWorkOrderDto,
   UpdateWorkOrderDto,

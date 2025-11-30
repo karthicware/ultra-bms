@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getUnitById, getUnitHistory } from '@/services/units.service';
 import type { Unit, UnitHistory, UnitStatus } from '@/types/units';
 import { UnitDeleteDialog } from '@/components/properties/UnitDeleteDialog';
+import { UnitFormModal } from '@/components/properties/UnitFormModal';
 import {
   Home,
   Pencil,
@@ -93,6 +94,8 @@ export default function UnitDetailPage() {
   const [history, setHistory] = useState<UnitHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   // Fetch unit details
   useEffect(() => {
@@ -119,14 +122,15 @@ export default function UnitDetailPage() {
     if (unitId) {
       fetchUnit();
     }
-  }, [unitId]); // Removed toast from dependencies
+  }, [unitId, refetchTrigger]); // Removed toast from dependencies
 
   // Handlers
   const handleEdit = () => {
-    toast({
-      title: 'Not Implemented',
-      description: 'Unit editing will be available in a future update',
-    });
+    setEditModalOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    setRefetchTrigger((prev) => prev + 1);
   };
 
   const handleDelete = () => {
@@ -396,15 +400,28 @@ export default function UnitDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Dialogs */}
       {unit && (
-        <UnitDeleteDialog
-          unitId={unit.id}
-          unitNumber={unit.unitNumber}
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          onSuccess={handleDeleteSuccess}
-        />
+        <>
+          <UnitDeleteDialog
+            unitId={unit.id}
+            unitNumber={unit.unitNumber}
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            onSuccess={handleDeleteSuccess}
+          />
+
+          {/* Edit Modal */}
+          <UnitFormModal
+            propertyId={unit.propertyId}
+            unit={unit}
+            mode="edit"
+            isOpen={editModalOpen}
+            onOpenChange={setEditModalOpen}
+            onSuccess={handleEditSuccess}
+            trigger={null}
+          />
+        </>
       )}
     </div>
   );

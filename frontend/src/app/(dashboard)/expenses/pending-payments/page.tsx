@@ -16,8 +16,6 @@ import { z } from 'zod';
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -82,9 +80,7 @@ import {
   Briefcase,
   Calendar as CalendarIcon,
   CheckCircle,
-  DollarSign,
   Loader2,
-  Receipt,
 } from 'lucide-react';
 
 // Payment method options

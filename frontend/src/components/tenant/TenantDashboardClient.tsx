@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { UnitInfoCard } from '@/components/tenant/UnitInfoCard';
 import { DashboardStatsGrid } from '@/components/tenant/DashboardStatsGrid';
 import { QuickActionsGrid } from '@/components/tenant/QuickActionsGrid';
+import { AnnouncementsWidget } from '@/components/announcements/AnnouncementsWidget';
 import { getDashboardData } from '@/services/tenant-portal.service';
 import type { DashboardData } from '@/types/tenant-portal';
 
@@ -124,6 +125,11 @@ export function TenantDashboardClient({ initialData }: TenantDashboardClientProp
         ) : dashboard ? (
           <QuickActionsGrid actions={dashboard.quickActions} />
         ) : null}
+
+        {/* Announcements Widget - Story 9.2 AC #64-70 */}
+        <div className="mt-6">
+          <AnnouncementsWidget isTenantView={true} maxItems={5} />
+        </div>
       </main>
 
       {/* Bottom Navigation - Mobile Only */}

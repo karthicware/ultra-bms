@@ -27,11 +27,11 @@ const settingsSections: SettingsSection[] = [
     icon: Shield,
   },
   {
-    title: 'Profile',
-    description: 'Update your personal information',
+    title: 'My Profile',
+    description: 'Customize your display name, avatar, and contact information',
     href: '/settings/profile',
     icon: User,
-    comingSoon: true,
+    requiresRole: ['SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER', 'FINANCE_MANAGER', 'MAINTENANCE_SUPERVISOR'],
   },
   {
     title: 'Notifications',

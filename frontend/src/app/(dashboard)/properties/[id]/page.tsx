@@ -10,14 +10,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,8 +26,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { getPropertyById } from '@/services/properties.service';
+import { getUnitsByProperty } from '@/services/units.service';
 import type { PropertyResponse, PropertyType } from '@/types/properties';
+import type { Unit } from '@/types/units';
 import { PropertyDeleteDialog } from '@/components/properties/PropertyDeleteDialog';
+import { UnitFormModal } from '@/components/properties/UnitFormModal';
+import { UnitGrid } from '@/components/properties/UnitGrid';
+import { UnitList } from '@/components/properties/UnitList';
 import {
   Building2,
   Pencil,
@@ -47,8 +44,9 @@ import {
   Home,
   Users,
   History,
-  Plus,
   ImageIcon,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 
 /**
@@ -80,6 +78,13 @@ export default function PropertyDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('units');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
+
+  // Units state
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [unitsLoading, setUnitsLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
 
   // Fetch property details
   useEffect(() => {
@@ -88,7 +93,7 @@ export default function PropertyDetailPage() {
         setIsLoading(true);
         const property = await getPropertyById(propertyId);
         setProperty(property);
-      } catch (error) {
+      } catch {
         toast({
           title: 'Error',
           description: 'Failed to load property details. Please try again.',
@@ -102,7 +107,52 @@ export default function PropertyDetailPage() {
     if (propertyId) {
       fetchProperty();
     }
-  }, [propertyId]); // Removed toast from dependencies
+  }, [propertyId, refetchTrigger]); // Removed toast from dependencies
+
+  // Fetch units when property loads
+  useEffect(() => {
+    const fetchUnits = async () => {
+      if (!propertyId) return;
+      try {
+        setUnitsLoading(true);
+        const unitsData = await getUnitsByProperty(propertyId);
+        // Handle both array and paginated response formats
+        const unitsArray = Array.isArray(unitsData)
+          ? unitsData
+          : (unitsData as unknown as { content?: Unit[]; units?: Unit[] })?.content ||
+            (unitsData as unknown as { content?: Unit[]; units?: Unit[] })?.units ||
+            [];
+        setUnits(unitsArray);
+      } catch {
+        toast({
+          title: 'Error',
+          description: 'Failed to load units.',
+          variant: 'destructive',
+        });
+        setUnits([]);
+      } finally {
+        setUnitsLoading(false);
+      }
+    };
+
+    fetchUnits();
+  }, [propertyId, refetchTrigger]);
+
+  const refetchProperty = () => setRefetchTrigger((prev) => prev + 1);
+
+  // Unit handlers
+  const handleViewUnit = (unitId: string) => {
+    router.push(`/units/${unitId}`);
+  };
+
+  const handleEditUnit = (unitId: string) => {
+    router.push(`/units/${unitId}/edit`);
+  };
+
+  const handleDeleteUnit = () => {
+    // Refresh the units list after deletion
+    setRefetchTrigger((prev) => prev + 1);
+  };
 
   // Handlers
   const handleEdit = () => {
@@ -118,17 +168,9 @@ export default function PropertyDetailPage() {
     router.push('/properties');
   };
 
-  const handleAddUnit = () => {
-    // TODO: Implement in Task 8 - Unit Form Modal
-    toast({
-      title: 'Not Implemented',
-      description: 'Add Unit functionality will be implemented in Task 8',
-    });
-  };
-
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6" data-testid="property-detail-page">
+      <div className="space-y-6" data-testid="property-detail-page">
         <Skeleton className="h-10 w-1/3" />
         <Skeleton className="h-64 w-full" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -144,17 +186,15 @@ export default function PropertyDetailPage() {
 
   if (!property) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center py-12">
-          <Building2 className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Property not found</h3>
-          <p className="text-muted-foreground mb-4">
-            The property you're looking for doesn't exist or has been deleted.
-          </p>
-          <Button onClick={() => router.push('/properties')}>
-            Back to Properties
-          </Button>
-        </div>
+      <div className="text-center py-12">
+        <Building2 className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Property not found</h3>
+        <p className="text-muted-foreground mb-4">
+          The property you're looking for doesn't exist or has been deleted.
+        </p>
+        <Button onClick={() => router.push('/properties')}>
+          Back to Properties
+        </Button>
       </div>
     );
   }
@@ -165,20 +205,7 @@ export default function PropertyDetailPage() {
   const availableUnits = property.unitCounts?.available || (totalUnits - occupiedUnits);
 
   return (
-    <div className="container mx-auto p-6 space-y-6" data-testid="property-detail-page">
-      {/* Breadcrumb */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/properties">Properties</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{property.name}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
+    <div className="space-y-6" data-testid="property-detail-page">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-2">
@@ -470,21 +497,66 @@ export default function PropertyDetailPage() {
         {/* Units Tab */}
         <TabsContent value="units" className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Units ({totalUnits})</h3>
-            <Button onClick={handleAddUnit} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Unit
-            </Button>
+            <div className="flex items-center gap-4">
+              <h3 className="text-lg font-semibold">Units ({units.length})</h3>
+              {/* View Toggle */}
+              <div className="flex border rounded-md">
+                <Button
+                  variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="rounded-r-none"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="rounded-l-none"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <UnitFormModal propertyId={propertyId} onSuccess={refetchProperty} />
           </div>
-          <Card>
-            <CardContent className="p-12 text-center text-muted-foreground">
-              <Home className="mx-auto h-12 w-12 mb-4 opacity-50" />
-              <p>Unit grid/list view will be implemented in Tasks 10 & 11</p>
-              <p className="text-sm mt-2">
-                This will show unit cards and table with filters
-              </p>
-            </CardContent>
-          </Card>
+
+          {unitsLoading ? (
+            <Card>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <Skeleton key={i} className="h-40" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : units.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center text-muted-foreground">
+                <Home className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                <p>No units found</p>
+                <p className="text-sm mt-2">Add units to this property using the button above</p>
+              </CardContent>
+            </Card>
+          ) : viewMode === 'grid' ? (
+            <UnitGrid
+              units={units}
+              onViewUnit={handleViewUnit}
+              onEditUnit={handleEditUnit}
+              onDeleteUnit={handleDeleteUnit}
+            />
+          ) : (
+            <UnitList
+              units={units}
+              selectedUnits={selectedUnits}
+              onSelectionChange={setSelectedUnits}
+              onViewUnit={handleViewUnit}
+              onEditUnit={handleEditUnit}
+              onDeleteUnit={handleDeleteUnit}
+            />
+          )}
         </TabsContent>
 
         {/* Tenants Tab */}

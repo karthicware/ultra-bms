@@ -41,9 +41,7 @@ import {
   type ExpenseCreateFormData,
 } from '@/lib/validations/expense';
 import {
-  ExpenseCategory,
   EXPENSE_CATEGORY_LABELS,
-  formatExpenseCurrency,
 } from '@/types/expense';
 import type { Property } from '@/types';
 import type { VendorListItem } from '@/types/vendors';
@@ -51,10 +49,8 @@ import {
   ArrowLeft,
   Loader2,
   Receipt,
-  Calendar,
   DollarSign,
   Building2,
-  Briefcase,
   Upload,
   X,
   FileText,

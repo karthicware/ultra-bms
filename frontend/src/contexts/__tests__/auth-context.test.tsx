@@ -27,7 +27,7 @@ function TestComponent() {
   const handleLogin = async () => {
     try {
       await login('test@example.com', 'password123');
-    } catch (error) {
+    } catch {
       // Expected error - silently catch
     }
   };
@@ -42,7 +42,7 @@ function TestComponent() {
         lastName: 'Doe',
         termsAccepted: true,
       });
-    } catch (error) {
+    } catch {
       // Expected error - silently catch
     }
   };

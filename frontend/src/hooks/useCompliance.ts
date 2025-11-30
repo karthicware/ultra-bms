@@ -49,7 +49,6 @@ import type {
   ComplianceRequirementDetail,
   ComplianceScheduleListResponse,
   ComplianceScheduleDetail,
-  ComplianceScheduleListItem,
   InspectionListResponse,
   InspectionDetail,
   ViolationListResponse,

@@ -75,6 +75,15 @@ public class AnnouncementServiceImpl implements AnnouncementService {
         return AnnouncementResponseDto.fromEntity(announcement);
     }
 
+    /**
+     * Get announcement entity for PDF generation
+     * Story 9.2 AC #35-39
+     */
+    @Transactional(readOnly = true)
+    public Announcement getAnnouncementEntity(UUID id) {
+        return findAnnouncementById(id);
+    }
+
     @Override
     public AnnouncementResponseDto updateAnnouncement(UUID id, AnnouncementUpdateDto dto, UUID updatedBy) {
         log.info("Updating announcement {} by user: {}", id, updatedBy);

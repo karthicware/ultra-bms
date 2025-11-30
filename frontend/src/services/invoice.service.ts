@@ -10,7 +10,6 @@ import { apiClient } from '@/lib/api';
 import type {
   Invoice,
   InvoiceDetail,
-  InvoiceListItem,
   InvoiceFilter,
   InvoiceStatus,
   InvoiceCreateRequest,
@@ -20,7 +19,6 @@ import type {
   InvoiceListResponse,
   SendInvoiceResponse,
   Payment,
-  PaymentListItem,
   PaymentFilter,
   PaymentCreateRequest,
   RecordPaymentResponse,

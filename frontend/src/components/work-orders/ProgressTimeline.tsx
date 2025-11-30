@@ -7,7 +7,7 @@
  * AC #22: Display timeline of all work order events
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,7 +24,6 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
-  ImageIcon,
 } from 'lucide-react';
 import type { TimelineEntry, TimelineEntryType } from '@/types/work-order-progress';
 

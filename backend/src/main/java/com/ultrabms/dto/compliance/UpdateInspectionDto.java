@@ -24,9 +24,32 @@ import java.time.LocalDate;
 public class UpdateInspectionDto {
 
     /**
+     * Scheduled date for inspection (can be rescheduled)
+     */
+    private LocalDate scheduledDate;
+
+    /**
      * Actual inspection date
      */
     private LocalDate inspectionDate;
+
+    /**
+     * Name of the inspector
+     */
+    @Size(max = 200, message = "Inspector name must be less than 200 characters")
+    private String inspectorName;
+
+    /**
+     * Inspector's company
+     */
+    @Size(max = 200, message = "Inspector company must be less than 200 characters")
+    private String inspectorCompany;
+
+    /**
+     * Inspector's contact info (phone/email)
+     */
+    @Size(max = 200, message = "Inspector contact must be less than 200 characters")
+    private String inspectorContact;
 
     /**
      * New status

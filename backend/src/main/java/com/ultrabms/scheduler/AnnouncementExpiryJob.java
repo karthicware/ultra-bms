@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Scheduled job for announcement expiry management.
- * Runs every hour to update PUBLISHED announcements that have passed
+ * Runs daily at midnight to update PUBLISHED announcements that have passed
  * their expiresAt date to EXPIRED status.
  *
  * Story 9.2: Internal Announcement Management (AC #23-26)
@@ -27,14 +27,14 @@ public class AnnouncementExpiryJob {
 
     /**
      * Check for expired announcements and update their status.
-     * Runs every hour at minute 0 (e.g., 1:00, 2:00, 3:00, ...).
+     * Runs daily at midnight (00:00:00).
      *
      * AC #23: Expired announcements automatically hidden from tenant portal
      * AC #24: Status updated from PUBLISHED to EXPIRED
      * AC #25: Visible in History tab after expiry
      * AC #26: Can be archived or deleted by admins
      */
-    @Scheduled(cron = "${announcement.expiry.cron:0 0 * * * *}")
+    @Scheduled(cron = "${announcement.expiry.cron:0 0 0 * * *}")
     @Transactional
     public void expireOverdueAnnouncements() {
         LOGGER.info("Starting announcement expiry job");

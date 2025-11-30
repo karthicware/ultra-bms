@@ -3,6 +3,7 @@ package com.ultrabms.service;
 import com.ultrabms.dto.checkout.CheckoutResponse;
 import com.ultrabms.dto.checkout.DepositRefundDto;
 import com.ultrabms.dto.expenses.ExpenseResponseDto;
+import com.ultrabms.entity.Announcement;
 import com.ultrabms.entity.Invoice;
 import com.ultrabms.entity.Payment;
 
@@ -134,4 +135,17 @@ public interface PdfGenerationService {
      * @return PDF content as byte array
      */
     byte[] generateFinancialDashboardPdf(com.ultrabms.dto.reports.FinancialDashboardDto dashboard);
+
+    // ============================================================
+    // ANNOUNCEMENT PDF METHODS - Story 9.2
+    // ============================================================
+
+    /**
+     * Generate announcement PDF
+     * Story 9.2 AC #35-39: Printable announcement with company letterhead
+     *
+     * @param announcement The announcement to generate PDF for
+     * @return PDF content as byte array
+     */
+    byte[] generateAnnouncementPdf(Announcement announcement);
 }

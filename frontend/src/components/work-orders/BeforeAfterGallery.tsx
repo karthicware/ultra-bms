@@ -23,7 +23,6 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
-  X,
   Grid,
   Columns,
   Maximize2,

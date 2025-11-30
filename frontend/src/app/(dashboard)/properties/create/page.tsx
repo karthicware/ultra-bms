@@ -33,10 +33,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { createProperty } from '@/services/properties.service';
+import { createProperty, uploadPropertyImage } from '@/services/properties.service';
 import { getPropertyManagers, type PropertyManager } from '@/services/users.service';
 import { createPropertySchema, type CreatePropertyFormData } from '@/lib/validations/properties';
 import { PropertyType } from '@/types/properties';
+import { PropertyImageUpload } from '@/components/properties/PropertyImageUpload';
 import { Building2, X } from 'lucide-react';
 
 export default function CreatePropertyPage() {
@@ -47,6 +48,7 @@ export default function CreatePropertyPage() {
   const [amenities, setAmenities] = useState<string[]>([]);
   const [managers, setManagers] = useState<PropertyManager[]>([]);
   const [isLoadingManagers, setIsLoadingManagers] = useState(true);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
 
   const form = useForm<CreatePropertyFormData>({
     resolver: zodResolver(createPropertySchema),
@@ -97,10 +99,35 @@ export default function CreatePropertyPage() {
 
       const property = await createProperty(payload);
 
-      toast({
-        title: 'Success',
-        description: `Property "${property.name}" created successfully`,
-      });
+      // Upload images if any were selected
+      if (selectedImages.length > 0) {
+        let uploadedCount = 0;
+        for (let i = 0; i < selectedImages.length; i++) {
+          try {
+            await uploadPropertyImage(property.id, selectedImages[i], i);
+            uploadedCount++;
+          } catch {
+            // Continue with other images if one fails
+            console.error(`Failed to upload image ${i + 1}`);
+          }
+        }
+        if (uploadedCount < selectedImages.length) {
+          toast({
+            title: 'Partial Success',
+            description: `Property created. ${uploadedCount} of ${selectedImages.length} images uploaded.`,
+          });
+        } else {
+          toast({
+            title: 'Success',
+            description: `Property "${property.name}" created with ${uploadedCount} images`,
+          });
+        }
+      } else {
+        toast({
+          title: 'Success',
+          description: `Property "${property.name}" created successfully`,
+        });
+      }
 
       router.push(`/properties/${property.id}`);
     } catch (error: any) {
@@ -396,19 +423,18 @@ export default function CreatePropertyPage() {
             </CardContent>
           </Card>
 
-          {/* Image Upload Placeholder */}
+          {/* Property Images */}
           <Card>
             <CardHeader>
               <CardTitle>Property Images</CardTitle>
-              <CardDescription>Upload up to 5 images (JPG/PNG, max 5MB each)</CardDescription>
+              <CardDescription>Upload up to 5 images (JPG/PNG/WebP, max 10MB each)</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="p-12 text-center text-muted-foreground border-2 border-dashed rounded-lg">
-                <p>Image upload will be implemented in Task 27</p>
-                <p className="text-sm mt-2">
-                  Drag-and-drop functionality with preview and delete options
-                </p>
-              </div>
+              <PropertyImageUpload
+                mode="create"
+                onImagesChange={setSelectedImages}
+                maxImages={5}
+              />
             </CardContent>
           </Card>
 

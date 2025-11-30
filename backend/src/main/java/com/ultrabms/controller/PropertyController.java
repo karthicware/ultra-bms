@@ -29,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.ultrabms.security.UserPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -274,6 +275,8 @@ public class PropertyController {
     private UUID getUserId(Object principal) {
         if (principal instanceof UUID) {
             return (UUID) principal;
+        } else if (principal instanceof UserPrincipal) {
+            return ((UserPrincipal) principal).getId();
         } else if (principal instanceof UserDetails) {
             return UUID.fromString(((UserDetails) principal).getUsername());
         } else if (principal instanceof String) {

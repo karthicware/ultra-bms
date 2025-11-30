@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ultrabms.dto.tenant.ChangePasswordRequest;
 import com.ultrabms.dto.tenant.DashboardResponse;
 import com.ultrabms.dto.tenant.TenantProfileResponse;
+import com.ultrabms.entity.Role;
 import com.ultrabms.entity.TenantDocument;
+import com.ultrabms.entity.User;
 import com.ultrabms.entity.enums.LeaseType;
 import com.ultrabms.entity.enums.PaymentFrequency;
+import com.ultrabms.repository.UserRepository;
 import com.ultrabms.service.TenantPortalService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +27,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
@@ -54,13 +59,34 @@ class TenantPortalControllerTest {
     @MockitoBean
     private TenantPortalService tenantPortalService;
 
+    @MockitoBean
+    private UserRepository userRepository;
+
+    private static final String TEST_USER_ID = "00000000-0000-0000-0000-000000000001";
+
     private UUID testUserId;
     private DashboardResponse dashboardResponse;
     private TenantProfileResponse profileResponse;
 
     @BeforeEach
     void setUp() {
-        testUserId = UUID.randomUUID();
+        testUserId = UUID.fromString(TEST_USER_ID);
+
+        // Mock UserRepository to return user for getCurrentUserId()
+        Role tenantRole = new Role();
+        tenantRole.setId(3L);
+        tenantRole.setName("TENANT");
+        tenantRole.setPermissions(new HashSet<>());
+
+        User testUser = new User();
+        testUser.setId(testUserId);
+        testUser.setEmail(TEST_USER_ID); // username in @WithMockUser
+        testUser.setFirstName("Test");
+        testUser.setLastName("Tenant");
+        testUser.setRole(tenantRole);
+        testUser.setActive(true);
+
+        when(userRepository.findByEmail(TEST_USER_ID)).thenReturn(Optional.of(testUser));
 
         // Setup dashboard response
         dashboardResponse = new DashboardResponse();

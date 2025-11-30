@@ -16,6 +16,7 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         return new ConcurrentMapCacheManager(
             // Property caches
+            "properties",
             "propertyById",
             "propertyWithOccupancy",
             // Company profile cache

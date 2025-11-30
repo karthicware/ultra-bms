@@ -71,7 +71,6 @@ import {
   getExpiryStatusLabel,
   formatFileSize,
   canPreviewFileType,
-  DocumentEntityType,
   DocumentAccessLevel,
 } from '@/types/document';
 

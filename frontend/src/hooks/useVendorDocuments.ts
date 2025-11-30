@@ -181,7 +181,7 @@ export function useUploadDocument() {
       // Invalidate vendor detail cache (document count might have changed)
       queryClient.invalidateQueries({ queryKey: vendorKeys.detail(vendorId) });
     },
-    onError: (error: any) => {
+    onError: () => {
       setUploadProgress(0);
     }
   });
@@ -268,7 +268,7 @@ export function useReplaceDocument() {
       // Invalidate expiring documents cache (expiry date might have changed)
       queryClient.invalidateQueries({ queryKey: vendorDocumentKeys.expiring() });
     },
-    onError: (error: any) => {
+    onError: () => {
       setUploadProgress(0);
     }
   });

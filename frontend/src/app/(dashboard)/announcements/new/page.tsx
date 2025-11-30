@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import {
   Select,
   SelectContent,
@@ -280,14 +280,15 @@ export default function CreateAnnouncementPage() {
                         <FormControl>
                           <Input
                             placeholder="Enter announcement title"
-                            maxLength={150}
+                            maxLength={200}
+                            data-testid="announcement-title-input"
                             {...field}
                           />
                         </FormControl>
                         <div className="flex justify-between">
                           <FormMessage />
                           <span className="text-xs text-muted-foreground">
-                            {titleValue?.length || 0}/150
+                            {titleValue?.length || 0}/200
                           </span>
                         </div>
                       </FormItem>
@@ -304,21 +305,15 @@ export default function CreateAnnouncementPage() {
                       <FormItem>
                         <FormLabel>Message *</FormLabel>
                         <FormControl>
-                          <Textarea
-                            placeholder="Enter your announcement message. You can use HTML for formatting."
-                            className="min-h-[300px] font-mono text-sm"
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Write your announcement message here..."
+                            minHeight="300px"
                             maxLength={5000}
-                            {...field}
+                            data-testid="announcement-message-editor"
                           />
                         </FormControl>
-                        <div className="flex justify-between">
-                          <FormDescription>
-                            Supports basic HTML tags for formatting (p, strong, ul, li, etc.)
-                          </FormDescription>
-                          <span className="text-xs text-muted-foreground">
-                            {messageValue?.length || 0}/5000
-                          </span>
-                        </div>
                         <FormMessage />
                       </FormItem>
                     )}

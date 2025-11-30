@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth-context';
+import { AnnouncementsWidget } from '@/components/announcements/AnnouncementsWidget';
 import { Users, FileText, Settings, Building2 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -141,6 +142,11 @@ export default function DashboardPage() {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Announcements Widget - Story 9.2 AC #64-70 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AnnouncementsWidget maxItems={5} />
       </div>
     </div>
   );

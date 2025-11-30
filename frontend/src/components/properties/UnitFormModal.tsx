@@ -3,11 +3,11 @@
 
 /**
  * Unit Form Modal Component
- * Modal dialog for creating a new unit with comprehensive validation
- * AC: #3, #17 - Unit creation with validation and features
+ * Modal dialog for creating or editing a unit with comprehensive validation
+ * AC: #3, #17 - Unit creation/editing with validation and features
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -39,28 +39,51 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { createUnit } from '@/services/units.service';
+import { createUnit, updateUnit } from '@/services/units.service';
 import { createUnitSchema, type CreateUnitFormData } from '@/lib/validations/units';
-import { UnitStatus } from '@/types/units';
-import { Plus, X } from 'lucide-react';
+import { UnitStatus, type Unit } from '@/types/units';
+import { Plus, X, Pencil } from 'lucide-react';
 
 interface UnitFormModalProps {
   propertyId: string;
+  /** Existing unit data for edit mode */
+  unit?: Unit;
+  /** Form mode - defaults to 'create' */
+  mode?: 'create' | 'edit';
+  /** Controlled open state */
+  isOpen?: boolean;
+  /** Controlled open change handler */
+  onOpenChange?: (open: boolean) => void;
   onSuccess?: () => void;
   trigger?: React.ReactNode;
 }
 
-export function UnitFormModal({ propertyId, onSuccess, trigger }: UnitFormModalProps) {
+export function UnitFormModal({
+  propertyId,
+  unit,
+  mode = 'create',
+  isOpen,
+  onOpenChange,
+  onSuccess,
+  trigger,
+}: UnitFormModalProps) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [featureKey, setFeatureKey] = useState('');
   const [featureValue, setFeatureValue] = useState('');
   const [features, setFeatures] = useState<Record<string, any>>({});
 
+  // Use controlled or uncontrolled open state
+  const open = isOpen !== undefined ? isOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
+
+  const isEditMode = mode === 'edit' && unit;
+
   const form = useForm<CreateUnitFormData>({
     resolver: zodResolver(createUnitSchema),
     defaultValues: {
+      propertyId,
       unitNumber: '',
       floor: 0,
       bedroomCount: 1,
@@ -72,6 +95,23 @@ export function UnitFormModal({ propertyId, onSuccess, trigger }: UnitFormModalP
     },
   });
 
+  // Reset form when unit changes (for edit mode)
+  useEffect(() => {
+    if (isEditMode && unit) {
+      form.reset({
+        unitNumber: unit.unitNumber,
+        floor: unit.floor ?? 0,
+        bedroomCount: unit.bedroomCount,
+        bathroomCount: unit.bathroomCount,
+        squareFootage: unit.squareFootage,
+        monthlyRent: unit.monthlyRent,
+        status: unit.status,
+        features: unit.features || {},
+      });
+      setFeatures(unit.features || {});
+    }
+  }, [unit, isEditMode, form]);
+
   const onSubmit = async (data: CreateUnitFormData) => {
     try {
       setIsSubmitting(true);
@@ -82,22 +122,39 @@ export function UnitFormModal({ propertyId, onSuccess, trigger }: UnitFormModalP
         features,
       };
 
-      const unit = await createUnit({ ...payload, propertyId } as any);
+      if (isEditMode && unit) {
+        // Update existing unit - convert null to undefined for optional fields
+        const updatePayload = {
+          ...payload,
+          floor: payload.floor ?? undefined,
+          squareFootage: payload.squareFootage ?? undefined,
+        };
+        const updatedUnit = await updateUnit(unit.id, updatePayload);
 
-      toast({
-        title: 'Success',
-        description: `Unit ${unit.unitNumber} created successfully`,
-      });
+        toast({
+          title: 'Success',
+          description: `Unit ${updatedUnit.unitNumber} updated successfully`,
+        });
+      } else {
+        // Create new unit
+        const newUnit = await createUnit({ ...payload, propertyId } as any);
 
-      form.reset();
-      setFeatures({});
+        toast({
+          title: 'Success',
+          description: `Unit ${newUnit.unitNumber} created successfully`,
+        });
+
+        form.reset();
+        setFeatures({});
+      }
+
       setOpen(false);
 
       if (onSuccess) {
         onSuccess();
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error?.message || 'Failed to create unit';
+      const errorMessage = error.response?.data?.error?.message || `Failed to ${isEditMode ? 'update' : 'create'} unit`;
 
       // Handle unit number uniqueness error
       if (errorMessage.includes('already exists') || errorMessage.includes('unique')) {
@@ -148,24 +205,26 @@ export function UnitFormModal({ propertyId, onSuccess, trigger }: UnitFormModalP
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Unit
-          </Button>
-        )}
-      </DialogTrigger>
+      {trigger !== null && (
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button className="gap-2">
+              {isEditMode ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              {isEditMode ? 'Edit Unit' : 'Add Unit'}
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Unit</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Unit' : 'Create New Unit'}</DialogTitle>
           <DialogDescription>
-            Add a new unit to this property
+            {isEditMode ? `Update unit ${unit?.unitNumber} details` : 'Add a new unit to this property'}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-testid="form-unit-create">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-testid={isEditMode ? 'form-unit-edit' : 'form-unit-create'}>
             {/* Basic Info */}
             <Card>
               <CardContent className="pt-6 space-y-4">
@@ -429,7 +488,7 @@ export function UnitFormModal({ propertyId, onSuccess, trigger }: UnitFormModalP
                 disabled={isSubmitting}
                 data-testid="btn-submit-unit"
               >
-                {isSubmitting ? 'Creating...' : 'Create Unit'}
+                {isSubmitting ? (isEditMode ? 'Saving...' : 'Creating...') : (isEditMode ? 'Save Changes' : 'Create Unit')}
               </Button>
             </div>
           </form>
