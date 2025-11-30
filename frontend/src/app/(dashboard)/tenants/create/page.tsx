@@ -13,6 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { differenceInMonths } from 'date-fns';
 
+import { ArrowLeft, Users } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -183,10 +184,10 @@ function CreateTenantWizard() {
           },
         }));
 
-        toast.success('Lead data loaded successfully');
+        toast.success('Data Loaded', { description: 'Lead data loaded successfully' });
       } catch (error) {
         console.error('Failed to load conversion data:', error);
-        toast.error('Failed to load lead data');
+        toast.error('Load Error', { description: 'Failed to load lead data' });
       } finally {
         setIsLoadingConversionData(false);
       }
@@ -358,13 +359,13 @@ function CreateTenantWizard() {
       // Submit to API
       const result = await createTenant(submitData);
 
-      toast.success(`Tenant registered successfully! Welcome email sent to ${formData.personalInfo.email}`);
+      toast.success('Tenant Registered', { description: `Welcome email sent to ${formData.personalInfo.email}` });
 
       // Redirect to tenant detail page
       router.push(`/tenants/${result.id}`);
     } catch (error: any) {
       console.error('Failed to create tenant:', error);
-      toast.error(error.response?.data?.error?.message || 'Failed to create tenant. Please try again.');
+      toast.error('Registration Failed', { description: error.response?.data?.error?.message || 'Failed to create tenant. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -389,10 +390,20 @@ function CreateTenantWizard() {
     <div className="container mx-auto py-6 max-w-4xl" data-testid="wizard-tenant-create">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Tenant Onboarding</h1>
-        <p className="text-muted-foreground mt-2">
-          Complete the 7-step wizard to register a new tenant
-        </p>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.push('/tenants')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-3">
+              <Users className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold">Tenant Onboarding</h1>
+            </div>
+            <p className="text-muted-foreground mt-2">
+              Complete the 7-step wizard to register a new tenant
+            </p>
+          </div>
+        </div>
         {isLeadConversion && (
           <Badge variant="secondary" className="mt-2" data-testid="badge-prefilled-from-quotation">
             Pre-filled from Quotation #{fromQuotation}

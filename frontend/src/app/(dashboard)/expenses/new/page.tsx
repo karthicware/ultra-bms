@@ -4,6 +4,7 @@
  * Expense Create Page
  * Story 6.2: Expense Management and Vendor Payments
  * AC #4: Manual expense creation with multipart form data
+ * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
 import { useState, useEffect, Suspense } from 'react';
@@ -14,13 +15,12 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -48,12 +48,16 @@ import type { VendorListItem } from '@/types/vendors';
 import {
   ArrowLeft,
   Loader2,
-  Receipt,
-  DollarSign,
+  ReceiptIcon,
+  DollarSignIcon,
   Building2,
   Upload,
   X,
-  FileText,
+  FileTextIcon,
+  CalendarIcon,
+  TagIcon,
+  UserIcon,
+  MessageSquareIcon,
 } from 'lucide-react';
 
 export default function CreateExpensePage() {
@@ -229,7 +233,10 @@ function CreateExpensePageContent() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Create Expense</h1>
+          <div className="flex items-center gap-3">
+            <ReceiptIcon className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold tracking-tight">Create Expense</h1>
+          </div>
           <p className="text-muted-foreground">Record a new expense or vendor payment</p>
         </div>
       </div>
@@ -241,28 +248,33 @@ function CreateExpensePageContent() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />
+                  <DollarSignIcon className="h-4 w-4" />
                   Expense Details
                 </CardTitle>
                 <CardDescription>Enter the expense category and amount</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <FormField
                   control={form.control}
                   name="category"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category *</FormLabel>
+                    <FormItem className="space-y-2">
+                      <Label className="flex items-center gap-1">
+                        Category <span className="text-destructive">*</span>
+                      </Label>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {Object.entries(EXPENSE_CATEGORY_LABELS).map(([value, label]) => (
                             <SelectItem key={value} value={value}>
-                              {label}
+                              <div className="flex items-center gap-2">
+                                <TagIcon className="size-4 text-blue-600" />
+                                <span>{label}</span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -276,18 +288,30 @@ function CreateExpensePageContent() {
                   control={form.control}
                   name="amount"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Amount (AED) *</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0.01"
-                          placeholder="0.00"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        />
-                      </FormControl>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="amount" className="flex items-center gap-1">
+                        Amount <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <DollarSignIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            id="amount"
+                            type="number"
+                            className="pl-9 pr-14"
+                            step="0.01"
+                            min="0.01"
+                            placeholder="0.00"
+                            {...field}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                          AED
+                        </span>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -297,12 +321,19 @@ function CreateExpensePageContent() {
                   control={form.control}
                   name="expenseDate"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Expense Date *</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormDescription>Date the expense was incurred</FormDescription>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="expenseDate" className="flex items-center gap-1">
+                        Expense Date <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <CalendarIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input id="expenseDate" type="date" className="pl-9" {...field} />
+                        </FormControl>
+                      </div>
+                      <p className="text-muted-foreground text-xs">Date the expense was incurred</p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -319,13 +350,16 @@ function CreateExpensePageContent() {
                 </CardTitle>
                 <CardDescription>Link expense to property or vendor</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <FormField
                   control={form.control}
                   name="propertyId"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Property</FormLabel>
+                    <FormItem className="space-y-2">
+                      <Label className="flex items-center gap-1">
+                        <Building2 className="size-4 mr-1 text-muted-foreground" />
+                        Property
+                      </Label>
                       {isLoadingProperties ? (
                         <Skeleton className="h-10 w-full" />
                       ) : (
@@ -334,15 +368,23 @@ function CreateExpensePageContent() {
                           value={field.value || '__none__'}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select property (optional)" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="__none__">No property</SelectItem>
+                            <SelectItem value="__none__">
+                              <div className="flex items-center gap-2">
+                                <Building2 className="size-4 text-gray-400" />
+                                <span>No property</span>
+                              </div>
+                            </SelectItem>
                             {properties.map((property) => (
                               <SelectItem key={property.id} value={property.id}>
-                                {property.name}
+                                <div className="flex items-center gap-2">
+                                  <Building2 className="size-4 text-blue-600" />
+                                  <span>{property.name}</span>
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -357,8 +399,11 @@ function CreateExpensePageContent() {
                   control={form.control}
                   name="vendorId"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vendor</FormLabel>
+                    <FormItem className="space-y-2">
+                      <Label className="flex items-center gap-1">
+                        <UserIcon className="size-4 mr-1 text-muted-foreground" />
+                        Vendor
+                      </Label>
                       {isLoadingVendors ? (
                         <Skeleton className="h-10 w-full" />
                       ) : (
@@ -367,23 +412,29 @@ function CreateExpensePageContent() {
                           value={field.value || '__none__'}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select vendor (optional)" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="__none__">No vendor</SelectItem>
+                            <SelectItem value="__none__">
+                              <div className="flex items-center gap-2">
+                                <UserIcon className="size-4 text-gray-400" />
+                                <span>No vendor</span>
+                              </div>
+                            </SelectItem>
                             {vendors.map((vendor) => (
                               <SelectItem key={vendor.id} value={vendor.id}>
-                                {vendor.companyName}
+                                <div className="flex items-center gap-2">
+                                  <UserIcon className="size-4 text-green-600" />
+                                  <span>{vendor.companyName}</span>
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       )}
-                      <FormDescription>
-                        Select if this is a vendor payment
-                      </FormDescription>
+                      <p className="text-muted-foreground text-xs">Select if this is a vendor payment</p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -396,7 +447,7 @@ function CreateExpensePageContent() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Receipt className="h-4 w-4" />
+                <MessageSquareIcon className="h-4 w-4" />
                 Description
               </CardTitle>
             </CardHeader>
@@ -405,19 +456,25 @@ function CreateExpensePageContent() {
                 control={form.control}
                 name="description"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description *</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Describe the expense..."
-                        className="resize-none"
-                        rows={3}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Provide details about this expense
-                    </FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="description" className="flex items-center gap-1">
+                      Description <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute top-3 left-0 flex items-start pl-3">
+                        <MessageSquareIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Textarea
+                          id="description"
+                          className="pl-9 resize-none min-h-[80px]"
+                          placeholder="Describe the expense..."
+                          rows={3}
+                          {...field}
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">Provide details about this expense</p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -429,7 +486,7 @@ function CreateExpensePageContent() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <FileText className="h-4 w-4" />
+                <FileTextIcon className="h-4 w-4" />
                 Receipt Upload
               </CardTitle>
               <CardDescription>Upload a receipt for this expense (optional)</CardDescription>
@@ -438,7 +495,7 @@ function CreateExpensePageContent() {
               {receiptFile ? (
                 <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
                   <div className="flex items-center gap-3">
-                    <FileText className="h-8 w-8 text-blue-500" />
+                    <FileTextIcon className="h-8 w-8 text-blue-500" />
                     <div>
                       <p className="font-medium">{receiptFile.name}</p>
                       <p className="text-sm text-muted-foreground">

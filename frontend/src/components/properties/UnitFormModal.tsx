@@ -5,6 +5,7 @@
  * Unit Form Modal Component
  * Modal dialog for creating or editing a unit with comprehensive validation
  * AC: #3, #17 - Unit creation/editing with validation and features
+ * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
 import { useState, useEffect } from 'react';
@@ -22,13 +23,12 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -42,7 +42,22 @@ import { useToast } from '@/hooks/use-toast';
 import { createUnit, updateUnit } from '@/services/units.service';
 import { createUnitSchema, type CreateUnitFormData } from '@/lib/validations/units';
 import { UnitStatus, type Unit } from '@/types/units';
-import { Plus, X, Pencil } from 'lucide-react';
+import {
+  Plus,
+  X,
+  Pencil,
+  HashIcon,
+  LayersIcon,
+  BedDoubleIcon,
+  BathIcon,
+  RulerIcon,
+  DollarSignIcon,
+  CheckCircleIcon,
+  WrenchIcon,
+  CircleDotIcon,
+  TagIcon,
+  SparklesIcon,
+} from 'lucide-react';
 
 interface UnitFormModalProps {
   propertyId: string;
@@ -88,7 +103,7 @@ export function UnitFormModal({
       floor: 0,
       bedroomCount: 1,
       bathroomCount: 1,
-      squareFootage: undefined,
+      squareFootage: undefined as unknown as number,
       monthlyRent: 0,
       status: UnitStatus.AVAILABLE,
       features: {},
@@ -229,24 +244,31 @@ export function UnitFormModal({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-testid={isEditMode ? 'form-unit-edit' : 'form-unit-create'}>
             {/* Basic Info */}
             <Card>
-              <CardContent className="pt-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className="pt-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="unitNumber"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Unit Number *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="101"
-                            {...field}
-                            data-testid="input-unit-number"
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Must be unique within property
-                        </FormDescription>
+                      <FormItem className="space-y-2">
+                        <Label htmlFor="unitNumber" className="flex items-center gap-1">
+                          Unit Number <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative">
+                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <HashIcon className="size-4" />
+                          </div>
+                          <FormControl>
+                            <Input
+                              id="unitNumber"
+                              className="pl-9"
+                              placeholder="101"
+                              {...field}
+                              data-testid="input-unit-number"
+                            />
+                          </FormControl>
+                        </div>
+                        <p className="text-muted-foreground text-xs">Must be unique within property</p>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -256,49 +278,61 @@ export function UnitFormModal({
                     control={form.control}
                     name="floor"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Floor</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="1"
-                            {...field}
-                            value={field.value ?? ''}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                            data-testid="input-floor"
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Can be negative for basement (-1, -2)
-                        </FormDescription>
+                      <FormItem className="space-y-2">
+                        <Label htmlFor="floor">Floor</Label>
+                        <div className="relative">
+                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <LayersIcon className="size-4" />
+                          </div>
+                          <FormControl>
+                            <Input
+                              id="floor"
+                              type="number"
+                              className="pl-9"
+                              placeholder="1"
+                              {...field}
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              data-testid="input-floor"
+                            />
+                          </FormControl>
+                        </div>
+                        <p className="text-muted-foreground text-xs">Can be negative for basement (-1, -2)</p>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="bedroomCount"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bedrooms *</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.5"
-                            min={0}
-                            max={10}
-                            placeholder="2"
-                            {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            data-testid="input-bedrooms"
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Can be decimal (e.g., 2.5 for studio with den)
-                        </FormDescription>
+                      <FormItem className="space-y-2">
+                        <Label htmlFor="bedroomCount" className="flex items-center gap-1">
+                          Bedrooms <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative">
+                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <BedDoubleIcon className="size-4" />
+                          </div>
+                          <FormControl>
+                            <Input
+                              id="bedroomCount"
+                              type="number"
+                              className="pl-9"
+                              step="0.5"
+                              min={0}
+                              max={10}
+                              placeholder="2"
+                              {...field}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              data-testid="input-bedrooms"
+                            />
+                          </FormControl>
+                        </div>
+                        <p className="text-muted-foreground text-xs">Can be decimal (e.g., 2.5 for studio with den)</p>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -308,51 +342,68 @@ export function UnitFormModal({
                     control={form.control}
                     name="bathroomCount"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bathrooms *</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.5"
-                            min={0}
-                            max={10}
-                            placeholder="1.5"
-                            {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            data-testid="input-bathrooms"
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Can be decimal (e.g., 1.5 for half bath)
-                        </FormDescription>
+                      <FormItem className="space-y-2">
+                        <Label htmlFor="bathroomCount" className="flex items-center gap-1">
+                          Bathrooms <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative">
+                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <BathIcon className="size-4" />
+                          </div>
+                          <FormControl>
+                            <Input
+                              id="bathroomCount"
+                              type="number"
+                              className="pl-9"
+                              step="0.5"
+                              min={0}
+                              max={10}
+                              placeholder="1.5"
+                              {...field}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              data-testid="input-bathrooms"
+                            />
+                          </FormControl>
+                        </div>
+                        <p className="text-muted-foreground text-xs">Can be decimal (e.g., 1.5 for half bath)</p>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="squareFootage"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Square Footage</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min={0}
-                            placeholder="1200"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                            value={field.value || ''}
-                            data-testid="input-square-footage"
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Unit area in square feet
-                        </FormDescription>
+                      <FormItem className="space-y-2">
+                        <Label htmlFor="squareFootage" className="flex items-center gap-1">
+                          Square Footage <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative">
+                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <RulerIcon className="size-4" />
+                          </div>
+                          <FormControl>
+                            <Input
+                              id="squareFootage"
+                              type="number"
+                              className="pl-9 pr-14"
+                              step="0.01"
+                              min={0}
+                              placeholder="1200"
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                              value={field.value || ''}
+                              data-testid="input-square-footage"
+                            />
+                          </FormControl>
+                          <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                            sq ft
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground text-xs">Unit area in square feet</p>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -362,22 +413,32 @@ export function UnitFormModal({
                     control={form.control}
                     name="monthlyRent"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Monthly Rent (AED) *</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min={0}
-                            placeholder="5000"
-                            {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            data-testid="input-monthly-rent"
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Base monthly rent amount
-                        </FormDescription>
+                      <FormItem className="space-y-2">
+                        <Label htmlFor="monthlyRent" className="flex items-center gap-1">
+                          Monthly Rent <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative">
+                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <DollarSignIcon className="size-4" />
+                          </div>
+                          <FormControl>
+                            <Input
+                              id="monthlyRent"
+                              type="number"
+                              className="pl-9 pr-14"
+                              step="0.01"
+                              min={0}
+                              placeholder="5000"
+                              {...field}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              data-testid="input-monthly-rent"
+                            />
+                          </FormControl>
+                          <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                            AED
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground text-xs">Base monthly rent amount</p>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -388,23 +449,36 @@ export function UnitFormModal({
                   control={form.control}
                   name="status"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
+                    <FormItem className="space-y-2">
+                      <Label>Status</Label>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-unit-status">
+                          <SelectTrigger data-testid="select-unit-status" className="w-full">
                             <SelectValue placeholder="Select status" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value={UnitStatus.AVAILABLE}>Available</SelectItem>
-                          <SelectItem value={UnitStatus.RESERVED}>Reserved</SelectItem>
-                          <SelectItem value={UnitStatus.UNDER_MAINTENANCE}>Under Maintenance</SelectItem>
+                          <SelectItem value={UnitStatus.AVAILABLE}>
+                            <div className="flex items-center gap-2">
+                              <CheckCircleIcon className="size-4 text-green-600" />
+                              <span>Available</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value={UnitStatus.RESERVED}>
+                            <div className="flex items-center gap-2">
+                              <CircleDotIcon className="size-4 text-yellow-600" />
+                              <span>Reserved</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value={UnitStatus.UNDER_MAINTENANCE}>
+                            <div className="flex items-center gap-2">
+                              <WrenchIcon className="size-4 text-orange-600" />
+                              <span>Under Maintenance</span>
+                            </div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormDescription>
-                        Initial unit status (default: Available)
-                      </FormDescription>
+                      <p className="text-muted-foreground text-xs">Initial unit status (default: Available)</p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -414,28 +488,43 @@ export function UnitFormModal({
 
             {/* Features */}
             <Card>
-              <CardContent className="pt-6 space-y-4">
-                <div>
-                  <FormLabel>Unit Features</FormLabel>
-                  <FormDescription className="mb-3">
+              <CardContent className="pt-6 space-y-6">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    <SparklesIcon className="size-4 mr-1 text-muted-foreground" />
+                    Unit Features
+                  </Label>
+                  <p className="text-muted-foreground text-xs mb-3">
                     Add custom features like balcony, view, floor plan type, parking spots, etc.
-                  </FormDescription>
+                  </p>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      placeholder="Feature name (e.g., balcony)"
-                      value={featureKey}
-                      onChange={(e) => setFeatureKey(e.target.value)}
-                      onKeyDown={handleFeatureKeyDown}
-                      data-testid="input-feature-key"
-                    />
-                    <div className="flex gap-2">
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <TagIcon className="size-4" />
+                      </div>
                       <Input
-                        placeholder="Value (e.g., true, sea, 2)"
-                        value={featureValue}
-                        onChange={(e) => setFeatureValue(e.target.value)}
+                        className="pl-9"
+                        placeholder="Feature name (e.g., balcony)"
+                        value={featureKey}
+                        onChange={(e) => setFeatureKey(e.target.value)}
                         onKeyDown={handleFeatureKeyDown}
-                        data-testid="input-feature-value"
+                        data-testid="input-feature-key"
                       />
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <SparklesIcon className="size-4" />
+                        </div>
+                        <Input
+                          className="pl-9"
+                          placeholder="Value (e.g., true, sea, 2)"
+                          value={featureValue}
+                          onChange={(e) => setFeatureValue(e.target.value)}
+                          onKeyDown={handleFeatureKeyDown}
+                          data-testid="input-feature-value"
+                        />
+                      </div>
                       <Button
                         type="button"
                         variant="outline"

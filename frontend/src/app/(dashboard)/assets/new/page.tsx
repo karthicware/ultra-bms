@@ -23,17 +23,28 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateAsset } from '@/hooks/useAssets';
 import { assetCreateSchema, type AssetCreateInput } from '@/lib/validations/asset';
 import { ASSET_CATEGORY_OPTIONS, type AssetCreateRequest, AssetCategory } from '@/types/asset';
-import { ArrowLeft, Save, Package } from 'lucide-react';
+import {
+  ArrowLeft,
+  Save,
+  Package,
+  Building2,
+  MapPinIcon,
+  FactoryIcon,
+  HashIcon,
+  CalendarIcon,
+  DollarSignIcon,
+  ClockIcon,
+  TagIcon,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getProperties } from '@/services/properties.service';
 
@@ -147,11 +158,18 @@ export default function NewAssetPage() {
                   control={form.control}
                   name="assetName"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Asset Name *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Main HVAC Unit" {...field} />
-                      </FormControl>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="assetName" className="flex items-center gap-1">
+                        Asset Name <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <TagIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input id="assetName" className="pl-9" placeholder="e.g., Main HVAC Unit" {...field} />
+                        </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -161,12 +179,17 @@ export default function NewAssetPage() {
                   control={form.control}
                   name="category"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category *</FormLabel>
+                    <FormItem className="space-y-2">
+                      <Label className="flex items-center gap-1">
+                        Category <span className="text-destructive">*</span>
+                      </Label>
                       <Select onValueChange={field.onChange} value={field.value || ''}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
+                          <SelectTrigger className="w-full">
+                            <div className="flex items-center gap-2">
+                              <Package className="size-4 text-muted-foreground" />
+                              <SelectValue placeholder="Select category" />
+                            </div>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -188,18 +211,26 @@ export default function NewAssetPage() {
                   control={form.control}
                   name="propertyId"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Property *</FormLabel>
+                    <FormItem className="space-y-2">
+                      <Label className="flex items-center gap-1">
+                        Property <span className="text-destructive">*</span>
+                      </Label>
                       <Select onValueChange={field.onChange} value={field.value || ''}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select property" />
+                          <SelectTrigger className="w-full">
+                            <div className="flex items-center gap-2">
+                              <Building2 className="size-4 text-muted-foreground" />
+                              <SelectValue placeholder="Select property" />
+                            </div>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {properties.map((property) => (
                             <SelectItem key={property.id} value={property.id}>
-                              {property.name}
+                              <div className="flex items-center gap-2">
+                                <Building2 className="size-4" />
+                                {property.name}
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -213,12 +244,19 @@ export default function NewAssetPage() {
                   control={form.control}
                   name="location"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Rooftop, Basement Level 2" {...field} />
-                      </FormControl>
-                      <FormDescription>Physical location within the property</FormDescription>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="location" className="flex items-center gap-1">
+                        Location <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <MapPinIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input id="location" className="pl-9" placeholder="e.g., Rooftop, Basement Level 2" {...field} />
+                        </FormControl>
+                      </div>
+                      <p className="text-muted-foreground text-xs">Physical location within the property</p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -239,11 +277,16 @@ export default function NewAssetPage() {
                   control={form.control}
                   name="manufacturer"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Manufacturer</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Carrier, Trane" {...field} value={field.value || ''} />
-                      </FormControl>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="manufacturer">Manufacturer</Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <FactoryIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input id="manufacturer" className="pl-9" placeholder="e.g., Carrier, Trane" {...field} value={field.value || ''} />
+                        </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -253,11 +296,16 @@ export default function NewAssetPage() {
                   control={form.control}
                   name="modelNumber"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Model Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., XYZ-1000" {...field} value={field.value || ''} />
-                      </FormControl>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="modelNumber">Model Number</Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <HashIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input id="modelNumber" className="pl-9" placeholder="e.g., XYZ-1000" {...field} value={field.value || ''} />
+                        </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -267,11 +315,16 @@ export default function NewAssetPage() {
                   control={form.control}
                   name="serialNumber"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Serial Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., SN123456789" {...field} value={field.value || ''} />
-                      </FormControl>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="serialNumber">Serial Number</Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <HashIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input id="serialNumber" className="pl-9" placeholder="e.g., SN123456789" {...field} value={field.value || ''} />
+                        </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -283,15 +336,22 @@ export default function NewAssetPage() {
                   control={form.control}
                   name="installationDate"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Installation Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          value={field.value || ''}
-                        />
-                      </FormControl>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="installationDate">Installation Date</Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <CalendarIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            id="installationDate"
+                            className="pl-9"
+                            type="date"
+                            {...field}
+                            value={field.value || ''}
+                          />
+                        </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -301,16 +361,23 @@ export default function NewAssetPage() {
                   control={form.control}
                   name="warrantyExpiryDate"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Warranty Expiry Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          value={field.value || ''}
-                        />
-                      </FormControl>
-                      <FormDescription>Leave empty if no warranty</FormDescription>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="warrantyExpiryDate">Warranty Expiry Date</Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <CalendarIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            id="warrantyExpiryDate"
+                            className="pl-9"
+                            type="date"
+                            {...field}
+                            value={field.value || ''}
+                          />
+                        </FormControl>
+                      </div>
+                      <p className="text-muted-foreground text-xs">Leave empty if no warranty</p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -331,19 +398,29 @@ export default function NewAssetPage() {
                   control={form.control}
                   name="purchaseCost"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Purchase Cost (AED)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="0.00"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                          value={field.value || ''}
-                        />
-                      </FormControl>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="purchaseCost">Purchase Cost</Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <DollarSignIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            id="purchaseCost"
+                            className="pl-9 pr-14"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                            value={field.value || ''}
+                          />
+                        </FormControl>
+                        <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                          AED
+                        </span>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -353,19 +430,29 @@ export default function NewAssetPage() {
                   control={form.control}
                   name="estimatedUsefulLife"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estimated Useful Life (years)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="1"
-                          max="100"
-                          placeholder="e.g., 10"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                          value={field.value || ''}
-                        />
-                      </FormControl>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="estimatedUsefulLife">Estimated Useful Life</Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <ClockIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            id="estimatedUsefulLife"
+                            className="pl-9 pr-16"
+                            type="number"
+                            min="1"
+                            max="100"
+                            placeholder="e.g., 10"
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            value={field.value || ''}
+                          />
+                        </FormControl>
+                        <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                          years
+                        </span>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

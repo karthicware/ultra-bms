@@ -163,7 +163,7 @@ export default function CheckoutWizardPage({ params }: PageProps) {
       }
     } catch (error) {
       console.error('Failed to load checkout data:', error);
-      toast.error('Failed to load tenant information');
+      toast.error('Load Error', { description: 'Failed to load tenant information' });
     } finally {
       setIsLoading(false);
     }
@@ -194,14 +194,14 @@ export default function CheckoutWizardPage({ params }: PageProps) {
   const handleCheckoutInitiated = (newCheckout: TenantCheckout) => {
     setCheckout(newCheckout);
     setCurrentStep(1);
-    toast.success('Checkout initiated successfully!');
+    toast.success('Checkout Initiated', { description: 'Checkout initiated successfully!' });
   };
 
   // Handle inspection saved
   const handleInspectionSaved = async () => {
     await refreshCheckout();
     setCurrentStep(2);
-    toast.success('Inspection saved successfully!');
+    toast.success('Inspection Saved', { description: 'Inspection saved successfully!' });
   };
 
   // Handle deposit calculation saved
@@ -209,14 +209,14 @@ export default function CheckoutWizardPage({ params }: PageProps) {
     setDepositRefund(refund);
     await refreshCheckout();
     setCurrentStep(3);
-    toast.success('Deposit calculation saved!');
+    toast.success('Deposit Saved', { description: 'Deposit calculation saved!' });
   };
 
   // Handle checkout completed
   const handleCheckoutCompleted = async () => {
     await refreshCheckout();
     setIsCompleted(true);
-    toast.success('Checkout completed successfully!');
+    toast.success('Checkout Completed', { description: 'Checkout completed successfully!' });
   };
 
   // Navigation
@@ -342,7 +342,7 @@ export default function CheckoutWizardPage({ params }: PageProps) {
                       window.open(url, '_blank');
                     } catch (error) {
                       console.error('Failed to open inspection report:', error);
-                      toast.error('Failed to open inspection report');
+                      toast.error('Download Error', { description: 'Failed to open inspection report' });
                     }
                   }}
                 >
@@ -360,7 +360,7 @@ export default function CheckoutWizardPage({ params }: PageProps) {
                       window.open(url, '_blank');
                     } catch (error) {
                       console.error('Failed to open deposit statement:', error);
-                      toast.error('Failed to open deposit statement');
+                      toast.error('Download Error', { description: 'Failed to open deposit statement' });
                     }
                   }}
                 >

@@ -174,10 +174,10 @@ export default function TenantLeaseRenewalPage() {
 
       setNewRequestNumber(result.requestNumber);
       setSubmitSuccess(true);
-      toast.success('Renewal request submitted successfully!');
+      toast.success('Request Submitted', { description: 'Renewal request submitted successfully!' });
     } catch (error) {
       console.error('Failed to submit renewal request:', error);
-      toast.error('Failed to submit renewal request. Please try again.');
+      toast.error('Submission Failed', { description: 'Failed to submit renewal request. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }

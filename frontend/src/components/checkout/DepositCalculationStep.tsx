@@ -188,7 +188,7 @@ export function DepositCalculationStep({
       }
     } catch (error) {
       console.error('Failed to save deposit calculation:', error);
-      toast.error('Failed to save deposit calculation');
+      toast.error('Save Error', { description: 'Failed to save deposit calculation' });
     } finally {
       setIsSubmitting(false);
     }

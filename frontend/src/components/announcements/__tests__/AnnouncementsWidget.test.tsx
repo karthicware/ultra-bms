@@ -69,24 +69,21 @@ const mockAnnouncementListResponse: AnnouncementListResponse = {
       createdByName: 'Admin User',
     },
   ],
-  page: { number: 0, size: 20, totalElements: 2, totalPages: 1 },
+  pagination: { page: 0, size: 20, totalElements: 2, totalPages: 1, hasNext: false, hasPrevious: false },
+  message: 'Success',
 };
 
 const mockStats: AnnouncementStats = {
   activeCount: 2,
   draftCount: 1,
-  expiredCount: 3,
-  archivedCount: 5,
 };
 
 const mockTenantAnnouncements: TenantAnnouncement[] = [
   {
     id: '123e4567-e89b-12d3-a456-426614174000',
-    announcementNumber: 'ANN-2025-0001',
     title: 'Building Maintenance Notice',
     message: '<p>Important maintenance notification.</p>',
     publishedAt: '2025-01-15T10:00:00Z',
-    expiresAt: '2025-02-15T10:00:00Z',
     hasAttachment: true,
   },
 ];

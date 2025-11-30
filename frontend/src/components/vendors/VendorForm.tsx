@@ -17,18 +17,31 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Building2, Phone, Briefcase, CreditCard, AlertCircle, CheckCircle2 } from 'lucide-react';
+import {
+  Loader2,
+  Building2,
+  Phone,
+  Briefcase,
+  CreditCard,
+  AlertCircle,
+  CheckCircle2,
+  UserIcon,
+  MailIcon,
+  MapPinIcon,
+  FileTextIcon,
+  DollarSignIcon,
+  ClockIcon,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -259,17 +272,24 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
               control={form.control}
               name="companyName"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
+                <FormItem className="space-y-2">
+                  <Label htmlFor="companyName" className="flex items-center gap-1">
                     Company Name <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="Enter company name"
-                      data-testid="vendor-company-name"
-                    />
-                  </FormControl>
+                  </Label>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <Building2 className="size-4" />
+                    </div>
+                    <FormControl>
+                      <Input
+                        id="companyName"
+                        className="pl-9"
+                        {...field}
+                        placeholder="Enter company name"
+                        data-testid="vendor-company-name"
+                      />
+                    </FormControl>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -280,17 +300,24 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
               control={form.control}
               name="contactPersonName"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
+                <FormItem className="space-y-2">
+                  <Label htmlFor="contactPersonName" className="flex items-center gap-1">
                     Contact Person Name <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="Full name of primary contact"
-                      data-testid="vendor-contact-person"
-                    />
-                  </FormControl>
+                  </Label>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <UserIcon className="size-4" />
+                    </div>
+                    <FormControl>
+                      <Input
+                        id="contactPersonName"
+                        className="pl-9"
+                        {...field}
+                        placeholder="Full name of primary contact"
+                        data-testid="vendor-contact-person"
+                      />
+                    </FormControl>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -302,17 +329,24 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
                 control={form.control}
                 name="emiratesIdOrTradeLicense"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="emiratesIdOrTradeLicense" className="flex items-center gap-1">
                       Emirates ID / Trade License <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Emirates ID or Trade License number"
-                        data-testid="vendor-emirates-id"
-                      />
-                    </FormControl>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <FileTextIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="emiratesIdOrTradeLicense"
+                          className="pl-9"
+                          {...field}
+                          placeholder="Emirates ID or Trade License number"
+                          data-testid="vendor-emirates-id"
+                        />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -323,17 +357,24 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
                 control={form.control}
                 name="trn"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tax Registration Number (TRN)</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="15-digit TRN (optional)"
-                        maxLength={15}
-                        data-testid="vendor-trn"
-                      />
-                    </FormControl>
-                    <FormDescription>UAE TRN for VAT purposes</FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="trn">Tax Registration Number (TRN)</Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <FileTextIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="trn"
+                          className="pl-9"
+                          {...field}
+                          placeholder="15-digit TRN (optional)"
+                          maxLength={15}
+                          data-testid="vendor-trn"
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">UAE TRN for VAT purposes</p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -357,25 +398,32 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
               control={form.control}
               name="email"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <FormLabel>
+                    <Label htmlFor="email" className="flex items-center gap-1">
                       Email Address <span className="text-destructive">*</span>
-                    </FormLabel>
+                    </Label>
                     {renderEmailStatus()}
                   </div>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="email"
-                      placeholder="vendor@company.com"
-                      className={cn(
-                        emailCheckStatus === 'taken' && 'border-red-500 focus-visible:ring-red-500'
-                      )}
-                      data-testid="vendor-email"
-                    />
-                  </FormControl>
-                  <FormDescription>Must be unique across all vendors</FormDescription>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <MailIcon className="size-4" />
+                    </div>
+                    <FormControl>
+                      <Input
+                        id="email"
+                        className={cn(
+                          'pl-9',
+                          emailCheckStatus === 'taken' && 'border-red-500 focus-visible:ring-red-500'
+                        )}
+                        {...field}
+                        type="email"
+                        placeholder="vendor@company.com"
+                        data-testid="vendor-email"
+                      />
+                    </FormControl>
+                  </div>
+                  <p className="text-muted-foreground text-xs">Must be unique across all vendors</p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -387,19 +435,26 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
                 control={form.control}
                 name="phoneNumber"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="phoneNumber" className="flex items-center gap-1">
                       Phone Number <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="tel"
-                        placeholder="+971501234567"
-                        data-testid="vendor-phone"
-                      />
-                    </FormControl>
-                    <FormDescription>E.164 format (e.g., +971501234567)</FormDescription>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <Phone className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="phoneNumber"
+                          className="pl-9"
+                          {...field}
+                          type="tel"
+                          placeholder="+971501234567"
+                          data-testid="vendor-phone"
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">E.164 format (e.g., +971501234567)</p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -410,16 +465,23 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
                 control={form.control}
                 name="secondaryPhoneNumber"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Secondary Phone</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="tel"
-                        placeholder="+971501234567 (optional)"
-                        data-testid="vendor-secondary-phone"
-                      />
-                    </FormControl>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="secondaryPhoneNumber">Secondary Phone</Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <Phone className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="secondaryPhoneNumber"
+                          className="pl-9"
+                          {...field}
+                          type="tel"
+                          placeholder="+971501234567 (optional)"
+                          data-testid="vendor-secondary-phone"
+                        />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -431,18 +493,24 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
               control={form.control}
               name="address"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
+                <FormItem className="space-y-2">
+                  <Label htmlFor="address" className="flex items-center gap-1">
                     Business Address <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Full business address including building, street, area, and city"
-                      className="min-h-20"
-                      data-testid="vendor-address"
-                    />
-                  </FormControl>
+                  </Label>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute top-3 left-0 flex items-start pl-3">
+                      <MapPinIcon className="size-4" />
+                    </div>
+                    <FormControl>
+                      <Textarea
+                        id="address"
+                        className="min-h-20 pl-9"
+                        {...field}
+                        placeholder="Full business address including building, street, area, and city"
+                        data-testid="vendor-address"
+                      />
+                    </FormControl>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -461,13 +529,13 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Service Categories */}
-            <div>
-              <FormLabel>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1">
                 Service Categories <span className="text-destructive">*</span>
-              </FormLabel>
-              <FormDescription className="mb-3">
+              </Label>
+              <p className="text-muted-foreground text-xs mb-3">
                 Select all service categories the vendor provides
-              </FormDescription>
+              </p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {SERVICE_CATEGORY_OPTIONS.map((option) => (
                   <div
@@ -506,11 +574,11 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
             <Separator />
 
             {/* Service Areas */}
-            <div>
-              <FormLabel>Service Areas</FormLabel>
-              <FormDescription className="mb-3">
+            <div className="space-y-2">
+              <Label>Service Areas</Label>
+              <p className="text-muted-foreground text-xs mb-3">
                 Select the emirates where the vendor can provide services
-              </FormDescription>
+              </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {SERVICE_AREA_OPTIONS.map((area) => (
                   <div
@@ -556,21 +624,31 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
                 control={form.control}
                 name="hourlyRate"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Hourly Rate (AED) <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        data-testid="vendor-hourly-rate"
-                      />
-                    </FormControl>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="hourlyRate" className="flex items-center gap-1">
+                      Hourly Rate <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <DollarSignIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="hourlyRate"
+                          className="pl-9 pr-14"
+                          {...field}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          data-testid="vendor-hourly-rate"
+                        />
+                      </FormControl>
+                      <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                        AED
+                      </span>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -581,23 +659,33 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
                 control={form.control}
                 name="emergencyCalloutFee"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Emergency Callout Fee (AED)</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00 (optional)"
-                        value={field.value || ''}
-                        onChange={(e) =>
-                          field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)
-                        }
-                        data-testid="vendor-emergency-fee"
-                      />
-                    </FormControl>
-                    <FormDescription>Fee for emergency/after-hours service</FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="emergencyCalloutFee">Emergency Callout Fee</Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <DollarSignIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="emergencyCalloutFee"
+                          className="pl-9 pr-14"
+                          {...field}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00 (optional)"
+                          value={field.value || ''}
+                          onChange={(e) =>
+                            field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)
+                          }
+                          data-testid="vendor-emergency-fee"
+                        />
+                      </FormControl>
+                      <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                        AED
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground text-xs">Fee for emergency/after-hours service</p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -608,14 +696,17 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
                 control={form.control}
                 name="paymentTerms"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
+                  <FormItem className="space-y-2">
+                    <Label className="flex items-center gap-1">
                       Payment Terms <span className="text-destructive">*</span>
-                    </FormLabel>
+                    </Label>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger data-testid="vendor-payment-terms">
-                          <SelectValue placeholder="Select payment terms" />
+                        <SelectTrigger data-testid="vendor-payment-terms" className="w-full">
+                          <div className="flex items-center gap-2">
+                            <ClockIcon className="size-4 text-muted-foreground" />
+                            <SelectValue placeholder="Select payment terms" />
+                          </div>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

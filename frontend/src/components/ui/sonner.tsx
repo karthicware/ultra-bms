@@ -28,13 +28,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast: "group toast group-[.toaster]:shadow-lg",
+          title: "group-[.toast]:text-inherit",
+          description: "group-[.toast]:!text-inherit group-[.toast]:!opacity-90",
           success:
-            "group-[.toaster]:bg-emerald-50 group-[.toaster]:text-emerald-900 group-[.toaster]:border-emerald-200 dark:group-[.toaster]:bg-emerald-950 dark:group-[.toaster]:text-emerald-100 dark:group-[.toaster]:border-emerald-800",
+            "group-[.toaster]:!bg-emerald-600 group-[.toaster]:!text-white group-[.toaster]:!border-emerald-600 dark:group-[.toaster]:!bg-emerald-500 dark:group-[.toaster]:!border-emerald-500 [&_svg]:!text-white",
           error:
-            "group-[.toaster]:bg-red-50 group-[.toaster]:text-red-900 group-[.toaster]:border-red-200 dark:group-[.toaster]:bg-red-950 dark:group-[.toaster]:text-red-100 dark:group-[.toaster]:border-red-800",
+            "group-[.toaster]:!bg-red-600 group-[.toaster]:!text-white group-[.toaster]:!border-red-600 dark:group-[.toaster]:!bg-red-500 dark:group-[.toaster]:!border-red-500 [&_svg]:!text-white",
           warning:
-            "group-[.toaster]:bg-amber-50 group-[.toaster]:text-amber-900 group-[.toaster]:border-amber-200 dark:group-[.toaster]:bg-amber-950 dark:group-[.toaster]:text-amber-100 dark:group-[.toaster]:border-amber-800",
-          info: "group-[.toaster]:bg-blue-50 group-[.toaster]:text-blue-900 group-[.toaster]:border-blue-200 dark:group-[.toaster]:bg-blue-950 dark:group-[.toaster]:text-blue-100 dark:group-[.toaster]:border-blue-800",
+            "group-[.toaster]:!bg-amber-500 group-[.toaster]:!text-white group-[.toaster]:!border-amber-500 dark:group-[.toaster]:!bg-amber-400 dark:group-[.toaster]:!border-amber-400 [&_svg]:!text-white",
+          info: "group-[.toaster]:!bg-blue-600 group-[.toaster]:!text-white group-[.toaster]:!border-blue-600 dark:group-[.toaster]:!bg-blue-500 dark:group-[.toaster]:!border-blue-500 [&_svg]:!text-white",
         },
       }}
       style={

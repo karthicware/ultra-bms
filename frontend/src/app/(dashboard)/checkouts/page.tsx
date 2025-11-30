@@ -140,7 +140,7 @@ export default function CheckoutsPage() {
       });
     } catch (error) {
       console.error('Failed to load checkouts:', error);
-      toast.error('Failed to load checkouts');
+      toast.error('Load Error', { description: 'Failed to load checkouts' });
     } finally {
       setIsLoading(false);
     }

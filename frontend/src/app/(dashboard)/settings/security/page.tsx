@@ -91,22 +91,22 @@ export default function SecurityPage() {
   const revokeSession = async (sessionId: string) => {
     try {
       await authApi.revokeSession(sessionId);
-      toast.success('Session revoked successfully');
+      toast.success('Session Revoked', { description: 'Session revoked successfully' });
       setSessions((prev) => prev.filter((s) => s.sessionId !== sessionId));
     } catch (err) {
       console.error('Failed to revoke session:', err);
-      toast.error('Failed to revoke session');
+      toast.error('Revoke Failed', { description: 'Failed to revoke session' });
     }
   };
 
   const logoutAllOtherDevices = async () => {
     try {
       await authApi.logoutAllDevices();
-      toast.success('Logged out from all other devices');
+      toast.success('Devices Logged Out', { description: 'Logged out from all other devices' });
       await fetchSessions(); // Refresh the list
     } catch (err) {
       console.error('Failed to logout all:', err);
-      toast.error('Failed to logout from all devices');
+      toast.error('Logout Failed', { description: 'Failed to logout from all devices' });
     }
   };
 

@@ -55,9 +55,18 @@ const bathroomCountSchema = z
   });
 
 /**
- * Square footage validation (for units)
+ * Square footage validation (for units) - Required
  */
 const unitSquareFootageSchema = z
+  .number({ message: 'Square footage is required' })
+  .positive('Square footage must be positive')
+  .min(100, 'Unit must be at least 100 sq ft')
+  .max(50000, 'Unit cannot exceed 50,000 sq ft');
+
+/**
+ * Square footage validation (for units) - Optional (for updates)
+ */
+const unitSquareFootageOptionalSchema = z
   .number()
   .positive('Square footage must be positive')
   .min(100, 'Unit must be at least 100 sq ft')
@@ -124,7 +133,7 @@ export const updateUnitSchema = z
     floor: floorSchema,
     bedroomCount: bedroomCountSchema.optional(),
     bathroomCount: bathroomCountSchema.optional(),
-    squareFootage: unitSquareFootageSchema,
+    squareFootage: unitSquareFootageOptionalSchema,
     monthlyRent: monthlyRentSchema.optional(),
     status: z.nativeEnum(UnitStatus).optional(),
     features: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
@@ -162,7 +171,7 @@ export const bulkCreateUnitsSchema = z
     incrementPattern: z.nativeEnum(IncrementPattern),
     bedroomCount: bedroomCountSchema,
     bathroomCount: bathroomCountSchema,
-    squareFootage: unitSquareFootageSchema,
+    squareFootage: unitSquareFootageOptionalSchema,
     monthlyRent: monthlyRentSchema,
     features: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
   })

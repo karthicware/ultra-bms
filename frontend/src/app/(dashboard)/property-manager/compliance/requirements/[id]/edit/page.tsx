@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, ChevronLeft, Save } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, ShieldCheck } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -155,16 +155,23 @@ export default function EditRequirementPage() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto py-6">      {/* Header */}
+    <div className="container max-w-2xl mx-auto py-6">
+      {/* Header */}
       <div className="mb-6">
-        <Button variant="ghost" onClick={() => router.back()} className="mb-4">
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        <h1 className="text-3xl font-bold tracking-tight">Edit Requirement</h1>
-        <p className="text-muted-foreground">
-          Update {requirement.name}
-        </p>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.push(`/property-manager/compliance/requirements/${requirementId}`)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold tracking-tight">Edit Requirement</h1>
+            </div>
+            <p className="text-muted-foreground">
+              Update {requirement.name}
+            </p>
+          </div>
+        </div>
       </div>
 
       <Form {...form}>

@@ -5,6 +5,7 @@
  * Story 6.3: Post-Dated Cheque (PDC) Management
  * AC #4: PDC Registration Form
  * AC #5: Bulk PDC Registration
+ * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
 import { useState } from 'react';
@@ -12,7 +13,19 @@ import { useRouter } from 'next/navigation';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
+import {
+  CalendarIcon,
+  Plus,
+  Trash2,
+  ArrowLeft,
+  Loader2,
+  UserIcon,
+  FileTextIcon,
+  HashIcon,
+  Building2Icon,
+  BanknoteIcon,
+  CreditCardIcon,
+} from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -26,10 +39,8 @@ import { Label } from '@/components/ui/label';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import {
@@ -141,7 +152,10 @@ export default function PDCRegistrationPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Register PDC</h1>
+          <div className="flex items-center gap-3">
+            <CreditCardIcon className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold tracking-tight">Register PDC</h1>
+          </div>
           <p className="text-muted-foreground">
             Register post-dated cheques for a tenant
           </p>
@@ -153,30 +167,38 @@ export default function PDCRegistrationPage() {
           {/* Tenant Selection */}
           <Card>
             <CardHeader>
-              <CardTitle>Tenant Information</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <UserIcon className="h-4 w-4" />
+                Tenant Information
+              </CardTitle>
               <CardDescription>
                 Select the tenant and optionally link to a lease
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 sm:grid-cols-2">
                 {/* Tenant */}
                 <FormField
                   control={form.control}
                   name="tenantId"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tenant *</FormLabel>
+                    <FormItem className="space-y-2">
+                      <Label className="flex items-center gap-1">
+                        Tenant <span className="text-destructive">*</span>
+                      </Label>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select tenant" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {MOCK_TENANTS.map((tenant) => (
                             <SelectItem key={tenant.id} value={tenant.id}>
-                              {tenant.name} ({tenant.email})
+                              <div className="flex items-center gap-2">
+                                <UserIcon className="size-4 text-blue-600" />
+                                <span>{tenant.name} ({tenant.email})</span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -191,29 +213,40 @@ export default function PDCRegistrationPage() {
                   control={form.control}
                   name="leaseId"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Link to Lease (Optional)</FormLabel>
+                    <FormItem className="space-y-2">
+                      <Label className="flex items-center gap-1">
+                        <FileTextIcon className="size-4 mr-1 text-muted-foreground" />
+                        Link to Lease
+                      </Label>
                       <Select
                         onValueChange={(v) => field.onChange(v || null)}
                         value={field.value || ''}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select lease" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No lease link</SelectItem>
+                          <SelectItem value="">
+                            <div className="flex items-center gap-2">
+                              <FileTextIcon className="size-4 text-gray-400" />
+                              <span>No lease link</span>
+                            </div>
+                          </SelectItem>
                           {MOCK_LEASES.map((lease) => (
                             <SelectItem key={lease.id} value={lease.id}>
-                              {lease.unitNumber} - {lease.property}
+                              <div className="flex items-center gap-2">
+                                <Building2Icon className="size-4 text-green-600" />
+                                <span>{lease.unitNumber} - {lease.property}</span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>
+                      <p className="text-muted-foreground text-xs">
                         Linking to a lease helps track PDCs by unit
-                      </FormDescription>
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -225,27 +258,38 @@ export default function PDCRegistrationPage() {
           {/* Number of Cheques */}
           <Card>
             <CardHeader>
-              <CardTitle>Cheque Details</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <BanknoteIcon className="h-4 w-4" />
+                Cheque Details
+              </CardTitle>
               <CardDescription>
                 Enter the number of cheques and fill in details for each
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               {/* Number of cheques selector */}
               <div className="flex items-end gap-4">
-                <div className="w-32">
-                  <Label htmlFor="numCheques">Number of Cheques</Label>
-                  <Input
-                    id="numCheques"
-                    type="number"
-                    min={1}
-                    max={24}
-                    value={numberOfCheques}
-                    onChange={(e) => handleNumberOfChequesChange(parseInt(e.target.value) || 1)}
-                    className="mt-1.5"
-                  />
+                <div className="w-40 space-y-2">
+                  <Label htmlFor="numCheques" className="flex items-center gap-1">
+                    <HashIcon className="size-4 mr-1 text-muted-foreground" />
+                    Number of Cheques
+                  </Label>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <HashIcon className="size-4" />
+                    </div>
+                    <Input
+                      id="numCheques"
+                      type="number"
+                      className="pl-9"
+                      min={1}
+                      max={24}
+                      value={numberOfCheques}
+                      onChange={(e) => handleNumberOfChequesChange(parseInt(e.target.value) || 1)}
+                    />
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground pb-2">
+                <p className="text-muted-foreground text-xs pb-2">
                   Enter 1-{PDC_VALIDATION_CONSTANTS.MAX_CHEQUES_PER_BULK} cheques
                 </p>
               </div>
@@ -256,10 +300,26 @@ export default function PDCRegistrationPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">#</TableHead>
-                      <TableHead className="min-w-[150px]">Cheque Number *</TableHead>
-                      <TableHead className="min-w-[150px]">Bank Name *</TableHead>
-                      <TableHead className="min-w-[120px]">Amount (AED) *</TableHead>
-                      <TableHead className="min-w-[150px]">Cheque Date *</TableHead>
+                      <TableHead className="min-w-[150px]">
+                        <span className="flex items-center gap-1">
+                          Cheque Number <span className="text-destructive">*</span>
+                        </span>
+                      </TableHead>
+                      <TableHead className="min-w-[150px]">
+                        <span className="flex items-center gap-1">
+                          Bank Name <span className="text-destructive">*</span>
+                        </span>
+                      </TableHead>
+                      <TableHead className="min-w-[120px]">
+                        <span className="flex items-center gap-1">
+                          Amount (AED) <span className="text-destructive">*</span>
+                        </span>
+                      </TableHead>
+                      <TableHead className="min-w-[150px]">
+                        <span className="flex items-center gap-1">
+                          Cheque Date <span className="text-destructive">*</span>
+                        </span>
+                      </TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -274,7 +334,12 @@ export default function PDCRegistrationPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormControl>
-                                  <Input placeholder="e.g., 123456" {...field} />
+                                  <div className="relative">
+                                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                      <HashIcon className="size-4" />
+                                    </div>
+                                    <Input className="pl-9" placeholder="e.g., 123456" {...field} />
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -288,7 +353,12 @@ export default function PDCRegistrationPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormControl>
-                                  <Input placeholder="e.g., Emirates NBD" {...field} />
+                                  <div className="relative">
+                                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                      <Building2Icon className="size-4" />
+                                    </div>
+                                    <Input className="pl-9" placeholder="e.g., Emirates NBD" {...field} />
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -302,14 +372,20 @@ export default function PDCRegistrationPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormControl>
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    min="0.01"
-                                    placeholder="0.00"
-                                    {...field}
-                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                  />
+                                  <div className="relative">
+                                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                      <BanknoteIcon className="size-4" />
+                                    </div>
+                                    <Input
+                                      type="number"
+                                      className="pl-9"
+                                      step="0.01"
+                                      min="0.01"
+                                      placeholder="0.00"
+                                      {...field}
+                                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                    />
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -332,12 +408,12 @@ export default function PDCRegistrationPage() {
                                           !field.value && 'text-muted-foreground'
                                         )}
                                       >
+                                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                                         {field.value ? (
                                           format(new Date(field.value), 'MMM dd, yyyy')
                                         ) : (
                                           <span>Pick date</span>
                                         )}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                       </Button>
                                     </FormControl>
                                   </PopoverTrigger>
@@ -399,8 +475,8 @@ export default function PDCRegistrationPage() {
               <div className="flex justify-end pt-4 border-t">
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Total Amount</p>
-                  <p className="text-2xl font-bold">{formatAmount(totalAmount)}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-2xl font-bold text-primary">{formatAmount(totalAmount)}</p>
+                  <p className="text-muted-foreground text-xs">
                     {fields.length} cheque{fields.length !== 1 ? 's' : ''}
                   </p>
                 </div>

@@ -6,6 +6,7 @@
  * AC #3: Add Bank Account Form with fields
  * AC #4: Edit Bank Account Form with pre-filled data
  * AC #26: Bank account form component with IBAN/SWIFT validation hints
+ * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
 import { useEffect, useState } from 'react';
@@ -21,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
   Select,
@@ -32,10 +34,8 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import {
@@ -45,7 +45,17 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Building2, HelpCircle, Info, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  Loader2,
+  Building2,
+  HelpCircle,
+  Info,
+  CheckCircle2,
+  AlertCircle,
+  HashIcon,
+  LandmarkIcon,
+  UserIcon,
+} from 'lucide-react';
 import type { BankAccount, BankAccountDetail } from '@/types/bank-account';
 import { BankAccountStatus, UAE_BANKS } from '@/types/bank-account';
 import {
@@ -216,33 +226,42 @@ export function BankAccountFormModal({
           </div>
         ) : (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" data-testid="form-bank-account">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" data-testid="form-bank-account">
               {/* Bank Name */}
               <FormField
                 control={form.control}
                 name="bankName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bank Name *</FormLabel>
-                    <FormControl>
-                      <>
-                        <Input
-                          placeholder="Select or type bank name"
-                          {...field}
-                          disabled={isSubmitting}
-                          list="uae-banks-list"
-                          data-testid="input-bank-name"
-                        />
-                        <datalist id="uae-banks-list">
-                          {UAE_BANKS.map((bank) => (
-                            <option key={bank} value={bank} />
-                          ))}
-                        </datalist>
-                      </>
-                    </FormControl>
-                    <FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="bankName" className="flex items-center gap-1">
+                      Bank Name <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <LandmarkIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <>
+                          <Input
+                            id="bankName"
+                            className="pl-9"
+                            placeholder="Select or type bank name"
+                            {...field}
+                            disabled={isSubmitting}
+                            list="uae-banks-list"
+                            data-testid="input-bank-name"
+                          />
+                          <datalist id="uae-banks-list">
+                            {UAE_BANKS.map((bank) => (
+                              <option key={bank} value={bank} />
+                            ))}
+                          </datalist>
+                        </>
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
                       Select from common UAE banks or enter a custom name
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -253,19 +272,28 @@ export function BankAccountFormModal({
                 control={form.control}
                 name="accountName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Account Name *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Company Main Account"
-                        {...field}
-                        disabled={isSubmitting}
-                        data-testid="input-account-name"
-                      />
-                    </FormControl>
-                    <FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="accountName" className="flex items-center gap-1">
+                      Account Name <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <UserIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="accountName"
+                          className="pl-9"
+                          placeholder="e.g., Company Main Account"
+                          {...field}
+                          disabled={isSubmitting}
+                          data-testid="input-account-name"
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
                       Account holder name or description
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -276,19 +304,28 @@ export function BankAccountFormModal({
                 control={form.control}
                 name="accountNumber"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Account Number *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., 1234567890123456"
-                        {...field}
-                        disabled={isSubmitting}
-                        data-testid="input-account-number"
-                      />
-                    </FormControl>
-                    <FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="accountNumber" className="flex items-center gap-1">
+                      Account Number <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <HashIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="accountNumber"
+                          className="pl-9"
+                          placeholder="e.g., 1234567890123456"
+                          {...field}
+                          disabled={isSubmitting}
+                          data-testid="input-account-number"
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
                       Bank account number (encrypted at rest)
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -299,9 +336,11 @@ export function BankAccountFormModal({
                 control={form.control}
                 name="iban"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <FormLabel>IBAN *</FormLabel>
+                      <Label htmlFor="iban" className="flex items-center gap-1">
+                        IBAN <span className="text-destructive">*</span>
+                      </Label>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -319,12 +358,16 @@ export function BankAccountFormModal({
                     </div>
                     <FormControl>
                       <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <Building2 className="size-4" />
+                        </div>
                         <Input
+                          id="iban"
+                          className={`pl-9 pr-10 ${ibanValidation ? (ibanValidation.valid ? 'border-green-500' : 'border-destructive') : ''}`}
                           placeholder="AE070331234567890123456"
                           {...field}
                           onChange={(e) => handleIbanChange(e.target.value)}
                           disabled={isSubmitting}
-                          className={ibanValidation ? (ibanValidation.valid ? 'border-green-500' : 'border-destructive') : ''}
                           data-testid="input-iban"
                         />
                         {ibanValidation && (
@@ -338,9 +381,9 @@ export function BankAccountFormModal({
                         )}
                       </div>
                     </FormControl>
-                    <FormDescription>
+                    <p className="text-muted-foreground text-xs">
                       UAE IBAN: AE + 21 digits (encrypted at rest)
-                    </FormDescription>
+                    </p>
                     {ibanValidation && !ibanValidation.valid && (
                       <p className="text-sm text-destructive">{ibanValidation.error}</p>
                     )}
@@ -354,9 +397,11 @@ export function BankAccountFormModal({
                 control={form.control}
                 name="swiftCode"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <FormLabel>SWIFT/BIC Code *</FormLabel>
+                      <Label htmlFor="swiftCode" className="flex items-center gap-1">
+                        SWIFT/BIC Code <span className="text-destructive">*</span>
+                      </Label>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -374,12 +419,16 @@ export function BankAccountFormModal({
                     </div>
                     <FormControl>
                       <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <Building2 className="size-4" />
+                        </div>
                         <Input
+                          id="swiftCode"
+                          className={`pl-9 pr-10 ${swiftValidation ? (swiftValidation.valid ? 'border-green-500' : 'border-destructive') : ''}`}
                           placeholder="EMIRAEADXXX"
                           {...field}
                           onChange={(e) => handleSwiftChange(e.target.value)}
                           disabled={isSubmitting}
-                          className={swiftValidation ? (swiftValidation.valid ? 'border-green-500' : 'border-destructive') : ''}
                           data-testid="input-swift-code"
                         />
                         {swiftValidation && (
@@ -393,9 +442,9 @@ export function BankAccountFormModal({
                         )}
                       </div>
                     </FormControl>
-                    <FormDescription>
+                    <p className="text-muted-foreground text-xs">
                       8 or 11 character bank identifier code
-                    </FormDescription>
+                    </p>
                     {swiftValidation && !swiftValidation.valid && (
                       <p className="text-sm text-destructive">{swiftValidation.error}</p>
                     )}
@@ -411,10 +460,10 @@ export function BankAccountFormModal({
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                     <div className="space-y-0.5">
-                      <FormLabel>Primary Account</FormLabel>
-                      <FormDescription>
+                      <Label>Primary Account</Label>
+                      <p className="text-muted-foreground text-xs">
                         Set as the default bank account for new PDCs
-                      </FormDescription>
+                      </p>
                     </div>
                     <FormControl>
                       <Switch
@@ -434,26 +483,36 @@ export function BankAccountFormModal({
                   control={form.control}
                   name="status"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
+                    <FormItem className="space-y-2">
+                      <Label>Status</Label>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                         disabled={isSubmitting}
                       >
                         <FormControl>
-                          <SelectTrigger data-testid="select-status">
+                          <SelectTrigger data-testid="select-status" className="w-full">
                             <SelectValue placeholder="Select status" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value={BankAccountStatus.ACTIVE}>Active</SelectItem>
-                          <SelectItem value={BankAccountStatus.INACTIVE}>Inactive</SelectItem>
+                          <SelectItem value={BankAccountStatus.ACTIVE}>
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="size-4 text-green-600" />
+                              <span>Active</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value={BankAccountStatus.INACTIVE}>
+                            <div className="flex items-center gap-2">
+                              <AlertCircle className="size-4 text-gray-500" />
+                              <span>Inactive</span>
+                            </div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormDescription>
+                      <p className="text-muted-foreground text-xs">
                         Inactive accounts cannot be used for new PDCs
-                      </FormDescription>
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -117,10 +117,10 @@ export function InspectionStep({ checkout, onInspectionSaved, onBack }: Inspecti
           'AFTER'
         );
 
-        toast.success(`Photos uploaded for ${sectionName}`);
+        toast.success('Photos Uploaded', { description: `Photos uploaded for ${sectionName}` });
       } catch (error) {
         console.error('Failed to upload photos:', error);
-        toast.error('Failed to upload photos');
+        toast.error('Upload Error', { description: 'Failed to upload photos' });
       } finally {
         setUploadingSection(null);
       }
@@ -183,7 +183,7 @@ export function InspectionStep({ checkout, onInspectionSaved, onBack }: Inspecti
       onInspectionSaved();
     } catch (error) {
       console.error('Failed to save inspection:', error);
-      toast.error('Failed to save inspection');
+      toast.error('Save Error', { description: 'Failed to save inspection' });
     } finally {
       setIsSubmitting(false);
     }

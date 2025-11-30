@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Settings, LogOut, User, Users } from 'lucide-react';
+import { Home, Settings, LogOut, User, Users, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Breadcrumb,
@@ -149,8 +149,14 @@ export function Header() {
         </Breadcrumb>
       </div>
 
-      {/* Right side - Theme Toggle & Avatar */}
+      {/* Right side - Notifications, Theme Toggle & Avatar */}
       <div className="flex items-center gap-2">
+        {/* Notification Bell */}
+        <Button variant="ghost" size="icon" className="relative h-8 w-8">
+          <Bell className="h-4 w-4" />
+          <span className="sr-only">Notifications</span>
+        </Button>
+
         <ThemeToggle />
 
         {/* User Avatar Dropdown */}

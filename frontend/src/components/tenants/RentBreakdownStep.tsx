@@ -3,6 +3,7 @@
 /**
  * Step 3: Rent Breakdown
  * Enter rent, fees, and deposits with real-time total calculation
+ * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
 import { useForm } from 'react-hook-form';
@@ -13,14 +14,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DollarSignIcon } from 'lucide-react';
 
 import { rentBreakdownSchema, formatCurrency, type RentBreakdownFormData } from '@/lib/validations/tenant';
 
@@ -65,26 +66,34 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
               control={form.control}
               name="baseRent"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Base Rent (Monthly) *</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <span className="absolute left-3 top-2.5 text-muted-foreground">AED</span>
+                <FormItem className="space-y-2">
+                  <Label htmlFor="baseRent" className="flex items-center gap-1">
+                    Base Rent (Monthly) <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <DollarSignIcon className="size-4" />
+                    </div>
+                    <FormControl>
                       <Input
+                        id="baseRent"
                         {...field}
                         type="number"
                         step="0.01"
                         min="0"
                         placeholder="0.00"
-                        className="pl-14"
+                        className="pl-9 pr-14"
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         data-testid="input-base-rent"
                       />
-                    </div>
-                  </FormControl>
-                  <FormDescription>
+                    </FormControl>
+                    <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                      AED
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
                     Monthly base rent amount
-                  </FormDescription>
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -95,26 +104,32 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
               control={form.control}
               name="serviceCharge"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Service Charge (Monthly)</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <span className="absolute left-3 top-2.5 text-muted-foreground">AED</span>
+                <FormItem className="space-y-2">
+                  <Label htmlFor="serviceCharge">Service Charge (Monthly)</Label>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <DollarSignIcon className="size-4" />
+                    </div>
+                    <FormControl>
                       <Input
+                        id="serviceCharge"
                         {...field}
                         type="number"
                         step="0.01"
                         min="0"
                         placeholder="0.00"
-                        className="pl-14"
+                        className="pl-9 pr-14"
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         data-testid="input-service-charge"
                       />
-                    </div>
-                  </FormControl>
-                  <FormDescription>
+                    </FormControl>
+                    <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                      AED
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
                     Monthly service charge (optional)
-                  </FormDescription>
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -125,26 +140,32 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
               control={form.control}
               name="adminFee"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Admin Fee (One-time)</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <span className="absolute left-3 top-2.5 text-muted-foreground">AED</span>
+                <FormItem className="space-y-2">
+                  <Label htmlFor="adminFee">Admin Fee (One-time)</Label>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <DollarSignIcon className="size-4" />
+                    </div>
+                    <FormControl>
                       <Input
+                        id="adminFee"
                         {...field}
                         type="number"
                         step="0.01"
                         min="0"
                         placeholder="0.00"
-                        className="pl-14"
+                        className="pl-9 pr-14"
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         data-testid="input-admin-fee"
                       />
-                    </div>
-                  </FormControl>
-                  <FormDescription>
+                    </FormControl>
+                    <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                      AED
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
                     One-time administrative fee (optional)
-                  </FormDescription>
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -155,26 +176,34 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
               control={form.control}
               name="securityDeposit"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Security Deposit *</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <span className="absolute left-3 top-2.5 text-muted-foreground">AED</span>
+                <FormItem className="space-y-2">
+                  <Label htmlFor="securityDeposit" className="flex items-center gap-1">
+                    Security Deposit <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <DollarSignIcon className="size-4" />
+                    </div>
+                    <FormControl>
                       <Input
+                        id="securityDeposit"
                         {...field}
                         type="number"
                         step="0.01"
                         min="0.01"
                         placeholder="0.00"
-                        className="pl-14"
+                        className="pl-9 pr-14"
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         data-testid="input-security-deposit"
                       />
-                    </div>
-                  </FormControl>
-                  <FormDescription>
+                    </FormControl>
+                    <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                      AED
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
                     Typically 1-2 months rent (refundable)
-                  </FormDescription>
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}

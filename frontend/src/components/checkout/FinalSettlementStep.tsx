@@ -105,7 +105,7 @@ export function FinalSettlementStep({
 
     // Ensure refund method is selected
     if (!values.refundMethod) {
-      toast.error('Please select a refund method');
+      toast.error('Selection Required', { description: 'Please select a refund method' });
       return;
     }
 
@@ -123,10 +123,10 @@ export function FinalSettlementStep({
         notes: values.settlementNotes ?? undefined,
       });
 
-      toast.success('Refund processed successfully!');
+      toast.success('Refund Processed', { description: 'Refund processed successfully!' });
     } catch (error) {
       console.error('Failed to process refund:', error);
-      toast.error('Failed to process refund');
+      toast.error('Refund Error', { description: 'Failed to process refund' });
     } finally {
       setIsProcessingRefund(false);
     }
@@ -135,7 +135,7 @@ export function FinalSettlementStep({
   // Handle form submission (complete checkout)
   const handleSubmit = async (data: FinalSettlementFormData) => {
     if (!data.acknowledgeFinalization) {
-      toast.error('Please acknowledge the checkout finalization');
+      toast.error('Acknowledgement Required', { description: 'Please acknowledge the checkout finalization' });
       return;
     }
 
@@ -151,7 +151,7 @@ export function FinalSettlementStep({
       onCompleted();
     } catch (error) {
       console.error('Failed to complete checkout:', error);
-      toast.error('Failed to complete checkout');
+      toast.error('Checkout Error', { description: 'Failed to complete checkout' });
     } finally {
       setIsSubmitting(false);
     }

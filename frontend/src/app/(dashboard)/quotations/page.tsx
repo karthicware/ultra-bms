@@ -3,31 +3,13 @@
 
 /**
  * Quotations List Page
- * Displays all quotations with filters, search, and actions
+ * Displays all quotations with shadcn-studio datatable
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { debounce } from 'lodash';
-import { format } from 'date-fns';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,19 +19,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
 import {
   getQuotations,
@@ -57,17 +29,8 @@ import {
   downloadQuotationPDF,
 } from '@/services/quotations.service';
 import type { Quotation, QuotationStatus } from '@/types';
-import { Plus, Search, Filter, Eye, Edit, Send, Download, FileText } from 'lucide-react';
-import { formatCurrency } from '@/lib/validations/quotations';
-
-const QUOTATION_STATUS_COLORS: Record<QuotationStatus, string> = {
-  DRAFT: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
-  SENT: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-  ACCEPTED: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-  REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-  EXPIRED: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-  CONVERTED: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300',
-};
+import { Plus, FileText } from 'lucide-react';
+import QuotationsDatatable from '@/components/quotations/QuotationsDatatable';
 
 export default function QuotationsPage() {
   const router = useRouter();
@@ -75,26 +38,19 @@ export default function QuotationsPage() {
 
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [quotationToSend, setQuotationToSend] = useState<{ id: string; number: string } | null>(null);
 
   const fetchQuotations = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await getQuotations({
-        page: currentPage,
-        size: pageSize,
-        status: statusFilter !== 'all' ? [statusFilter as QuotationStatus] : undefined,
+        page: 0,
+        size: 1000, // Fetch all for client-side filtering
       });
 
       setQuotations(response.data.content);
-      setTotalPages(response.data.totalPages);
-      setTotalElements(response.data.totalElements);
     } catch (error) {
       toast({
         title: 'Error',
@@ -104,7 +60,7 @@ export default function QuotationsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, statusFilter]); // Removed toast from dependencies
+  }, [toast]);
 
   const debouncedFetch = useMemo(() => debounce(fetchQuotations, 300), [fetchQuotations]);
 
@@ -113,13 +69,20 @@ export default function QuotationsPage() {
     return () => debouncedFetch.cancel();
   }, [debouncedFetch]);
 
-  const handleSendQuotation = async (id: string, quotationNumber: string) => {
+  const handleSendClick = (id: string, quotationNumber: string) => {
+    setQuotationToSend({ id, number: quotationNumber });
+    setSendDialogOpen(true);
+  };
+
+  const handleSendConfirm = async () => {
+    if (!quotationToSend) return;
+
     try {
-      setSendingId(id);
-      await sendQuotation(id);
+      setSendingId(quotationToSend.id);
+      await sendQuotation(quotationToSend.id);
       toast({
         title: 'Success',
-        description: `Quotation ${quotationNumber} sent successfully`,
+        description: `Quotation ${quotationToSend.number} sent successfully`,
         variant: 'success',
       });
       fetchQuotations();
@@ -131,6 +94,8 @@ export default function QuotationsPage() {
       });
     } finally {
       setSendingId(null);
+      setSendDialogOpen(false);
+      setQuotationToSend(null);
     }
   };
 
@@ -151,15 +116,6 @@ export default function QuotationsPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto py-6 space-y-6">
-        <Skeleton className="h-10 w-48" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -173,227 +129,55 @@ export default function QuotationsPage() {
         </Button>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center">
-            <Filter className="mr-2 h-5 w-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger data-testid="select-filter-status">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="DRAFT">Draft</SelectItem>
-                <SelectItem value="SENT">Sent</SelectItem>
-                <SelectItem value="ACCEPTED">Accepted</SelectItem>
-                <SelectItem value="REJECTED">Rejected</SelectItem>
-                <SelectItem value="EXPIRED">Expired</SelectItem>
-                <SelectItem value="CONVERTED">Converted</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Page size" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10 per page</SelectItem>
-                <SelectItem value="20">20 per page</SelectItem>
-                <SelectItem value="50">50 per page</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Table */}
+      {/* Datatable */}
       <Card>
         <CardContent className="p-0">
-          <Table data-testid="table-quotations">
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead>Quotation #</TableHead>
-                <TableHead>Lead Name</TableHead>
-                <TableHead>Property</TableHead>
-                <TableHead>Rent Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Issue Date</TableHead>
-                <TableHead>Expiry Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {quotations.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    No quotations found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                quotations.map((quote) => (
-                  <TableRow key={quote.id}>
-                    <TableCell className="font-medium">{quote.quotationNumber}</TableCell>
-                    <TableCell>{quote.leadName || 'N/A'}</TableCell>
-                    <TableCell className="text-sm">
-                      {quote.propertyName || 'N/A'}
-                      {quote.unitNumber && ` - ${quote.unitNumber}`}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {formatCurrency(quote.totalFirstPayment)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={QUOTATION_STATUS_COLORS[quote.status]}>
-                        {quote.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {format(new Date(quote.issueDate), 'PP')}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {format(new Date(quote.validityDate), 'PP')}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => router.push(`/quotations/${quote.id}`)}
-                          data-testid={`btn-view-quotation-${quote.id}`}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-
-                        {quote.status === 'DRAFT' && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => router.push(`/quotations/${quote.id}/edit`)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  disabled={sendingId === quote.id}
-                                  data-testid={`btn-send-quotation-${quote.id}`}
-                                >
-                                  <Send className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent data-testid="modal-confirm-send">
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Send Quotation</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will send quotation {quote.quotationNumber} via email to the
-                                    lead. Are you sure?
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleSendQuotation(quote.id, quote.quotationNumber)}
-                                    data-testid="btn-confirm"
-                                  >
-                                    Send
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </>
-                        )}
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownloadPDF(quote.id, quote.quotationNumber)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-
-        {/* Pagination Footer */}
-        {quotations.length > 0 && (
-          <CardContent className="py-4 border-t">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {quotations.length} of {totalElements} quotations
-              </div>
-
-              {totalPages > 1 && (
-                <Pagination className="mx-0 w-auto">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => currentPage > 0 && setCurrentPage(currentPage - 1)}
-                        className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                      />
-                    </PaginationItem>
-
-                    {currentPage > 2 && (
-                      <>
-                        <PaginationItem>
-                          <PaginationLink onClick={() => setCurrentPage(0)} className="cursor-pointer">1</PaginationLink>
-                        </PaginationItem>
-                        {currentPage > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
-                      </>
-                    )}
-
-                    {Array.from({ length: totalPages }, (_, i) => i)
-                      .filter(page => Math.abs(page - currentPage) <= 2)
-                      .map(page => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => setCurrentPage(page)}
-                            isActive={page === currentPage}
-                            className="cursor-pointer"
-                          >
-                            {page + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-
-                    {currentPage < totalPages - 3 && (
-                      <>
-                        {currentPage < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
-                        <PaginationItem>
-                          <PaginationLink onClick={() => setCurrentPage(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
-                        </PaginationItem>
-                      </>
-                    )}
-
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => currentPage < totalPages - 1 && setCurrentPage(currentPage + 1)}
-                        className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              )}
-
-              <div className="text-sm text-muted-foreground">
-                Page {currentPage + 1} of {totalPages || 1}
-              </div>
+          {isLoading ? (
+            <div className="p-6 space-y-4">
+              <Skeleton className="h-10 w-48" />
+              <Skeleton className="h-64 w-full" />
             </div>
-          </CardContent>
-        )}
+          ) : quotations.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <FileText className="h-12 w-12 mb-4" />
+              <h3 className="text-lg font-semibold mb-1">No quotations found</h3>
+              <p className="text-sm mb-4">Create your first quotation to get started</p>
+              <Button onClick={() => router.push('/quotations/create')}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Quotation
+              </Button>
+            </div>
+          ) : (
+            <QuotationsDatatable
+              data={quotations}
+              onSend={handleSendClick}
+              onDownload={handleDownloadPDF}
+            />
+          )}
+        </CardContent>
       </Card>
+
+      {/* Send Confirmation Dialog */}
+      <AlertDialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
+        <AlertDialogContent data-testid="modal-confirm-send">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send Quotation</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will send quotation {quotationToSend?.number} via email to the lead. Are you sure?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!sendingId}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSendConfirm}
+              disabled={!!sendingId}
+              data-testid="btn-confirm"
+            >
+              {sendingId ? 'Sending...' : 'Send'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

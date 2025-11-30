@@ -128,7 +128,7 @@ export default function LeaseExtensionPage({ params }: PageProps) {
         }
       } catch (error) {
         console.error('Failed to load tenant data:', error);
-        toast.error('Failed to load tenant information');
+        toast.error('Load Error', { description: 'Failed to load tenant information' });
       } finally {
         setIsLoading(false);
       }
@@ -218,10 +218,10 @@ export default function LeaseExtensionPage({ params }: PageProps) {
         amendmentPdfUrl: result.data.amendmentPdfUrl,
       });
 
-      toast.success('Lease extended successfully!');
+      toast.success('Lease Extended', { description: 'Lease extended successfully!' });
     } catch (error) {
       console.error('Failed to extend lease:', error);
-      toast.error('Failed to extend lease. Please try again.');
+      toast.error('Extension Failed', { description: 'Failed to extend lease. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }

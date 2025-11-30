@@ -3,6 +3,7 @@
 /**
  * Step 2: Lease Information
  * Select property, unit, and lease dates
+ * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
 import { useEffect, useState } from 'react';
@@ -15,12 +16,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -28,7 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Building2, DoorOpenIcon } from 'lucide-react';
 
 import { leaseInfoSchema, type LeaseInfoFormData } from '@/lib/validations/tenant';
 import { getProperties, getAvailableUnits } from '@/services/tenant.service';
@@ -125,8 +125,10 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
               control={form.control}
               name="propertyId"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Property *</FormLabel>
+                <FormItem className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    Property <span className="text-destructive">*</span>
+                  </Label>
                   {isLoadingProperties ? (
                     <Skeleton className="h-10 w-full" />
                   ) : (
@@ -135,14 +137,20 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger data-testid="select-property">
-                          <SelectValue placeholder="Select a property" />
+                        <SelectTrigger data-testid="select-property" className="w-full">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="size-4 text-muted-foreground" />
+                            <SelectValue placeholder="Select a property" />
+                          </div>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {properties.map((property) => (
                           <SelectItem key={property.id} value={property.id}>
-                            {property.name} - {property.address}
+                            <div className="flex items-center gap-2">
+                              <Building2 className="size-4 text-muted-foreground" />
+                              <span>{property.name} - {property.address}</span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -158,8 +166,10 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
               control={form.control}
               name="unitId"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Unit *</FormLabel>
+                <FormItem className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    Unit <span className="text-destructive">*</span>
+                  </Label>
                   {isLoadingUnits ? (
                     <Skeleton className="h-10 w-full" />
                   ) : !selectedPropertyId ? (
@@ -180,35 +190,43 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger data-testid="select-unit">
-                          <SelectValue placeholder="Select a unit" />
+                        <SelectTrigger data-testid="select-unit" className="w-full">
+                          <div className="flex items-center gap-2">
+                            <DoorOpenIcon className="size-4 text-muted-foreground" />
+                            <SelectValue placeholder="Select a unit" />
+                          </div>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {units.map((unit) => (
                           <SelectItem key={unit.id} value={unit.id}>
-                            Unit {unit.unitNumber} - Floor {unit.floor} - {unit.bedroomCount}BR, {unit.bathroomCount}BA - AED {unit.monthlyRent}/mo
+                            <div className="flex items-center gap-2">
+                              <DoorOpenIcon className="size-4 text-muted-foreground" />
+                              <span>Unit {unit.unitNumber} - Floor {unit.floor} - {unit.bedroomCount}BR, {unit.bathroomCount}BA - AED {unit.monthlyRent}/mo</span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   )}
-                  <FormDescription>
+                  <p className="text-muted-foreground text-xs">
                     Only AVAILABLE units are shown
-                  </FormDescription>
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
             {/* Lease Dates */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="leaseStartDate"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Lease Start Date *</FormLabel>
+                  <FormItem className="space-y-2 flex flex-col">
+                    <Label className="flex items-center gap-1">
+                      Lease Start Date <span className="text-destructive">*</span>
+                    </Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -220,12 +238,12 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
                             )}
                             data-testid="btn-lease-start-date"
                           >
+                            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                             {field.value ? (
                               format(field.value, 'PPP')
                             ) : (
                               <span>Pick a date</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -239,9 +257,9 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
                         />
                       </PopoverContent>
                     </Popover>
-                    <FormDescription>
+                    <p className="text-muted-foreground text-xs">
                       Must be today or later
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -251,8 +269,10 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
                 control={form.control}
                 name="leaseEndDate"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Lease End Date *</FormLabel>
+                  <FormItem className="space-y-2 flex flex-col">
+                    <Label className="flex items-center gap-1">
+                      Lease End Date <span className="text-destructive">*</span>
+                    </Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -264,12 +284,12 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
                             )}
                             data-testid="btn-lease-end-date"
                           >
+                            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                             {field.value ? (
                               format(field.value, 'PPP')
                             ) : (
                               <span>Pick a date</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -288,9 +308,9 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
                       </PopoverContent>
                     </Popover>
                     {leaseDuration > 0 && (
-                      <FormDescription>
+                      <p className="text-muted-foreground text-xs">
                         Duration: {leaseDuration} months
-                      </FormDescription>
+                      </p>
                     )}
                     <FormMessage />
                   </FormItem>
@@ -304,7 +324,9 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
               name="leaseType"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Lease Type *</FormLabel>
+                  <Label className="flex items-center gap-1">
+                    Lease Type <span className="text-destructive">*</span>
+                  </Label>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -315,25 +337,25 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
                         <FormControl>
                           <RadioGroupItem value={LeaseType.FIXED_TERM} data-testid="radio-fixed-term" />
                         </FormControl>
-                        <FormLabel className="font-normal">
+                        <Label className="font-normal cursor-pointer">
                           Fixed Term - Set start and end dates
-                        </FormLabel>
+                        </Label>
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
                           <RadioGroupItem value={LeaseType.MONTH_TO_MONTH} data-testid="radio-month-to-month" />
                         </FormControl>
-                        <FormLabel className="font-normal">
+                        <Label className="font-normal cursor-pointer">
                           Month to Month - Flexible monthly renewal
-                        </FormLabel>
+                        </Label>
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
                           <RadioGroupItem value={LeaseType.YEARLY} data-testid="radio-yearly" />
                         </FormControl>
-                        <FormLabel className="font-normal">
+                        <Label className="font-normal cursor-pointer">
                           Yearly - 12-month renewable lease
-                        </FormLabel>
+                        </Label>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>
@@ -356,10 +378,10 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>Auto-Renewal Option</FormLabel>
-                    <FormDescription>
+                    <Label>Auto-Renewal Option</Label>
+                    <p className="text-muted-foreground text-xs">
                       Lease will automatically renew unless tenant or manager provides notice
-                    </FormDescription>
+                    </p>
                   </div>
                 </FormItem>
               )}

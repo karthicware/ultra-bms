@@ -129,10 +129,10 @@ export default function PDCDashboardPage() {
             ) : (
               <>
                 <div className="text-2xl font-bold">
-                  {dashboard?.pdcsDueThisWeek.count || 0}
+                  {dashboard?.pdcsDueThisWeek?.count || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {formatPDCCurrency(dashboard?.pdcsDueThisWeek.totalValue || 0)}
+                  {formatPDCCurrency(dashboard?.pdcsDueThisWeek?.totalValue || 0)}
                 </p>
               </>
             )}
@@ -154,10 +154,10 @@ export default function PDCDashboardPage() {
             ) : (
               <>
                 <div className="text-2xl font-bold">
-                  {dashboard?.pdcsDeposited.count || 0}
+                  {dashboard?.pdcsDeposited?.count || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {formatPDCCurrency(dashboard?.pdcsDeposited.totalValue || 0)}
+                  {formatPDCCurrency(dashboard?.pdcsDeposited?.totalValue || 0)}
                 </p>
               </>
             )}

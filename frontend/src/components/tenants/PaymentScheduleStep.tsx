@@ -3,6 +3,7 @@
 /**
  * Step 5: Payment Schedule
  * Configure payment frequency, due date, and method
+ * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
 import { useForm } from 'react-hook-form';
@@ -13,16 +14,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CalendarIcon, HashIcon } from 'lucide-react';
 
 import { paymentScheduleSchema, formatCurrency, type PaymentScheduleFormData } from '@/lib/validations/tenant';
 import { PaymentFrequency, PaymentMethod } from '@/types/tenant';
@@ -73,7 +74,9 @@ export function PaymentScheduleStep({ data, totalMonthlyRent, onComplete, onBack
               name="paymentFrequency"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Payment Frequency *</FormLabel>
+                  <Label className="flex items-center gap-1">
+                    Payment Frequency <span className="text-destructive">*</span>
+                  </Label>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -84,25 +87,25 @@ export function PaymentScheduleStep({ data, totalMonthlyRent, onComplete, onBack
                         <FormControl>
                           <RadioGroupItem value={PaymentFrequency.MONTHLY} data-testid="radio-monthly" />
                         </FormControl>
-                        <FormLabel className="font-normal">
+                        <Label className="font-normal cursor-pointer">
                           Monthly - Pay every month
-                        </FormLabel>
+                        </Label>
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
                           <RadioGroupItem value={PaymentFrequency.QUARTERLY} data-testid="radio-quarterly" />
                         </FormControl>
-                        <FormLabel className="font-normal">
+                        <Label className="font-normal cursor-pointer">
                           Quarterly - Pay every 3 months
-                        </FormLabel>
+                        </Label>
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
                           <RadioGroupItem value={PaymentFrequency.YEARLY} data-testid="radio-yearly" />
                         </FormControl>
-                        <FormLabel className="font-normal">
+                        <Label className="font-normal cursor-pointer">
                           Yearly - Pay annually
-                        </FormLabel>
+                        </Label>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>
@@ -116,15 +119,20 @@ export function PaymentScheduleStep({ data, totalMonthlyRent, onComplete, onBack
               control={form.control}
               name="paymentDueDate"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment Due Date (Day of Month) *</FormLabel>
+                <FormItem className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    Payment Due Date (Day of Month) <span className="text-destructive">*</span>
+                  </Label>
                   <Select
                     onValueChange={(value) => field.onChange(parseInt(value))}
                     defaultValue={field.value?.toString()}
                   >
                     <FormControl>
-                      <SelectTrigger data-testid="select-due-date">
-                        <SelectValue placeholder="Select day of month" />
+                      <SelectTrigger data-testid="select-due-date" className="w-full">
+                        <div className="flex items-center gap-2">
+                          <CalendarIcon className="size-4 text-muted-foreground" />
+                          <SelectValue placeholder="Select day of month" />
+                        </div>
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -135,9 +143,9 @@ export function PaymentScheduleStep({ data, totalMonthlyRent, onComplete, onBack
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormDescription>
+                  <p className="text-muted-foreground text-xs">
                     Payment must be received by this day each period
-                  </FormDescription>
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -149,7 +157,9 @@ export function PaymentScheduleStep({ data, totalMonthlyRent, onComplete, onBack
               name="paymentMethod"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Payment Method *</FormLabel>
+                  <Label className="flex items-center gap-1">
+                    Payment Method <span className="text-destructive">*</span>
+                  </Label>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -160,41 +170,41 @@ export function PaymentScheduleStep({ data, totalMonthlyRent, onComplete, onBack
                         <FormControl>
                           <RadioGroupItem value={PaymentMethod.BANK_TRANSFER} data-testid="radio-bank-transfer" />
                         </FormControl>
-                        <FormLabel className="font-normal">
+                        <Label className="font-normal cursor-pointer">
                           Bank Transfer
-                        </FormLabel>
+                        </Label>
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
                           <RadioGroupItem value={PaymentMethod.CHEQUE} data-testid="radio-cheque" />
                         </FormControl>
-                        <FormLabel className="font-normal">
+                        <Label className="font-normal cursor-pointer">
                           Cheque
-                        </FormLabel>
+                        </Label>
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
                           <RadioGroupItem value={PaymentMethod.PDC} data-testid="radio-pdc" />
                         </FormControl>
-                        <FormLabel className="font-normal">
+                        <Label className="font-normal cursor-pointer">
                           Post-Dated Cheques (PDC)
-                        </FormLabel>
+                        </Label>
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
                           <RadioGroupItem value={PaymentMethod.CASH} data-testid="radio-cash" />
                         </FormControl>
-                        <FormLabel className="font-normal">
+                        <Label className="font-normal cursor-pointer">
                           Cash
-                        </FormLabel>
+                        </Label>
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
                           <RadioGroupItem value={PaymentMethod.ONLINE} data-testid="radio-online" />
                         </FormControl>
-                        <FormLabel className="font-normal">
+                        <Label className="font-normal cursor-pointer">
                           Online Payment
-                        </FormLabel>
+                        </Label>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>
@@ -209,22 +219,31 @@ export function PaymentScheduleStep({ data, totalMonthlyRent, onComplete, onBack
                 control={form.control}
                 name="pdcChequeCount"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Number of PDC Cheques *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        min="1"
-                        max="12"
-                        placeholder="1"
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        data-testid="input-pdc-count"
-                      />
-                    </FormControl>
-                    <FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="pdcChequeCount" className="flex items-center gap-1">
+                      Number of PDC Cheques <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <HashIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="pdcChequeCount"
+                          className="pl-9"
+                          {...field}
+                          type="number"
+                          min="1"
+                          max="12"
+                          placeholder="1"
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          data-testid="input-pdc-count"
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
                       Number of post-dated cheques (1-12)
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -3,6 +3,7 @@
 /**
  * Step 6: Document Upload
  * Upload required and optional documents
+ * Updated: shadcn-studio form styling (SCP-2025-11-30) - uses FileUploadZone component
  */
 
 import { useState } from 'react';

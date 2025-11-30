@@ -105,7 +105,7 @@ export default function TenantDetailPage() {
       setCheckout(checkoutData);
     } catch (error) {
       console.error('Failed to load tenant:', error);
-      toast.error('Failed to load tenant details');
+      toast.error('Load Error', { description: 'Failed to load tenant details' });
     } finally {
       setIsLoading(false);
       setIsCheckoutLoading(false);

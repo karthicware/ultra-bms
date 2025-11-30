@@ -241,13 +241,13 @@ export default function NotificationsPage() {
       setSelectedNotification({ ...notification, ...details });
       setIsDetailOpen(true);
     } catch {
-      toast.error('Failed to load notification details');
+      toast.error('Load Error', { description: 'Failed to load notification details' });
     }
   }, []);
 
   const handleSendTestEmail = useCallback(async () => {
     if (!testEmailAddress) {
-      toast.error('Please enter an email address');
+      toast.error('Email Required', { description: 'Please enter an email address' });
       return;
     }
     try {

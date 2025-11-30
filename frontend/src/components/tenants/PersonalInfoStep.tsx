@@ -3,6 +3,7 @@
 /**
  * Step 1: Personal Information
  * Collects tenant's personal details including emergency contact
+ * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
 import { useForm } from 'react-hook-form';
@@ -14,18 +15,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CalendarIcon, InfoIcon } from 'lucide-react';
+import {
+  CalendarIcon,
+  InfoIcon,
+  UserIcon,
+  MailIcon,
+  PhoneIcon,
+  CreditCardIcon,
+  GlobeIcon,
+} from 'lucide-react';
 
 import { personalInfoSchema, calculateAge, type PersonalInfoFormData } from '@/lib/validations/tenant';
 import { cn } from '@/lib/utils';
@@ -78,20 +86,29 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Name Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="firstName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Enter first name"
-                        data-testid="input-first-name"
-                      />
-                    </FormControl>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="firstName" className="flex items-center gap-1">
+                      First Name <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <UserIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="firstName"
+                          className="pl-9"
+                          {...field}
+                          placeholder="Enter first name"
+                          data-testid="input-first-name"
+                        />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -101,15 +118,24 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
                 control={form.control}
                 name="lastName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Enter last name"
-                        data-testid="input-last-name"
-                      />
-                    </FormControl>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="lastName" className="flex items-center gap-1">
+                      Last Name <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <UserIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="lastName"
+                          className="pl-9"
+                          {...field}
+                          placeholder="Enter last name"
+                          data-testid="input-last-name"
+                        />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -117,24 +143,33 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
             </div>
 
             {/* Contact Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="tenant@example.com"
-                        data-testid="input-email"
-                      />
-                    </FormControl>
-                    <FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="email" className="flex items-center gap-1">
+                      Email <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <MailIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="email"
+                          className="pl-9"
+                          {...field}
+                          type="email"
+                          placeholder="tenant@example.com"
+                          data-testid="input-email"
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
                       Used for login and lease communications
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -144,19 +179,28 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
                 control={form.control}
                 name="phone"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="tel"
-                        placeholder="+971501234567"
-                        data-testid="input-phone"
-                      />
-                    </FormControl>
-                    <FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="phone" className="flex items-center gap-1">
+                      Phone Number <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <PhoneIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="phone"
+                          className="pl-9"
+                          {...field}
+                          type="tel"
+                          placeholder="+971501234567"
+                          data-testid="input-phone"
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
                       E.164 format (e.g., +971501234567)
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -164,13 +208,15 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
             </div>
 
             {/* Date of Birth and National ID */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="dateOfBirth"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Date of Birth *</FormLabel>
+                  <FormItem className="space-y-2 flex flex-col">
+                    <Label className="flex items-center gap-1">
+                      Date of Birth <span className="text-destructive">*</span>
+                    </Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -182,12 +228,12 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
                             )}
                             data-testid="btn-date-of-birth"
                           >
+                            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                             {field.value ? (
                               format(field.value, 'PPP')
                             ) : (
                               <span>Pick a date</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -205,10 +251,10 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
                       </PopoverContent>
                     </Popover>
                     {age !== null && (
-                      <FormDescription>
+                      <p className="text-muted-foreground text-xs">
                         Age: {age} years old
                         {age < 18 && ' - Must be 18 or older'}
-                      </FormDescription>
+                      </p>
                     )}
                     <FormMessage />
                   </FormItem>
@@ -219,18 +265,27 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
                 control={form.control}
                 name="nationalId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>National ID / Passport Number *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="784-1234-1234567-1"
-                        data-testid="input-national-id"
-                      />
-                    </FormControl>
-                    <FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="nationalId" className="flex items-center gap-1">
+                      National ID / Passport Number <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <CreditCardIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="nationalId"
+                          className="pl-9"
+                          {...field}
+                          placeholder="784-1234-1234567-1"
+                          data-testid="input-national-id"
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
                       Emirates ID or Passport number
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -242,12 +297,17 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
               control={form.control}
               name="nationality"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nationality *</FormLabel>
+                <FormItem className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    Nationality <span className="text-destructive">*</span>
+                  </Label>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-nationality">
-                        <SelectValue placeholder="Select nationality" />
+                      <SelectTrigger data-testid="select-nationality" className="w-full">
+                        <div className="flex items-center gap-2">
+                          <GlobeIcon className="size-4 text-muted-foreground" />
+                          <SelectValue placeholder="Select nationality" />
+                        </div>
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -271,20 +331,29 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
               </AlertDescription>
             </Alert>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="emergencyContactName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Emergency Contact Name *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Enter emergency contact name"
-                        data-testid="input-emergency-contact-name"
-                      />
-                    </FormControl>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="emergencyContactName" className="flex items-center gap-1">
+                      Emergency Contact Name <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <UserIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="emergencyContactName"
+                          className="pl-9"
+                          {...field}
+                          placeholder="Enter emergency contact name"
+                          data-testid="input-emergency-contact-name"
+                        />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -294,16 +363,25 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
                 control={form.control}
                 name="emergencyContactPhone"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Emergency Contact Phone *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="tel"
-                        placeholder="+971501234567"
-                        data-testid="input-emergency-contact-phone"
-                      />
-                    </FormControl>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="emergencyContactPhone" className="flex items-center gap-1">
+                      Emergency Contact Phone <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <PhoneIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="emergencyContactPhone"
+                          className="pl-9"
+                          {...field}
+                          type="tel"
+                          placeholder="+971501234567"
+                          data-testid="input-emergency-contact-phone"
+                        />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

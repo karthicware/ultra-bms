@@ -5,6 +5,7 @@
  * Step 4: Parking Allocation (Optional)
  * Story 3.8 Integration: Select from available parking spots in inventory
  * AC#14: Integration with tenant onboarding - parking allocation dropdown
+ * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
 import { useForm } from 'react-hook-form';
@@ -16,13 +17,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -168,7 +168,7 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: 
             {/* Available Parking Spots */}
             {propertyId && (
               <div className="space-y-3">
-                <FormLabel>Available Parking Spots</FormLabel>
+                <Label>Available Parking Spots</Label>
 
                 {isLoadingSpots ? (
                   <div className="space-y-2">
@@ -225,14 +225,14 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: 
                 )}
 
                 {availableSpots && availableSpots.length > 0 && (
-                  <FormDescription>
+                  <p className="text-muted-foreground text-xs">
                     Select one or more parking spots from the available inventory.
                     {selectedSpotIds.size > 0 && (
                       <span className="ml-2 font-medium text-primary">
                         {selectedSpotIds.size} spot{selectedSpotIds.size !== 1 ? 's' : ''} selected
                       </span>
                     )}
-                  </FormDescription>
+                  </p>
                 )}
               </div>
             )}
@@ -242,7 +242,7 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: 
               <>
                 {/* Mulkiya Document Upload */}
                 <div className="space-y-2">
-                  <FormLabel>Mulkiya Document (Vehicle Registration)</FormLabel>
+                  <Label>Mulkiya Document (Vehicle Registration)</Label>
                   {selectedFile ? (
                     <div className="flex items-center justify-between p-3 border rounded-md">
                       <div className="flex-1">

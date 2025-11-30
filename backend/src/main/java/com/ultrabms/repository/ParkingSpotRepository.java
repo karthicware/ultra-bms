@@ -168,20 +168,24 @@ public interface ParkingSpotRepository extends JpaRepository<ParkingSpot, UUID>,
 
     /**
      * Count parking spots by status
+     * Uses native query with explicit cast for PostgreSQL enum compatibility
      *
-     * @param status Parking spot status
+     * @param status Parking spot status name (use ParkingSpotStatus.name())
      * @return Count of spots with given status
      */
-    long countByStatusAndActiveTrue(ParkingSpotStatus status);
+    @Query(value = "SELECT COUNT(*) FROM parking_spots WHERE status = CAST(:status AS parking_spot_status) AND active = true", nativeQuery = true)
+    long countByStatusAndActiveTrue(@Param("status") String status);
 
     /**
      * Count parking spots by property and status
+     * Uses native query with explicit cast for PostgreSQL enum compatibility
      *
      * @param propertyId Property UUID
-     * @param status Parking spot status
+     * @param status Parking spot status name (use ParkingSpotStatus.name())
      * @return Count of spots
      */
-    long countByPropertyIdAndStatusAndActiveTrue(UUID propertyId, ParkingSpotStatus status);
+    @Query(value = "SELECT COUNT(*) FROM parking_spots WHERE property_id = :propertyId AND status = CAST(:status AS parking_spot_status) AND active = true", nativeQuery = true)
+    long countByPropertyIdAndStatusAndActiveTrue(@Param("propertyId") UUID propertyId, @Param("status") String status);
 
     /**
      * Count all active parking spots for a property

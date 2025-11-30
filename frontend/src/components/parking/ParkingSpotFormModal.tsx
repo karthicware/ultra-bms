@@ -1,10 +1,10 @@
- 
-'use client';
+ 'use client';
 
 /**
  * Parking Spot Form Modal Component
  * Story 3.8: Parking Spot Inventory Management
  * AC#5, AC#6, AC#7: Add/Edit modal with validation
+ * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
 import { useEffect } from 'react';
@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -31,13 +32,18 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Loader2, Car } from 'lucide-react';
+import {
+  Loader2,
+  Car,
+  Building2,
+  HashIcon,
+  DollarSignIcon,
+  MessageSquareIcon,
+} from 'lucide-react';
 import type { ParkingSpot } from '@/types/parking';
 import type { Property } from '@/types/properties';
 import {
@@ -161,36 +167,41 @@ export function ParkingSpotFormModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* Property Selection (only for create) */}
             {!isEditing && (
               <FormField
                 control={form.control}
                 name="propertyId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Property *</FormLabel>
+                  <FormItem className="space-y-2">
+                    <Label className="flex items-center gap-1">
+                      Property <span className="text-destructive">*</span>
+                    </Label>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                       disabled={isSubmitting}
                     >
                       <FormControl>
-                        <SelectTrigger data-testid="select-property">
+                        <SelectTrigger data-testid="select-property" className="w-full">
                           <SelectValue placeholder="Select a property" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {properties.map((property) => (
                           <SelectItem key={property.id} value={property.id}>
-                            {property.name}
+                            <div className="flex items-center gap-2">
+                              <Building2 className="size-4 text-muted-foreground" />
+                              <span>{property.name}</span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>
+                    <p className="text-muted-foreground text-xs">
                       Select the property for this parking spot
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -214,19 +225,28 @@ export function ParkingSpotFormModal({
               control={form.control}
               name="spotNumber"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Spot Number *</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g., P1-001, B2-015"
-                      {...field}
-                      disabled={isSubmitting}
-                      data-testid="input-spot-number"
-                    />
-                  </FormControl>
-                  <FormDescription>
+                <FormItem className="space-y-2">
+                  <Label htmlFor="spotNumber" className="flex items-center gap-1">
+                    Spot Number <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <HashIcon className="size-4" />
+                    </div>
+                    <FormControl>
+                      <Input
+                        id="spotNumber"
+                        className="pl-9"
+                        placeholder="e.g., P1-001, B2-015"
+                        {...field}
+                        disabled={isSubmitting}
+                        data-testid="input-spot-number"
+                      />
+                    </FormControl>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
                     Unique identifier for this parking spot (1-20 characters)
-                  </FormDescription>
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -237,24 +257,36 @@ export function ParkingSpotFormModal({
               control={form.control}
               name="defaultFee"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Monthly Fee (AED) *</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="99999.99"
-                      placeholder="e.g., 500.00"
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      disabled={isSubmitting}
-                      data-testid="input-default-fee"
-                    />
-                  </FormControl>
-                  <FormDescription>
+                <FormItem className="space-y-2">
+                  <Label htmlFor="defaultFee" className="flex items-center gap-1">
+                    Monthly Fee <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <DollarSignIcon className="size-4" />
+                    </div>
+                    <FormControl>
+                      <Input
+                        id="defaultFee"
+                        type="number"
+                        className="pl-9 pr-14"
+                        step="0.01"
+                        min="0"
+                        max="99999.99"
+                        placeholder="e.g., 500.00"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        disabled={isSubmitting}
+                        data-testid="input-default-fee"
+                      />
+                    </FormControl>
+                    <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                      AED
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
                     Default monthly rental fee for this spot (0 - 99,999.99)
-                  </FormDescription>
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -265,21 +297,30 @@ export function ParkingSpotFormModal({
               control={form.control}
               name="notes"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Add any additional notes about this parking spot..."
-                      className="min-h-[80px] resize-none"
-                      {...field}
-                      value={field.value ?? ''}
-                      disabled={isSubmitting}
-                      data-testid="textarea-notes"
-                    />
-                  </FormControl>
-                  <FormDescription>
+                <FormItem className="space-y-2">
+                  <Label htmlFor="notes" className="flex items-center gap-1">
+                    <MessageSquareIcon className="size-4 mr-1 text-muted-foreground" />
+                    Notes
+                  </Label>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute top-3 left-0 flex items-start pl-3">
+                      <MessageSquareIcon className="size-4" />
+                    </div>
+                    <FormControl>
+                      <Textarea
+                        id="notes"
+                        placeholder="Add any additional notes about this parking spot..."
+                        className="pl-9 min-h-[80px] resize-none"
+                        {...field}
+                        value={field.value ?? ''}
+                        disabled={isSubmitting}
+                        data-testid="textarea-notes"
+                      />
+                    </FormControl>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
                     {(field.value ?? '').length}/500 characters
-                  </FormDescription>
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}

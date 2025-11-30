@@ -4,6 +4,7 @@
  * Invoice Create Page
  * Story 6.1: Rent Invoicing and Payment Management
  * AC #4: Manual invoice creation with tenant selection
+ * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
 import { useState, useEffect, Suspense } from 'react';
@@ -14,13 +15,12 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -48,11 +48,15 @@ import {
   Loader2,
   Plus,
   Trash2,
-  User,
+  UserIcon,
   Building,
-  Calendar,
-  DollarSign,
-  FileText,
+  CalendarIcon,
+  DollarSignIcon,
+  FileTextIcon,
+  MessageSquareIcon,
+  CarIcon,
+  WrenchIcon,
+  ReceiptIcon,
 } from 'lucide-react';
 
 // Wrapper component to handle Suspense boundary for useSearchParams
@@ -130,7 +134,7 @@ function CreateInvoicePageContent() {
       try {
         setIsLoadingTenants(true);
         const response = await searchTenants(searchQuery, 0, 100);
-        setTenants(response.content || []);
+        setTenants(response.data?.content || []);
       } catch (error) {
         console.error('Failed to load tenants:', error);
         toast({
@@ -239,43 +243,50 @@ function CreateInvoicePageContent() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Create Invoice</h1>
+          <div className="flex items-center gap-3">
+            <ReceiptIcon className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold tracking-tight">Create Invoice</h1>
+          </div>
           <p className="text-muted-foreground">Create a new invoice for a tenant</p>
         </div>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Tenant Selection */}
-            <Card>
+          {/* Tenant Selection */}
+          <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="h-4 w-4" />
+                  <UserIcon className="h-4 w-4" />
                   Tenant Selection
                 </CardTitle>
                 <CardDescription>Select the tenant for this invoice</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <FormField
                   control={form.control}
                   name="tenantId"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tenant *</FormLabel>
+                    <FormItem className="space-y-2">
+                      <Label className="flex items-center gap-1">
+                        Tenant <span className="text-destructive">*</span>
+                      </Label>
                       {isLoadingTenants ? (
                         <Skeleton className="h-10 w-full" />
                       ) : (
                         <Select onValueChange={handleTenantSelect} value={field.value}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select a tenant" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {tenants.map((tenant) => (
                               <SelectItem key={tenant.id} value={tenant.id}>
-                                {tenant.firstName} {tenant.lastName} - {tenant.tenantNumber}
+                                <div className="flex items-center gap-2">
+                                  <UserIcon className="size-4 text-blue-600" />
+                                  <span>{tenant.firstName} {tenant.lastName} - {tenant.tenantNumber}</span>
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -320,21 +331,28 @@ function CreateInvoicePageContent() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
+                  <CalendarIcon className="h-4 w-4" />
                   Invoice Dates
                 </CardTitle>
                 <CardDescription>Set invoice and due dates</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <FormField
                   control={form.control}
                   name="invoiceDate"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Invoice Date *</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="invoiceDate" className="flex items-center gap-1">
+                        Invoice Date <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <CalendarIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input id="invoiceDate" type="date" className="pl-9" {...field} />
+                        </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -344,98 +362,141 @@ function CreateInvoicePageContent() {
                   control={form.control}
                   name="dueDate"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Due Date *</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Payment is expected by this date
-                      </FormDescription>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="dueDate" className="flex items-center gap-1">
+                        Due Date <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <CalendarIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input id="dueDate" type="date" className="pl-9" {...field} />
+                        </FormControl>
+                      </div>
+                      <p className="text-muted-foreground text-xs">Payment is expected by this date</p>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </CardContent>
             </Card>
-          </div>
 
           {/* Amounts */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
+                <DollarSignIcon className="h-4 w-4" />
                 Amount Details
               </CardTitle>
               <CardDescription>Enter the invoice amounts</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-3">
-                <FormField
-                  control={form.control}
-                  name="baseRent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Base Rent (AED) *</FormLabel>
+              <FormField
+                control={form.control}
+                name="baseRent"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="baseRent" className="flex items-center gap-1">
+                      Base Rent <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <DollarSignIcon className="size-4" />
+                      </div>
                       <FormControl>
                         <Input
+                          id="baseRent"
                           type="number"
+                          className="pl-9 pr-14"
                           step="0.01"
                           placeholder="0.00"
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                        AED
+                      </span>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="serviceCharges"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Service Charges (AED)</FormLabel>
+              <FormField
+                control={form.control}
+                name="serviceCharges"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="serviceCharges" className="flex items-center gap-1">
+                      <WrenchIcon className="size-4 mr-1 text-muted-foreground" />
+                      Service Charges
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <WrenchIcon className="size-4" />
+                      </div>
                       <FormControl>
                         <Input
+                          id="serviceCharges"
                           type="number"
+                          className="pl-9 pr-14"
                           step="0.01"
                           placeholder="0.00"
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                        AED
+                      </span>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="parkingFees"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Parking Fees (AED)</FormLabel>
+              <FormField
+                control={form.control}
+                name="parkingFees"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="parkingFees" className="flex items-center gap-1">
+                      <CarIcon className="size-4 mr-1 text-muted-foreground" />
+                      Parking Fees
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <CarIcon className="size-4" />
+                      </div>
                       <FormControl>
                         <Input
+                          id="parkingFees"
                           type="number"
+                          className="pl-9 pr-14"
                           step="0.01"
                           placeholder="0.00"
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                        AED
+                      </span>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Additional Charges */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-medium">Additional Charges</h4>
+                  <Label className="flex items-center gap-1">
+                    <Plus className="size-4 mr-1 text-muted-foreground" />
+                    Additional Charges
+                  </Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -455,11 +516,16 @@ function CreateInvoicePageContent() {
                           control={form.control}
                           name={`additionalCharges.${index}.description`}
                           render={({ field }) => (
-                            <FormItem className="flex-1">
-                              {index === 0 && <FormLabel>Description</FormLabel>}
-                              <FormControl>
-                                <Input placeholder="Description" {...field} />
-                              </FormControl>
+                            <FormItem className="flex-1 space-y-2">
+                              {index === 0 && <Label>Description</Label>}
+                              <div className="relative">
+                                <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                  <FileTextIcon className="size-4" />
+                                </div>
+                                <FormControl>
+                                  <Input className="pl-9" placeholder="Description" {...field} />
+                                </FormControl>
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -468,17 +534,23 @@ function CreateInvoicePageContent() {
                           control={form.control}
                           name={`additionalCharges.${index}.amount`}
                           render={({ field }) => (
-                            <FormItem className="w-32">
-                              {index === 0 && <FormLabel>Amount</FormLabel>}
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="0.00"
-                                  {...field}
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                                />
-                              </FormControl>
+                            <FormItem className="w-36 space-y-2">
+                              {index === 0 && <Label>Amount</Label>}
+                              <div className="relative">
+                                <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                  <DollarSignIcon className="size-4" />
+                                </div>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    className="pl-9"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                  />
+                                </FormControl>
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -514,7 +586,7 @@ function CreateInvoicePageContent() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <FileText className="h-4 w-4" />
+                <MessageSquareIcon className="h-4 w-4" />
                 Additional Notes
               </CardTitle>
             </CardHeader>
@@ -523,19 +595,27 @@ function CreateInvoicePageContent() {
                 control={form.control}
                 name="notes"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Any additional notes or comments for this invoice..."
-                        className="resize-none"
-                        rows={3}
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      These notes will be visible on the invoice
-                    </FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="notes" className="flex items-center gap-1">
+                      <MessageSquareIcon className="size-4 mr-1 text-muted-foreground" />
+                      Notes
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute top-3 left-0 flex items-start pl-3">
+                        <MessageSquareIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Textarea
+                          id="notes"
+                          className="pl-9 resize-none min-h-[80px]"
+                          placeholder="Any additional notes or comments for this invoice..."
+                          rows={3}
+                          {...field}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">These notes will be visible on the invoice</p>
                     <FormMessage />
                   </FormItem>
                 )}

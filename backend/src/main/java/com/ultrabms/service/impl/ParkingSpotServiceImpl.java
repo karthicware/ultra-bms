@@ -333,15 +333,15 @@ public class ParkingSpotServiceImpl implements ParkingSpotService {
 
         if (propertyId != null) {
             available = parkingSpotRepository.countByPropertyIdAndStatusAndActiveTrue(
-                    propertyId, ParkingSpotStatus.AVAILABLE);
+                    propertyId, ParkingSpotStatus.AVAILABLE.name());
             assigned = parkingSpotRepository.countByPropertyIdAndStatusAndActiveTrue(
-                    propertyId, ParkingSpotStatus.ASSIGNED);
+                    propertyId, ParkingSpotStatus.ASSIGNED.name());
             underMaintenance = parkingSpotRepository.countByPropertyIdAndStatusAndActiveTrue(
-                    propertyId, ParkingSpotStatus.UNDER_MAINTENANCE);
+                    propertyId, ParkingSpotStatus.UNDER_MAINTENANCE.name());
         } else {
-            available = parkingSpotRepository.countByStatusAndActiveTrue(ParkingSpotStatus.AVAILABLE);
-            assigned = parkingSpotRepository.countByStatusAndActiveTrue(ParkingSpotStatus.ASSIGNED);
-            underMaintenance = parkingSpotRepository.countByStatusAndActiveTrue(ParkingSpotStatus.UNDER_MAINTENANCE);
+            available = parkingSpotRepository.countByStatusAndActiveTrue(ParkingSpotStatus.AVAILABLE.name());
+            assigned = parkingSpotRepository.countByStatusAndActiveTrue(ParkingSpotStatus.ASSIGNED.name());
+            underMaintenance = parkingSpotRepository.countByStatusAndActiveTrue(ParkingSpotStatus.UNDER_MAINTENANCE.name());
         }
 
         return ParkingSpotCountsResponse.of(available, assigned, underMaintenance);

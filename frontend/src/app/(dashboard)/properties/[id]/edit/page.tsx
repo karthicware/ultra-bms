@@ -15,13 +15,12 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -39,7 +38,19 @@ import { getPropertyManagers, type PropertyManager } from '@/services/users.serv
 import { updatePropertySchema, type UpdatePropertyFormData } from '@/lib/validations/properties';
 import { PropertyType, type PropertyImage } from '@/types/properties';
 import { PropertyImageUpload } from '@/components/properties/PropertyImageUpload';
-import { Building2, X } from 'lucide-react';
+import {
+  Building2,
+  X,
+  MapPinIcon,
+  HashIcon,
+  CalendarIcon,
+  RulerIcon,
+  UserIcon,
+  SparklesIcon,
+  HomeIcon,
+  BuildingIcon,
+  LayersIcon,
+} from 'lucide-react';
 
 export default function EditPropertyPage() {
   const router = useRouter();
@@ -226,68 +237,101 @@ export default function EditPropertyPage() {
               <CardTitle>Basic Information</CardTitle>
               <CardDescription>Required property details</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              {/* Property Name */}
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Property Name *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Sunset Towers"
-                        {...field}
-                        data-testid="input-property-name"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Maximum 200 characters
-                    </FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="name" className="flex items-center gap-1">
+                      Property Name <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3">
+                        <Building2 className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="name"
+                          placeholder="Sunset Towers"
+                          className="pl-9"
+                          {...field}
+                          data-testid="input-property-name"
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">Maximum 200 characters</p>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Address */}
               <FormField
                 control={form.control}
                 name="address"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address *</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="123 Main Street, Dubai, UAE"
-                        {...field}
-                        data-testid="input-property-address"
-                        className="resize-none"
-                        rows={3}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Full address (maximum 500 characters)
-                    </FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="address" className="flex items-center gap-1">
+                      Address <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute top-3 left-0 flex items-start justify-center pl-3">
+                        <MapPinIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Textarea
+                          id="address"
+                          placeholder="123 Main Street, Dubai, UAE"
+                          className="pl-9 resize-none min-h-[80px]"
+                          rows={3}
+                          {...field}
+                          data-testid="input-property-address"
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">Full address (maximum 500 characters)</p>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Property Type */}
                 <FormField
                   control={form.control}
                   name="propertyType"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Property Type *</FormLabel>
+                    <FormItem className="space-y-2">
+                      <Label className="flex items-center gap-1">
+                        Property Type <span className="text-destructive">*</span>
+                      </Label>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-property-type">
+                          <SelectTrigger data-testid="select-property-type" className="w-full">
                             <SelectValue placeholder="Select property type" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value={PropertyType.RESIDENTIAL}>Residential</SelectItem>
-                          <SelectItem value={PropertyType.COMMERCIAL}>Commercial</SelectItem>
-                          <SelectItem value={PropertyType.MIXED_USE}>Mixed Use</SelectItem>
+                          <SelectItem value={PropertyType.RESIDENTIAL}>
+                            <div className="flex items-center gap-2">
+                              <HomeIcon className="size-4 text-blue-600" />
+                              <span>Residential</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value={PropertyType.COMMERCIAL}>
+                            <div className="flex items-center gap-2">
+                              <BuildingIcon className="size-4 text-purple-600" />
+                              <span>Commercial</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value={PropertyType.MIXED_USE}>
+                            <div className="flex items-center gap-2">
+                              <LayersIcon className="size-4 text-orange-600" />
+                              <span>Mixed Use</span>
+                            </div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -295,25 +339,33 @@ export default function EditPropertyPage() {
                   )}
                 />
 
+                {/* Total Units */}
                 <FormField
                   control={form.control}
                   name="totalUnitsCount"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Total Units *</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={1}
-                          placeholder="10"
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                          data-testid="input-total-units"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Minimum 1 unit
-                      </FormDescription>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="totalUnitsCount" className="flex items-center gap-1">
+                        Total Units <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3">
+                          <HashIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            id="totalUnitsCount"
+                            type="number"
+                            min={1}
+                            placeholder="10"
+                            className="pl-9"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                            data-testid="input-total-units"
+                          />
+                        </FormControl>
+                      </div>
+                      <p className="text-muted-foreground text-xs">Minimum 1 unit</p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -328,21 +380,24 @@ export default function EditPropertyPage() {
               <CardTitle>Additional Details</CardTitle>
               <CardDescription>Optional property information</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               {/* Property Manager */}
               <FormField
                 control={form.control}
                 name="managerId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assigned Manager</FormLabel>
+                  <FormItem className="space-y-2">
+                    <Label className="flex items-center gap-1">
+                      <UserIcon className="size-4 mr-1 text-muted-foreground" />
+                      Assigned Manager
+                    </Label>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                       disabled={isLoadingManagers}
                     >
                       <FormControl>
-                        <SelectTrigger data-testid="select-property-manager">
+                        <SelectTrigger data-testid="select-property-manager" className="w-full">
                           <SelectValue placeholder={isLoadingManagers ? "Loading managers..." : "Select a manager (optional)"} />
                         </SelectTrigger>
                       </FormControl>
@@ -355,62 +410,81 @@ export default function EditPropertyPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>
-                      Assign a property manager to this property
-                    </FormDescription>
+                    <p className="text-muted-foreground text-xs">Assign a property manager to this property</p>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Year Built */}
                 <FormField
                   control={form.control}
                   name="yearBuilt"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Year Built</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={1900}
-                          max={new Date().getFullYear()}
-                          placeholder="2020"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                          value={field.value || ''}
-                          data-testid="input-year-built"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Between 1900 and {new Date().getFullYear()}
-                      </FormDescription>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="yearBuilt" className="flex items-center gap-1">
+                        <CalendarIcon className="size-4 mr-1 text-muted-foreground" />
+                        Year Built
+                      </Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3">
+                          <CalendarIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            id="yearBuilt"
+                            type="number"
+                            min={1900}
+                            max={new Date().getFullYear()}
+                            placeholder="2020"
+                            className="pl-9"
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            value={field.value || ''}
+                            data-testid="input-year-built"
+                          />
+                        </FormControl>
+                      </div>
+                      <p className="text-muted-foreground text-xs">Between 1900 and {new Date().getFullYear()}</p>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                {/* Total Square Footage */}
                 <FormField
                   control={form.control}
                   name="totalSquareFootage"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Total Square Footage</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          placeholder="10000"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                          value={field.value || ''}
-                          data-testid="input-square-footage"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Total area in square feet
-                      </FormDescription>
+                    <FormItem className="space-y-2">
+                      <Label htmlFor="totalSquareFootage" className="flex items-center gap-1">
+                        <RulerIcon className="size-4 mr-1 text-muted-foreground" />
+                        Total Square Footage
+                      </Label>
+                      <div className="relative">
+                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3">
+                          <RulerIcon className="size-4" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            id="totalSquareFootage"
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            placeholder="10000"
+                            className="pl-9"
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                            value={field.value || ''}
+                            data-testid="input-square-footage"
+                          />
+                        </FormControl>
+                        <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center justify-center pr-3 text-sm">
+                          sq ft
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-xs">Total area in square feet</p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -419,15 +493,24 @@ export default function EditPropertyPage() {
 
               {/* Amenities */}
               <div className="space-y-2">
-                <FormLabel>Amenities</FormLabel>
+                <Label className="flex items-center gap-1">
+                  <SparklesIcon className="size-4 mr-1 text-muted-foreground" />
+                  Amenities
+                </Label>
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="e.g., Pool, Gym, Parking"
-                    value={amenitiesInput}
-                    onChange={(e) => setAmenitiesInput(e.target.value)}
-                    onKeyDown={handleAmenitiesKeyDown}
-                    data-testid="input-amenities"
-                  />
+                  <div className="relative flex-1">
+                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3">
+                      <SparklesIcon className="size-4" />
+                    </div>
+                    <Input
+                      placeholder="e.g., Pool, Gym, Parking"
+                      value={amenitiesInput}
+                      onChange={(e) => setAmenitiesInput(e.target.value)}
+                      onKeyDown={handleAmenitiesKeyDown}
+                      className="pl-9"
+                      data-testid="input-amenities"
+                    />
+                  </div>
                   <Button
                     type="button"
                     variant="outline"
@@ -437,18 +520,16 @@ export default function EditPropertyPage() {
                     Add
                   </Button>
                 </div>
-                <FormDescription>
-                  Press Enter or click Add to include amenities
-                </FormDescription>
+                <p className="text-muted-foreground text-xs">Press Enter or click Add to include amenities</p>
                 {amenities.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-3">
                     {amenities.map((amenity) => (
-                      <Badge key={amenity} variant="secondary" className="gap-1">
+                      <Badge key={amenity} variant="secondary" className="gap-1 px-3 py-1">
                         {amenity}
                         <button
                           type="button"
                           onClick={() => handleRemoveAmenity(amenity)}
-                          className="hover:bg-destructive/20 rounded-full p-0.5"
+                          className="hover:bg-destructive/20 rounded-full p-0.5 ml-1"
                           data-testid={`btn-remove-amenity-${amenity}`}
                         >
                           <X className="h-3 w-3" />

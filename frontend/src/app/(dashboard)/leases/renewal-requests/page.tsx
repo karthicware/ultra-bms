@@ -335,7 +335,7 @@ export default function RenewalRequestsPage() {
       setPendingCount(count);
     } catch (error) {
       console.error('Failed to fetch renewal requests:', error);
-      toast.error('Failed to load renewal requests');
+      toast.error('Load Error', { description: 'Failed to load renewal requests' });
     } finally {
       setIsLoading(false);
     }
@@ -350,12 +350,12 @@ export default function RenewalRequestsPage() {
     try {
       setIsProcessing(true);
       await approveRenewalRequest(request.id);
-      toast.success('Request approved! Redirecting to lease extension...');
+      toast.success('Request Approved', { description: 'Redirecting to lease extension...' });
       // Redirect to lease extension page for the tenant
       router.push(`/leases/extensions/${request.tenantId}`);
     } catch (error) {
       console.error('Failed to approve request:', error);
-      toast.error('Failed to approve request');
+      toast.error('Approval Failed', { description: 'Failed to approve request' });
       setIsProcessing(false);
     }
   };
@@ -366,13 +366,13 @@ export default function RenewalRequestsPage() {
     try {
       setIsProcessing(true);
       await rejectRenewalRequest(selectedRequest.id, { reason });
-      toast.success('Request rejected. Tenant has been notified.');
+      toast.success('Request Rejected', { description: 'Tenant has been notified.' });
       setShowRejectDialog(false);
       setSelectedRequest(null);
       fetchData();
     } catch (error) {
       console.error('Failed to reject request:', error);
-      toast.error('Failed to reject request');
+      toast.error('Rejection Failed', { description: 'Failed to reject request' });
     } finally {
       setIsProcessing(false);
     }

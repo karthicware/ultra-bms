@@ -5,6 +5,7 @@
  * Create Work Order Page
  * Story 4.1: Work Order Creation and Management
  * Form for creating a new work order with photo uploads
+ * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
 import { useState, useEffect } from 'react';
@@ -12,19 +13,31 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Loader2, Upload, X } from 'lucide-react';
+import {
+  CalendarIcon,
+  Loader2,
+  Upload,
+  X,
+  Building2,
+  DoorOpenIcon,
+  WrenchIcon,
+  TagIcon,
+  FileTextIcon,
+  MessageSquareIcon,
+  DollarSignIcon,
+  BoxIcon,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -263,18 +276,26 @@ export default function CreateWorkOrderPage() {
                 control={form.control}
                 name="propertyId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Property *</FormLabel>
+                  <FormItem className="space-y-2">
+                    <Label className="flex items-center gap-1">
+                      Property <span className="text-destructive">*</span>
+                    </Label>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger data-testid="select-property">
-                          <SelectValue placeholder={loadingProperties ? 'Loading...' : 'Select property'} />
+                        <SelectTrigger data-testid="select-property" className="w-full">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="size-4 text-muted-foreground" />
+                            <SelectValue placeholder={loadingProperties ? 'Loading...' : 'Select property'} />
+                          </div>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {properties.map((property) => (
                           <SelectItem key={property.id} value={property.id}>
-                            {property.name}
+                            <div className="flex items-center gap-2">
+                              <Building2 className="size-4" />
+                              {property.name}
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -288,35 +309,41 @@ export default function CreateWorkOrderPage() {
                 control={form.control}
                 name="unitId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Unit</FormLabel>
+                  <FormItem className="space-y-2">
+                    <Label>Unit</Label>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
                       disabled={!watchedPropertyId || loadingUnits}
                     >
                       <FormControl>
-                        <SelectTrigger data-testid="select-unit">
-                          <SelectValue
-                            placeholder={
-                              !watchedPropertyId
-                                ? 'Select property first'
-                                : loadingUnits
-                                ? 'Loading...'
-                                : 'Select unit (optional)'
-                            }
-                          />
+                        <SelectTrigger data-testid="select-unit" className="w-full">
+                          <div className="flex items-center gap-2">
+                            <DoorOpenIcon className="size-4 text-muted-foreground" />
+                            <SelectValue
+                              placeholder={
+                                !watchedPropertyId
+                                  ? 'Select property first'
+                                  : loadingUnits
+                                  ? 'Loading...'
+                                  : 'Select unit (optional)'
+                              }
+                            />
+                          </div>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {units.map((unit) => (
                           <SelectItem key={unit.id} value={unit.id}>
-                            Unit {unit.unitNumber} - {unit.status}
+                            <div className="flex items-center gap-2">
+                              <DoorOpenIcon className="size-4" />
+                              Unit {unit.unitNumber} - {unit.status}
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>Leave empty for property-wide work orders</FormDescription>
+                    <p className="text-muted-foreground text-xs">Leave empty for property-wide work orders</p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -327,39 +354,45 @@ export default function CreateWorkOrderPage() {
                 control={form.control}
                 name="assetId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Linked Asset</FormLabel>
+                  <FormItem className="space-y-2">
+                    <Label>Linked Asset</Label>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
                       disabled={!watchedPropertyId || loadingAssets}
                     >
                       <FormControl>
-                        <SelectTrigger data-testid="select-asset">
-                          <SelectValue
-                            placeholder={
-                              !watchedPropertyId
-                                ? 'Select property first'
-                                : loadingAssets
-                                ? 'Loading...'
-                                : assets.length === 0
-                                ? 'No assets available'
-                                : 'Select asset (optional)'
-                            }
-                          />
+                        <SelectTrigger data-testid="select-asset" className="w-full">
+                          <div className="flex items-center gap-2">
+                            <BoxIcon className="size-4 text-muted-foreground" />
+                            <SelectValue
+                              placeholder={
+                                !watchedPropertyId
+                                  ? 'Select property first'
+                                  : loadingAssets
+                                  ? 'Loading...'
+                                  : assets.length === 0
+                                  ? 'No assets available'
+                                  : 'Select asset (optional)'
+                              }
+                            />
+                          </div>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {assets.map((asset) => (
                           <SelectItem key={asset.id} value={asset.id}>
-                            {asset.assetNumber} - {asset.assetName}
+                            <div className="flex items-center gap-2">
+                              <BoxIcon className="size-4" />
+                              {asset.assetNumber} - {asset.assetName}
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>
+                    <p className="text-muted-foreground text-xs">
                       Link this work order to a property asset (e.g., HVAC unit, elevator)
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -370,12 +403,17 @@ export default function CreateWorkOrderPage() {
                   control={form.control}
                   name="category"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category *</FormLabel>
+                    <FormItem className="space-y-2">
+                      <Label className="flex items-center gap-1">
+                        Category <span className="text-destructive">*</span>
+                      </Label>
                       <Select onValueChange={field.onChange} value={field.value || ''}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-category">
-                            <SelectValue placeholder="Select category" />
+                          <SelectTrigger data-testid="select-category" className="w-full">
+                            <div className="flex items-center gap-2">
+                              <WrenchIcon className="size-4 text-muted-foreground" />
+                              <SelectValue placeholder="Select category" />
+                            </div>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -401,7 +439,9 @@ export default function CreateWorkOrderPage() {
                   name="priority"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel>Priority *</FormLabel>
+                      <Label className="flex items-center gap-1">
+                        Priority <span className="text-destructive">*</span>
+                      </Label>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
@@ -413,28 +453,28 @@ export default function CreateWorkOrderPage() {
                             <FormControl>
                               <RadioGroupItem value={WorkOrderPriority.HIGH} data-testid="radio-priority-high" />
                             </FormControl>
-                            <FormLabel className="font-normal flex items-center gap-2">
+                            <Label className="font-normal flex items-center gap-2 cursor-pointer">
                               <Badge variant="destructive">HIGH</Badge>
                               Emergency repairs, safety issues
-                            </FormLabel>
+                            </Label>
                           </FormItem>
                           <FormItem className="flex items-center space-x-3 space-y-0">
                             <FormControl>
                               <RadioGroupItem value={WorkOrderPriority.MEDIUM} data-testid="radio-priority-medium" />
                             </FormControl>
-                            <FormLabel className="font-normal flex items-center gap-2">
+                            <Label className="font-normal flex items-center gap-2 cursor-pointer">
                               <Badge className="bg-yellow-500">MEDIUM</Badge>
                               Non-urgent repairs
-                            </FormLabel>
+                            </Label>
                           </FormItem>
                           <FormItem className="flex items-center space-x-3 space-y-0">
                             <FormControl>
                               <RadioGroupItem value={WorkOrderPriority.LOW} data-testid="radio-priority-low" />
                             </FormControl>
-                            <FormLabel className="font-normal flex items-center gap-2">
+                            <Label className="font-normal flex items-center gap-2 cursor-pointer">
                               <Badge variant="secondary">LOW</Badge>
                               General maintenance
-                            </FormLabel>
+                            </Label>
                           </FormItem>
                         </RadioGroup>
                       </FormControl>
@@ -456,16 +496,25 @@ export default function CreateWorkOrderPage() {
                 control={form.control}
                 name="title"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Replace broken kitchen faucet"
-                        {...field}
-                        data-testid="input-title"
-                        maxLength={100}
-                      />
-                    </FormControl>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="title" className="flex items-center gap-1">
+                      Title <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <TagIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="title"
+                          className="pl-9"
+                          placeholder="e.g., Replace broken kitchen faucet"
+                          {...field}
+                          data-testid="input-title"
+                          maxLength={100}
+                        />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -475,21 +524,29 @@ export default function CreateWorkOrderPage() {
                 control={form.control}
                 name="description"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description *</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Describe the maintenance issue in detail..."
-                        className="resize-none"
-                        rows={6}
-                        {...field}
-                        data-testid="textarea-description"
-                        maxLength={1000}
-                      />
-                    </FormControl>
-                    <FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="description" className="flex items-center gap-1">
+                      Description <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute top-3 left-0 flex items-start pl-3">
+                        <FileTextIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Textarea
+                          id="description"
+                          placeholder="Describe the maintenance issue in detail..."
+                          className="resize-none pl-9"
+                          rows={6}
+                          {...field}
+                          data-testid="textarea-description"
+                          maxLength={1000}
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
                       {watchedDescription?.length || 0}/1000 characters
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -508,8 +565,8 @@ export default function CreateWorkOrderPage() {
                 control={form.control}
                 name="scheduledDate"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Scheduled Date</FormLabel>
+                  <FormItem className="flex flex-col space-y-2">
+                    <Label>Scheduled Date</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -521,6 +578,7 @@ export default function CreateWorkOrderPage() {
                             )}
                             data-testid="btn-scheduled-date"
                           >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
                             {field.value ? (
                               format(new Date(field.value), 'PPP')
                             ) : (
@@ -540,9 +598,9 @@ export default function CreateWorkOrderPage() {
                         />
                       </PopoverContent>
                     </Popover>
-                    <FormDescription>
+                    <p className="text-muted-foreground text-xs">
                       When should this work be performed?
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -552,21 +610,27 @@ export default function CreateWorkOrderPage() {
                 control={form.control}
                 name="accessInstructions"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Access Instructions</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Provide any special access instructions, gate codes, or tenant contact details..."
-                        className="resize-none"
-                        rows={4}
-                        {...field}
-                        data-testid="textarea-access-instructions"
-                        maxLength={500}
-                      />
-                    </FormControl>
-                    <FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="accessInstructions">Access Instructions</Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute top-3 left-0 flex items-start pl-3">
+                        <MessageSquareIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Textarea
+                          id="accessInstructions"
+                          placeholder="Provide any special access instructions, gate codes, or tenant contact details..."
+                          className="resize-none pl-9"
+                          rows={4}
+                          {...field}
+                          data-testid="textarea-access-instructions"
+                          maxLength={500}
+                        />
+                      </FormControl>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
                       {field.value?.length || 0}/500 characters
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -576,21 +640,31 @@ export default function CreateWorkOrderPage() {
                 control={form.control}
                 name="estimatedCost"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estimated Cost (AED)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                        value={field.value ?? ''}
-                        data-testid="input-estimated-cost"
-                        step="0.01"
-                        min="0"
-                      />
-                    </FormControl>
-                    <FormDescription>Optional estimated cost for this work order</FormDescription>
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="estimatedCost">Estimated Cost</Label>
+                    <div className="relative">
+                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <DollarSignIcon className="size-4" />
+                      </div>
+                      <FormControl>
+                        <Input
+                          id="estimatedCost"
+                          type="number"
+                          placeholder="0.00"
+                          className="pl-9 pr-14"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          value={field.value ?? ''}
+                          data-testid="input-estimated-cost"
+                          step="0.01"
+                          min="0"
+                        />
+                      </FormControl>
+                      <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
+                        AED
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground text-xs">Optional estimated cost for this work order</p>
                     <FormMessage />
                   </FormItem>
                 )}
