@@ -107,6 +107,7 @@ export default function CompleteSchedulePage() {
       toast({
         title: 'Schedule Completed',
         description: 'The compliance schedule has been marked as complete.',
+        variant: 'success',
       });
 
       router.push(`/property-manager/compliance/schedules/${scheduleId}`);

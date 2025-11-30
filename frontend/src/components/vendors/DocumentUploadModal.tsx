@@ -183,6 +183,7 @@ export function DocumentUploadModal({
           toast({
             title: 'Document uploaded',
             description: 'The document has been uploaded successfully.',
+            variant: 'success',
           });
           handleClose();
           onSuccess?.();

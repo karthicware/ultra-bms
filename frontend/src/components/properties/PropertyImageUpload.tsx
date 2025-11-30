@@ -107,6 +107,7 @@ export function PropertyImageUpload({
             toast({
               title: 'Image uploaded',
               description: 'Property image uploaded successfully.',
+              variant: 'success',
             });
             onImagesUpdate?.();
           } catch {
@@ -170,6 +171,7 @@ export function PropertyImageUpload({
       toast({
         title: 'Image deleted',
         description: 'Property image deleted successfully.',
+        variant: 'success',
       });
       onImagesUpdate?.();
     } catch {

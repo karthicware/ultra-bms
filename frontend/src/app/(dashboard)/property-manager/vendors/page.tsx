@@ -99,6 +99,7 @@ export default function VendorsPage() {
       toast({
         title: 'Vendor Deleted',
         description: `${vendorToDelete.name} has been deleted successfully`,
+        variant: 'success',
       });
       setDeleteDialogOpen(false);
       setVendorToDelete(null);

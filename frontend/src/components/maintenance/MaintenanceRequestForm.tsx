@@ -127,6 +127,7 @@ export function MaintenanceRequestForm() {
       toast({
         title: 'Request submitted successfully',
         description: `Request ${response.requestNumber} has been created`,
+        variant: 'success',
       });
 
       // Redirect to request details

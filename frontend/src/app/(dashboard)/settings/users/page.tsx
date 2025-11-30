@@ -173,6 +173,7 @@ export default function UsersPage() {
       toast({
         title: 'User Deactivated',
         description: `${selectedUser.firstName} ${selectedUser.lastName} has been deactivated.`,
+        variant: 'success',
       });
       fetchUsers();
     } catch (error: unknown) {
@@ -198,6 +199,7 @@ export default function UsersPage() {
       toast({
         title: 'User Reactivated',
         description: `${selectedUser.firstName} ${selectedUser.lastName} has been reactivated.`,
+        variant: 'success',
       });
       fetchUsers();
     } catch (error: unknown) {

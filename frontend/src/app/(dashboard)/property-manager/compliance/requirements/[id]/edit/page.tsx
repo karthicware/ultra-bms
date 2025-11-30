@@ -125,6 +125,7 @@ export default function EditRequirementPage() {
       toast({
         title: 'Requirement Updated',
         description: 'The requirement has been updated successfully.',
+        variant: 'success',
       });
 
       router.push(`/property-manager/compliance/requirements/${requirementId}`);

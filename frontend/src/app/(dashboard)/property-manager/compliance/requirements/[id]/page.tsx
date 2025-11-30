@@ -88,6 +88,7 @@ export default function RequirementDetailPage() {
       toast({
         title: 'Requirement Deleted',
         description: 'The requirement has been deleted successfully.',
+        variant: 'success',
       });
       router.push('/property-manager/compliance/requirements');
     } catch (error: unknown) {

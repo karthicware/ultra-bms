@@ -127,7 +127,7 @@ export default function CreatePropertyPage() {
           toast({
             title: 'Partial Success',
             description: `Property created. ${uploadedCount} of ${selectedImages.length} images uploaded.`,
-            variant: 'warning',
+            variant: 'success',
           });
         } else {
           toast({

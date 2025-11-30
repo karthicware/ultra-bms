@@ -95,6 +95,7 @@ export default function EditUserDialog({
       toast({
         title: 'User Updated',
         description: `${data.firstName} ${data.lastName} has been updated.`,
+        variant: 'success',
       });
 
       reset();

@@ -30,6 +30,7 @@ export default function NewVendorPage() {
       toast({
         title: 'Vendor Registered Successfully',
         description: `${response.companyName} has been registered with vendor number ${response.vendorNumber}`,
+        variant: 'success',
       });
 
       // Navigate to vendor detail page

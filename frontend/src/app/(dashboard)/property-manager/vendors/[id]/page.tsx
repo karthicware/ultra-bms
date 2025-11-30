@@ -155,6 +155,7 @@ export default function VendorDetailPage({ params }: PageProps) {
       toast({
         title: 'Status Updated',
         description: `Vendor status changed to ${targetStatus}`,
+        variant: 'success',
       });
       setStatusDialogOpen(false);
       refetch();
@@ -177,6 +178,7 @@ export default function VendorDetailPage({ params }: PageProps) {
       toast({
         title: 'Vendor Deleted',
         description: `${vendor.companyName} has been deleted`,
+        variant: 'success',
       });
       router.push('/property-manager/vendors');
     } catch (error) {

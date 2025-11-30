@@ -6,60 +6,27 @@
  * AC #15: Display all invoices with status, amounts, and due dates
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { debounce } from 'lodash';
-import { format } from 'date-fns';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
 import { getInvoices, getInvoiceSummary } from '@/services/invoice.service';
 import {
   InvoiceListItem,
-  InvoiceStatus,
   InvoiceSummary,
-  getInvoiceStatusColor,
-  getInvoiceStatusLabel,
   formatCurrency,
 } from '@/types/invoice';
 import {
   Plus,
-  Search,
-  Eye,
-  FileText,
-  ArrowUpDown,
-  AlertCircle,
   DollarSign,
   Clock,
   CheckCircle,
+  AlertCircle,
+  FileText,
 } from 'lucide-react';
+import InvoicesDatatable from '@/components/invoices/InvoicesDatatable';
 
 export default function InvoicesPage() {
   const router = useRouter();
@@ -69,45 +36,32 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [summary, setSummary] = useState<InvoiceSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
-  const [sortField, setSortField] = useState<string>('createdAt');
-  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('DESC');
 
-  // Fetch invoices
-  const fetchInvoices = useCallback(async () => {
-    try {
-      setIsLoading(true);
+  // Fetch all invoices for client-side filtering
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getInvoices({
+          page: 0,
+          size: 1000, // Fetch all for client-side filtering
+        });
+        setInvoices(response.data.content || []);
+      } catch (error) {
+        console.error('Failed to fetch invoices:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load invoices',
+          variant: 'destructive',
+        });
+        setInvoices([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      const response = await getInvoices({
-        search: searchTerm || undefined,
-        status: statusFilter === 'ALL' ? undefined : statusFilter as InvoiceStatus,
-        page: currentPage,
-        size: pageSize,
-        sortBy: sortField,
-        sortDirection,
-      });
-
-      setInvoices(response.data.content || []);
-      setTotalPages(response.data.totalPages || 0);
-      setTotalElements(response.data.totalElements || 0);
-    } catch (error) {
-      console.error('Failed to fetch invoices:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load invoices',
-        variant: 'destructive',
-      });
-      setInvoices([]);
-    } finally {
-      setIsLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, pageSize, searchTerm, statusFilter, sortField, sortDirection]);
+    fetchInvoices();
+  }, [toast]);
 
   // Fetch summary
   const fetchSummary = useCallback(async () => {
@@ -119,17 +73,6 @@ export default function InvoicesPage() {
     }
   }, []);
 
-  // Debounced search
-  const debouncedFetchInvoices = useMemo(
-    () => debounce(fetchInvoices, 300),
-    [fetchInvoices]
-  );
-
-  useEffect(() => {
-    debouncedFetchInvoices();
-    return () => debouncedFetchInvoices.cancel();
-  }, [debouncedFetchInvoices]);
-
   useEffect(() => {
     fetchSummary();
   }, [fetchSummary]);
@@ -137,25 +80,6 @@ export default function InvoicesPage() {
   // Handlers
   const handleCreateInvoice = () => {
     router.push('/invoices/new');
-  };
-
-  const handleViewInvoice = (id: string) => {
-    router.push(`/invoices/${id}`);
-  };
-
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC');
-    } else {
-      setSortField(field);
-      setSortDirection('DESC');
-    }
-    setCurrentPage(0);
-  };
-
-  const handleStatusFilter = (value: string) => {
-    setStatusFilter(value);
-    setCurrentPage(0);
   };
 
   // Summary cards
@@ -216,26 +140,43 @@ export default function InvoicesPage() {
     </div>
   );
 
-  // Loading skeleton
-  const LoadingSkeleton = () => (
-    <div className="space-y-3">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="flex items-center space-x-4">
-          <Skeleton className="h-12 w-full" />
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-32" />
         </div>
-      ))}
-    </div>
-  );
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <Skeleton className="h-20 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <Skeleton className="h-64 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
-          <p className="text-muted-foreground">
-            Manage rent invoices and track payments
-          </p>
+        <div className="flex items-center gap-3">
+          <FileText className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
+            <p className="text-muted-foreground">
+              Manage rent invoices and track payments
+            </p>
+          </div>
         </div>
         <Button onClick={handleCreateInvoice}>
           <Plus className="mr-2 h-4 w-4" />
@@ -246,244 +187,9 @@ export default function InvoicesPage() {
       {/* Summary Cards */}
       <SummaryCards />
 
-      {/* Filters */}
+      {/* Datatable */}
       <Card>
-        <CardHeader>
-          <CardTitle>Invoice List</CardTitle>
-          <CardDescription>
-            {totalElements} total invoices
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by invoice number or tenant..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(0);
-                }}
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={handleStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Statuses</SelectItem>
-                <SelectItem value="DRAFT">Draft</SelectItem>
-                <SelectItem value="SENT">Sent</SelectItem>
-                <SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
-                <SelectItem value="PAID">Paid</SelectItem>
-                <SelectItem value="OVERDUE">Overdue</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Table */}
-          {isLoading ? (
-            <LoadingSkeleton />
-          ) : invoices.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">No invoices found</h3>
-              <p className="text-muted-foreground">
-                {searchTerm || statusFilter !== 'ALL'
-                  ? 'Try adjusting your filters'
-                  : 'Create your first invoice to get started'}
-              </p>
-              {!searchTerm && statusFilter === 'ALL' && (
-                <Button onClick={handleCreateInvoice} className="mt-4">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Invoice
-                </Button>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader className="bg-muted/50">
-                    <TableRow>
-                      <TableHead>
-                        <Button
-                          variant="ghost"
-                          onClick={() => handleSort('invoiceNumber')}
-                          className="h-auto p-0 font-medium"
-                        >
-                          Invoice #
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead>
-                        <Button
-                          variant="ghost"
-                          onClick={() => handleSort('tenantName')}
-                          className="h-auto p-0 font-medium"
-                        >
-                          Tenant
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead>Property / Unit</TableHead>
-                      <TableHead className="text-right">
-                        <Button
-                          variant="ghost"
-                          onClick={() => handleSort('totalAmount')}
-                          className="h-auto p-0 font-medium"
-                        >
-                          Total
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead className="text-right">Balance</TableHead>
-                      <TableHead>
-                        <Button
-                          variant="ghost"
-                          onClick={() => handleSort('dueDate')}
-                          className="h-auto p-0 font-medium"
-                        >
-                          Due Date
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead>
-                        <Button
-                          variant="ghost"
-                          onClick={() => handleSort('status')}
-                          className="h-auto p-0 font-medium"
-                        >
-                          Status
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {invoices.map((invoice) => (
-                      <TableRow
-                        key={invoice.id}
-                        className={invoice.isOverdue ? 'bg-red-50 dark:bg-red-950/20' : ''}
-                      >
-                        <TableCell className="font-medium">
-                          {invoice.invoiceNumber}
-                        </TableCell>
-                        <TableCell>{invoice.tenantName}</TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            <div>{invoice.propertyName}</div>
-                            <div className="text-muted-foreground">
-                              Unit {invoice.unitNumber}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {formatCurrency(invoice.totalAmount)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span
-                            className={
-                              invoice.balanceAmount > 0
-                                ? 'text-amber-600 font-medium'
-                                : 'text-green-600'
-                            }
-                          >
-                            {formatCurrency(invoice.balanceAmount)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {format(new Date(invoice.dueDate), 'dd MMM yyyy')}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getInvoiceStatusColor(invoice.status)}>
-                            {getInvoiceStatusLabel(invoice.status)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewInvoice(invoice.id)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Pagination Footer */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
-                <div className="text-sm text-muted-foreground">
-                  Showing {invoices.length} of {totalElements} invoices
-                </div>
-
-                {totalPages > 1 && (
-                  <Pagination className="mx-0 w-auto">
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() => currentPage > 0 && setCurrentPage(currentPage - 1)}
-                          className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                        />
-                      </PaginationItem>
-
-                      {currentPage > 2 && (
-                        <>
-                          <PaginationItem>
-                            <PaginationLink onClick={() => setCurrentPage(0)} className="cursor-pointer">1</PaginationLink>
-                          </PaginationItem>
-                          {currentPage > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
-                        </>
-                      )}
-
-                      {Array.from({ length: totalPages }, (_, i) => i)
-                        .filter(page => Math.abs(page - currentPage) <= 2)
-                        .map(page => (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              onClick={() => setCurrentPage(page)}
-                              isActive={page === currentPage}
-                              className="cursor-pointer"
-                            >
-                              {page + 1}
-                            </PaginationLink>
-                          </PaginationItem>
-                        ))}
-
-                      {currentPage < totalPages - 3 && (
-                        <>
-                          {currentPage < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
-                          <PaginationItem>
-                            <PaginationLink onClick={() => setCurrentPage(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
-                          </PaginationItem>
-                        </>
-                      )}
-
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() => currentPage < totalPages - 1 && setCurrentPage(currentPage + 1)}
-                          className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                )}
-
-                <div className="text-sm text-muted-foreground">
-                  Page {currentPage + 1} of {totalPages || 1}
-                </div>
-              </div>
-            </>
-          )}
-        </CardContent>
+        <InvoicesDatatable data={invoices} />
       </Card>
     </div>
   );

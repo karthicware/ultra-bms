@@ -173,7 +173,6 @@ export default function CreateAnnouncementPage() {
           toast({
             title: 'Warning',
             description: 'Announcement created but attachment upload failed. You can try again later.',
-            variant: 'warning',
           });
         }
       }

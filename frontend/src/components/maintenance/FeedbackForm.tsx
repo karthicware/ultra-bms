@@ -60,6 +60,7 @@ export function FeedbackForm({ requestId }: FeedbackFormProps) {
       toast({
         title: 'Feedback submitted',
         description: 'Thank you for your feedback!',
+        variant: 'success',
       });
 
       // Refresh request data

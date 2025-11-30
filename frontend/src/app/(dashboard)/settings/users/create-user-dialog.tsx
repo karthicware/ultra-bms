@@ -97,6 +97,7 @@ export default function CreateUserDialog({
       toast({
         title: 'User Created',
         description: `${data.firstName} ${data.lastName} has been created. A welcome email has been sent.`,
+        variant: 'success',
       });
 
       reset();

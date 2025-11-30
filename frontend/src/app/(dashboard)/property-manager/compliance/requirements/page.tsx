@@ -158,6 +158,7 @@ export default function RequirementsPage() {
       toast({
         title: 'Requirement Deleted',
         description: `${requirementToDelete.requirementName} has been deleted successfully`,
+        variant: 'success',
       });
       setDeleteDialogOpen(false);
       setRequirementToDelete(null);

@@ -81,6 +81,7 @@ export default function FinancialDashboardPage() {
       toast({
         title: 'Dashboard Refreshed',
         description: 'Financial dashboard data has been updated.',
+        variant: 'success',
       });
     },
     onError: () => {

@@ -90,6 +90,7 @@ export default function RecordInspectionResultsPage() {
           toast({
             title: 'Cannot Record Results',
             description: 'This inspection already has recorded results.',
+            variant: 'destructive',
           });
           router.push(`/property-manager/compliance/inspections/${inspectionId}`);
         }
@@ -130,6 +131,7 @@ export default function RecordInspectionResultsPage() {
       toast({
         title: 'Results Recorded',
         description: `Inspection has been marked as ${getInspectionResultLabel(data.result as InspectionResult)}.`,
+        variant: 'success',
       });
 
       router.push(`/property-manager/compliance/inspections/${inspectionId}`);

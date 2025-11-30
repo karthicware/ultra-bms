@@ -6,40 +6,12 @@
  * AC #27-34: Three-tab UI (Active, Drafts, History) with search and filtering
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { debounce } from 'lodash';
-import { format } from 'date-fns';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from '@/components/ui/pagination';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,98 +33,47 @@ import {
 } from '@/services/announcement.service';
 import {
   AnnouncementListItem,
-  AnnouncementStatus,
   AnnouncementStats,
-  AnnouncementFilter,
 } from '@/types/announcement';
 import {
   Plus,
-  Search,
-  Eye,
-  Edit,
-  Trash2,
-  Send,
-  Archive,
-  Copy,
-  MoreHorizontal,
   Megaphone,
   FileText,
   Clock,
-  Paperclip,
-  ArrowUpDown,
 } from 'lucide-react';
-
-// Status badge styling
-function getStatusBadgeClass(status: AnnouncementStatus): string {
-  switch (status) {
-    case AnnouncementStatus.DRAFT:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
-    case AnnouncementStatus.PUBLISHED:
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-    case AnnouncementStatus.EXPIRED:
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300';
-    case AnnouncementStatus.ARCHIVED:
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-}
-
-function getStatusLabel(status: AnnouncementStatus): string {
-  switch (status) {
-    case AnnouncementStatus.DRAFT:
-      return 'Draft';
-    case AnnouncementStatus.PUBLISHED:
-      return 'Published';
-    case AnnouncementStatus.EXPIRED:
-      return 'Expired';
-    case AnnouncementStatus.ARCHIVED:
-      return 'Archived';
-    default:
-      return status;
-  }
-}
+import AnnouncementsDatatable from '@/components/announcements/AnnouncementsDatatable';
 
 export default function AnnouncementsPage() {
   const router = useRouter();
   const { toast } = useToast();
 
   // State
-  const [announcements, setAnnouncements] = useState<AnnouncementListItem[]>([]);
+  const [activeAnnouncements, setActiveAnnouncements] = useState<AnnouncementListItem[]>([]);
+  const [draftAnnouncements, setDraftAnnouncements] = useState<AnnouncementListItem[]>([]);
+  const [historyAnnouncements, setHistoryAnnouncements] = useState<AnnouncementListItem[]>([]);
   const [stats, setStats] = useState<AnnouncementStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'ACTIVE' | 'DRAFTS' | 'HISTORY'>('ACTIVE');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
-  const [sortField, setSortField] = useState<string>('createdAt');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [announcementToDelete, setAnnouncementToDelete] = useState<AnnouncementListItem | null>(null);
 
-  // Fetch announcements
-  const fetchAnnouncements = useCallback(async () => {
+  // Fetch all announcements for each tab
+  const fetchAllAnnouncements = useCallback(async () => {
     try {
       setIsLoading(true);
 
-      const filters: AnnouncementFilter = {
-        tab: activeTab,
-        search: searchTerm || undefined,
-        page: currentPage,
-        size: pageSize,
-        sortBy: sortField,
-        sortDir: sortDirection,
-      };
+      // Fetch all tabs in parallel
+      const [activeResponse, draftsResponse, historyResponse] = await Promise.all([
+        getAnnouncements({ tab: 'ACTIVE', page: 0, size: 1000 }),
+        getAnnouncements({ tab: 'DRAFTS', page: 0, size: 1000 }),
+        getAnnouncements({ tab: 'HISTORY', page: 0, size: 1000 }),
+      ]);
 
-      const response = await getAnnouncements(filters);
-
-      setAnnouncements(response.data || []);
-      setTotalPages(response.pagination?.totalPages || 0);
-      setTotalElements(response.pagination?.totalElements || 0);
+      setActiveAnnouncements(activeResponse.data || []);
+      setDraftAnnouncements(draftsResponse.data || []);
+      setHistoryAnnouncements(historyResponse.data || []);
     } catch (error) {
       console.error('Failed to fetch announcements:', error);
       toast({
@@ -160,11 +81,10 @@ export default function AnnouncementsPage() {
         description: 'Failed to load announcements',
         variant: 'destructive',
       });
-      setAnnouncements([]);
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, currentPage, pageSize, searchTerm, sortField, sortDirection, toast]);
+  }, [toast]);
 
   // Fetch stats
   const fetchStats = useCallback(async () => {
@@ -176,20 +96,10 @@ export default function AnnouncementsPage() {
     }
   }, []);
 
-  // Debounced search
-  const debouncedFetch = useMemo(
-    () => debounce(fetchAnnouncements, 300),
-    [fetchAnnouncements]
-  );
-
   useEffect(() => {
-    debouncedFetch();
-    return () => debouncedFetch.cancel();
-  }, [debouncedFetch]);
-
-  useEffect(() => {
+    fetchAllAnnouncements();
     fetchStats();
-  }, [fetchStats]);
+  }, [fetchAllAnnouncements, fetchStats]);
 
   // Handlers
   const handleCreateAnnouncement = () => {
@@ -204,22 +114,6 @@ export default function AnnouncementsPage() {
     router.push(`/announcements/${id}?edit=true`);
   };
 
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
-    setCurrentPage(0);
-  };
-
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab as 'ACTIVE' | 'DRAFTS' | 'HISTORY');
-    setCurrentPage(0);
-    setSearchTerm('');
-  };
-
   const handlePublish = async (id: string) => {
     try {
       await publishAnnouncement(id);
@@ -228,7 +122,7 @@ export default function AnnouncementsPage() {
         description: 'Announcement published successfully. Emails have been sent to all tenants.',
         variant: 'success',
       });
-      fetchAnnouncements();
+      fetchAllAnnouncements();
       fetchStats();
     } catch (error) {
       console.error('Failed to publish announcement:', error);
@@ -248,7 +142,7 @@ export default function AnnouncementsPage() {
         description: 'Announcement archived successfully',
         variant: 'success',
       });
-      fetchAnnouncements();
+      fetchAllAnnouncements();
       fetchStats();
     } catch (error) {
       console.error('Failed to archive announcement:', error);
@@ -294,7 +188,7 @@ export default function AnnouncementsPage() {
         description: 'Announcement deleted successfully',
         variant: 'success',
       });
-      fetchAnnouncements();
+      fetchAllAnnouncements();
       fetchStats();
     } catch (error) {
       console.error('Failed to delete announcement:', error);
@@ -306,6 +200,20 @@ export default function AnnouncementsPage() {
     } finally {
       setDeleteDialogOpen(false);
       setAnnouncementToDelete(null);
+    }
+  };
+
+  // Get data for current tab
+  const getCurrentTabData = () => {
+    switch (activeTab) {
+      case 'ACTIVE':
+        return activeAnnouncements;
+      case 'DRAFTS':
+        return draftAnnouncements;
+      case 'HISTORY':
+        return historyAnnouncements;
+      default:
+        return [];
     }
   };
 
@@ -339,81 +247,43 @@ export default function AnnouncementsPage() {
     </div>
   );
 
-  // Loading skeleton
-  const LoadingSkeleton = () => (
-    <div className="space-y-3">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="flex items-center space-x-4">
-          <Skeleton className="h-12 w-full" />
+  if (isLoading) {
+    return (
+      <div className="space-y-6" data-testid="announcements-page">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-44" />
         </div>
-      ))}
-    </div>
-  );
-
-  // Get available actions based on status
-  const getRowActions = (announcement: AnnouncementListItem) => {
-    const actions = [];
-
-    // View is always available
-    actions.push({
-      label: 'View',
-      icon: Eye,
-      onClick: () => handleViewAnnouncement(announcement.id),
-    });
-
-    // Edit only for DRAFT
-    if (announcement.status === AnnouncementStatus.DRAFT) {
-      actions.push({
-        label: 'Edit',
-        icon: Edit,
-        onClick: () => handleEditAnnouncement(announcement.id),
-      });
-      actions.push({
-        label: 'Publish',
-        icon: Send,
-        onClick: () => handlePublish(announcement.id),
-      });
-    }
-
-    // Archive for PUBLISHED or EXPIRED
-    if (announcement.status === AnnouncementStatus.PUBLISHED ||
-        announcement.status === AnnouncementStatus.EXPIRED) {
-      actions.push({
-        label: 'Archive',
-        icon: Archive,
-        onClick: () => handleArchive(announcement.id),
-      });
-    }
-
-    // Copy is always available
-    actions.push({
-      label: 'Copy',
-      icon: Copy,
-      onClick: () => handleCopy(announcement.id),
-    });
-
-    // Delete only for DRAFT
-    if (announcement.status === AnnouncementStatus.DRAFT) {
-      actions.push({
-        label: 'Delete',
-        icon: Trash2,
-        onClick: () => handleDeleteClick(announcement),
-        variant: 'destructive' as const,
-      });
-    }
-
-    return actions;
-  };
+        <div className="grid gap-4 md:grid-cols-2">
+          {[1, 2].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <Skeleton className="h-20 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <Skeleton className="h-64 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" data-testid="announcements-page">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Announcements</h1>
-          <p className="text-muted-foreground">
-            Manage internal announcements for tenants
-          </p>
+        <div className="flex items-center gap-3">
+          <Megaphone className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Announcements</h1>
+            <p className="text-muted-foreground">
+              Manage internal announcements for tenants
+            </p>
+          </div>
         </div>
         <Button onClick={handleCreateAnnouncement} data-testid="create-announcement-btn">
           <Plus className="mr-2 h-4 w-4" />
@@ -425,7 +295,7 @@ export default function AnnouncementsPage() {
       <SummaryCards />
 
       {/* Tabs and Content */}
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
+      <Tabs value={activeTab} onValueChange={(tab) => setActiveTab(tab as 'ACTIVE' | 'DRAFTS' | 'HISTORY')}>
         <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
           <TabsTrigger value="ACTIVE" className="flex items-center gap-2" data-testid="tab-active">
             <Megaphone className="h-4 w-4" />
@@ -443,228 +313,15 @@ export default function AnnouncementsPage() {
 
         <TabsContent value={activeTab} className="mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle>
-                {activeTab === 'ACTIVE' && 'Active Announcements'}
-                {activeTab === 'DRAFTS' && 'Draft Announcements'}
-                {activeTab === 'HISTORY' && 'Announcement History'}
-              </CardTitle>
-              <CardDescription>
-                {totalElements} announcements
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Search */}
-              <div className="flex flex-col md:flex-row gap-4 mb-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by title or announcement number..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(0);
-                    }}
-                    data-testid="announcement-search-input"
-                  />
-                </div>
-              </div>
-
-              {/* Table */}
-              {isLoading ? (
-                <LoadingSkeleton />
-              ) : announcements.length === 0 ? (
-                <div className="text-center py-12">
-                  <Megaphone className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <h3 className="mt-4 text-lg font-semibold">No announcements found</h3>
-                  <p className="text-muted-foreground">
-                    {searchTerm
-                      ? 'Try adjusting your search'
-                      : activeTab === 'DRAFTS'
-                      ? 'Create a new announcement to get started'
-                      : 'No announcements in this category'}
-                  </p>
-                  {!searchTerm && activeTab === 'DRAFTS' && (
-                    <Button onClick={handleCreateAnnouncement} className="mt-4">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create Announcement
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader className="bg-muted/50">
-                        <TableRow>
-                          <TableHead>
-                            <Button
-                              variant="ghost"
-                              onClick={() => handleSort('announcementNumber')}
-                              className="h-auto p-0 font-medium"
-                            >
-                              Number
-                              <ArrowUpDown className="ml-2 h-4 w-4" />
-                            </Button>
-                          </TableHead>
-                          <TableHead>
-                            <Button
-                              variant="ghost"
-                              onClick={() => handleSort('title')}
-                              className="h-auto p-0 font-medium"
-                            >
-                              Title
-                              <ArrowUpDown className="ml-2 h-4 w-4" />
-                            </Button>
-                          </TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>
-                            <Button
-                              variant="ghost"
-                              onClick={() => handleSort('expiresAt')}
-                              className="h-auto p-0 font-medium"
-                            >
-                              Expires
-                              <ArrowUpDown className="ml-2 h-4 w-4" />
-                            </Button>
-                          </TableHead>
-                          <TableHead>
-                            <Button
-                              variant="ghost"
-                              onClick={() => handleSort('createdAt')}
-                              className="h-auto p-0 font-medium"
-                            >
-                              Created
-                              <ArrowUpDown className="ml-2 h-4 w-4" />
-                            </Button>
-                          </TableHead>
-                          <TableHead>Created By</TableHead>
-                          <TableHead className="w-[50px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {announcements.map((announcement) => (
-                          <TableRow key={announcement.id} data-testid={`announcement-row-${announcement.id}`}>
-                            <TableCell className="font-medium">
-                              {announcement.announcementNumber}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{announcement.title}</span>
-                                {announcement.hasAttachment && (
-                                  <Paperclip className="h-4 w-4 text-muted-foreground" />
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getStatusBadgeClass(announcement.status)}>
-                                {getStatusLabel(announcement.status)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {format(new Date(announcement.expiresAt), 'dd MMM yyyy')}
-                            </TableCell>
-                            <TableCell>
-                              {format(new Date(announcement.createdAt), 'dd MMM yyyy')}
-                            </TableCell>
-                            <TableCell>
-                              {announcement.createdByName || '-'}
-                            </TableCell>
-                            <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  {getRowActions(announcement).map((action) => (
-                                    <div key={action.label}>
-                                      {action.label === 'Delete' && <DropdownMenuSeparator />}
-                                      <DropdownMenuItem
-                                        onClick={action.onClick}
-                                        className={action.variant === 'destructive' ? 'text-red-600' : ''}
-                                      >
-                                        <action.icon className="mr-2 h-4 w-4" />
-                                        {action.label}
-                                      </DropdownMenuItem>
-                                    </div>
-                                  ))}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* Pagination */}
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t">
-                    <div className="text-sm text-muted-foreground">
-                      Showing {announcements.length} of {totalElements} announcements
-                    </div>
-
-                    {totalPages > 1 && (
-                      <Pagination className="mx-0 w-auto">
-                        <PaginationContent>
-                          <PaginationItem>
-                            <PaginationPrevious
-                              onClick={() => currentPage > 0 && setCurrentPage(currentPage - 1)}
-                              className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                            />
-                          </PaginationItem>
-
-                          {currentPage > 2 && (
-                            <>
-                              <PaginationItem>
-                                <PaginationLink onClick={() => setCurrentPage(0)} className="cursor-pointer">1</PaginationLink>
-                              </PaginationItem>
-                              {currentPage > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
-                            </>
-                          )}
-
-                          {Array.from({ length: totalPages }, (_, i) => i)
-                            .filter(page => Math.abs(page - currentPage) <= 2)
-                            .map(page => (
-                              <PaginationItem key={page}>
-                                <PaginationLink
-                                  onClick={() => setCurrentPage(page)}
-                                  isActive={page === currentPage}
-                                  className="cursor-pointer"
-                                >
-                                  {page + 1}
-                                </PaginationLink>
-                              </PaginationItem>
-                            ))}
-
-                          {currentPage < totalPages - 3 && (
-                            <>
-                              {currentPage < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
-                              <PaginationItem>
-                                <PaginationLink onClick={() => setCurrentPage(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
-                              </PaginationItem>
-                            </>
-                          )}
-
-                          <PaginationItem>
-                            <PaginationNext
-                              onClick={() => currentPage < totalPages - 1 && setCurrentPage(currentPage + 1)}
-                              className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                            />
-                          </PaginationItem>
-                        </PaginationContent>
-                      </Pagination>
-                    )}
-
-                    <div className="text-sm text-muted-foreground">
-                      Page {currentPage + 1} of {totalPages || 1}
-                    </div>
-                  </div>
-                </>
-              )}
-            </CardContent>
+            <AnnouncementsDatatable
+              data={getCurrentTabData()}
+              onView={handleViewAnnouncement}
+              onEdit={handleEditAnnouncement}
+              onPublish={handlePublish}
+              onArchive={handleArchive}
+              onCopy={handleCopy}
+              onDelete={handleDeleteClick}
+            />
           </Card>
         </TabsContent>
       </Tabs>

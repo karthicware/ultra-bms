@@ -187,6 +187,7 @@ export function DocumentReplaceModal({
           toast({
             title: 'Document replaced',
             description: 'The document has been replaced successfully.',
+            variant: 'success',
           });
           handleClose();
           onSuccess?.();

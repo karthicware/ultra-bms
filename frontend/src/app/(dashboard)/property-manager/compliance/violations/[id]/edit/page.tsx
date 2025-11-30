@@ -122,6 +122,7 @@ export default function EditViolationPage() {
       toast({
         title: 'Violation Updated',
         description: 'The violation has been updated successfully.',
+        variant: 'success',
       });
 
       router.push(`/property-manager/compliance/violations/${violationId}`);

@@ -128,6 +128,7 @@ export function VendorDocumentList({
           toast({
             title: 'Document deleted',
             description: 'The document has been deleted successfully.',
+            variant: 'success',
           });
           setDeleteDocument(null);
         },

@@ -109,6 +109,7 @@ function NewInspectionContent() {
       toast({
         title: 'Inspection Scheduled',
         description: 'The inspection has been scheduled successfully.',
+        variant: 'success',
       });
 
       router.push(`/property-manager/compliance/inspections/${inspection?.id}`);

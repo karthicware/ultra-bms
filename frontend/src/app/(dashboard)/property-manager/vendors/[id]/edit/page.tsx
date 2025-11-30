@@ -41,6 +41,7 @@ export default function EditVendorPage({ params }: PageProps) {
       toast({
         title: 'Vendor Updated',
         description: `${data.companyName} has been updated successfully`,
+        variant: 'success',
       });
 
       // Navigate back to vendor detail page

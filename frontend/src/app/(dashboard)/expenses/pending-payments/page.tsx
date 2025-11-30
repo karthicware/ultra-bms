@@ -226,6 +226,7 @@ export default function PendingPaymentsPage() {
         description: `${response.data.processedCount} expenses marked as paid${
           response.data.failedCount > 0 ? `, ${response.data.failedCount} failed` : ''
         }`,
+        variant: 'success',
       });
 
       // Reset and refresh

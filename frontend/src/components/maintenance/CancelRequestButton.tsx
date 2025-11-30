@@ -48,6 +48,7 @@ export function CancelRequestButton({ requestId, requestNumber }: CancelRequestB
       toast({
         title: 'Request cancelled',
         description: `Request ${requestNumber} has been cancelled`,
+        variant: 'success',
       });
 
       // Redirect to requests list

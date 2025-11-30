@@ -124,6 +124,7 @@ function NewViolationContent() {
       toast({
         title: 'Violation Recorded',
         description: `Violation ${violation?.violationNumber} has been recorded.`,
+        variant: 'success',
       });
 
       router.push(`/property-manager/compliance/violations/${violation?.id}`);

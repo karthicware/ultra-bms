@@ -82,6 +82,7 @@ export default function NewRequirementPage() {
       toast({
         title: 'Requirement Created',
         description: `${data.name} has been created successfully.`,
+        variant: 'success',
       });
 
       router.push(`/property-manager/compliance/requirements/${requirement?.id}`);
