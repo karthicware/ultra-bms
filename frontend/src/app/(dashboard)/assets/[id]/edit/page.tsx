@@ -133,7 +133,7 @@ export default function EditAssetPage() {
 
   if (isLoadingAsset) {
     return (
-      <div className="space-y-6">
+      <div className="container mx-auto space-y-6">
         <Skeleton className="h-8 w-48" />
         <Card>
           <CardContent className="p-6">
@@ -150,7 +150,7 @@ export default function EditAssetPage() {
 
   if (!asset) {
     return (
-      <div className="flex flex-col items-center justify-center h-64">
+      <div className="container mx-auto flex flex-col items-center justify-center h-64">
         <Package className="h-12 w-12 text-gray-400 mb-4" />
         <p className="text-gray-500">Asset not found</p>
         <Button variant="outline" className="mt-4" onClick={() => router.push('/assets')}>
@@ -162,7 +162,7 @@ export default function EditAssetPage() {
 
   if (!asset.editable) {
     return (
-      <div className="flex flex-col items-center justify-center h-64">
+      <div className="container mx-auto flex flex-col items-center justify-center h-64">
         <Package className="h-12 w-12 text-gray-400 mb-4" />
         <p className="text-gray-500">This asset cannot be edited</p>
         <Button variant="outline" className="mt-4" onClick={() => router.push(`/assets/${assetId}`)}>
@@ -173,7 +173,7 @@ export default function EditAssetPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.push(`/assets/${assetId}`)}>

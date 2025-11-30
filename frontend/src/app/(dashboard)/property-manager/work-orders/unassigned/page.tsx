@@ -197,7 +197,7 @@ export default function UnassignedWorkOrdersPage() {
   };
 
   return (
-    <div className="space-y-6" data-testid="unassigned-work-orders-page">
+    <div className="container mx-auto space-y-6" data-testid="unassigned-work-orders-page">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

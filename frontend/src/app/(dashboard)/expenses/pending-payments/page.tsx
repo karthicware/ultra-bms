@@ -249,7 +249,7 @@ export default function PendingPaymentsPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="container mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Skeleton className="h-10 w-10" />
           <div>
@@ -265,7 +265,7 @@ export default function PendingPaymentsPage() {
   }
 
   return (
-    <div className="space-y-6" data-testid="page-vendor-payments">
+    <div className="container mx-auto space-y-6" data-testid="page-vendor-payments">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

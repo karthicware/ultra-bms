@@ -165,7 +165,7 @@ export default function DocumentEditPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6" data-testid="form-document-edit">
+      <div className="container mx-auto space-y-6" data-testid="form-document-edit">
         <Skeleton className="h-10 w-64" />
         <Card>
           <CardContent className="space-y-4 pt-6">
@@ -180,7 +180,7 @@ export default function DocumentEditPage() {
 
   if (error || !document) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500" data-testid="form-document-edit">
+      <div className="container mx-auto flex flex-col items-center justify-center h-64 text-gray-500" data-testid="form-document-edit">
         <FileText className="h-12 w-12 mb-4" />
         <p className="text-lg font-medium">Document not found</p>
         <Button variant="outline" className="mt-4" onClick={() => router.push('/documents')}>
@@ -192,7 +192,7 @@ export default function DocumentEditPage() {
   }
 
   return (
-    <div className="space-y-6" data-testid="form-document-edit">
+    <div className="container mx-auto space-y-6" data-testid="form-document-edit">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">

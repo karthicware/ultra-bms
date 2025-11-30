@@ -173,7 +173,7 @@ export default function UnitDetailPage() {
     : 0;
 
   return (
-    <div className="space-y-6" data-testid="unit-detail-page">
+    <div className="container mx-auto space-y-6" data-testid="unit-detail-page">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-2">

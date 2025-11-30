@@ -147,7 +147,7 @@ export default function ExpensesPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6" data-testid="page-expenses">
+      <div className="container mx-auto space-y-6" data-testid="page-expenses">
         <div className="flex items-center justify-between">
           <Skeleton className="h-10 w-48" />
           <div className="flex gap-2">
@@ -174,7 +174,7 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="space-y-6" data-testid="page-expenses">
+    <div className="container mx-auto space-y-6" data-testid="page-expenses">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

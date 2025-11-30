@@ -197,7 +197,7 @@ export default function CreateAnnouncementPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>

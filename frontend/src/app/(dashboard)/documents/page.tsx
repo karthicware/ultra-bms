@@ -61,7 +61,7 @@ export default function DocumentsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6" data-testid="page-documents">
+      <div className="container mx-auto space-y-6" data-testid="page-documents">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-10 w-40" />
@@ -79,7 +79,7 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="space-y-6" data-testid="page-documents">
+    <div className="container mx-auto space-y-6" data-testid="page-documents">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">

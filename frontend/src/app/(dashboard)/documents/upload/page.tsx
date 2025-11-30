@@ -166,7 +166,7 @@ export default function DocumentUploadPage() {
   };
 
   return (
-    <div className="space-y-6" data-testid="page-document-upload">
+    <div className="container mx-auto space-y-6" data-testid="page-document-upload">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={handleBack}>

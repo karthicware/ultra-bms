@@ -58,7 +58,7 @@ export default function AssetsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6" data-testid="page-assets">
+      <div className="container mx-auto space-y-6" data-testid="page-assets">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-10 w-32" />
@@ -76,7 +76,7 @@ export default function AssetsPage() {
   }
 
   return (
-    <div className="space-y-6" data-testid="page-assets">
+    <div className="container mx-auto space-y-6" data-testid="page-assets">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">

@@ -127,7 +127,7 @@ export default function BankAccountsPage() {
   const accounts = bankAccounts || [];
 
   return (
-    <div className="space-y-6" data-testid="page-bank-accounts">
+    <div className="container mx-auto space-y-6" data-testid="page-bank-accounts">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

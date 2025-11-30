@@ -200,7 +200,7 @@ export default function VendorDetailPage({ params }: PageProps) {
   // Loading state
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="container mx-auto space-y-6">
         <Skeleton className="h-8 w-64 mb-6" />
         <Skeleton className="h-12 w-96 mb-8" />
         <div className="grid gap-6 md:grid-cols-2">
@@ -214,7 +214,7 @@ export default function VendorDetailPage({ params }: PageProps) {
   // Error state
   if (error || !vendor) {
     return (
-      <div className="space-y-6">
+      <div className="container mx-auto space-y-6">
         <div className="flex flex-col items-center justify-center py-12">
           <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
           <h2 className="text-xl font-semibold mb-2">Vendor Not Found</h2>
@@ -231,7 +231,7 @@ export default function VendorDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="space-y-6" data-testid="vendor-detail-page">      {/* Header */}
+    <div className="container mx-auto space-y-6" data-testid="vendor-detail-page">      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-3 mb-2">

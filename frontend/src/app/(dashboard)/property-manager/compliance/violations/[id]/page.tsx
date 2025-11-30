@@ -89,7 +89,7 @@ export default function ViolationDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="container mx-auto space-y-6">
         <Skeleton className="h-10 w-1/3" />
         <Skeleton className="h-64 w-full" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -102,7 +102,7 @@ export default function ViolationDetailPage() {
 
   if (!violation) {
     return (
-      <div className="space-y-6">
+      <div className="container mx-auto space-y-6">
         <div className="text-center py-12">
           <FileWarning className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-semibold mb-2">Violation not found</h3>
@@ -118,7 +118,7 @@ export default function ViolationDetailPage() {
   const fineStatusColorClass = getFineStatusColor(violation.fineStatus);
 
   return (
-    <div className="space-y-6" data-testid="violation-detail-page">      {/* Header */}
+    <div className="container mx-auto space-y-6" data-testid="violation-detail-page">      {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="flex items-center gap-3 mb-2">

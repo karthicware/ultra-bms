@@ -167,7 +167,7 @@ export default function DocumentDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="container mx-auto space-y-6">
         <Skeleton className="h-10 w-64" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
@@ -183,7 +183,7 @@ export default function DocumentDetailPage() {
 
   if (error || !document) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+      <div className="container mx-auto flex flex-col items-center justify-center h-64 text-gray-500">
         <FileText className="h-12 w-12 mb-4" />
         <p className="text-lg font-medium">Document not found</p>
         <Button variant="outline" className="mt-4" onClick={handleBack}>
@@ -197,7 +197,7 @@ export default function DocumentDetailPage() {
   const canPreview = canPreviewFileType(document.fileType);
 
   return (
-    <div className="space-y-6" data-testid="page-document-detail">
+    <div className="container mx-auto space-y-6" data-testid="page-document-detail">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">

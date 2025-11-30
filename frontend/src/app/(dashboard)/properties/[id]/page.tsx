@@ -170,7 +170,7 @@ export default function PropertyDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6" data-testid="property-detail-page">
+      <div className="container mx-auto space-y-6" data-testid="property-detail-page">
         <Skeleton className="h-10 w-1/3" />
         <Skeleton className="h-64 w-full" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -186,7 +186,7 @@ export default function PropertyDetailPage() {
 
   if (!property) {
     return (
-      <div className="text-center py-12">
+      <div className="container mx-auto text-center py-12">
         <Building2 className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
         <h3 className="text-lg font-semibold mb-2">Property not found</h3>
         <p className="text-muted-foreground mb-4">
@@ -205,7 +205,7 @@ export default function PropertyDetailPage() {
   const availableUnits = property.unitCounts?.available || (totalUnits - occupiedUnits);
 
   return (
-    <div className="space-y-6" data-testid="property-detail-page">
+    <div className="container mx-auto space-y-6" data-testid="property-detail-page">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-2">

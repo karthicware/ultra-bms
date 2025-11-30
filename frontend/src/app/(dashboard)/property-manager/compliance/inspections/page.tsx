@@ -150,7 +150,7 @@ export default function InspectionsPage() {
   };
 
   return (
-    <div className="space-y-6" data-testid="inspections-page">
+    <div className="container mx-auto space-y-6" data-testid="inspections-page">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

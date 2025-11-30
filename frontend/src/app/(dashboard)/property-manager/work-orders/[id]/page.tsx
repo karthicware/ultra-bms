@@ -501,7 +501,7 @@ export default function WorkOrderDetailPage() {
   const canCancel = workOrder.status === WorkOrderStatus.OPEN;
 
   return (
-    <div className="space-y-6" data-testid="work-order-detail-page">
+    <div className="container mx-auto space-y-6" data-testid="work-order-detail-page">
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>

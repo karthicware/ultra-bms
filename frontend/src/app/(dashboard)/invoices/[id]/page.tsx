@@ -169,7 +169,7 @@ export default function InvoiceDetailPage({ params }: PageProps) {
   // Loading state
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="container mx-auto space-y-6">
         <Skeleton className="h-8 w-64" />
         <div className="grid gap-4 md:grid-cols-2">
           <Skeleton className="h-48" />
@@ -182,7 +182,7 @@ export default function InvoiceDetailPage({ params }: PageProps) {
 
   if (!invoice) {
     return (
-      <div className="text-center py-12">
+      <div className="container mx-auto text-center py-12">
         <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
         <h3 className="mt-4 text-lg font-semibold">Invoice not found</h3>
         <Button onClick={() => router.push('/invoices')} className="mt-4">
@@ -193,7 +193,7 @@ export default function InvoiceDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

@@ -249,7 +249,7 @@ export default function AnnouncementsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6" data-testid="announcements-page">
+      <div className="container mx-auto space-y-6" data-testid="announcements-page">
         <div className="flex items-center justify-between">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-10 w-44" />
@@ -273,7 +273,7 @@ export default function AnnouncementsPage() {
   }
 
   return (
-    <div className="space-y-6" data-testid="announcements-page">
+    <div className="container mx-auto space-y-6" data-testid="announcements-page">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

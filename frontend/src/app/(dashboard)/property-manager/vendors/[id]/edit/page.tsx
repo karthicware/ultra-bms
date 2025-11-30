@@ -62,7 +62,7 @@ export default function EditVendorPage({ params }: PageProps) {
   // Loading state
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="container mx-auto space-y-6">
         <Skeleton className="h-8 w-64 mb-6" />
         <Skeleton className="h-12 w-96 mb-8" />
         <div className="space-y-6 max-w-4xl">
@@ -77,7 +77,7 @@ export default function EditVendorPage({ params }: PageProps) {
   // Error state
   if (error || !vendor) {
     return (
-      <div className="space-y-6">
+      <div className="container mx-auto space-y-6">
         <div className="flex flex-col items-center justify-center py-12">
           <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
           <h2 className="text-xl font-semibold mb-2">Vendor Not Found</h2>
@@ -94,7 +94,7 @@ export default function EditVendorPage({ params }: PageProps) {
   }
 
   return (
-    <div className="space-y-6" data-testid="edit-vendor-page">      {/* Header */}
+    <div className="container mx-auto space-y-6" data-testid="edit-vendor-page">      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight" data-testid="edit-vendor-title">
           Edit Vendor

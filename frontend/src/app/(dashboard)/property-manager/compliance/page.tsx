@@ -160,7 +160,7 @@ export default function CompliancePage() {
   };
 
   return (
-    <div className="space-y-6" data-testid="compliance-page">
+    <div className="container mx-auto space-y-6" data-testid="compliance-page">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

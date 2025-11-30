@@ -264,7 +264,7 @@ export default function EditExpensePage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="container mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Skeleton className="h-10 w-10" />
           <div>
@@ -286,7 +286,7 @@ export default function EditExpensePage() {
   }
 
   return (
-    <div className="space-y-6" data-testid="form-expense-edit">
+    <div className="container mx-auto space-y-6" data-testid="form-expense-edit">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.push(`/expenses/${expenseId}`)}>

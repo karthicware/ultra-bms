@@ -83,7 +83,7 @@ export default function TenantAnnouncementDetailPage() {
   // Loading skeleton
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="container mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Skeleton className="h-10 w-10" />
           <div>
@@ -108,7 +108,7 @@ export default function TenantAnnouncementDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
