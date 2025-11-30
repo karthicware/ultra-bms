@@ -10,6 +10,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowLeft, Building2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 import { useToast } from '@/hooks/use-toast';
 
@@ -51,14 +53,28 @@ export default function NewVendorPage() {
   };
 
   return (
-    <div className="container mx-auto space-y-6" data-testid="new-vendor-page">      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight" data-testid="new-vendor-title">
-          Register New Vendor
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Add a new service provider to your vendor network
-        </p>
+    <div className="container mx-auto space-y-6" data-testid="new-vendor-page">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.push('/property-manager/vendors')}
+          data-testid="btn-back"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <div className="flex items-center gap-3">
+            <Building2 className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold tracking-tight" data-testid="new-vendor-title">
+              Register New Vendor
+            </h1>
+          </div>
+          <p className="text-muted-foreground mt-2">
+            Add a new service provider to your vendor network
+          </p>
+        </div>
       </div>
 
       {/* Vendor Form */}

@@ -231,20 +231,32 @@ export default function VendorDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="container mx-auto space-y-6" data-testid="vendor-detail-page">      {/* Header */}
+    <div className="container mx-auto space-y-6" data-testid="vendor-detail-page">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold tracking-tight" data-testid="vendor-company-name">
-              {vendor.companyName}
-            </h1>
-            <Badge className={getVendorStatusColor(vendor.status)} data-testid="vendor-status-badge">
-              {vendor.status}
-            </Badge>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push('/property-manager/vendors')}
+            data-testid="btn-back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <Building2 className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold tracking-tight" data-testid="vendor-company-name">
+                {vendor.companyName}
+              </h1>
+              <Badge className={getVendorStatusColor(vendor.status)} data-testid="vendor-status-badge">
+                {vendor.status}
+              </Badge>
+            </div>
+            <p className="text-muted-foreground font-mono" data-testid="vendor-number">
+              {vendor.vendorNumber}
+            </p>
           </div>
-          <p className="text-muted-foreground font-mono" data-testid="vendor-number">
-            {vendor.vendorNumber}
-          </p>
         </div>
 
         <div className="flex gap-2">

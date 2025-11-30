@@ -9,7 +9,7 @@
 
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Building2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -94,14 +94,28 @@ export default function EditVendorPage({ params }: PageProps) {
   }
 
   return (
-    <div className="container mx-auto space-y-6" data-testid="edit-vendor-page">      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight" data-testid="edit-vendor-title">
-          Edit Vendor
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Update information for {vendor.companyName}
-        </p>
+    <div className="container mx-auto space-y-6" data-testid="edit-vendor-page">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.push(`/property-manager/vendors/${id}`)}
+          data-testid="btn-back"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <div className="flex items-center gap-3">
+            <Building2 className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold tracking-tight" data-testid="edit-vendor-title">
+              Edit Vendor
+            </h1>
+          </div>
+          <p className="text-muted-foreground mt-2">
+            Update information for {vendor.companyName}
+          </p>
+        </div>
       </div>
 
       {/* Vendor Form */}

@@ -297,31 +297,32 @@ export default function PMScheduleDetailPage() {
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
-        <div>
+        <div className="flex items-center gap-4">
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => router.push('/property-manager/pm-schedules')}
-            className="mb-2"
             data-testid="btn-back"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Schedules
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">{schedule.scheduleName}</h1>
-            {getStatusBadge(schedule.status)}
+          <div>
+            <div className="flex items-center gap-3">
+              <Calendar className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold tracking-tight">{schedule.scheduleName}</h1>
+              {getStatusBadge(schedule.status)}
+            </div>
+            <p className="text-muted-foreground mt-2">
+              {schedule.propertyName ? (
+                <span className="flex items-center gap-1">
+                  <Building2 className="h-4 w-4" />
+                  {schedule.propertyName}
+                </span>
+              ) : (
+                'All Properties'
+              )}
+            </p>
           </div>
-          <p className="text-muted-foreground mt-1">
-            {schedule.propertyName ? (
-              <span className="flex items-center gap-1">
-                <Building2 className="h-4 w-4" />
-                {schedule.propertyName}
-              </span>
-            ) : (
-              'All Properties'
-            )}
-          </p>
         </div>
 
         {/* Actions */}

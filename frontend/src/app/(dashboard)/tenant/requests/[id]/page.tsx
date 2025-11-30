@@ -18,7 +18,7 @@ import { use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Calendar, Clock, ArrowLeft, User } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft, User, Wrench } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -90,18 +90,22 @@ export default function RequestDetailsPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      {/* Back Button */}
-      <Button variant="ghost" className="mb-4" onClick={() => router.back()}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Requests
-      </Button>
-
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{request.title}</h1>
-            <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push('/tenant/requests')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-3">
+              <Wrench className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold tracking-tight">{request.title}</h1>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap mt-2">
               <span className="text-muted-foreground">Request #{request.requestNumber}</span>
               <StatusBadge status={request.status} />
               <Badge className={PRIORITY_COLORS[request.priority]}>{request.priority}</Badge>
@@ -110,12 +114,12 @@ export default function RequestDetailsPage({ params }: { params: Promise<{ id: s
               </Badge>
             </div>
           </div>
-
-          {/* Cancel Button (only if SUBMITTED) */}
-          {request.status === MaintenanceStatus.SUBMITTED && (
-            <CancelRequestButton requestId={request.id} requestNumber={request.requestNumber} />
-          )}
         </div>
+
+        {/* Cancel Button (only if SUBMITTED) */}
+        {request.status === MaintenanceStatus.SUBMITTED && (
+          <CancelRequestButton requestId={request.id} requestNumber={request.requestNumber} />
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
