@@ -156,6 +156,7 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
         toast({
           title: 'Success',
           description: `Created ${successCount} units successfully`,
+          variant: 'success',
         });
 
         setTimeout(() => {
@@ -171,7 +172,7 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
         toast({
           title: 'Partial Success',
           description: `Created ${successCount} of ${data.count} units`,
-          variant: 'default',
+          variant: 'warning',
         });
       }
     } catch (error: any) {

@@ -111,6 +111,7 @@ export default function QuotationsPage() {
       toast({
         title: 'Success',
         description: `Quotation ${quotationNumber} sent successfully`,
+        variant: 'success',
       });
       fetchQuotations();
     } catch (error: any) {
@@ -130,6 +131,7 @@ export default function QuotationsPage() {
       toast({
         title: 'Success',
         description: 'PDF downloaded successfully',
+        variant: 'success',
       });
     } catch (error) {
       toast({

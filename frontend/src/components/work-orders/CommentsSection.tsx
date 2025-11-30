@@ -56,6 +56,7 @@ export function CommentsSection({ workOrderId, comments, onCommentAdded }: Comme
       toast({
         title: 'Success',
         description: 'Comment added successfully',
+        variant: 'success',
       });
 
       form.reset();

@@ -118,6 +118,7 @@ export default function InvoiceDetailPage({ params }: PageProps) {
       toast({
         title: 'Success',
         description: 'Invoice sent successfully',
+        variant: 'success',
       });
       fetchInvoice();
     } catch (error) {
@@ -140,6 +141,7 @@ export default function InvoiceDetailPage({ params }: PageProps) {
       toast({
         title: 'Success',
         description: 'Invoice cancelled successfully',
+        variant: 'success',
       });
       fetchInvoice();
     } catch (error) {
@@ -160,6 +162,7 @@ export default function InvoiceDetailPage({ params }: PageProps) {
     toast({
       title: 'Success',
       description: 'Payment recorded successfully',
+      variant: 'success',
     });
   };
 

@@ -6,7 +6,7 @@
 import { useCallback } from 'react';
 import { toast as sonnerToast } from 'sonner';
 
-type ToastVariant = 'default' | 'destructive' | 'success';
+type ToastVariant = 'default' | 'destructive' | 'success' | 'warning' | 'info';
 
 interface ToastProps {
   title?: string;
@@ -29,6 +29,18 @@ export function useToast() {
         break;
       case 'success':
         sonnerToast.success(message, {
+          description: fullDescription,
+          duration,
+        });
+        break;
+      case 'warning':
+        sonnerToast.warning(message, {
+          description: fullDescription,
+          duration,
+        });
+        break;
+      case 'info':
+        sonnerToast.info(message, {
           description: fullDescription,
           duration,
         });

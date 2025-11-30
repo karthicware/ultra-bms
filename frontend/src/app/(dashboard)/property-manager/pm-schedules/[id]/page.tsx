@@ -151,6 +151,7 @@ export default function PMScheduleDetailPage() {
       toast({
         title: 'Success',
         description: `Schedule ${newStatus === PMScheduleStatus.ACTIVE ? 'resumed' : newStatus === PMScheduleStatus.PAUSED ? 'paused' : 'completed'} successfully`,
+        variant: 'success',
       });
       await fetchSchedule();
     } catch (error: unknown) {
@@ -174,6 +175,7 @@ export default function PMScheduleDetailPage() {
       toast({
         title: 'Success',
         description: `Work Order #${response.workOrderNumber} generated successfully`,
+        variant: 'success',
       });
       await fetchSchedule();
       await fetchHistory();
@@ -198,6 +200,7 @@ export default function PMScheduleDetailPage() {
       toast({
         title: 'Success',
         description: 'PM schedule deleted successfully',
+        variant: 'success',
       });
       router.push('/property-manager/pm-schedules');
     } catch (error: unknown) {

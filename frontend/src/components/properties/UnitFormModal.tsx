@@ -134,6 +134,7 @@ export function UnitFormModal({
         toast({
           title: 'Success',
           description: `Unit ${updatedUnit.unitNumber} updated successfully`,
+          variant: 'success',
         });
       } else {
         // Create new unit
@@ -142,6 +143,7 @@ export function UnitFormModal({
         toast({
           title: 'Success',
           description: `Unit ${newUnit.unitNumber} created successfully`,
+          variant: 'success',
         });
 
         form.reset();

@@ -245,6 +245,7 @@ export default function EditExpensePage() {
       toast({
         title: 'Success',
         description: 'Expense updated successfully',
+        variant: 'success',
       });
 
       router.push(`/expenses/${expenseId}`);

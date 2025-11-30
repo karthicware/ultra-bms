@@ -49,6 +49,7 @@ export function UnitDeleteDialog({
       toast({
         title: 'Success',
         description: `Unit ${unitNumber} has been archived successfully`,
+        variant: 'success',
       });
 
       onOpenChange(false);

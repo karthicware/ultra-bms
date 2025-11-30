@@ -55,7 +55,7 @@ public class TenantCheckoutController {
      * Get tenant checkout summary for initiation form
      */
     @GetMapping("/tenants/{tenantId}/checkout/summary")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Get tenant checkout summary", description = "Get tenant details for checkout initiation")
     public ResponseEntity<Map<String, Object>> getTenantCheckoutSummary(
             @PathVariable UUID tenantId) {
@@ -73,7 +73,7 @@ public class TenantCheckoutController {
      * Get tenant outstanding amounts
      */
     @GetMapping("/tenants/{tenantId}/outstanding")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Get tenant outstanding amounts", description = "Get breakdown of tenant outstanding invoices and fees")
     public ResponseEntity<Map<String, Object>> getTenantOutstanding(
             @PathVariable UUID tenantId) {
@@ -91,7 +91,7 @@ public class TenantCheckoutController {
      * Initiate checkout for tenant
      */
     @PostMapping("/tenants/{tenantId}/checkout/initiate")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Initiate checkout", description = "Start checkout process for tenant")
     public ResponseEntity<Map<String, Object>> initiateCheckout(
             @PathVariable UUID tenantId,
@@ -121,7 +121,7 @@ public class TenantCheckoutController {
      * Get paginated list of checkouts
      */
     @GetMapping("/checkouts")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "List checkouts", description = "Get paginated list of checkouts with filters")
     public ResponseEntity<Map<String, Object>> getCheckouts(
             @RequestParam(required = false) CheckoutStatus status,
@@ -145,7 +145,7 @@ public class TenantCheckoutController {
      * Get single checkout by ID
      */
     @GetMapping("/checkouts/{checkoutId}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Get checkout", description = "Get checkout details by ID")
     public ResponseEntity<Map<String, Object>> getCheckout(
             @PathVariable UUID checkoutId) {
@@ -163,7 +163,7 @@ public class TenantCheckoutController {
      * Get checkout by tenant ID
      */
     @GetMapping("/tenants/{tenantId}/checkout")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Get checkout by tenant", description = "Get active checkout for tenant")
     public ResponseEntity<Map<String, Object>> getCheckoutByTenant(
             @PathVariable UUID tenantId) {
@@ -192,7 +192,7 @@ public class TenantCheckoutController {
      * Save inspection data
      */
     @PutMapping("/tenants/{tenantId}/checkout/{checkoutId}/inspection")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Save inspection", description = "Save inspection data for checkout")
     public ResponseEntity<Map<String, Object>> saveInspection(
             @PathVariable UUID tenantId,
@@ -214,7 +214,7 @@ public class TenantCheckoutController {
      * Get inspection details
      */
     @GetMapping("/checkouts/{checkoutId}/inspection")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Get inspection", description = "Get inspection details for checkout")
     public ResponseEntity<Map<String, Object>> getInspection(
             @PathVariable UUID checkoutId) {
@@ -247,7 +247,7 @@ public class TenantCheckoutController {
      */
     @PostMapping(value = "/tenants/{tenantId}/checkout/{checkoutId}/inspection/photos",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Upload inspection photos", description = "Upload photos for inspection")
     public ResponseEntity<Map<String, Object>> uploadInspectionPhotos(
             @PathVariable UUID tenantId,
@@ -272,7 +272,7 @@ public class TenantCheckoutController {
      * Delete inspection photo
      */
     @DeleteMapping("/checkouts/{checkoutId}/inspection/photos/{photoId}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Delete inspection photo", description = "Delete a photo from inspection")
     public ResponseEntity<Map<String, Object>> deleteInspectionPhoto(
             @PathVariable UUID checkoutId,
@@ -296,7 +296,7 @@ public class TenantCheckoutController {
      * Save deposit calculation
      */
     @PutMapping("/tenants/{tenantId}/checkout/{checkoutId}/deposit")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Save deposit calculation", description = "Save deposit deductions and calculate refund")
     public ResponseEntity<Map<String, Object>> saveDepositCalculation(
             @PathVariable UUID tenantId,
@@ -319,7 +319,7 @@ public class TenantCheckoutController {
      * Get deposit refund details
      */
     @GetMapping("/checkouts/{checkoutId}/deposit")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Get deposit refund", description = "Get deposit refund details for checkout")
     public ResponseEntity<Map<String, Object>> getDepositRefund(
             @PathVariable UUID checkoutId) {
@@ -348,7 +348,7 @@ public class TenantCheckoutController {
      * Process deposit refund
      */
     @PostMapping("/checkouts/{checkoutId}/refund")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Process refund", description = "Process deposit refund payment")
     public ResponseEntity<Map<String, Object>> processRefund(
             @PathVariable UUID checkoutId,
@@ -369,7 +369,7 @@ public class TenantCheckoutController {
      * Approve refund (ADMIN only for amounts > threshold)
      */
     @PostMapping("/checkouts/{checkoutId}/refund/approve")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Approve refund", description = "Approve high-value refund (ADMIN only)")
     public ResponseEntity<Map<String, Object>> approveRefund(
             @PathVariable UUID checkoutId,
@@ -395,7 +395,7 @@ public class TenantCheckoutController {
      * Complete checkout
      */
     @PostMapping("/tenants/{tenantId}/checkout/{checkoutId}/complete")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Complete checkout", description = "Complete checkout process and finalize tenant departure")
     public ResponseEntity<Map<String, Object>> completeCheckout(
             @PathVariable UUID tenantId,
@@ -421,7 +421,7 @@ public class TenantCheckoutController {
      * Get checkout document (inspection report, deposit statement, final settlement)
      */
     @GetMapping("/checkouts/{checkoutId}/documents/{documentType}")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Get checkout document", description = "Get presigned URL for checkout document")
     public ResponseEntity<Map<String, Object>> getCheckoutDocument(
             @PathVariable UUID checkoutId,
@@ -440,7 +440,7 @@ public class TenantCheckoutController {
      * Get refund receipt
      */
     @GetMapping("/checkouts/{checkoutId}/receipt")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Get refund receipt", description = "Get presigned URL for refund receipt PDF")
     public ResponseEntity<Map<String, Object>> getRefundReceipt(
             @PathVariable UUID checkoutId) {
@@ -462,7 +462,7 @@ public class TenantCheckoutController {
      * Get checkout counts by status
      */
     @GetMapping("/checkouts/counts")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Get checkout counts", description = "Get count of checkouts by status")
     public ResponseEntity<Map<String, Object>> getCheckoutCounts() {
 
@@ -479,7 +479,7 @@ public class TenantCheckoutController {
      * Get pending refunds count
      */
     @GetMapping("/checkouts/refunds/pending/count")
-    @PreAuthorize("hasAnyRole('PROPERTY_MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
     @Operation(summary = "Get pending refunds count", description = "Get count of refunds pending processing")
     public ResponseEntity<Map<String, Object>> getPendingRefundsCount() {
 
@@ -496,7 +496,7 @@ public class TenantCheckoutController {
      * Get refunds requiring approval (ADMIN)
      */
     @GetMapping("/checkouts/refunds/pending-approval")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Get refunds pending approval", description = "Get list of refunds requiring admin approval")
     public ResponseEntity<Map<String, Object>> getRefundsRequiringApproval() {
 

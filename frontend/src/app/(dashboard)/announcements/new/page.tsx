@@ -173,7 +173,7 @@ export default function CreateAnnouncementPage() {
           toast({
             title: 'Warning',
             description: 'Announcement created but attachment upload failed. You can try again later.',
-            variant: 'default',
+            variant: 'warning',
           });
         }
       }
@@ -181,6 +181,7 @@ export default function CreateAnnouncementPage() {
       toast({
         title: 'Success',
         description: 'Announcement created as draft',
+        variant: 'success',
       });
 
       router.push(`/announcements/${announcement.id}`);

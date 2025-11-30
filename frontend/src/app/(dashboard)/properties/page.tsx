@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -37,12 +37,21 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
 import { getProperties } from '@/services/properties.service';
 import type { Property, PropertyType } from '@/types/properties';
 import { getPropertyManagers, type PropertyManager } from '@/services/users.service';
 import { PropertyDeleteDialog } from '@/components/properties/PropertyDeleteDialog';
-import { Plus, Search, Eye, Pencil, Trash2, Building2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Trash2, Building2, ArrowUpDown, ArrowUp, ArrowDown, Filter, X } from 'lucide-react';
 
 /**
  * Get occupancy badge color based on percentage
@@ -71,12 +80,13 @@ export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [pendingSearch, setPendingSearch] = useState('');
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>('all');
   const [managerFilter, setManagerFilter] = useState<string>('all');
   const [occupancyMin, setOccupancyMin] = useState<string>('');
   const [occupancyMax, setOccupancyMax] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [sortField, setSortField] = useState<string>('name');
@@ -172,6 +182,29 @@ export default function PropertiesPage() {
     setCurrentPage(0); // Reset to first page
   };
 
+  const handleSearch = () => {
+    setSearchTerm(pendingSearch);
+    setCurrentPage(0);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleClearFilters = () => {
+    setPendingSearch('');
+    setSearchTerm('');
+    setPropertyTypeFilter('all');
+    setManagerFilter('all');
+    setOccupancyMin('');
+    setOccupancyMax('');
+    setCurrentPage(0);
+  };
+
+  const hasActiveFilters = searchTerm || propertyTypeFilter !== 'all' || managerFilter !== 'all' || occupancyMin || occupancyMax;
+
   const handleSort = (field: string) => {
     if (sortField === field) {
       // Toggle direction if same field
@@ -215,27 +248,51 @@ export default function PropertiesPage() {
         </Button>
       </div>
 
-      {/* Filters and Search */}
+      {/* Search Bar */}
       <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Search */}
-            <div className="relative lg:col-span-1">
+        <CardContent className="py-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by name or address..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={pendingSearch}
+                onChange={(e) => setPendingSearch(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 className="pl-9"
                 data-testid="input-search-property"
               />
             </div>
+            <Button onClick={handleSearch} className="gap-2" data-testid="btn-search">
+              <Search className="h-4 w-4" />
+              Search
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Properties Table */}
+      <Card>
+        {/* Filters inside table card */}
+        <CardContent className="py-4 border-b">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Filters</span>
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="h-7 px-2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Clear
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {/* Property Type Filter */}
-            <Select value={propertyTypeFilter} onValueChange={setPropertyTypeFilter}>
+            <Select value={propertyTypeFilter} onValueChange={(val) => { setPropertyTypeFilter(val); setCurrentPage(0); }}>
               <SelectTrigger data-testid="select-filter-type">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
@@ -248,7 +305,7 @@ export default function PropertiesPage() {
             </Select>
 
             {/* Property Manager Filter */}
-            <Select value={managerFilter} onValueChange={setManagerFilter}>
+            <Select value={managerFilter} onValueChange={(val) => { setManagerFilter(val); setCurrentPage(0); }}>
               <SelectTrigger data-testid="select-filter-manager">
                 <SelectValue placeholder="All Managers" />
               </SelectTrigger>
@@ -268,7 +325,7 @@ export default function PropertiesPage() {
               type="number"
               placeholder="Min Occupancy %"
               value={occupancyMin}
-              onChange={(e) => setOccupancyMin(e.target.value)}
+              onChange={(e) => { setOccupancyMin(e.target.value); setCurrentPage(0); }}
               min="0"
               max="100"
               data-testid="input-occupancy-min"
@@ -279,7 +336,7 @@ export default function PropertiesPage() {
               type="number"
               placeholder="Max Occupancy %"
               value={occupancyMax}
-              onChange={(e) => setOccupancyMax(e.target.value)}
+              onChange={(e) => { setOccupancyMax(e.target.value); setCurrentPage(0); }}
               min="0"
               max="100"
               data-testid="input-occupancy-max"
@@ -297,16 +354,9 @@ export default function PropertiesPage() {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Results Count */}
-          <div className="text-sm text-muted-foreground">
-            Showing {properties.length} of {totalElements} properties
-          </div>
         </CardContent>
-      </Card>
 
-      {/* Properties Table */}
-      <Card>
+        {/* Table Content */}
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-6 space-y-3">
@@ -335,7 +385,7 @@ export default function PropertiesPage() {
           ) : (
             <div className="overflow-x-auto">
               <Table data-testid="table-properties">
-                <TableHeader>
+                <TableHeader className="bg-muted/50">
                   <TableRow>
                     <TableHead>
                       <Button
@@ -472,36 +522,103 @@ export default function PropertiesPage() {
             </div>
           )}
         </CardContent>
-      </Card>
 
-      {/* Pagination */}
-      {!isLoading && totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Page {currentPage + 1} of {totalPages}
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 0}
-              data-testid="btn-prev-page"
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages - 1}
-              data-testid="btn-next-page"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
+        {/* Pagination Footer */}
+        {!isLoading && (
+          <CardContent className="py-4 border-t">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Results Count - Bottom Left */}
+              <div className="text-sm text-muted-foreground">
+                Showing {properties.length} of {totalElements} properties
+              </div>
+
+              {/* Pagination Controls - Center */}
+              {totalPages > 1 && (
+                <Pagination className="mx-0 w-auto">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => currentPage > 0 && handlePageChange(currentPage - 1)}
+                        className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        data-testid="btn-prev-page"
+                      />
+                    </PaginationItem>
+
+                    {/* First page */}
+                    {currentPage > 2 && (
+                      <>
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => handlePageChange(0)}
+                            className="cursor-pointer"
+                          >
+                            1
+                          </PaginationLink>
+                        </PaginationItem>
+                        {currentPage > 3 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                      </>
+                    )}
+
+                    {/* Pages around current */}
+                    {Array.from({ length: totalPages }, (_, i) => i)
+                      .filter(page => {
+                        const distance = Math.abs(page - currentPage);
+                        return distance <= 2;
+                      })
+                      .map(page => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => handlePageChange(page)}
+                            isActive={page === currentPage}
+                            className="cursor-pointer"
+                          >
+                            {page + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+
+                    {/* Last page */}
+                    {currentPage < totalPages - 3 && (
+                      <>
+                        {currentPage < totalPages - 4 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => handlePageChange(totalPages - 1)}
+                            className="cursor-pointer"
+                          >
+                            {totalPages}
+                          </PaginationLink>
+                        </PaginationItem>
+                      </>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => currentPage < totalPages - 1 && handlePageChange(currentPage + 1)}
+                        className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        data-testid="btn-next-page"
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+
+              {/* Page Info - Bottom Right */}
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage + 1} of {totalPages || 1}
+              </div>
+            </div>
+          </CardContent>
+        )}
+      </Card>
 
       {/* Delete Confirmation Dialog */}
       {propertyToDelete && (

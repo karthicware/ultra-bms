@@ -217,6 +217,7 @@ export default function AnnouncementsPage() {
       toast({
         title: 'Success',
         description: 'Announcement published successfully. Emails have been sent to all tenants.',
+        variant: 'success',
       });
       fetchAnnouncements();
       fetchStats();
@@ -236,6 +237,7 @@ export default function AnnouncementsPage() {
       toast({
         title: 'Success',
         description: 'Announcement archived successfully',
+        variant: 'success',
       });
       fetchAnnouncements();
       fetchStats();
@@ -255,6 +257,7 @@ export default function AnnouncementsPage() {
       toast({
         title: 'Success',
         description: 'Announcement copied. You can now edit the draft.',
+        variant: 'success',
       });
       router.push(`/announcements/${copied.id}?edit=true`);
     } catch (error) {
@@ -280,6 +283,7 @@ export default function AnnouncementsPage() {
       toast({
         title: 'Success',
         description: 'Announcement deleted successfully',
+        variant: 'success',
       });
       fetchAnnouncements();
       fetchStats();

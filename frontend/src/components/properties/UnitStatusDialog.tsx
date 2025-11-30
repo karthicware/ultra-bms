@@ -119,6 +119,7 @@ export function UnitStatusDialog({
       toast({
         title: 'Success',
         description: `Unit ${unitNumber} status updated to ${getStatusDisplayName(newStatus)}`,
+        variant: 'success',
       });
 
       // Reset form

@@ -136,6 +136,7 @@ export default function CompanyProfilePage() {
       toast({
         title: 'Success',
         description: 'Company profile saved successfully.',
+        variant: 'success',
       });
     } catch (error) {
       console.error('Failed to save company profile:', error);
@@ -185,6 +186,7 @@ export default function CompanyProfilePage() {
       toast({
         title: 'Success',
         description: 'Logo uploaded successfully.',
+        variant: 'success',
       });
     } catch (error) {
       console.error('Failed to upload logo:', error);
@@ -212,6 +214,7 @@ export default function CompanyProfilePage() {
       toast({
         title: 'Success',
         description: 'Logo deleted successfully.',
+        variant: 'success',
       });
     } catch (error) {
       console.error('Failed to delete logo:', error);

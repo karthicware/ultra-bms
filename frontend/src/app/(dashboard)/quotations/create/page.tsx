@@ -129,6 +129,7 @@ function CreateQuotationForm() {
       toast({
         title: 'Success',
         description: `Quotation ${quotation.quotationNumber} created successfully`,
+        variant: 'success',
       });
 
       router.push(`/quotations/${quotation.id}`);

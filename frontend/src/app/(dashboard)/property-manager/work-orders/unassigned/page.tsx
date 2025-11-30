@@ -183,6 +183,7 @@ export default function UnassignedWorkOrdersPage() {
       toast({
         title: 'Success',
         description: `Work Order #${selectedWorkOrder.workOrderNumber} has been assigned successfully`,
+        variant: 'success',
       });
 
       // Refresh the list

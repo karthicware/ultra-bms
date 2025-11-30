@@ -122,6 +122,7 @@ export function BulkStatusUpdateDialog({
         toast({
           title: 'Success',
           description: `Updated ${successCount} units to ${getStatusDisplayName(newStatus)}`,
+          variant: 'success',
         });
 
         setTimeout(() => {
@@ -138,7 +139,7 @@ export function BulkStatusUpdateDialog({
         toast({
           title: 'Partial Success',
           description: `Updated ${successCount} of ${unitCount} units`,
-          variant: 'default',
+          variant: 'warning',
         });
       }
     } catch (error: any) {

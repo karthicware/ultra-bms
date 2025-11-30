@@ -164,6 +164,7 @@ export default function EditPropertyPage() {
       toast({
         title: 'Success',
         description: `Property "${property.name}" updated successfully`,
+        variant: 'success',
       });
 
       router.push(`/properties/${propertyId}`);

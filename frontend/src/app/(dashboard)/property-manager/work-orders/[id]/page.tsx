@@ -243,6 +243,7 @@ export default function WorkOrderDetailPage() {
       toast({
         title: 'Success',
         description: `Work Order #${workOrder?.workOrderNumber} has been cancelled`,
+        variant: 'success',
       });
       router.push('/property-manager/work-orders');
     } catch (error) {
@@ -266,6 +267,7 @@ export default function WorkOrderDetailPage() {
     toast({
       title: 'Use Action Buttons',
       description: 'Please use the action buttons (Assign, Start Work, Mark Complete) to update the work order status.',
+      variant: 'info',
     });
   };
 
@@ -292,6 +294,7 @@ export default function WorkOrderDetailPage() {
       toast({
         title: 'Success',
         description: `Work Order #${workOrder?.workOrderNumber} has been assigned successfully`,
+        variant: 'success',
       });
     } catch (error) {
       const axiosError = error as AxiosError<{ error?: { message?: string } }>;
@@ -329,6 +332,7 @@ export default function WorkOrderDetailPage() {
       toast({
         title: 'Success',
         description: `Work Order #${workOrder?.workOrderNumber} has been reassigned successfully`,
+        variant: 'success',
       });
     } catch (error) {
       const axiosError = error as AxiosError<{ error?: { message?: string } }>;
@@ -367,6 +371,7 @@ export default function WorkOrderDetailPage() {
       toast({
         title: 'Work Started',
         description: `Work has been started on ${workOrder?.workOrderNumber}`,
+        variant: 'success',
       });
     } catch (error) {
       const axiosError = error as AxiosError<{ error?: { message?: string } }>;
@@ -400,6 +405,7 @@ export default function WorkOrderDetailPage() {
       toast({
         title: 'Progress Updated',
         description: 'Progress update has been added successfully',
+        variant: 'success',
       });
     } catch (error) {
       const axiosError = error as AxiosError<{ error?: { message?: string } }>;
@@ -437,6 +443,7 @@ export default function WorkOrderDetailPage() {
       toast({
         title: 'Work Completed',
         description: `${workOrder?.workOrderNumber} has been marked as complete`,
+        variant: 'success',
       });
     } catch (error) {
       const axiosError = error as AxiosError<{ error?: { message?: string } }>;

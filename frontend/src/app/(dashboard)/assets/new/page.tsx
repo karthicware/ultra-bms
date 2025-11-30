@@ -104,6 +104,7 @@ export default function NewAssetPage() {
       toast({
         title: 'Success',
         description: 'Asset created successfully',
+        variant: 'success',
       });
       router.push('/assets');
     } catch (error: any) {

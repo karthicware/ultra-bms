@@ -225,6 +225,7 @@ export default function CreateWorkOrderPage() {
       toast({
         title: 'Success',
         description: `Work Order #${workOrder.workOrderNumber} created successfully`,
+        variant: 'success',
       });
 
       // Redirect after short delay

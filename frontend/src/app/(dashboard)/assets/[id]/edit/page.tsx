@@ -107,6 +107,7 @@ export default function EditAssetPage() {
       toast({
         title: 'Success',
         description: 'Asset updated successfully',
+        variant: 'success',
       });
       router.push(`/assets/${assetId}`);
     } catch {

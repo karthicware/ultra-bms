@@ -80,6 +80,7 @@ export default function CreateLeadPage() {
       toast({
         title: 'Success',
         description: `Lead ${lead.leadNumber} created successfully`,
+        variant: 'success',
       });
 
       router.push(`/leads/${lead.id}`);

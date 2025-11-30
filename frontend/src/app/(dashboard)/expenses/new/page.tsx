@@ -205,6 +205,7 @@ function CreateExpensePageContent() {
       toast({
         title: 'Success',
         description: `Expense ${expense.expenseNumber} created successfully`,
+        variant: 'success',
       });
 
       router.push(`/expenses/${expense.id}`);

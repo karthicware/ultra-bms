@@ -215,6 +215,7 @@ function CreateInvoicePageContent() {
       toast({
         title: 'Success',
         description: `Invoice ${invoice.invoiceNumber} created successfully`,
+        variant: 'success',
       });
 
       router.push(`/invoices/${invoice.id}`);

@@ -49,6 +49,7 @@ export function PropertyDeleteDialog({
       toast({
         title: 'Success',
         description: `Property "${propertyName}" has been archived successfully`,
+        variant: 'success',
       });
 
       onOpenChange(false);

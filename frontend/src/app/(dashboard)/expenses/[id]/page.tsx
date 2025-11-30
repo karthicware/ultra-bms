@@ -116,6 +116,7 @@ export default function ExpenseDetailPage() {
       toast({
         title: 'Success',
         description: 'Expense deleted successfully',
+        variant: 'success',
       });
       router.push('/expenses');
     } catch (error) {
@@ -155,6 +156,7 @@ export default function ExpenseDetailPage() {
     toast({
       title: 'Success',
       description: 'Expense marked as paid',
+      variant: 'success',
     });
   };
 

@@ -248,6 +248,7 @@ function AnnouncementDetailContent() {
       toast({
         title: 'Success',
         description: 'Attachment removed',
+        variant: 'success',
       });
     } catch (error) {
       console.error('Failed to delete attachment:', error);
@@ -298,6 +299,7 @@ function AnnouncementDetailContent() {
       toast({
         title: 'Success',
         description: 'Announcement updated',
+        variant: 'success',
       });
 
       setIsEditing(false);
@@ -324,6 +326,7 @@ function AnnouncementDetailContent() {
       toast({
         title: 'Published!',
         description: 'Announcement published. Emails have been sent to all tenants.',
+        variant: 'success',
       });
       fetchAnnouncement();
     } catch (error) {
@@ -348,6 +351,7 @@ function AnnouncementDetailContent() {
       toast({
         title: 'Success',
         description: 'Announcement archived',
+        variant: 'success',
       });
       fetchAnnouncement();
     } catch (error) {
@@ -371,6 +375,7 @@ function AnnouncementDetailContent() {
       toast({
         title: 'Success',
         description: 'Announcement copied. You can now edit the draft.',
+        variant: 'success',
       });
       router.push(`/announcements/${copied.id}?edit=true`);
     } catch (error) {
@@ -392,6 +397,7 @@ function AnnouncementDetailContent() {
       toast({
         title: 'Success',
         description: 'Announcement deleted',
+        variant: 'success',
       });
       router.push('/announcements');
     } catch (error) {

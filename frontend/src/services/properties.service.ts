@@ -93,8 +93,8 @@ export async function createProperty(data: CreatePropertyRequest): Promise<Prope
  * ```
  */
 export async function getProperties(params?: PropertySearchParams): Promise<PropertyListResponse> {
-  const response = await apiClient.get<PropertyListResponse>(PROPERTIES_BASE_PATH, { params });
-  return response.data;
+  const response = await apiClient.get<{ success: boolean; data: PropertyListResponse }>(PROPERTIES_BASE_PATH, { params });
+  return response.data.data ?? { content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 20 };
 }
 
 /**

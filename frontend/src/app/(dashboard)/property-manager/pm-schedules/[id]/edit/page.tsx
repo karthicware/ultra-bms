@@ -154,6 +154,7 @@ export default function EditPMSchedulePage({ params }: PageProps) {
       toast({
         title: 'Success',
         description: 'PM Schedule updated successfully',
+        variant: 'success',
       });
 
       // Redirect to detail page

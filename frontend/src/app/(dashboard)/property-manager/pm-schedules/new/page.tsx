@@ -121,6 +121,7 @@ export default function CreatePMSchedulePage() {
       toast({
         title: 'Success',
         description: `PM Schedule "${response.scheduleName}" created successfully`,
+        variant: 'success',
       });
 
       // Redirect to list page after short delay

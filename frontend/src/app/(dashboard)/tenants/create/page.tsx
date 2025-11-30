@@ -13,11 +13,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { differenceInMonths } from 'date-fns';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import {
+  Stepper,
+  StepperDescription,
+  StepperIndicator,
+  StepperItem,
+  StepperSeparator,
+  StepperTitle,
+  StepperTrigger,
+} from '@/components/ui/stepper';
 
 import { PersonalInfoStep } from '@/components/tenants/PersonalInfoStep';
 import { LeaseInfoStep } from '@/components/tenants/LeaseInfoStep';
@@ -62,13 +70,13 @@ interface TenantOnboardingFormData {
 }
 
 const WIZARD_STEPS = [
-  { id: 'step-1', label: 'Personal Info', value: '1' },
-  { id: 'step-2', label: 'Lease Info', value: '2' },
-  { id: 'step-3', label: 'Rent Breakdown', value: '3' },
-  { id: 'step-4', label: 'Parking', value: '4' },
-  { id: 'step-5', label: 'Payment', value: '5' },
-  { id: 'step-6', label: 'Documents', value: '6' },
-  { id: 'step-7', label: 'Review', value: '7' },
+  { step: 1, title: 'Personal Info', description: 'Basic tenant details' },
+  { step: 2, title: 'Lease Info', description: 'Property & lease terms' },
+  { step: 3, title: 'Rent', description: 'Payment breakdown' },
+  { step: 4, title: 'Parking', description: 'Parking allocation' },
+  { step: 5, title: 'Payment', description: 'Schedule setup' },
+  { step: 6, title: 'Documents', description: 'Upload files' },
+  { step: 7, title: 'Review', description: 'Final review' },
 ];
 
 function CreateTenantWizard() {
@@ -186,9 +194,6 @@ function CreateTenantWizard() {
 
     loadConversionData();
   }, [fromLead, fromQuotation]);
-
-  // Calculate progress percentage
-  const progressPercentage = (parseInt(currentStep) / WIZARD_STEPS.length) * 100;
 
   // Navigate to next step
   const goToNextStep = () => {
@@ -395,39 +400,44 @@ function CreateTenantWizard() {
         )}
       </div>
 
-      {/* Progress Indicator */}
+      {/* Stepper Navigation */}
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium">
-              Step {currentStep} of {WIZARD_STEPS.length}
-            </span>
-            <span className="text-sm text-muted-foreground">
-              {Math.round(progressPercentage)}% Complete
-            </span>
-          </div>
-          <Progress value={progressPercentage} className="h-2" />
+          <Stepper
+            value={parseInt(currentStep)}
+            onValueChange={(value) => {
+              // Only allow going to completed steps or current step
+              if (value <= parseInt(currentStep)) {
+                setCurrentStep(value.toString());
+              }
+            }}
+          >
+            {WIZARD_STEPS.map(({ step, title, description }) => (
+              <StepperItem
+                key={step}
+                step={step}
+                className="relative flex-1 !flex-col"
+              >
+                <StepperTrigger className="flex-col gap-2 rounded">
+                  <StepperIndicator className="size-8" />
+                  <div className="space-y-0.5 px-1 text-center">
+                    <StepperTitle className="text-xs sm:text-sm">{title}</StepperTitle>
+                    <StepperDescription className="hidden lg:block text-xs">
+                      {description}
+                    </StepperDescription>
+                  </div>
+                </StepperTrigger>
+                {step < WIZARD_STEPS.length && (
+                  <StepperSeparator className="absolute left-[calc(50%+1rem+0.125rem)] right-[calc(-50%+1rem+0.125rem)] top-4 -order-1 m-0 h-0.5 w-auto group-data-[orientation=horizontal]/stepper:block" />
+                )}
+              </StepperItem>
+            ))}
+          </Stepper>
         </CardContent>
       </Card>
 
-      {/* Wizard Tabs */}
-      <Tabs value={currentStep} onValueChange={setCurrentStep} className="w-full">
-        <TabsList className="grid grid-cols-7 w-full mb-6 h-auto">
-          {WIZARD_STEPS.map((step, index) => (
-            <TabsTrigger
-              key={step.id}
-              value={step.value}
-              className="flex flex-col items-center py-3"
-              disabled={parseInt(currentStep) < index + 1}
-              data-testid={`tab-${step.id}`}
-            >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-semibold mb-1">
-                {step.value}
-              </div>
-              <span className="text-xs hidden md:block">{step.label}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      {/* Wizard Content */}
+      <Tabs value={currentStep} className="w-full">
 
         {/* Step 1: Personal Information */}
         <TabsContent value="1">

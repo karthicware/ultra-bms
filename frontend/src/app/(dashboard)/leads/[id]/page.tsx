@@ -160,6 +160,7 @@ export default function LeadDetailPage() {
       toast({
         title: 'Success',
         description: 'Document uploaded successfully',
+        variant: 'success',
       });
       setIsUploadDialogOpen(false);
       setSelectedFile(null);
@@ -181,6 +182,7 @@ export default function LeadDetailPage() {
       toast({
         title: 'Success',
         description: 'Document deleted successfully',
+        variant: 'success',
       });
       fetchLeadData();
     } catch (error) {
@@ -210,6 +212,7 @@ export default function LeadDetailPage() {
       toast({
         title: 'Success',
         description: `Downloaded ${fileName}`,
+        variant: 'success',
       });
     } catch (error: any) {
       console.error('[PAGE] Download error:', error);
@@ -228,6 +231,7 @@ export default function LeadDetailPage() {
       toast({
         title: 'Success',
         description: response.message || 'Lead converted to tenant successfully',
+        variant: 'success',
       });
       // Redirect to tenant onboarding page (Story 3.2 - future)
       // For now, just refresh the lead data

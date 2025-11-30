@@ -175,14 +175,14 @@ export async function checkEmailAvailability(email: string): Promise<boolean> {
  * ```
  */
 export async function getProperties(): Promise<Property[]> {
-  const response = await apiClient.get<{ content: Property[] }>(PROPERTIES_BASE_PATH, {
+  const response = await apiClient.get<{ success: boolean; data: { content: Property[] } }>(PROPERTIES_BASE_PATH, {
     params: {
       page: 0,
       size: 1000, // Get all properties for dropdown
       status: 'ACTIVE',
     },
   });
-  return response.data.content;
+  return response.data.data?.content ?? [];
 }
 
 /**

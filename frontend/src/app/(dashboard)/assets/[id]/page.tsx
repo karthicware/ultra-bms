@@ -79,6 +79,7 @@ export default function AssetDetailPage() {
       toast({
         title: 'Success',
         description: 'Asset deleted successfully',
+        variant: 'success',
       });
       router.push('/assets');
     } catch {

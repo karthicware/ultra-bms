@@ -113,6 +113,7 @@ export default function UserProfilePage() {
       toast({
         title: 'Success',
         description: 'Profile updated successfully.',
+        variant: 'success',
       });
     } catch (error) {
       console.error('Failed to save profile:', error);
@@ -150,6 +151,7 @@ export default function UserProfilePage() {
       toast({
         title: 'Success',
         description: 'Avatar uploaded successfully.',
+        variant: 'success',
       });
     } catch (error) {
       console.error('Failed to upload avatar:', error);
@@ -177,6 +179,7 @@ export default function UserProfilePage() {
       toast({
         title: 'Success',
         description: 'Avatar removed successfully.',
+        variant: 'success',
       });
     } catch (error) {
       console.error('Failed to delete avatar:', error);
