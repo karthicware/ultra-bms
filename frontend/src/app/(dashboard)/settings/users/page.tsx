@@ -29,6 +29,15 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -60,7 +69,7 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
 
   // Dialog State
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -322,7 +331,7 @@ export default function UsersPage() {
       <Card>
         <CardContent className="p-0">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
@@ -399,45 +408,65 @@ export default function UsersPage() {
 
           {/* Pagination */}
           {!isLoading && users.length > 0 && (
-            <div className="flex items-center justify-between px-4 py-4 border-t">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-4 border-t">
               <div className="text-sm text-muted-foreground">
                 Showing {users.length} of {totalElements} users
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">Rows per page:</span>
-                  <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-                    <SelectTrigger className="w-[70px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 0}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm">
-                    Page {currentPage + 1} of {totalPages || 1}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage >= totalPages - 1}
-                  >
-                    Next
-                  </Button>
-                </div>
+
+              {totalPages > 1 && (
+                <Pagination className="mx-0 w-auto">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => currentPage > 0 && handlePageChange(currentPage - 1)}
+                        className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+
+                    {currentPage > 2 && (
+                      <>
+                        <PaginationItem>
+                          <PaginationLink onClick={() => handlePageChange(0)} className="cursor-pointer">1</PaginationLink>
+                        </PaginationItem>
+                        {currentPage > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                      </>
+                    )}
+
+                    {Array.from({ length: totalPages }, (_, i) => i)
+                      .filter(page => Math.abs(page - currentPage) <= 2)
+                      .map(page => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => handlePageChange(page)}
+                            isActive={page === currentPage}
+                            className="cursor-pointer"
+                          >
+                            {page + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+
+                    {currentPage < totalPages - 3 && (
+                      <>
+                        {currentPage < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                        <PaginationItem>
+                          <PaginationLink onClick={() => handlePageChange(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
+                        </PaginationItem>
+                      </>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => currentPage < totalPages - 1 && handlePageChange(currentPage + 1)}
+                        className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage + 1} of {totalPages || 1}
               </div>
             </div>
           )}

@@ -41,6 +41,15 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
 import {
   getQuotations,
@@ -69,7 +78,7 @@ export default function QuotationsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [sendingId, setSendingId] = useState<string | null>(null);
@@ -203,15 +212,11 @@ export default function QuotationsPage() {
         </CardContent>
       </Card>
 
-      <div className="text-sm text-muted-foreground">
-        Showing {quotations.length} of {totalElements} quotations
-      </div>
-
       {/* Table */}
       <Card>
         <CardContent className="p-0">
           <Table data-testid="table-quotations">
-            <TableHeader>
+            <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead>Quotation #</TableHead>
                 <TableHead>Lead Name</TableHead>
@@ -321,29 +326,74 @@ export default function QuotationsPage() {
             </TableBody>
           </Table>
         </CardContent>
-      </Card>
 
-      {totalPages > 1 && (
-        <div className="flex justify-between items-center">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-            disabled={currentPage === 0}
-          >
-            Previous
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {currentPage + 1} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={currentPage >= totalPages - 1}
-          >
-            Next
-          </Button>
-        </div>
-      )}
+        {/* Pagination Footer */}
+        {quotations.length > 0 && (
+          <CardContent className="py-4 border-t">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-muted-foreground">
+                Showing {quotations.length} of {totalElements} quotations
+              </div>
+
+              {totalPages > 1 && (
+                <Pagination className="mx-0 w-auto">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => currentPage > 0 && setCurrentPage(currentPage - 1)}
+                        className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+
+                    {currentPage > 2 && (
+                      <>
+                        <PaginationItem>
+                          <PaginationLink onClick={() => setCurrentPage(0)} className="cursor-pointer">1</PaginationLink>
+                        </PaginationItem>
+                        {currentPage > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                      </>
+                    )}
+
+                    {Array.from({ length: totalPages }, (_, i) => i)
+                      .filter(page => Math.abs(page - currentPage) <= 2)
+                      .map(page => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={page === currentPage}
+                            className="cursor-pointer"
+                          >
+                            {page + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+
+                    {currentPage < totalPages - 3 && (
+                      <>
+                        {currentPage < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                        <PaginationItem>
+                          <PaginationLink onClick={() => setCurrentPage(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
+                        </PaginationItem>
+                      </>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => currentPage < totalPages - 1 && setCurrentPage(currentPage + 1)}
+                        className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage + 1} of {totalPages || 1}
+              </div>
+            </div>
+          </CardContent>
+        )}
+      </Card>
     </div>
   );
 }

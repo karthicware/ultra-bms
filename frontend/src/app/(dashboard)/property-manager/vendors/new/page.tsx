@@ -11,14 +11,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { useToast } from '@/hooks/use-toast';
 
 import { VendorForm } from '@/components/vendors/VendorForm';
@@ -58,25 +50,7 @@ export default function NewVendorPage() {
   };
 
   return (
-    <div className="container mx-auto py-6" data-testid="new-vendor-page">
-      {/* Breadcrumb */}
-      <Breadcrumb className="mb-6">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/property-manager/dashboard">Dashboard</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/property-manager/vendors">Vendors</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Register New Vendor</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      {/* Header */}
+    <div className="space-y-6" data-testid="new-vendor-page">      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight" data-testid="new-vendor-title">
           Register New Vendor

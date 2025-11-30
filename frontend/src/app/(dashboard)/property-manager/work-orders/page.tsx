@@ -30,6 +30,15 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
 import { getWorkOrders } from '@/services/work-orders.service';
 import { getProperties } from '@/services/properties.service';
@@ -108,7 +117,7 @@ export default function WorkOrdersPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [propertyFilter, setPropertyFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [sortField, setSortField] = useState<string>('scheduledDate');
@@ -351,7 +360,7 @@ export default function WorkOrdersPage() {
             <>
               <div className="overflow-x-auto">
                 <Table data-testid="table-work-orders">
-                  <TableHeader>
+                  <TableHeader className="bg-muted/50">
                     <TableRow>
                       <TableHead>
                         <Button
@@ -469,33 +478,65 @@ export default function WorkOrdersPage() {
               </div>
 
               {/* Pagination */}
-              <div className="flex items-center justify-between border-t px-6 py-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t px-6 py-4">
                 <div className="text-sm text-muted-foreground">
-                  Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalElements)} of{' '}
-                  {totalElements} work orders
+                  Showing {workOrders.length} of {totalElements} work orders
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 0}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-                  <div className="text-sm">
-                    Page {currentPage + 1} of {totalPages}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage >= totalPages - 1}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+
+                {totalPages > 1 && (
+                  <Pagination className="mx-0 w-auto">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => currentPage > 0 && setCurrentPage(currentPage - 1)}
+                          className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+
+                      {currentPage > 2 && (
+                        <>
+                          <PaginationItem>
+                            <PaginationLink onClick={() => setCurrentPage(0)} className="cursor-pointer">1</PaginationLink>
+                          </PaginationItem>
+                          {currentPage > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                        </>
+                      )}
+
+                      {Array.from({ length: totalPages }, (_, i) => i)
+                        .filter(page => Math.abs(page - currentPage) <= 2)
+                        .map(page => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              onClick={() => setCurrentPage(page)}
+                              isActive={page === currentPage}
+                              className="cursor-pointer"
+                            >
+                              {page + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+
+                      {currentPage < totalPages - 3 && (
+                        <>
+                          {currentPage < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                          <PaginationItem>
+                            <PaginationLink onClick={() => setCurrentPage(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
+                          </PaginationItem>
+                        </>
+                      )}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => currentPage < totalPages - 1 && setCurrentPage(currentPage + 1)}
+                          className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                )}
+
+                <div className="text-sm text-muted-foreground">
+                  Page {currentPage + 1} of {totalPages || 1}
                 </div>
               </div>
             </>

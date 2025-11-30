@@ -43,6 +43,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  PaginationEllipsis,
 } from '@/components/ui/pagination';
 import { usePDCs } from '@/hooks/usePDCs';
 import { PDCStatusBadge } from '@/components/pdc/PDCStatusBadge';
@@ -76,7 +77,7 @@ function PDCListContent() {
     search: '',
     status: initialStatus || 'ALL',
     page: 0,
-    size: 20,
+    size: 10,
     sortBy: 'chequeDate',
     sortDirection: 'ASC',
   });
@@ -124,7 +125,7 @@ function PDCListContent() {
       search: '',
       status: 'ALL',
       page: 0,
-      size: 20,
+      size: 10,
       sortBy: 'chequeDate',
       sortDirection: 'ASC',
     });
@@ -236,7 +237,7 @@ function PDCListContent() {
           ) : (
             <>
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-muted/50">
                   <TableRow>
                     <TableHead
                       className="cursor-pointer hover:text-foreground"
@@ -354,50 +355,67 @@ function PDCListContent() {
               </Table>
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="border-t px-4 py-4">
-                  <Pagination>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t px-4 py-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {pdcs.length} of {totalElements} PDCs
+                </div>
+
+                {totalPages > 1 && (
+                  <Pagination className="mx-0 w-auto">
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious
-                          onClick={() => handlePageChange(Math.max(0, (filters.page || 0) - 1))}
-                          className={
-                            (filters.page || 0) === 0
-                              ? 'pointer-events-none opacity-50'
-                              : 'cursor-pointer'
-                          }
+                          onClick={() => (filters.page || 0) > 0 && handlePageChange((filters.page || 0) - 1)}
+                          className={(filters.page || 0) === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                         />
                       </PaginationItem>
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        const pageNum = i;
-                        return (
-                          <PaginationItem key={pageNum}>
+
+                      {(filters.page || 0) > 2 && (
+                        <>
+                          <PaginationItem>
+                            <PaginationLink onClick={() => handlePageChange(0)} className="cursor-pointer">1</PaginationLink>
+                          </PaginationItem>
+                          {(filters.page || 0) > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                        </>
+                      )}
+
+                      {Array.from({ length: totalPages }, (_, i) => i)
+                        .filter(page => Math.abs(page - (filters.page || 0)) <= 2)
+                        .map(page => (
+                          <PaginationItem key={page}>
                             <PaginationLink
-                              onClick={() => handlePageChange(pageNum)}
-                              isActive={(filters.page || 0) === pageNum}
+                              onClick={() => handlePageChange(page)}
+                              isActive={page === (filters.page || 0)}
                               className="cursor-pointer"
                             >
-                              {pageNum + 1}
+                              {page + 1}
                             </PaginationLink>
                           </PaginationItem>
-                        );
-                      })}
+                        ))}
+
+                      {(filters.page || 0) < totalPages - 3 && (
+                        <>
+                          {(filters.page || 0) < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                          <PaginationItem>
+                            <PaginationLink onClick={() => handlePageChange(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
+                          </PaginationItem>
+                        </>
+                      )}
+
                       <PaginationItem>
                         <PaginationNext
-                          onClick={() =>
-                            handlePageChange(Math.min(totalPages - 1, (filters.page || 0) + 1))
-                          }
-                          className={
-                            (filters.page || 0) >= totalPages - 1
-                              ? 'pointer-events-none opacity-50'
-                              : 'cursor-pointer'
-                          }
+                          onClick={() => (filters.page || 0) < totalPages - 1 && handlePageChange((filters.page || 0) + 1)}
+                          className={(filters.page || 0) >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                         />
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>
+                )}
+
+                <div className="text-sm text-muted-foreground">
+                  Page {(filters.page || 0) + 1} of {totalPages || 1}
                 </div>
-              )}
+              </div>
             </>
           )}
         </CardContent>

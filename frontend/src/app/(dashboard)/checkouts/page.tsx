@@ -44,6 +44,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -84,7 +93,7 @@ export default function CheckoutsPage() {
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(0);
-  const [pageSize] = useState(20);
+  const [pageSize] = useState(10);
 
   // Statistics
   const [stats, setStats] = useState({
@@ -330,7 +339,7 @@ export default function CheckoutsPage() {
             </div>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead>Checkout #</TableHead>
                   <TableHead>Tenant</TableHead>
@@ -416,32 +425,69 @@ export default function CheckoutsPage() {
             </Table>
           )}
 
-          {/* Pagination */}
-          {totalCount > pageSize && (
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-muted-foreground">
-                Showing {page * pageSize + 1} to {Math.min((page + 1) * pageSize, totalCount)} of{' '}
-                {totalCount}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 0}
-                  onClick={() => setPage(page - 1)}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={(page + 1) * pageSize >= totalCount}
-                  onClick={() => setPage(page + 1)}
-                >
-                  Next
-                </Button>
-              </div>
+          {/* Pagination Footer */}
+          {checkouts.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t">
+            <div className="text-sm text-muted-foreground">
+              Showing {checkouts.length} of {totalCount} checkouts
             </div>
+
+            {Math.ceil(totalCount / pageSize) > 1 && (
+              <Pagination className="mx-0 w-auto">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => page > 0 && setPage(page - 1)}
+                      className={page === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+
+                  {page > 2 && (
+                    <>
+                      <PaginationItem>
+                        <PaginationLink onClick={() => setPage(0)} className="cursor-pointer">1</PaginationLink>
+                      </PaginationItem>
+                      {page > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                    </>
+                  )}
+
+                  {Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => i)
+                    .filter(p => Math.abs(p - page) <= 2)
+                    .map(p => (
+                      <PaginationItem key={p}>
+                        <PaginationLink
+                          onClick={() => setPage(p)}
+                          isActive={p === page}
+                          className="cursor-pointer"
+                        >
+                          {p + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                  {page < Math.ceil(totalCount / pageSize) - 3 && (
+                    <>
+                      {page < Math.ceil(totalCount / pageSize) - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                      <PaginationItem>
+                        <PaginationLink onClick={() => setPage(Math.ceil(totalCount / pageSize) - 1)} className="cursor-pointer">{Math.ceil(totalCount / pageSize)}</PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => page < Math.ceil(totalCount / pageSize) - 1 && setPage(page + 1)}
+                      className={page >= Math.ceil(totalCount / pageSize) - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+
+            <div className="text-sm text-muted-foreground">
+              Page {page + 1} of {Math.ceil(totalCount / pageSize) || 1}
+            </div>
+          </div>
           )}
         </CardContent>
       </Card>

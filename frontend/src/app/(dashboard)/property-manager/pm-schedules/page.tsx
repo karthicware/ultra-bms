@@ -43,6 +43,15 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
 import { useToast } from '@/hooks/use-toast';
 import { getPMSchedules } from '@/services/pm-schedule.service';
 import {
@@ -65,7 +74,7 @@ function PMSchedulesContent() {
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     currentPage: 0,
-    pageSize: 20,
+    pageSize: 10,
     totalPages: 0,
     totalElements: 0,
   });
@@ -83,7 +92,7 @@ function PMSchedulesContent() {
 
       const filters: Parameters<typeof getPMSchedules>[0] = {
         page,
-        size: 20,
+        size: 10,
         sortBy: 'nextGenerationDate',
         sortDirection: 'ASC',
       };
@@ -286,7 +295,7 @@ function PMSchedulesContent() {
             </div>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead>Schedule Name</TableHead>
                   <TableHead>Property</TableHead>
@@ -337,43 +346,76 @@ function PMSchedulesContent() {
             </Table>
           )}
         </CardContent>
-      </Card>
 
-      {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {pagination.currentPage * pagination.pageSize + 1} to{' '}
-            {Math.min((pagination.currentPage + 1) * pagination.pageSize, pagination.totalElements)} of{' '}
-            {pagination.totalElements} schedules
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchSchedules(pagination.currentPage - 1)}
-              disabled={pagination.currentPage === 0}
-              data-testid="btn-prev-page"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            <span className="text-sm">
-              Page {pagination.currentPage + 1} of {pagination.totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchSchedules(pagination.currentPage + 1)}
-              disabled={pagination.currentPage >= pagination.totalPages - 1}
-              data-testid="btn-next-page"
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+        {/* Pagination Footer */}
+        {schedules.length > 0 && (
+        <CardContent className="py-4 border-t">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {schedules.length} of {pagination.totalElements} schedules
+            </div>
+
+            {pagination.totalPages > 1 && (
+              <Pagination className="mx-0 w-auto">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => pagination.currentPage > 0 && fetchSchedules(pagination.currentPage - 1)}
+                      className={pagination.currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      data-testid="btn-prev-page"
+                    />
+                  </PaginationItem>
+
+                  {pagination.currentPage > 2 && (
+                    <>
+                      <PaginationItem>
+                        <PaginationLink onClick={() => fetchSchedules(0)} className="cursor-pointer">1</PaginationLink>
+                      </PaginationItem>
+                      {pagination.currentPage > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                    </>
+                  )}
+
+                  {Array.from({ length: pagination.totalPages }, (_, i) => i)
+                    .filter(page => Math.abs(page - pagination.currentPage) <= 2)
+                    .map(page => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => fetchSchedules(page)}
+                          isActive={page === pagination.currentPage}
+                          className="cursor-pointer"
+                        >
+                          {page + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                  {pagination.currentPage < pagination.totalPages - 3 && (
+                    <>
+                      {pagination.currentPage < pagination.totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                      <PaginationItem>
+                        <PaginationLink onClick={() => fetchSchedules(pagination.totalPages - 1)} className="cursor-pointer">{pagination.totalPages}</PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => pagination.currentPage < pagination.totalPages - 1 && fetchSchedules(pagination.currentPage + 1)}
+                      className={pagination.currentPage >= pagination.totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      data-testid="btn-next-page"
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+
+            <div className="text-sm text-muted-foreground">
+              Page {pagination.currentPage + 1} of {pagination.totalPages || 1}
+            </div>
           </div>
-        </div>
-      )}
+        </CardContent>
+        )}
+      </Card>
     </div>
   );
 }

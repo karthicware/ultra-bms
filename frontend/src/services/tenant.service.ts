@@ -14,9 +14,9 @@ import type {
 } from '@/types';
 
 /**
- * Spring Page response structure for tenant list
+ * Spring Page structure
  */
-export interface TenantListResponse {
+export interface TenantPage {
   content: TenantResponse[];
   totalElements: number;
   totalPages: number;
@@ -25,6 +25,16 @@ export interface TenantListResponse {
   first: boolean;
   last: boolean;
   empty: boolean;
+}
+
+/**
+ * API response wrapper for tenant list
+ */
+export interface TenantListResponse {
+  success?: boolean;
+  message?: string;
+  data?: TenantPage;
+  timestamp?: string;
 }
 
 const TENANTS_BASE_PATH = '/v1/tenants';

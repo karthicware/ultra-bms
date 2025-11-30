@@ -31,6 +31,15 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
+import {
   Plus,
   Search,
   Eye,
@@ -73,7 +82,7 @@ export default function DocumentsPage() {
   const [accessLevelFilter, setAccessLevelFilter] = useState<string>('ALL');
   const [expiryStatusFilter, setExpiryStatusFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize] = useState(20);
+  const [pageSize] = useState(10);
 
   // Debounce search
   const debouncedSetSearch = useMemo(
@@ -263,7 +272,7 @@ export default function DocumentsPage() {
       <Card>
         <CardContent className="p-0">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead>Document #</TableHead>
                 <TableHead>Title</TableHead>
@@ -372,34 +381,74 @@ export default function DocumentsPage() {
             </TableBody>
           </Table>
         </CardContent>
-      </Card>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">
-            Showing {documents.length} of {totalElements} documents
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === 0}
-              onClick={() => setCurrentPage(currentPage - 1)}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage >= totalPages - 1}
-              onClick={() => setCurrentPage(currentPage + 1)}
-            >
-              Next
-            </Button>
+        {/* Pagination Footer */}
+        {documents.length > 0 && (
+        <CardContent className="py-4 border-t">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {documents.length} of {totalElements} documents
+            </div>
+
+            {totalPages > 1 && (
+              <Pagination className="mx-0 w-auto">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => currentPage > 0 && setCurrentPage(currentPage - 1)}
+                      className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+
+                  {currentPage > 2 && (
+                    <>
+                      <PaginationItem>
+                        <PaginationLink onClick={() => setCurrentPage(0)} className="cursor-pointer">1</PaginationLink>
+                      </PaginationItem>
+                      {currentPage > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                    </>
+                  )}
+
+                  {Array.from({ length: totalPages }, (_, i) => i)
+                    .filter(page => Math.abs(page - currentPage) <= 2)
+                    .map(page => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          isActive={page === currentPage}
+                          className="cursor-pointer"
+                        >
+                          {page + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                  {currentPage < totalPages - 3 && (
+                    <>
+                      {currentPage < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                      <PaginationItem>
+                        <PaginationLink onClick={() => setCurrentPage(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => currentPage < totalPages - 1 && setCurrentPage(currentPage + 1)}
+                      className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage + 1} of {totalPages || 1}
+            </div>
           </div>
-        </div>
-      )}
+        </CardContent>
+        )}
+      </Card>
     </div>
   );
 }

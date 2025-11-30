@@ -11,14 +11,6 @@ import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -69,7 +61,7 @@ export default function EditVendorPage({ params }: PageProps) {
   // Loading state
   if (isLoading) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="space-y-6">
         <Skeleton className="h-8 w-64 mb-6" />
         <Skeleton className="h-12 w-96 mb-8" />
         <div className="space-y-6 max-w-4xl">
@@ -84,7 +76,7 @@ export default function EditVendorPage({ params }: PageProps) {
   // Error state
   if (error || !vendor) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="space-y-6">
         <div className="flex flex-col items-center justify-center py-12">
           <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
           <h2 className="text-xl font-semibold mb-2">Vendor Not Found</h2>
@@ -101,31 +93,7 @@ export default function EditVendorPage({ params }: PageProps) {
   }
 
   return (
-    <div className="container mx-auto py-6" data-testid="edit-vendor-page">
-      {/* Breadcrumb */}
-      <Breadcrumb className="mb-6">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/property-manager/dashboard">Dashboard</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/property-manager/vendors">Vendors</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href={`/property-manager/vendors/${id}`}>
-              {vendor.companyName}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Edit</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      {/* Header */}
+    <div className="space-y-6" data-testid="edit-vendor-page">      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight" data-testid="edit-vendor-title">
           Edit Vendor

@@ -22,14 +22,6 @@ import {
   Calendar,
 } from 'lucide-react';
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -49,6 +41,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -107,7 +108,7 @@ export default function RequirementsPage() {
         category: selectedCategory !== 'all' ? (selectedCategory as ComplianceCategory) : undefined,
         status: selectedStatus !== 'all' ? (selectedStatus as RequirementStatus) : undefined,
         page,
-        size: 20,
+        size: 10,
       });
 
       setRequirements(response.data?.content || []);
@@ -193,24 +194,7 @@ export default function RequirementsPage() {
   };
 
   return (
-    <div className="container mx-auto py-6" data-testid="requirements-page">
-      {/* Breadcrumb */}
-      <Breadcrumb className="mb-6">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/property-manager/dashboard">Dashboard</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/property-manager/compliance">Compliance</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Requirements</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
+    <div className="space-y-6" data-testid="requirements-page">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -309,7 +293,7 @@ export default function RequirementsPage() {
           ) : (
             <>
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-muted/50">
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Category</TableHead>
@@ -389,31 +373,67 @@ export default function RequirementsPage() {
               </Table>
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-4 border-t">
-                  <p className="text-sm text-muted-foreground">
-                    Page {page + 1} of {totalPages}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage(Math.max(0, page - 1))}
-                      disabled={page === 0}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
-                      disabled={page >= totalPages - 1}
-                    >
-                      Next
-                    </Button>
-                  </div>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Showing {requirements.length} of {totalElements} requirements
                 </div>
-              )}
+
+                {totalPages > 1 && (
+                  <Pagination className="mx-0 w-auto">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => page > 0 && setPage(page - 1)}
+                          className={page === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+
+                      {page > 2 && (
+                        <>
+                          <PaginationItem>
+                            <PaginationLink onClick={() => setPage(0)} className="cursor-pointer">1</PaginationLink>
+                          </PaginationItem>
+                          {page > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                        </>
+                      )}
+
+                      {Array.from({ length: totalPages }, (_, i) => i)
+                        .filter(p => Math.abs(p - page) <= 2)
+                        .map(p => (
+                          <PaginationItem key={p}>
+                            <PaginationLink
+                              onClick={() => setPage(p)}
+                              isActive={p === page}
+                              className="cursor-pointer"
+                            >
+                              {p + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+
+                      {page < totalPages - 3 && (
+                        <>
+                          {page < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                          <PaginationItem>
+                            <PaginationLink onClick={() => setPage(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
+                          </PaginationItem>
+                        </>
+                      )}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => page < totalPages - 1 && setPage(page + 1)}
+                          className={page >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                )}
+
+                <div className="text-sm text-muted-foreground">
+                  Page {page + 1} of {totalPages || 1}
+                </div>
+              </div>
             </>
           )}
         </CardContent>

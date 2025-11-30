@@ -20,6 +20,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -79,7 +81,8 @@ public class ParkingSpot extends BaseEntity {
      */
     @NotNull(message = "Status is required")
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "status", nullable = false, columnDefinition = "parking_spot_status")
     @Builder.Default
     private ParkingSpotStatus status = ParkingSpotStatus.AVAILABLE;
 

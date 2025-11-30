@@ -1,20 +1,30 @@
 'use client';
 
-import { Sidebar } from '@/components/layout/Sidebar';
+import { AppSidebar } from '@/components/layout/AppSidebar';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import { SessionExpiryWarning } from '@/components/auth/session-expiry-warning';
-import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden">
-      <SessionExpiryWarning />
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto bg-gray-50">
-        <div className="container mx-auto p-6">
-          <Breadcrumbs />
-          {children}
+    <div className="bg-muted flex min-h-dvh w-full">
+      <SidebarProvider>
+        <SessionExpiryWarning />
+        <AppSidebar />
+        <div className="flex flex-1 flex-col">
+          <Header />
+          <main className="size-full flex-1 px-4 py-6 sm:px-6">
+            <Card className="min-h-[calc(100vh-11rem)]">
+              <CardContent className="h-full p-6">
+                {children}
+              </CardContent>
+            </Card>
+          </main>
+          <Footer />
         </div>
-      </main>
+      </SidebarProvider>
     </div>
   );
 }

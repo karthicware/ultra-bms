@@ -26,11 +26,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
 import { getAllTenants, searchTenants } from '@/services/tenant.service';
 import type { TenantResponse, TenantStatus } from '@/types/tenant';
-import { Plus, Search, Eye, Users, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Search, Eye, Users, ArrowUpDown, ArrowUp, ArrowDown, Filter, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 /**
@@ -58,8 +67,9 @@ export default function TenantsPage() {
   const [tenants, setTenants] = useState<TenantResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [pendingSearch, setPendingSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [sortField, setSortField] = useState<string>('createdAt');
@@ -74,9 +84,9 @@ export default function TenantsPage() {
         ? await searchTenants(searchTerm, currentPage, pageSize)
         : await getAllTenants(currentPage, pageSize, `${sortField},${sortDirection}`);
 
-      setTenants(response.content || []);
-      setTotalPages(response.totalPages || 0);
-      setTotalElements(response.totalElements || 0);
+      setTenants(response.data?.content || []);
+      setTotalPages(response.data?.totalPages || 0);
+      setTotalElements(response.data?.totalElements || 0);
     } catch (error) {
       console.error('Failed to fetch tenants:', error);
       setTenants([]);
@@ -112,6 +122,23 @@ export default function TenantsPage() {
   const handlePageSizeChange = (newSize: string) => {
     setPageSize(parseInt(newSize));
     setCurrentPage(0); // Reset to first page
+  };
+
+  const handleSearch = () => {
+    setSearchTerm(pendingSearch);
+    setCurrentPage(0);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleClearSearch = () => {
+    setPendingSearch('');
+    setSearchTerm('');
+    setCurrentPage(0);
   };
 
   const handleSort = (field: string) => {
@@ -164,25 +191,49 @@ export default function TenantsPage() {
         </Button>
       </div>
 
-      {/* Filters and Search */}
+      {/* Search Bar */}
       <Card>
-        <CardHeader>
-          <CardTitle>Search & Filter</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Search */}
-            <div className="relative md:col-span-2">
+        <CardContent className="py-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by name, email, or tenant number..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={pendingSearch}
+                onChange={(e) => setPendingSearch(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 className="pl-9"
                 data-testid="input-search-tenant"
               />
             </div>
+            <Button onClick={handleSearch} className="gap-2" data-testid="btn-search">
+              <Search className="h-4 w-4" />
+              Search
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Tenants Table */}
+      <Card>
+        {/* Filters inside table card */}
+        <CardContent className="py-4 border-b">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Filters</span>
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSearch}
+                className="h-7 px-2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Clear
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {/* Page Size Selector */}
             <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
               <SelectTrigger data-testid="select-page-size">
@@ -195,16 +246,9 @@ export default function TenantsPage() {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Results Count */}
-          <div className="text-sm text-muted-foreground">
-            Showing {tenants.length} of {totalElements} tenants
-          </div>
         </CardContent>
-      </Card>
 
-      {/* Tenants Table */}
-      <Card>
+        {/* Table Content */}
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-6 space-y-3">
@@ -233,7 +277,7 @@ export default function TenantsPage() {
           ) : (
             <div className="overflow-x-auto">
               <Table data-testid="table-tenants">
-                <TableHeader>
+                <TableHeader className="bg-muted/50">
                   <TableRow>
                     <TableHead>
                       <Button
@@ -327,36 +371,91 @@ export default function TenantsPage() {
             </div>
           )}
         </CardContent>
-      </Card>
 
-      {/* Pagination */}
-      {!isLoading && totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Page {currentPage + 1} of {totalPages}
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 0}
-              data-testid="btn-prev-page"
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages - 1}
-              data-testid="btn-next-page"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
+        {/* Pagination Footer */}
+        {!isLoading && tenants.length > 0 && (
+          <CardContent className="py-4 border-t">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Results Count - Bottom Left */}
+              <div className="text-sm text-muted-foreground">
+                Showing {tenants.length} of {totalElements} tenants
+              </div>
+
+              {/* Pagination Controls - Center */}
+              {totalPages > 1 && (
+                <Pagination className="mx-0 w-auto">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => currentPage > 0 && handlePageChange(currentPage - 1)}
+                        className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        data-testid="btn-prev-page"
+                      />
+                    </PaginationItem>
+
+                    {currentPage > 2 && (
+                      <>
+                        <PaginationItem>
+                          <PaginationLink onClick={() => handlePageChange(0)} className="cursor-pointer">
+                            1
+                          </PaginationLink>
+                        </PaginationItem>
+                        {currentPage > 3 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                      </>
+                    )}
+
+                    {Array.from({ length: totalPages }, (_, i) => i)
+                      .filter(page => Math.abs(page - currentPage) <= 2)
+                      .map(page => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => handlePageChange(page)}
+                            isActive={page === currentPage}
+                            className="cursor-pointer"
+                          >
+                            {page + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+
+                    {currentPage < totalPages - 3 && (
+                      <>
+                        {currentPage < totalPages - 4 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                        <PaginationItem>
+                          <PaginationLink onClick={() => handlePageChange(totalPages - 1)} className="cursor-pointer">
+                            {totalPages}
+                          </PaginationLink>
+                        </PaginationItem>
+                      </>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => currentPage < totalPages - 1 && handlePageChange(currentPage + 1)}
+                        className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        data-testid="btn-next-page"
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+
+              {/* Page Info - Bottom Right */}
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage + 1} of {totalPages || 1}
+              </div>
+            </div>
+          </CardContent>
+        )}
+      </Card>
     </div>
   );
 }
