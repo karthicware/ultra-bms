@@ -188,7 +188,7 @@ export default function InvoicesPage() {
       <SummaryCards />
 
       {/* Datatable */}
-      <Card>
+      <Card className="py-0">
         <InvoicesDatatable data={invoices} />
       </Card>
     </div>

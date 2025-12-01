@@ -5,7 +5,10 @@ import java.net.URI;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -30,10 +33,17 @@ public class S3Config {
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
 
+    @Value("${aws.s3.access-key:}")
+    private String accessKey;
+
+    @Value("${aws.s3.secret-key:}")
+    private String secretKey;
+
     /**
      * Creates and configures S3 client bean.
      *
-     * Uses DefaultCredentialsProvider which checks:
+     * Uses StaticCredentialsProvider if access-key and secret-key are provided,
+     * otherwise falls back to DefaultCredentialsProvider which checks:
      * 1. Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
      * 2. System properties (aws.accessKeyId, aws.secretKey)
      * 3. AWS credentials file (~/.aws/credentials)
@@ -48,7 +58,7 @@ public class S3Config {
     public S3Client s3Client() {
         var builder = S3Client.builder()
                 .region(Region.of(region))
-                .credentialsProvider(DefaultCredentialsProvider.create());
+                .credentialsProvider(getCredentialsProvider());
 
         // Apply endpoint override for LocalStack (dev environment)
         if (endpoint != null && !endpoint.isEmpty()) {
@@ -56,6 +66,13 @@ public class S3Config {
         }
 
         return builder.build();
+    }
+
+    private AwsCredentialsProvider getCredentialsProvider() {
+        if (accessKey != null && !accessKey.isEmpty() && secretKey != null && !secretKey.isEmpty()) {
+            return StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey));
+        }
+        return DefaultCredentialsProvider.create();
     }
 
     /**
@@ -71,7 +88,8 @@ public class S3Config {
     @Bean
     public S3Presigner s3Presigner() {
         var builder = S3Presigner.builder()
-                .region(Region.of(region));
+                .region(Region.of(region))
+                .credentialsProvider(getCredentialsProvider());
 
         // Apply endpoint override for LocalStack (dev environment)
         if (endpoint != null && !endpoint.isEmpty()) {

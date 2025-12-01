@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Pagination,
@@ -47,11 +47,12 @@ import {
 import { getAdminUsers, getRoles, deactivateAdminUser, reactivateAdminUser } from '@/services/admin-users.service';
 import type { AdminUser, Role, UserStatus } from '@/types/admin-users';
 import { USER_STATUS_STYLES, ROLE_DISPLAY_NAMES } from '@/types/admin-users';
-import { Plus, Search, Users, MoreHorizontal, Pencil, UserX, UserCheck, RefreshCw } from 'lucide-react';
+import { Plus, Search, Users, MoreHorizontal, Pencil, UserX, UserCheck, RefreshCw, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import CreateUserDialog from './create-user-dialog';
 import EditUserDialog from './edit-user-dialog';
+import ViewUserDialog from './view-user-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export default function UsersPage() {
@@ -74,6 +75,7 @@ export default function UsersPage() {
   // Dialog State
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
@@ -147,6 +149,11 @@ export default function UsersPage() {
   // Handlers
   const handleCreateUser = () => {
     setCreateDialogOpen(true);
+  };
+
+  const handleViewUser = (user: AdminUser) => {
+    setSelectedUser(user);
+    setViewDialogOpen(true);
   };
 
   const handleEditUser = (user: AdminUser) => {
@@ -275,63 +282,64 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            {/* Search */}
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+      {/* Unified Datatable Card */}
+      <Card className="py-0">
+        {/* Filters Section */}
+        {users.length > 0 && (
+          <div className="border-b">
+            <div className="flex flex-col gap-4 p-6">
+              <span className="text-xl font-semibold">Filter</span>
+            <div className="flex flex-wrap gap-4">
+              {/* Search */}
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* Role Filter */}
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Roles" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  {roles.map((role) => (
+                    <SelectItem key={role.id} value={role.name}>
+                      {getRoleDisplayName(role.name)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Status Filter */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="INACTIVE">Inactive</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Refresh */}
+              <Button variant="outline" onClick={fetchUsers}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
             </div>
-
-            {/* Role Filter */}
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Roles" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                {roles.map((role) => (
-                  <SelectItem key={role.id} value={role.name}>
-                    {getRoleDisplayName(role.name)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Status Filter */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="INACTIVE">Inactive</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Refresh */}
-            <Button variant="outline" onClick={fetchUsers}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        )}
 
-      {/* Users Table */}
-      <Card>
-        <CardContent className="p-0">
+        {/* Table Section */}
+        <div className="border-b">
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
@@ -380,6 +388,10 @@ export default function UsersPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewUser(user)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEditUser(user)}>
                             <Pencil className="h-4 w-4 mr-2" />
                             Edit
@@ -407,72 +419,68 @@ export default function UsersPage() {
               )}
             </TableBody>
           </Table>
+        </div>
 
-          {/* Pagination */}
-          {!isLoading && users.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-4 border-t">
-              <div className="text-sm text-muted-foreground">
-                Showing {users.length} of {totalElements} users
-              </div>
+        {/* Pagination Section */}
+        {!isLoading && users.length > 0 && (
+          <div className="flex items-center justify-between gap-3 px-6 py-4 max-sm:flex-col md:max-lg:flex-col">
+            <p className="text-muted-foreground text-sm whitespace-nowrap" aria-live="polite">
+              Showing {users.length} of {totalElements} users
+            </p>
 
-              {totalPages > 1 && (
-                <Pagination className="mx-0 w-auto">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => currentPage > 0 && handlePageChange(currentPage - 1)}
-                        className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                      />
-                    </PaginationItem>
+            {totalPages > 1 && (
+              <Pagination className="mx-0 w-auto">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => currentPage > 0 && handlePageChange(currentPage - 1)}
+                      className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
 
-                    {currentPage > 2 && (
-                      <>
-                        <PaginationItem>
-                          <PaginationLink onClick={() => handlePageChange(0)} className="cursor-pointer">1</PaginationLink>
-                        </PaginationItem>
-                        {currentPage > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
-                      </>
-                    )}
+                  {currentPage > 2 && (
+                    <>
+                      <PaginationItem>
+                        <PaginationLink onClick={() => handlePageChange(0)} className="cursor-pointer">1</PaginationLink>
+                      </PaginationItem>
+                      {currentPage > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                    </>
+                  )}
 
-                    {Array.from({ length: totalPages }, (_, i) => i)
-                      .filter(page => Math.abs(page - currentPage) <= 2)
-                      .map(page => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => handlePageChange(page)}
-                            isActive={page === currentPage}
-                            className="cursor-pointer"
-                          >
-                            {page + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
+                  {Array.from({ length: totalPages }, (_, i) => i)
+                    .filter(page => Math.abs(page - currentPage) <= 2)
+                    .map(page => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(page)}
+                          isActive={page === currentPage}
+                          className="cursor-pointer"
+                        >
+                          {page + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
 
-                    {currentPage < totalPages - 3 && (
-                      <>
-                        {currentPage < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
-                        <PaginationItem>
-                          <PaginationLink onClick={() => handlePageChange(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
-                        </PaginationItem>
-                      </>
-                    )}
+                  {currentPage < totalPages - 3 && (
+                    <>
+                      {currentPage < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                      <PaginationItem>
+                        <PaginationLink onClick={() => handlePageChange(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
 
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => currentPage < totalPages - 1 && handlePageChange(currentPage + 1)}
-                        className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              )}
-
-              <div className="text-sm text-muted-foreground">
-                Page {currentPage + 1} of {totalPages || 1}
-              </div>
-            </div>
-          )}
-        </CardContent>
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => currentPage < totalPages - 1 && handlePageChange(currentPage + 1)}
+                      className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </div>
+        )}
       </Card>
 
       {/* Create User Dialog */}
@@ -481,6 +489,13 @@ export default function UsersPage() {
         onOpenChange={setCreateDialogOpen}
         roles={roles}
         onSuccess={handleUserCreated}
+      />
+
+      {/* View User Dialog */}
+      <ViewUserDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        user={selectedUser}
       />
 
       {/* Edit User Dialog */}

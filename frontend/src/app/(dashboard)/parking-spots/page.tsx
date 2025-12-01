@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -149,10 +149,10 @@ export default function ParkingSpotListPage() {
 
   // Clear selection when filters change
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    /* eslint-disable react-hooks/set-state-in-effect */
     setSelectedIds(new Set());
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsAllSelected(false);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [propertyFilter, statusFilter, searchTerm, currentPage]);
 
   // Cleanup debounce
@@ -322,90 +322,6 @@ export default function ParkingSpotListPage() {
         </div>
       )}
 
-      {/* Filters and Search */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="relative lg:col-span-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by spot number or tenant..."
-                defaultValue={searchTerm}
-                onChange={(e) => debouncedSearch(e.target.value)}
-                className="pl-9"
-                data-testid="input-search-parking-spot"
-              />
-            </div>
-
-            {/* Property Filter */}
-            <Select value={propertyFilter} onValueChange={(value) => {
-              setPropertyFilter(value);
-              setCurrentPage(0);
-            }}>
-              <SelectTrigger data-testid="select-filter-property">
-                <SelectValue placeholder="All Properties" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Properties</SelectItem>
-                {properties.map((property) => (
-                  <SelectItem key={property.id} value={property.id}>
-                    {property.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Status Filter */}
-            <Select value={statusFilter} onValueChange={(value) => {
-              setStatusFilter(value);
-              setCurrentPage(0);
-            }}>
-              <SelectTrigger data-testid="select-filter-status">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="AVAILABLE">Available</SelectItem>
-                <SelectItem value="ASSIGNED">Assigned</SelectItem>
-                <SelectItem value="UNDER_MAINTENANCE">Under Maintenance</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Page Size Selector */}
-            <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-              <SelectTrigger data-testid="select-page-size">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10 per page</SelectItem>
-                <SelectItem value="20">20 per page</SelectItem>
-                <SelectItem value="50">50 per page</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Results Count */}
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Showing {parkingSpots.length} of {totalElements} parking spots
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refetchSpots()}
-              className="gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Bulk Actions Bar */}
       {selectedIds.size > 0 && (
         <BulkActionsBar
@@ -419,9 +335,78 @@ export default function ParkingSpotListPage() {
         />
       )}
 
-      {/* Parking Spots Table */}
-      <Card>
-        <CardContent className="p-0">
+      {/* Unified Datatable Card */}
+      <Card className="py-0">
+        {/* Filters Section */}
+        {parkingSpots.length > 0 && (
+          <div className="border-b">
+            <div className="flex flex-col gap-4 p-6">
+              <span className="text-xl font-semibold">Filter</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Search */}
+              <div className="relative lg:col-span-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by spot number or tenant..."
+                  defaultValue={searchTerm}
+                  onChange={(e) => debouncedSearch(e.target.value)}
+                  className="pl-9"
+                  data-testid="input-search-parking-spot"
+                />
+              </div>
+
+              {/* Property Filter */}
+              <Select value={propertyFilter} onValueChange={(value) => {
+                setPropertyFilter(value);
+                setCurrentPage(0);
+              }}>
+                <SelectTrigger data-testid="select-filter-property">
+                  <SelectValue placeholder="All Properties" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Properties</SelectItem>
+                  {properties.map((property) => (
+                    <SelectItem key={property.id} value={property.id}>
+                      {property.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Status Filter */}
+              <Select value={statusFilter} onValueChange={(value) => {
+                setStatusFilter(value);
+                setCurrentPage(0);
+              }}>
+                <SelectTrigger data-testid="select-filter-status">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="AVAILABLE">Available</SelectItem>
+                  <SelectItem value="ASSIGNED">Assigned</SelectItem>
+                  <SelectItem value="UNDER_MAINTENANCE">Under Maintenance</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Page Size Selector */}
+              <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+                <SelectTrigger data-testid="select-page-size">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 per page</SelectItem>
+                  <SelectItem value="20">20 per page</SelectItem>
+                  <SelectItem value="50">50 per page</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+        )}
+
+        {/* Table Section */}
+        <div className="border-b">
           {isLoading ? (
             <div className="p-6 space-y-3">
               <Skeleton className="h-10 w-full" />
@@ -578,79 +563,71 @@ export default function ParkingSpotListPage() {
               </Table>
             </div>
           )}
-        </CardContent>
+        </div>
+
+        {/* Pagination Section */}
+        {!isLoading && parkingSpots.length > 0 && (
+          <div className="flex items-center justify-between gap-3 px-6 py-4 max-sm:flex-col md:max-lg:flex-col">
+            <p className="text-muted-foreground text-sm whitespace-nowrap" aria-live="polite">
+              Showing {parkingSpots.length} of {totalElements} parking spots
+            </p>
+
+            {totalPages > 1 && (
+              <Pagination className="mx-0 w-auto">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => currentPage > 0 && handlePageChange(currentPage - 1)}
+                      className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      data-testid="btn-prev-page"
+                    />
+                  </PaginationItem>
+
+                  {currentPage > 2 && (
+                    <>
+                      <PaginationItem>
+                        <PaginationLink onClick={() => handlePageChange(0)} className="cursor-pointer">1</PaginationLink>
+                      </PaginationItem>
+                      {currentPage > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                    </>
+                  )}
+
+                  {Array.from({ length: totalPages }, (_, i) => i)
+                    .filter(page => Math.abs(page - currentPage) <= 2)
+                    .map(page => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(page)}
+                          isActive={page === currentPage}
+                          className="cursor-pointer"
+                        >
+                          {page + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                  {currentPage < totalPages - 3 && (
+                    <>
+                      {currentPage < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                      <PaginationItem>
+                        <PaginationLink onClick={() => handlePageChange(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => currentPage < totalPages - 1 && handlePageChange(currentPage + 1)}
+                      className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      data-testid="btn-next-page"
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </div>
+        )}
       </Card>
-
-      {/* Pagination */}
-      {!isLoading && parkingSpots.length > 0 && (
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {parkingSpots.length} of {totalElements} parking spots
-              </div>
-
-              {totalPages > 1 && (
-                <Pagination className="mx-0 w-auto">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => currentPage > 0 && handlePageChange(currentPage - 1)}
-                        className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                        data-testid="btn-prev-page"
-                      />
-                    </PaginationItem>
-
-                    {currentPage > 2 && (
-                      <>
-                        <PaginationItem>
-                          <PaginationLink onClick={() => handlePageChange(0)} className="cursor-pointer">1</PaginationLink>
-                        </PaginationItem>
-                        {currentPage > 3 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
-                      </>
-                    )}
-
-                    {Array.from({ length: totalPages }, (_, i) => i)
-                      .filter(page => Math.abs(page - currentPage) <= 2)
-                      .map(page => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => handlePageChange(page)}
-                            isActive={page === currentPage}
-                            className="cursor-pointer"
-                          >
-                            {page + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-
-                    {currentPage < totalPages - 3 && (
-                      <>
-                        {currentPage < totalPages - 4 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
-                        <PaginationItem>
-                          <PaginationLink onClick={() => handlePageChange(totalPages - 1)} className="cursor-pointer">{totalPages}</PaginationLink>
-                        </PaginationItem>
-                      </>
-                    )}
-
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => currentPage < totalPages - 1 && handlePageChange(currentPage + 1)}
-                        className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                        data-testid="btn-next-page"
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              )}
-
-              <div className="text-sm text-muted-foreground">
-                Page {currentPage + 1} of {totalPages || 1}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Create/Edit Modal */}
       <ParkingSpotFormModal

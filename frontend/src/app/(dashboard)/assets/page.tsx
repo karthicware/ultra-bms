@@ -103,7 +103,7 @@ export default function AssetsPage() {
       </div>
 
       {/* Datatable */}
-      <Card>
+      <Card className="py-0">
         <AssetsDatatable data={assets} />
       </Card>
     </div>

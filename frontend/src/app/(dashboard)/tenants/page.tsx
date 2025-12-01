@@ -88,7 +88,7 @@ export default function TenantsPage() {
       </div>
 
       {/* Datatable */}
-      <Card>
+      <Card className="py-0">
         <TenantsDatatable data={tenants} />
       </Card>
     </div>

@@ -93,7 +93,7 @@ export default function WorkOrdersPage() {
       </div>
 
       {/* Datatable */}
-      <Card>
+      <Card className="py-0">
         <WorkOrdersDatatable data={workOrders} />
       </Card>
     </div>

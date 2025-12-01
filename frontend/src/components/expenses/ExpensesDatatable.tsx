@@ -234,11 +234,12 @@ const ExpensesDatatable = ({
   return (
     <div className="w-full">
       <div className="border-b">
-        <div className="flex flex-col gap-4 p-6">
-          <span className="text-xl font-semibold">Filter</span>
-          <div className="grid grid-cols-1 gap-6 max-md:last:col-span-full sm:grid-cols-2 md:grid-cols-4">
-            <Filter column={table.getColumn('category')!} label="Category" formatFn={(v) => EXPENSE_CATEGORY_LABELS[v as ExpenseCategory] || v} />
-            <Filter column={table.getColumn('paymentStatus')!} label="Status" formatFn={(v) => PAYMENT_STATUS_LABELS[v as PaymentStatus] || v} />
+        {data.length > 0 && (
+          <div className="flex flex-col gap-4 p-6">
+            <span className="text-xl font-semibold">Filter</span>
+            <div className="grid grid-cols-1 gap-6 max-md:last:col-span-full sm:grid-cols-2 md:grid-cols-4">
+              <Filter column={table.getColumn('category')!} label="Category" formatFn={(v) => EXPENSE_CATEGORY_LABELS[v as ExpenseCategory] || v} />
+              <Filter column={table.getColumn('paymentStatus')!} label="Status" formatFn={(v) => PAYMENT_STATUS_LABELS[v as PaymentStatus] || v} />
             <div className="w-full space-y-2">
               <Label>Page Size</Label>
               <Select
@@ -260,6 +261,7 @@ const ExpensesDatatable = ({
             </div>
           </div>
         </div>
+        )}
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

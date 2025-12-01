@@ -96,7 +96,7 @@ export default function DocumentsPage() {
       </div>
 
       {/* Datatable */}
-      <Card>
+      <Card className="py-0">
         <DocumentsDatatable data={documents} onDownload={handleDownload} />
       </Card>
     </div>

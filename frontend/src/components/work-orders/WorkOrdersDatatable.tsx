@@ -291,12 +291,13 @@ const WorkOrdersDatatable = ({
   return (
     <div className="w-full">
       <div className="border-b">
-        <div className="flex flex-col gap-4 p-6">
-          <span className="text-xl font-semibold">Filter</span>
-          <div className="grid grid-cols-1 gap-6 max-md:last:col-span-full sm:grid-cols-2 md:grid-cols-4">
-            <Filter column={table.getColumn('status')!} label="Status" />
-            <Filter column={table.getColumn('priority')!} label="Priority" />
-            <Filter column={table.getColumn('category')!} label="Category" />
+        {data.length > 0 && (
+          <div className="flex flex-col gap-4 p-6">
+            <span className="text-xl font-semibold">Filter</span>
+            <div className="grid grid-cols-1 gap-6 max-md:last:col-span-full sm:grid-cols-2 md:grid-cols-4">
+              <Filter column={table.getColumn('status')!} label="Status" />
+              <Filter column={table.getColumn('priority')!} label="Priority" />
+              <Filter column={table.getColumn('category')!} label="Category" />
             <div className="w-full space-y-2">
               <Label>Page Size</Label>
               <Select
@@ -318,6 +319,7 @@ const WorkOrdersDatatable = ({
             </div>
           </div>
         </div>
+        )}
         <Table data-testid="table-work-orders">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

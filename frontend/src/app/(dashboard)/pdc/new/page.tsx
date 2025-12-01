@@ -219,8 +219,8 @@ export default function PDCRegistrationPage() {
                         Link to Lease
                       </Label>
                       <Select
-                        onValueChange={(v) => field.onChange(v || null)}
-                        value={field.value || ''}
+                        onValueChange={(v) => field.onChange(v === '__none__' ? null : v)}
+                        value={field.value || '__none__'}
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
@@ -228,7 +228,7 @@ export default function PDCRegistrationPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">
+                          <SelectItem value="__none__">
                             <div className="flex items-center gap-2">
                               <FileTextIcon className="size-4 text-gray-400" />
                               <span>No lease link</span>

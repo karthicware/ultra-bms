@@ -700,13 +700,11 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
                     <Label className="flex items-center gap-1">
                       Payment Terms <span className="text-destructive">*</span>
                     </Label>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || PaymentTerms.NET_30}>
                       <FormControl>
                         <SelectTrigger data-testid="vendor-payment-terms" className="w-full">
-                          <div className="flex items-center gap-2">
-                            <ClockIcon className="size-4 text-muted-foreground" />
-                            <SelectValue placeholder="Select payment terms" />
-                          </div>
+                          <ClockIcon className="size-4 text-muted-foreground" />
+                          <SelectValue placeholder="Select payment terms" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

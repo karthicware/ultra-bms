@@ -219,10 +219,11 @@ const TenantsDatatable = ({
   return (
     <div className="w-full">
       <div className="border-b">
-        <div className="flex flex-col gap-4 p-6">
-          <span className="text-xl font-semibold">Filter</span>
-          <div className="grid grid-cols-1 gap-6 max-md:last:col-span-full sm:grid-cols-2 md:grid-cols-3">
-            <Filter column={table.getColumn('status')!} label="Status" />
+        {data.length > 0 && (
+          <div className="flex flex-col gap-4 p-6">
+            <span className="text-xl font-semibold">Filter</span>
+            <div className="grid grid-cols-1 gap-6 max-md:last:col-span-full sm:grid-cols-2 md:grid-cols-3">
+              <Filter column={table.getColumn('status')!} label="Status" />
             <div className="w-full space-y-2">
               <Label>Page Size</Label>
               <Select
@@ -244,6 +245,7 @@ const TenantsDatatable = ({
             </div>
           </div>
         </div>
+        )}
         <Table data-testid="table-tenants">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

@@ -92,7 +92,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Datatable */}
-      <Card>
+      <Card className="py-0">
         <LeadsDatatable data={leads} />
       </Card>
     </div>

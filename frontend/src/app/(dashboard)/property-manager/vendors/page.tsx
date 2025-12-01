@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog,
@@ -157,30 +157,28 @@ export default function VendorsPage() {
       </div>
 
       {/* Datatable */}
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-6 space-y-4">
-              <Skeleton className="h-10 w-48" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-          ) : vendors.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Users className="h-12 w-12 mb-4" />
-              <h3 className="text-lg font-semibold mb-1">No vendors found</h3>
-              <p className="text-sm mb-4">Get started by adding your first vendor</p>
-              <Button onClick={() => router.push('/property-manager/vendors/new')}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Vendor
-              </Button>
-            </div>
-          ) : (
-            <VendorsDatatable
-              data={vendors}
-              onDelete={handleDeleteClick}
-            />
-          )}
-        </CardContent>
+      <Card className="py-0">
+        {isLoading ? (
+          <div className="p-6 space-y-4">
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        ) : vendors.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <Users className="h-12 w-12 mb-4" />
+            <h3 className="text-lg font-semibold mb-1">No vendors found</h3>
+            <p className="text-sm mb-4">Get started by adding your first vendor</p>
+            <Button onClick={() => router.push('/property-manager/vendors/new')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Vendor
+            </Button>
+          </div>
+        ) : (
+          <VendorsDatatable
+            data={vendors}
+            onDelete={handleDeleteClick}
+          />
+        )}
       </Card>
 
       {/* Delete Confirmation Dialog */}

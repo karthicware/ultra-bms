@@ -205,7 +205,7 @@ export default function ExpensesPage() {
       <ExpenseSummaryCharts summary={summary} isLoading={isLoading} />
 
       {/* Datatable */}
-      <Card>
+      <Card className="py-0">
         <ExpensesDatatable data={expenses} />
       </Card>
     </div>

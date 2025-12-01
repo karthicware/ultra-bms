@@ -10,7 +10,7 @@ import { useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePDCs } from '@/hooks/usePDCs';
 import type { PDCStatus, PDCFilter } from '@/types/pdc';
@@ -79,36 +79,34 @@ function PDCListContent() {
       </div>
 
       {/* Datatable */}
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-6 space-y-4">
-              <Skeleton className="h-10 w-48" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-          ) : pdcs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Calendar className="h-12 w-12 mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold mb-1">No PDCs found</h3>
-              <p className="text-sm mb-4">Register your first PDC to get started</p>
-              <Button asChild>
-                <Link href="/pdc/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Register PDC
-                </Link>
-              </Button>
-            </div>
-          ) : (
-            <PDCListDatatable
-              data={pdcs}
-              onDeposit={handleDeposit}
-              onClear={handleClear}
-              onBounce={handleBounce}
-              onWithdraw={handleWithdraw}
-              onCancel={handleCancel}
-            />
-          )}
-        </CardContent>
+      <Card className="py-0">
+        {isLoading ? (
+          <div className="p-6 space-y-4">
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        ) : pdcs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <Calendar className="h-12 w-12 mb-4 opacity-50" />
+            <h3 className="text-lg font-semibold mb-1">No PDCs found</h3>
+            <p className="text-sm mb-4">Register your first PDC to get started</p>
+            <Button asChild>
+              <Link href="/pdc/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Register PDC
+              </Link>
+            </Button>
+          </div>
+        ) : (
+          <PDCListDatatable
+            data={pdcs}
+            onDeposit={handleDeposit}
+            onClear={handleClear}
+            onBounce={handleBounce}
+            onWithdraw={handleWithdraw}
+            onCancel={handleCancel}
+          />
+        )}
       </Card>
     </div>
   );

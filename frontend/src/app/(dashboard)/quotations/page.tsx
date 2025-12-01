@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -130,31 +130,29 @@ export default function QuotationsPage() {
       </div>
 
       {/* Datatable */}
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-6 space-y-4">
-              <Skeleton className="h-10 w-48" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-          ) : quotations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <FileText className="h-12 w-12 mb-4" />
-              <h3 className="text-lg font-semibold mb-1">No quotations found</h3>
-              <p className="text-sm mb-4">Create your first quotation to get started</p>
-              <Button onClick={() => router.push('/quotations/create')}>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Quotation
-              </Button>
-            </div>
-          ) : (
-            <QuotationsDatatable
-              data={quotations}
-              onSend={handleSendClick}
-              onDownload={handleDownloadPDF}
-            />
-          )}
-        </CardContent>
+      <Card className="py-0">
+        {isLoading ? (
+          <div className="p-6 space-y-4">
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        ) : quotations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <FileText className="h-12 w-12 mb-4" />
+            <h3 className="text-lg font-semibold mb-1">No quotations found</h3>
+            <p className="text-sm mb-4">Create your first quotation to get started</p>
+            <Button onClick={() => router.push('/quotations/create')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Quotation
+            </Button>
+          </div>
+        ) : (
+          <QuotationsDatatable
+            data={quotations}
+            onSend={handleSendClick}
+            onDownload={handleDownloadPDF}
+          />
+        )}
       </Card>
 
       {/* Send Confirmation Dialog */}

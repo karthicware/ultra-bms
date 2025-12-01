@@ -312,7 +312,7 @@ export default function AnnouncementsPage() {
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">
-          <Card>
+          <Card className="py-0">
             <AnnouncementsDatatable
               data={getCurrentTabData()}
               onView={handleViewAnnouncement}
