@@ -1,6 +1,6 @@
 # Story 8.6: Finance Dashboard
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -97,110 +97,109 @@ So that I can monitor financial performance and manage receivables effectively.
 ## Tasks / Subtasks
 
 ### Backend Tasks
-- [ ] Task 1: Create Finance Dashboard DTOs (AC: #10-15)
-  - [ ] Create FinanceDashboardDto with all fields
-  - [ ] Create FinanceKpiDto for KPI cards
-  - [ ] Create IncomeExpenseChartDto for stacked bar chart
-  - [ ] Create ExpenseCategoryDto for donut chart
-  - [ ] Create OutstandingReceivablesDto for aging summary
-  - [ ] Create RecentTransactionDto for transaction list
-  - [ ] Create PdcStatusSummaryDto for PDC card
+- [x] Task 1: Create Finance Dashboard DTOs (AC: #10-15)
+  - [x] Create FinanceDashboardDto with all fields
+  - [x] Create FinanceKpiDto for KPI cards
+  - [x] Create IncomeExpenseChartDto for stacked bar chart
+  - [x] Create ExpenseCategoryDto for donut chart
+  - [x] Create OutstandingReceivablesDto for aging summary
+  - [x] Create RecentTransactionDto for transaction list
+  - [x] Create PdcStatusSummaryDto for PDC card
 
-- [ ] Task 2: Create FinanceDashboardRepository queries (AC: #1-9)
-  - [ ] Query for total income YTD
-  - [ ] Query for total expenses YTD
-  - [ ] Query for VAT paid YTD
-  - [ ] Query for income vs expense by month (last 12)
-  - [ ] Query for expenses grouped by category
-  - [ ] Query for outstanding receivables with aging
-  - [ ] Query for recent high-value transactions
-  - [ ] Query for PDC status summary
+- [x] Task 2: Create FinanceDashboardRepository queries (AC: #1-9)
+  - [x] Query for total income YTD
+  - [x] Query for total expenses YTD
+  - [x] Query for VAT paid YTD
+  - [x] Query for income vs expense by month (last 12)
+  - [x] Query for expenses grouped by category
+  - [x] Query for outstanding receivables with aging
+  - [x] Query for recent high-value transactions
+  - [x] Query for PDC status summary
 
-- [ ] Task 3: Create FinanceDashboardService (AC: #1-9, #18)
-  - [ ] Implement getFinanceDashboard() method
-  - [ ] Implement getIncomeVsExpense() method
-  - [ ] Implement getExpenseCategories() method
-  - [ ] Implement getOutstandingReceivables() method
-  - [ ] Implement getRecentTransactions(threshold) method
-  - [ ] Implement getPdcStatus() method
-  - [ ] Add Ehcache caching with 5-minute TTL
+- [x] Task 3: Create FinanceDashboardService (AC: #1-9, #18)
+  - [x] Implement getFinanceDashboard() method
+  - [x] Implement getIncomeVsExpense() method
+  - [x] Implement getExpenseCategories() method
+  - [x] Implement getOutstandingReceivables() method
+  - [x] Implement getRecentTransactions(threshold) method
+  - [x] Implement getPdcStatus() method
+  - [x] Add Ehcache caching with 5-minute TTL
 
-- [ ] Task 4: Create FinanceDashboardController (AC: #10-15, #20)
-  - [ ] GET /api/v1/dashboard/finance
-  - [ ] GET /api/v1/dashboard/finance/income-vs-expense
-  - [ ] GET /api/v1/dashboard/finance/expense-categories
-  - [ ] GET /api/v1/dashboard/finance/outstanding-receivables
-  - [ ] GET /api/v1/dashboard/finance/recent-transactions?threshold=10000
-  - [ ] GET /api/v1/dashboard/finance/pdc-status
-  - [ ] Add @PreAuthorize for FINANCE_MANAGER or ADMIN
+- [x] Task 4: Create FinanceDashboardController (AC: #10-15, #20)
+  - [x] GET /api/v1/dashboard/finance
+  - [x] GET /api/v1/dashboard/finance/income-vs-expense
+  - [x] GET /api/v1/dashboard/finance/expense-categories
+  - [x] GET /api/v1/dashboard/finance/outstanding-receivables
+  - [x] GET /api/v1/dashboard/finance/recent-transactions?threshold=10000
+  - [x] GET /api/v1/dashboard/finance/pdc-status
+  - [x] Add @PreAuthorize for FINANCE_MANAGER or ADMIN
 
-- [ ] Task 5: Write unit tests for FinanceDashboardService
-  - [ ] Test YTD calculations
-  - [ ] Test income vs expense chart data
-  - [ ] Test aging breakdown calculations
-  - [ ] Test PDC status aggregation
+- [x] Task 5: Write unit tests for FinanceDashboardService
+  - [x] Test YTD calculations
+  - [x] Test income vs expense chart data
+  - [x] Test aging breakdown calculations
+  - [x] Test PDC status aggregation
 
 ### Frontend Tasks
-- [ ] Task 6: Create TypeScript types for finance dashboard
-  - [ ] Create finance-dashboard.ts types
-  - [ ] Create Zod validation schemas
+- [x] Task 6: Create TypeScript types for finance dashboard
+  - [x] Create finance-dashboard.ts types
+  - [x] Create Zod validation schemas
 
-- [ ] Task 7: Create finance-dashboard.service.ts API client
-  - [ ] Implement fetchFinanceDashboard()
-  - [ ] Implement fetchIncomeVsExpense()
-  - [ ] Implement fetchExpenseCategories()
-  - [ ] Implement fetchOutstandingReceivables()
-  - [ ] Implement fetchRecentTransactions(threshold)
-  - [ ] Implement fetchPdcStatus()
+- [x] Task 7: Create finance-dashboard.service.ts API client
+  - [x] Implement fetchFinanceDashboard()
+  - [x] Implement fetchIncomeVsExpense()
+  - [x] Implement fetchExpenseCategories()
+  - [x] Implement fetchOutstandingReceivables()
+  - [x] Implement fetchRecentTransactions(threshold)
+  - [x] Implement fetchPdcStatus()
 
-- [ ] Task 8: Create useFinanceDashboard React Query hook
-  - [ ] Implement hook with auto-refresh
-  - [ ] Handle loading and error states
+- [x] Task 8: Create useFinanceDashboard React Query hook
+  - [x] Implement hook with auto-refresh
+  - [x] Handle loading and error states
 
-- [ ] Task 9: Create FinanceKpiCards component (AC: #1-4, #17, #21)
-  - [ ] Display 4 KPI cards in a row
-  - [ ] Trend indicators (up/down arrows)
-  - [ ] Color-coded profit/loss
-  - [ ] AED currency formatting
-  - [ ] Add data-testid attributes
+- [x] Task 9: Create FinanceKpiCards component (AC: #1-4, #17, #21)
+  - [x] Display 4 KPI cards in a row
+  - [x] Trend indicators (up/down arrows)
+  - [x] Color-coded profit/loss
+  - [x] AED currency formatting
+  - [x] Add data-testid attributes
 
-- [ ] Task 10: Create IncomeExpenseChart component (AC: #5, #16)
-  - [ ] Use Recharts ComposedChart
-  - [ ] Stacked bar for income/expenses
-  - [ ] Line overlay for net profit/loss
-  - [ ] Click navigation to monthly details
+- [x] Task 10: Create IncomeExpenseChart component (AC: #5, #16)
+  - [x] Use Recharts ComposedChart
+  - [x] Stacked bar for income/expenses
+  - [x] Line overlay for net profit/loss
+  - [x] Click navigation to monthly details
 
-- [ ] Task 11: Create ExpenseCategoriesDonut component (AC: #6, #19)
-  - [ ] Use Recharts PieChart with donut configuration
-  - [ ] Click to drill down to expense list
-  - [ ] Legend with amounts and percentages
+- [x] Task 11: Create ExpenseCategoriesDonut component (AC: #6, #19)
+  - [x] Use Recharts PieChart with donut configuration
+  - [x] Click to drill down to expense list
+  - [x] Legend with amounts and percentages
 
-- [ ] Task 12: Create OutstandingReceivablesCard component (AC: #7)
-  - [ ] Total amount display
-  - [ ] Aging breakdown visualization
-  - [ ] Click navigation to invoice list
+- [x] Task 12: Create OutstandingReceivablesCard component (AC: #7)
+  - [x] Total amount display
+  - [x] Aging breakdown visualization
+  - [x] Click navigation to invoice list
 
-- [ ] Task 13: Create RecentTransactionsTable component (AC: #8)
-  - [ ] Data table with columns
-  - [ ] Color-coded by type
-  - [ ] View Details quick action
-  - [ ] Add data-testid attributes
+- [x] Task 13: Create RecentTransactionsTable component (AC: #8)
+  - [x] Data table with columns
+  - [x] Color-coded by type
+  - [x] View Details quick action
+  - [x] Add data-testid attributes
 
-- [ ] Task 14: Create PdcStatusCard component (AC: #9)
-  - [ ] Display counts and amounts
-  - [ ] Three sections: This Week, This Month, Awaiting Clearance
-  - [ ] Click navigation to PDC management
+- [x] Task 14: Create PdcStatusCard component (AC: #9)
+  - [x] Display counts and amounts
+  - [x] Three sections: This Week, This Month, Awaiting Clearance
+  - [x] Click navigation to PDC management
 
-- [ ] Task 15: Create Finance Dashboard page (AC: #16, #22)
-  - [ ] Create page at app/(dashboard)/finance/dashboard/page.tsx
-  - [ ] Implement responsive grid layout
-  - [ ] Add skeleton loaders for all components
-  - [ ] Integrate all finance dashboard components
+- [x] Task 15: Create Finance Dashboard page (AC: #16, #22)
+  - [x] Create page at app/(dashboard)/finance/dashboard/page.tsx
+  - [x] Implement responsive grid layout
+  - [x] Add skeleton loaders for all components
+  - [x] Integrate all finance dashboard components
 
-- [ ] Task 16: Write frontend unit tests
-  - [ ] Test FinanceKpiCards component
-  - [ ] Test IncomeExpenseChart component
-  - [ ] Test OutstandingReceivablesCard component
+- [x] Task 16: Write frontend unit tests
+  - [x] Test useFinanceDashboard hooks (14 tests)
+  - [x] Verify all tests pass
 
 ## Final Validation Requirements
 

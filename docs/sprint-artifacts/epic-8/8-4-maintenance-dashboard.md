@@ -1,6 +1,6 @@
 # Story 8.4: Maintenance Dashboard
 
-Status: review
+Status: done
 
 ## Story
 
@@ -291,3 +291,114 @@ Execute lint check: `npm run lint`
 ### Completion Notes List
 
 ### File List
+
+---
+
+## Code Review Report
+
+**Reviewer:** Amelia (Dev Agent)
+**Review Date:** 2025-12-02
+**Story:** 8.4 - Maintenance Dashboard
+**Status:** review → **APPROVED**
+
+### Summary
+
+Story 8.4 implementation is **APPROVED** with no blockers. All 21 acceptance criteria validated with evidence. All 19 backend tests pass, all 14 frontend tests pass.
+
+---
+
+### Acceptance Criteria Validation
+
+| AC | Description | Status | Evidence |
+|----|-------------|--------|----------|
+| AC-1 | Active Jobs KPI card | ✅ PASS | `MaintenanceKpiCards.tsx:59-68` - displays activeJobs count with click navigation |
+| AC-2 | Overdue Jobs KPI card | ✅ PASS | `MaintenanceKpiCards.tsx:70-80` - red highlight via `highlight: overdueJobs > 0` |
+| AC-3 | Pending Jobs KPI card | ✅ PASS | `MaintenanceKpiCards.tsx:81-89` - pendingJobs count with OPEN status filter |
+| AC-4 | Completed This Month KPI | ✅ PASS | `MaintenanceKpiCards.tsx:90-102` - shows monthOverMonthChange trend |
+| AC-5 | Jobs by Status pie chart | ✅ PASS | `JobsByStatusChart.tsx:47-160` - Recharts PieChart with click handler |
+| AC-6 | Jobs by Priority bar chart | ✅ PASS | `JobsByPriorityChart.tsx:22-120` - green-to-red gradient via PRIORITY_COLORS |
+| AC-7 | Jobs by Category horizontal bar | ✅ PASS | `JobsByCategoryChart.tsx:22-135` - layout="vertical" BarChart sorted desc |
+| AC-8 | High Priority & Overdue table | ✅ PASS | `HighPriorityOverdueTable.tsx:77-341` - sortable, paginated, overdue highlight |
+| AC-9 | Recently Completed list | ✅ PASS | `RecentlyCompletedList.tsx:29-184` - last 5 jobs with View Details |
+| AC-10 | GET /maintenance endpoint | ✅ PASS | `MaintenanceDashboardController.java:41-48` |
+| AC-11 | GET /jobs-by-status endpoint | ✅ PASS | `MaintenanceDashboardController.java:57-64` |
+| AC-12 | GET /jobs-by-priority endpoint | ✅ PASS | `MaintenanceDashboardController.java:73-80` |
+| AC-13 | GET /jobs-by-category endpoint | ✅ PASS | `MaintenanceDashboardController.java:89-96` |
+| AC-14 | GET /high-priority-overdue pagination | ✅ PASS | `MaintenanceDashboardController.java:108-125` |
+| AC-15 | GET /recently-completed endpoint | ✅ PASS | `MaintenanceDashboardController.java:135-145` |
+| AC-16 | Recharts for charts | ✅ PASS | All 3 chart components import from 'recharts' |
+| AC-17 | Click-to-filter on charts | ✅ PASS | `JobsByStatusChart.tsx:53-65` - onStatusClick toggle filter |
+| AC-18 | Ehcache 5-min TTL | ✅ PASS | `ehcache.xml:203-284` - 7 caches with 5-minute TTL |
+| AC-19 | Drill-down navigation | ✅ PASS | `page.tsx:70-85` - handleKpiClick, handleJobClick routers |
+| AC-20 | MAINTENANCE_SUPERVISOR role | ✅ PASS | `MaintenanceDashboardController.java:39` - @PreAuthorize on all endpoints |
+| AC-21 | data-testid attributes | ✅ PASS | All components have data-testid (KPI cards, charts, table rows, buttons) |
+
+---
+
+### Task Completion Verification
+
+All 16 tasks completed:
+
+**Backend (5 tasks):**
+- Task 1: DTOs created - 7 files in `dto/dashboard/maintenance/`
+- Task 2: Repository with 9 query methods implemented
+- Task 3: Service with @Cacheable on all methods
+- Task 4: Controller with 6 endpoints + @PreAuthorize
+- Task 5: Unit tests - 19 tests passing
+
+**Frontend (11 tasks):**
+- Task 6: Types in `maintenance-dashboard.ts` (267 lines)
+- Task 7: Service client with 6 API methods
+- Task 8: React Query hook with filter state management
+- Task 9-14: All 6 UI components created with data-testid
+- Task 15: Dashboard page at `maintenance/dashboard/page.tsx`
+- Task 16: Frontend tests - 14 tests passing
+
+---
+
+### Test Results
+
+**Backend:** `mvn test -Dtest=MaintenanceDashboardServiceTest`
+```
+Tests run: 19, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+**Frontend:** `npm test -- useMaintenanceDashboard`
+```
+Test Suites: 1 passed, 1 total
+Tests: 14 passed, 14 total
+```
+
+---
+
+### Code Quality Assessment
+
+| Category | Rating | Notes |
+|----------|--------|-------|
+| Architecture | ✅ Excellent | Clean separation: Controller→Service→Repository |
+| Security | ✅ Excellent | @PreAuthorize on all endpoints, no SQL injection (parameterized queries) |
+| Performance | ✅ Good | Native SQL aggregations, 5-min Ehcache TTL, React Query staleTime=2min |
+| TypeScript | ✅ Excellent | Full type coverage, Zod schemas for runtime validation |
+| Testing | ✅ Good | 33 total tests (19 backend + 14 frontend) |
+| Accessibility | ✅ Good | All interactive elements have data-testid |
+
+---
+
+### Issues Found
+
+**None** - No blocking issues identified.
+
+---
+
+### Recommendations (Non-Blocking)
+
+1. Consider adding integration tests for the full API flow
+2. Consider adding E2E tests for chart interactions
+3. Consider adding error boundary around charts for graceful degradation
+
+---
+
+### Verdict
+
+**APPROVED** - Ready for merge. All ACs met, tests pass, code quality is high.

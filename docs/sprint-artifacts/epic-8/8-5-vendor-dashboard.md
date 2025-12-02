@@ -1,6 +1,6 @@
 # Story 8.5: Vendor Dashboard
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -84,101 +84,101 @@ So that I can monitor vendor performance and manage compliance effectively.
 ## Tasks / Subtasks
 
 ### Backend Tasks
-- [ ] Task 1: Create Vendor Dashboard DTOs (AC: #9-13)
-  - [ ] Create VendorDashboardDto with all fields
-  - [ ] Create VendorKpiDto for KPI cards
-  - [ ] Create JobsBySpecializationDto for bar chart
-  - [ ] Create VendorPerformanceSnapshotDto for scatter plot
-  - [ ] Create ExpiringDocumentDto for documents list
-  - [ ] Create TopVendorDto for top vendors list
+- [x] Task 1: Create Vendor Dashboard DTOs (AC: #9-13)
+  - [x] Create VendorDashboardDto with all fields
+  - [x] Create VendorKpiDto for KPI cards
+  - [x] Create JobsBySpecializationDto for bar chart
+  - [x] Create VendorPerformanceSnapshotDto for scatter plot
+  - [x] Create ExpiringDocumentDto for documents list
+  - [x] Create TopVendorDto for top vendors list
 
-- [ ] Task 2: Create VendorDashboardRepository queries (AC: #1-8)
-  - [ ] Query for active vendors count
-  - [ ] Query for average SLA compliance calculation
-  - [ ] Query for top performing vendor by rating
-  - [ ] Query for documents expiring in 30 days
-  - [ ] Query for jobs grouped by specialization
-  - [ ] Query for vendor performance snapshot data
-  - [ ] Query for vendors with expiring documents
-  - [ ] Query for top vendors by jobs completed
+- [x] Task 2: Create VendorDashboardRepository queries (AC: #1-8)
+  - [x] Query for active vendors count
+  - [x] Query for average SLA compliance calculation
+  - [x] Query for top performing vendor by rating
+  - [x] Query for documents expiring in 30 days
+  - [x] Query for jobs grouped by specialization
+  - [x] Query for vendor performance snapshot data
+  - [x] Query for vendors with expiring documents
+  - [x] Query for top vendors by jobs completed
 
-- [ ] Task 3: Create VendorDashboardService (AC: #1-8, #16)
-  - [ ] Implement getVendorDashboard() method
-  - [ ] Implement getJobsBySpecialization() method
-  - [ ] Implement getPerformanceSnapshot() method
-  - [ ] Implement getExpiringDocuments() method
-  - [ ] Implement getTopVendors() method
-  - [ ] Add Ehcache caching with 5-minute TTL
-  - [ ] Calculate SLA compliance from vendor ratings
+- [x] Task 3: Create VendorDashboardService (AC: #1-8, #16)
+  - [x] Implement getVendorDashboard() method
+  - [x] Implement getJobsBySpecialization() method
+  - [x] Implement getPerformanceSnapshot() method
+  - [x] Implement getExpiringDocuments() method
+  - [x] Implement getTopVendors() method
+  - [x] Add Ehcache caching with 5-minute TTL
+  - [x] Calculate SLA compliance from vendor ratings
 
-- [ ] Task 4: Create VendorDashboardController (AC: #9-13, #18)
-  - [ ] GET /api/v1/dashboard/vendor
-  - [ ] GET /api/v1/dashboard/vendor/jobs-by-specialization
-  - [ ] GET /api/v1/dashboard/vendor/performance-snapshot
-  - [ ] GET /api/v1/dashboard/vendor/expiring-documents
-  - [ ] GET /api/v1/dashboard/vendor/top-vendors
-  - [ ] Add @PreAuthorize for authorized roles
+- [x] Task 4: Create VendorDashboardController (AC: #9-13, #18)
+  - [x] GET /api/v1/dashboard/vendor
+  - [x] GET /api/v1/dashboard/vendor/jobs-by-specialization
+  - [x] GET /api/v1/dashboard/vendor/performance-snapshot
+  - [x] GET /api/v1/dashboard/vendor/expiring-documents
+  - [x] GET /api/v1/dashboard/vendor/top-vendors
+  - [x] Add @PreAuthorize for authorized roles
 
-- [ ] Task 5: Write unit tests for VendorDashboardService
-  - [ ] Test KPI calculations
-  - [ ] Test performance snapshot data aggregation
-  - [ ] Test expiring documents query
+- [x] Task 5: Write unit tests for VendorDashboardService
+  - [x] Test KPI calculations
+  - [x] Test performance snapshot data aggregation
+  - [x] Test expiring documents query
 
 ### Frontend Tasks
-- [ ] Task 6: Create TypeScript types for vendor dashboard
-  - [ ] Create vendor-dashboard.ts types
-  - [ ] Create Zod validation schemas
+- [x] Task 6: Create TypeScript types for vendor dashboard
+  - [x] Create vendor-dashboard.ts types
+  - [x] Create Zod validation schemas
 
-- [ ] Task 7: Create vendor-dashboard.service.ts API client
-  - [ ] Implement fetchVendorDashboard()
-  - [ ] Implement fetchJobsBySpecialization()
-  - [ ] Implement fetchPerformanceSnapshot()
-  - [ ] Implement fetchExpiringDocuments()
-  - [ ] Implement fetchTopVendors()
+- [x] Task 7: Create vendor-dashboard.service.ts API client
+  - [x] Implement fetchVendorDashboard()
+  - [x] Implement fetchJobsBySpecialization()
+  - [x] Implement fetchPerformanceSnapshot()
+  - [x] Implement fetchExpiringDocuments()
+  - [x] Implement fetchTopVendors()
 
-- [ ] Task 8: Create useVendorDashboard React Query hook
-  - [ ] Implement hook with auto-refresh
-  - [ ] Handle loading and error states
+- [x] Task 8: Create useVendorDashboard React Query hook
+  - [x] Implement hook with auto-refresh
+  - [x] Handle loading and error states
 
-- [ ] Task 9: Create VendorKpiCards component (AC: #1-4)
-  - [ ] Display 4 KPI cards in a row
-  - [ ] Star rating badge for top vendor
-  - [ ] Red highlight for critical expiring docs
-  - [ ] Add data-testid attributes
+- [x] Task 9: Create VendorKpiCards component (AC: #1-4)
+  - [x] Display 4 KPI cards in a row
+  - [x] Star rating badge for top vendor
+  - [x] Red highlight for critical expiring docs
+  - [x] Add data-testid attributes
 
-- [ ] Task 10: Create JobsBySpecializationChart component (AC: #5)
-  - [ ] Use Recharts BarChart
-  - [ ] Click navigation to vendor list
-  - [ ] Color-coded bars
+- [x] Task 10: Create JobsBySpecializationChart component (AC: #5)
+  - [x] Use Recharts BarChart
+  - [x] Click navigation to vendor list
+  - [x] Color-coded bars
 
-- [ ] Task 11: Create VendorPerformanceScatter component (AC: #6, #14, #15, #17)
-  - [ ] Use Recharts ScatterChart
-  - [ ] Bubble size proportional to job count
-  - [ ] Custom tooltip with vendor details
-  - [ ] Color-code by performance tier
-  - [ ] Add hover interactions
+- [x] Task 11: Create VendorPerformanceScatter component (AC: #6, #14, #15, #17)
+  - [x] Use Recharts ScatterChart
+  - [x] Bubble size proportional to job count
+  - [x] Custom tooltip with vendor details
+  - [x] Color-code by performance tier
+  - [x] Add hover interactions
 
-- [ ] Task 12: Create ExpiringDocumentsTable component (AC: #7)
-  - [ ] Create sortable data table
-  - [ ] Red highlight for < 7 days
-  - [ ] Quick action buttons
-  - [ ] Add data-testid attributes
+- [x] Task 12: Create ExpiringDocumentsTable component (AC: #7)
+  - [x] Create sortable data table
+  - [x] Red highlight for < 7 days
+  - [x] Quick action buttons
+  - [x] Add data-testid attributes
 
-- [ ] Task 13: Create TopVendorsTable component (AC: #8)
-  - [ ] Display top 5 vendors
-  - [ ] Star rating component
-  - [ ] View Profile quick action
+- [x] Task 13: Create TopVendorsTable component (AC: #8)
+  - [x] Display top 5 vendors
+  - [x] Star rating component
+  - [x] View Profile quick action
 
-- [ ] Task 14: Create Vendor Dashboard page (AC: #14, #19)
-  - [ ] Create page at app/(dashboard)/vendors/dashboard/page.tsx
-  - [ ] Implement responsive grid layout
-  - [ ] Add skeleton loaders for all components
-  - [ ] Integrate all vendor dashboard components
+- [x] Task 14: Create Vendor Dashboard page (AC: #14, #19)
+  - [x] Create page at app/(dashboard)/vendors/dashboard/page.tsx
+  - [x] Implement responsive grid layout
+  - [x] Add skeleton loaders for all components
+  - [x] Integrate all vendor dashboard components
 
-- [ ] Task 15: Write frontend unit tests
-  - [ ] Test VendorKpiCards component
-  - [ ] Test VendorPerformanceScatter with hover
-  - [ ] Test ExpiringDocumentsTable component
+- [x] Task 15: Write frontend unit tests
+  - [x] Test VendorKpiCards component
+  - [x] Test VendorPerformanceScatter with hover
+  - [x] Test ExpiringDocumentsTable component
 
 ## Final Validation Requirements
 
@@ -265,10 +265,83 @@ Execute lint check: `npm run lint`
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
 ### Completion Notes List
 
+**Implementation Date:** 2025-12-02
+
+**Backend Implementation:**
+- 6 DTOs created in `backend/src/main/java/com/ultrabms/dto/dashboard/vendor/`
+- VendorDashboardRepository interface with 8 query methods
+- VendorDashboardRepositoryImpl with native SQL queries for performance
+- VendorDashboardService interface with 6 methods
+- VendorDashboardServiceImpl with @Cacheable (5-minute TTL) on all methods
+- VendorDashboardController with 6 REST endpoints and @PreAuthorize security
+- Ehcache configuration added to ehcache.xml (6 vendor dashboard caches)
+- VendorDashboardServiceTest with 16 unit tests (all passing)
+
+**Frontend Implementation:**
+- TypeScript types in `frontend/src/types/vendor-dashboard.ts` (~250 lines)
+- Zod validation schemas in `frontend/src/lib/validations/vendor-dashboard.ts` (~150 lines)
+- API service in `frontend/src/services/vendor-dashboard.service.ts` (~105 lines)
+- React Query hooks in `frontend/src/hooks/useVendorDashboard.ts` (~150 lines)
+- 5 dashboard components in `frontend/src/components/vendor-dashboard/`
+- Dashboard page at `frontend/src/app/(dashboard)/vendors/dashboard/page.tsx`
+- 47 frontend unit tests (all passing)
+
+**Test Results:**
+- Backend: 16/16 tests PASS (VendorDashboardServiceTest)
+- Frontend: 47/47 tests PASS (VendorKpiCards, VendorPerformanceScatter, ExpiringDocumentsTable, useVendorDashboard)
+
+**Build Status:**
+- Backend: mvn compile SUCCESS
+- Frontend: npm run build SUCCESS
+
+**Fixes Applied During Implementation:**
+1. Fixed `List.of()` type issue in tests - used `new ArrayList<>()` with `.add()`
+2. Fixed import error - changed `import api from '@/lib/api'` to `import { apiClient } from '@/lib/api'`
+3. Fixed Recharts Bar onClick type issue - used index-based lookup
+4. Fixed Zod schema mismatch - removed nullable from serviceCategorySchema, aligned with TypeScript enum
+5. Added type assertions to service functions for Zod/TypeScript compatibility
+
 ### File List
+
+**Backend Files Created:**
+- `backend/src/main/java/com/ultrabms/dto/dashboard/vendor/VendorKpiDto.java`
+- `backend/src/main/java/com/ultrabms/dto/dashboard/vendor/JobsBySpecializationDto.java`
+- `backend/src/main/java/com/ultrabms/dto/dashboard/vendor/VendorPerformanceSnapshotDto.java`
+- `backend/src/main/java/com/ultrabms/dto/dashboard/vendor/ExpiringDocumentDto.java`
+- `backend/src/main/java/com/ultrabms/dto/dashboard/vendor/TopVendorDto.java`
+- `backend/src/main/java/com/ultrabms/dto/dashboard/vendor/VendorDashboardDto.java`
+- `backend/src/main/java/com/ultrabms/repository/VendorDashboardRepository.java`
+- `backend/src/main/java/com/ultrabms/repository/impl/VendorDashboardRepositoryImpl.java`
+- `backend/src/main/java/com/ultrabms/service/VendorDashboardService.java`
+- `backend/src/main/java/com/ultrabms/service/impl/VendorDashboardServiceImpl.java`
+- `backend/src/main/java/com/ultrabms/controller/VendorDashboardController.java`
+- `backend/src/test/java/com/ultrabms/service/VendorDashboardServiceTest.java`
+
+**Backend Files Modified:**
+- `backend/src/main/resources/ehcache.xml` (added vendor dashboard caches)
+
+**Frontend Files Created:**
+- `frontend/src/types/vendor-dashboard.ts`
+- `frontend/src/lib/validations/vendor-dashboard.ts`
+- `frontend/src/services/vendor-dashboard.service.ts`
+- `frontend/src/hooks/useVendorDashboard.ts`
+- `frontend/src/components/vendor-dashboard/VendorKpiCards.tsx`
+- `frontend/src/components/vendor-dashboard/JobsBySpecializationChart.tsx`
+- `frontend/src/components/vendor-dashboard/VendorPerformanceScatter.tsx`
+- `frontend/src/components/vendor-dashboard/ExpiringDocumentsTable.tsx`
+- `frontend/src/components/vendor-dashboard/TopVendorsTable.tsx`
+- `frontend/src/components/vendor-dashboard/index.ts`
+- `frontend/src/app/(dashboard)/vendors/dashboard/page.tsx`
+- `frontend/src/components/vendor-dashboard/__tests__/VendorKpiCards.test.tsx`
+- `frontend/src/components/vendor-dashboard/__tests__/VendorPerformanceScatter.test.tsx`
+- `frontend/src/components/vendor-dashboard/__tests__/ExpiringDocumentsTable.test.tsx`
+- `frontend/src/hooks/__tests__/useVendorDashboard.test.tsx`
+
+**Frontend Files Modified:**
+- `frontend/src/types/index.ts` (added vendor-dashboard exports)

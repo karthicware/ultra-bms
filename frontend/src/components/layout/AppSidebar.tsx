@@ -94,8 +94,12 @@ const menuSections: MenuSection[] = [
     items: [
       {
         icon: LayoutDashboard,
-        label: 'Dashboard',
-        href: '/dashboard',
+        label: 'Dashboards',
+        items: [
+          { label: 'Executive Summary', href: '/dashboard' },
+          { label: 'Occupancy', href: '/dashboard/occupancy' },
+          { label: 'Maintenance', href: '/maintenance/dashboard' },
+        ],
       },
     ],
   },

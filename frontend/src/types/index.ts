@@ -265,3 +265,54 @@ export {
   PRIORITY_LABELS,
   CATEGORY_LABELS,
 } from './maintenance-dashboard';
+// Vendor Dashboard exports (Story 8.5)
+export {
+  // Enums
+  PerformanceTier,
+  VendorDocumentType,
+  // Interfaces
+  type TopVendorKpi,
+  type ExpiringDocsKpi,
+  type VendorKpi,
+  type JobsBySpecialization,
+  type VendorPerformanceSnapshot,
+  type ExpiringDocument as VendorExpiringDocument,
+  type TopVendor,
+  type VendorDashboard,
+  type ExpiringDocumentsParams,
+  type TopVendorsParams,
+  // Constants
+  PERFORMANCE_TIER_COLORS,
+  PERFORMANCE_TIER_LABELS,
+  DOCUMENT_TYPE_LABELS,
+  SPECIALIZATION_COLORS,
+  SPECIALIZATION_LABELS,
+  BUBBLE_SIZE,
+  // Functions
+  calculateBubbleSize,
+} from './vendor-dashboard';
+// Finance Dashboard exports (Story 8.6)
+export {
+  // Enums
+  TransactionType,
+  TrendDirection as FinanceTrendDirection,
+  // Interfaces
+  type FinanceKpi,
+  type IncomeExpenseChartData,
+  type ExpenseCategoryData,
+  type OutstandingReceivables,
+  type AgingBucket as FinanceAgingBucket,
+  type RecentTransaction,
+  type PdcStatusSummary,
+  type FinanceDashboard,
+  type FinanceKpiCardProps,
+  // Constants
+  FINANCE_CHART_COLORS,
+  EXPENSE_CATEGORY_COLORS,
+  // Functions
+  formatAedCurrency,
+  formatCompactCurrency,
+  getTrendDirection as getFinanceTrendDirection,
+  getTrendColor,
+  getProfitLossColor,
+} from './finance-dashboard';

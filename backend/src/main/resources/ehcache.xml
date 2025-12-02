@@ -283,6 +283,172 @@
         </resources>
     </cache>
 
+    <!-- ================================================================= -->
+    <!-- VENDOR DASHBOARD CACHES (Story 8.5) -->
+    <!-- AC-16: 5-minute cache TTL for vendor dashboard data -->
+    <!-- ================================================================= -->
+
+    <!-- Vendor Dashboard Complete Data Cache -->
+    <cache alias="vendorDashboard">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.vendor.VendorDashboardDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Vendor Dashboard KPIs Cache -->
+    <cache alias="vendorKpis">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.vendor.VendorKpiDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Vendor Jobs By Specialization Cache -->
+    <cache alias="vendorJobsBySpecialization">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Vendor Performance Snapshot Cache -->
+    <cache alias="vendorPerformanceSnapshot">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Vendor Expiring Documents Cache -->
+    <cache alias="vendorExpiringDocuments">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Vendor Top Vendors Cache -->
+    <cache alias="vendorTopVendors">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- ================================================================= -->
+    <!-- FINANCE DASHBOARD CACHES (Story 8.6) -->
+    <!-- AC-18: 5-minute cache TTL for finance dashboard data -->
+    <!-- ================================================================= -->
+
+    <!-- Finance Dashboard Complete Data Cache -->
+    <cache alias="financeDashboard">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.finance.FinanceDashboardDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Finance Dashboard KPIs Cache -->
+    <cache alias="financeKpis">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.finance.FinanceKpiDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Finance Income vs Expense Cache -->
+    <cache alias="financeIncomeVsExpense">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Finance Expense Categories Cache -->
+    <cache alias="financeExpenseCategories">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Finance Outstanding Receivables Cache -->
+    <cache alias="financeReceivables">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.finance.OutstandingReceivablesDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Finance Recent Transactions Cache -->
+    <cache alias="financeRecentTransactions">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Finance PDC Status Cache -->
+    <cache alias="financePdcStatus">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.finance.PdcStatusSummaryDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
     <!-- Default cache template for other caches -->
     <cache-template name="default">
         <expiry>

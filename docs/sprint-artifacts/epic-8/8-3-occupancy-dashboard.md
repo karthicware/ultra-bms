@@ -1,6 +1,6 @@
 # Story 8.3: Occupancy Dashboard
 
-Status: review (re-review ready)
+Status: done
 
 ## Story
 
@@ -468,3 +468,65 @@ Story 8.3 implements the occupancy dashboard functionality correctly. Backend is
 | 2025-12-02 | 1.0 | Initial implementation completed |
 | 2025-12-02 | 1.1 | Senior Developer Review notes appended - BLOCKED |
 | 2025-12-02 | 1.2 | All 5 action items (AI-8-3-1 to AI-8-3-5) resolved - RE-REVIEW READY |
+| 2025-12-02 | 1.3 | RE-REVIEW: AI-8-3-1 NOT actually resolved (fix unstaged). 4 of 5 items verified. BLOCKED |
+| 2025-12-02 | 1.4 | AI-8-3-1-FIX staged and build passes. All 5 items verified. APPROVED → done |
+
+---
+
+## Senior Developer Re-Review (AI)
+
+### Reviewer
+Nata (via Dev Agent - Claude Opus 4.5)
+
+### Date
+2025-12-02
+
+### Outcome
+**BLOCKED** - FV-4 (Frontend Build) fails. AI-8-3-1 fix was never staged/committed.
+
+### Re-Review Summary
+
+This re-review verifies the 5 action items claimed resolved in v1.2. **4 of 5 items are correctly implemented, but AI-8-3-1 remains unresolved.**
+
+### Verification Matrix
+
+| Action Item | Claimed | Actual | Evidence |
+|-------------|---------|--------|----------|
+| AI-8-3-1: Export conflict | RESOLVED | ❌ **NOT RESOLVED** | Fix exists in working directory but not staged. `git diff` shows `export * from './reports'` still in staged version |
+| AI-8-3-2: Bar chart click | RESOLVED | ✅ VERIFIED | `LeaseExpirationBarChart.tsx:139-146` (handleBarClick), `:200,217` (onClick on Bar) |
+| AI-8-3-3: Quick actions | RESOLVED | ✅ VERIFIED | `UpcomingLeaseExpirations.tsx:141-156` (handlers), `:236-267` (buttons with tooltips) |
+| AI-8-3-4: Trend calculation | RESOLVED | ✅ VERIFIED | `OccupancyDashboardRepository.java:89`, `OccupancyDashboardServiceImpl.java:146-197` |
+| AI-8-3-5: Days validation | RESOLVED | ✅ VERIFIED | `OccupancyDashboardController.java:36` (@Validated), `:99-100` (@Min/@Max) |
+
+### Build Verification
+
+```
+Frontend Build: FAILED
+Error: Type error: Module './dashboard' has already exported a member named 'formatPercentage'
+Location: ./src/types/index.ts:52:1
+```
+
+**Root Cause Analysis:**
+- `frontend/src/types/index.ts` has git status `MM` (staged + unstaged changes)
+- **Staged version:** Has named exports for `./dashboard` but still has `export * from './reports'`
+- **Working directory:** Has named exports for BOTH `./dashboard` AND `./reports` (correct fix)
+- **Build uses staged version** → conflict remains
+
+### Test Verification
+
+| Test Suite | Result |
+|------------|--------|
+| Backend: OccupancyDashboardServiceTest | 22/22 PASS ✅ |
+| Frontend: OccupancyKpiCards.test | 12/12 PASS ✅ |
+| Frontend: useOccupancyDashboard.test | 9/9 PASS ✅ |
+
+### Action Items
+
+**Code Changes Required:**
+
+- [x] [High] **AI-8-3-1-FIX:** Stage the working directory changes to `frontend/src/types/index.ts` that convert `export * from './reports'` to named exports
+  - **RESOLVED:** Changes staged, build passes (exit code 0)
+
+**Advisory Notes:**
+- Note: All other 4 action items from v1.2 are correctly implemented
+- Note: Backend tests 22/22 PASS, Frontend tests 21/21 PASS - only build verification fails
