@@ -26,7 +26,7 @@ import type {
 } from '@/types/assets-dashboard';
 import { z } from 'zod';
 
-const BASE_URL = '/api/v1/dashboard/assets';
+const BASE_URL = '/v1/dashboard/assets';
 
 /**
  * Fetch complete assets dashboard data (AC-10)

@@ -3,7 +3,7 @@
  * Story 8.4: Maintenance Dashboard
  */
 
-import axios from 'axios';
+import { apiClient } from '@/lib/api';
 import type {
   MaintenanceDashboard,
   JobsByStatus,
@@ -15,8 +15,7 @@ import type {
   HighPriorityJobsFilters
 } from '@/types/maintenance-dashboard';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-const MAINTENANCE_DASHBOARD_URL = `${API_BASE_URL}/api/v1/dashboard/maintenance`;
+const MAINTENANCE_DASHBOARD_URL = '/v1/dashboard/maintenance';
 
 /**
  * Helper to build query params
@@ -44,7 +43,7 @@ export const maintenanceDashboardService = {
     filters?: MaintenanceDashboardFilters
   ): Promise<MaintenanceDashboard> {
     const params = buildParams((filters || {}) as Record<string, unknown>);
-    const response = await axios.get<MaintenanceDashboard>(
+    const response = await apiClient.get<MaintenanceDashboard>(
       `${MAINTENANCE_DASHBOARD_URL}?${params.toString()}`
     );
     return response.data;
@@ -58,7 +57,7 @@ export const maintenanceDashboardService = {
     filters?: MaintenanceDashboardFilters
   ): Promise<JobsByStatus[]> {
     const params = buildParams((filters || {}) as Record<string, unknown>);
-    const response = await axios.get<JobsByStatus[]>(
+    const response = await apiClient.get<JobsByStatus[]>(
       `${MAINTENANCE_DASHBOARD_URL}/jobs-by-status?${params.toString()}`
     );
     return response.data;
@@ -72,7 +71,7 @@ export const maintenanceDashboardService = {
     filters?: MaintenanceDashboardFilters
   ): Promise<JobsByPriority[]> {
     const params = buildParams((filters || {}) as Record<string, unknown>);
-    const response = await axios.get<JobsByPriority[]>(
+    const response = await apiClient.get<JobsByPriority[]>(
       `${MAINTENANCE_DASHBOARD_URL}/jobs-by-priority?${params.toString()}`
     );
     return response.data;
@@ -86,7 +85,7 @@ export const maintenanceDashboardService = {
     filters?: MaintenanceDashboardFilters
   ): Promise<JobsByCategory[]> {
     const params = buildParams((filters || {}) as Record<string, unknown>);
-    const response = await axios.get<JobsByCategory[]>(
+    const response = await apiClient.get<JobsByCategory[]>(
       `${MAINTENANCE_DASHBOARD_URL}/jobs-by-category?${params.toString()}`
     );
     return response.data;
@@ -105,7 +104,7 @@ export const maintenanceDashboardService = {
       page: filters?.page ?? 0,
       size: filters?.size ?? 10
     });
-    const response = await axios.get<HighPriorityJobsPage>(
+    const response = await apiClient.get<HighPriorityJobsPage>(
       `${MAINTENANCE_DASHBOARD_URL}/high-priority-overdue?${params.toString()}`
     );
     return response.data;
@@ -123,7 +122,7 @@ export const maintenanceDashboardService = {
       ...filters,
       limit
     });
-    const response = await axios.get<RecentlyCompletedJob[]>(
+    const response = await apiClient.get<RecentlyCompletedJob[]>(
       `${MAINTENANCE_DASHBOARD_URL}/recently-completed?${params.toString()}`
     );
     return response.data;

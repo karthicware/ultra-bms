@@ -122,21 +122,6 @@ export function UpcomingLeaseExpirations({
 }: UpcomingLeaseExpirationsProps) {
   const router = useRouter();
 
-  if (isLoading || !items) {
-    return <TableSkeleton rows={maxItems} />;
-  }
-
-  const displayItems = items.slice(0, maxItems);
-  const hasMoreItems = items.length > maxItems;
-
-  const handleRowClick = (tenantId: string) => {
-    router.push(`/tenants/${tenantId}`);
-  };
-
-  const handleViewAll = () => {
-    router.push('/leases?expiring=true');
-  };
-
   // AC-7: Quick action - View Lease
   const handleViewLease = useCallback(
     (e: React.MouseEvent, tenantId: string) => {
@@ -154,6 +139,21 @@ export function UpcomingLeaseExpirations({
     },
     [router]
   );
+
+  if (isLoading || !items) {
+    return <TableSkeleton rows={maxItems} />;
+  }
+
+  const displayItems = items.slice(0, maxItems);
+  const hasMoreItems = items.length > maxItems;
+
+  const handleRowClick = (tenantId: string) => {
+    router.push(`/tenants/${tenantId}`);
+  };
+
+  const handleViewAll = () => {
+    router.push('/leases?expiring=true');
+  };
 
   return (
     <Card data-testid="upcoming-lease-expirations">

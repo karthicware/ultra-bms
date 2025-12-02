@@ -40,13 +40,13 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
                     JOIN tenants t ON tc.tenant_id = t.id
                     WHERE tc.status NOT IN ('COMPLETED', 'ON_HOLD')
                     AND t.status = 'ACTIVE'
-                    AND (:propertyId IS NULL OR tc.property_id = :propertyId)
+                    AND (CAST(:propertyId AS UUID) IS NULL OR tc.property_id = :propertyId)
                 ) as notice_period_units
             FROM units u
             JOIN properties p ON u.property_id = p.id
             WHERE p.active = true
             AND u.active = true
-            AND (:propertyId IS NULL OR u.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR u.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -67,7 +67,7 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
             JOIN properties p ON u.property_id = p.id
             WHERE p.active = true
             AND u.active = true
-            AND (:propertyId IS NULL OR u.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR u.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -85,7 +85,7 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
             WHERE u.status = 'AVAILABLE'
             AND p.active = true
             AND u.active = true
-            AND (:propertyId IS NULL OR u.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR u.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -102,8 +102,8 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
             FROM tenants t
             WHERE t.status = 'ACTIVE'
             AND t.active = true
-            AND t.lease_end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + :days
-            AND (:propertyId IS NULL OR t.property_id = :propertyId)
+            AND t.lease_end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + CAST(:days AS INTEGER)
+            AND (CAST(:propertyId AS UUID) IS NULL OR t.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -131,7 +131,7 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
             AND t.active = true
             AND u.active = true
             AND u.square_footage > 0
-            AND (:propertyId IS NULL OR t.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR t.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -150,13 +150,13 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
         String sql = """
             WITH month_series AS (
                 SELECT
-                    EXTRACT(YEAR FROM gs)::integer as year,
-                    EXTRACT(MONTH FROM gs)::integer as month,
+                    CAST(EXTRACT(YEAR FROM gs) AS INTEGER) as year,
+                    CAST(EXTRACT(MONTH FROM gs) AS INTEGER) as month,
                     TO_CHAR(gs, 'Mon YYYY') as month_label,
                     TO_CHAR(gs, 'YYYY-MM') as year_month
                 FROM generate_series(
                     DATE_TRUNC('month', CURRENT_DATE),
-                    DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' * :months - INTERVAL '1 day',
+                    DATE_TRUNC('month', CURRENT_DATE) + CAST(:months AS INTEGER) * INTERVAL '1 month' - INTERVAL '1 day',
                     INTERVAL '1 month'
                 ) as gs
             )
@@ -174,7 +174,7 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
                 AND EXTRACT(MONTH FROM t.lease_end_date) = ms.month
                 AND t.status = 'ACTIVE'
                 AND t.active = true
-                AND (:propertyId IS NULL OR t.property_id = :propertyId)
+                AND (CAST(:propertyId AS UUID) IS NULL OR t.property_id = :propertyId)
             LEFT JOIN lease_extensions le ON
                 le.tenant_id = t.id
                 AND le.status = 'APPROVED'
@@ -205,7 +205,7 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
                 t.property_id,
                 p.name as property_name,
                 t.lease_end_date as expiry_date,
-                (t.lease_end_date - CURRENT_DATE)::integer as days_remaining,
+                CAST((t.lease_end_date - CURRENT_DATE) AS INTEGER) as days_remaining,
                 CASE WHEN le.id IS NOT NULL AND le.status = 'APPROVED' THEN true ELSE false END as is_renewed,
                 CASE
                     WHEN le.id IS NOT NULL AND le.status = 'APPROVED' THEN 'Renewed'
@@ -218,8 +218,8 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
             LEFT JOIN lease_extensions le ON le.tenant_id = t.id AND le.status = 'APPROVED'
             WHERE t.status = 'ACTIVE'
             AND t.active = true
-            AND t.lease_end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + :days
-            AND (:propertyId IS NULL OR t.property_id = :propertyId)
+            AND t.lease_end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + CAST(:days AS INTEGER)
+            AND (CAST(:propertyId AS UUID) IS NULL OR t.property_id = :propertyId)
             ORDER BY t.lease_end_date ASC
             LIMIT :limit OFFSET :offset
             """;
@@ -240,8 +240,8 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
             FROM tenants t
             WHERE t.status = 'ACTIVE'
             AND t.active = true
-            AND t.lease_end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + :days
-            AND (:propertyId IS NULL OR t.property_id = :propertyId)
+            AND t.lease_end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + CAST(:days AS INTEGER)
+            AND (CAST(:propertyId AS UUID) IS NULL OR t.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -273,7 +273,7 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
                 JOIN units u ON t.unit_id = u.id
                 JOIN properties p ON t.property_id = p.id
                 WHERE t.active = true
-                AND (:propertyId IS NULL OR t.property_id = :propertyId)
+                AND (CAST(:propertyId AS UUID) IS NULL OR t.property_id = :propertyId)
             )
             UNION ALL
             (
@@ -294,7 +294,7 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
                 JOIN properties p ON t.property_id = p.id
                 WHERE le.status = 'APPROVED'
                 AND le.approved_at IS NOT NULL
-                AND (:propertyId IS NULL OR t.property_id = :propertyId)
+                AND (CAST(:propertyId AS UUID) IS NULL OR t.property_id = :propertyId)
             )
             UNION ALL
             (
@@ -307,7 +307,7 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
                     t.unit_id,
                     u.unit_number,
                     p.name as property_name,
-                    tc.actual_move_out_date::timestamp as timestamp,
+                    CAST(tc.actual_move_out_date AS TIMESTAMP) as timestamp,
                     CONCAT('Lease terminated for unit ', u.unit_number) as description
                 FROM tenant_checkouts tc
                 JOIN tenants t ON tc.tenant_id = t.id
@@ -315,7 +315,7 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
                 JOIN properties p ON tc.property_id = p.id
                 WHERE tc.status = 'COMPLETED'
                 AND tc.actual_move_out_date IS NOT NULL
-                AND (:propertyId IS NULL OR tc.property_id = :propertyId)
+                AND (CAST(:propertyId AS UUID) IS NULL OR tc.property_id = :propertyId)
             )
             UNION ALL
             (
@@ -335,7 +335,7 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
                 JOIN units u ON t.unit_id = u.id
                 JOIN properties p ON tc.property_id = p.id
                 WHERE tc.status NOT IN ('COMPLETED', 'ON_HOLD')
-                AND (:propertyId IS NULL OR tc.property_id = :propertyId)
+                AND (CAST(:propertyId AS UUID) IS NULL OR tc.property_id = :propertyId)
             )
             ORDER BY timestamp DESC NULLS LAST
             LIMIT :limit
@@ -363,15 +363,15 @@ public class OccupancyDashboardRepositoryImpl implements OccupancyDashboardRepos
                     FROM tenants t
                     WHERE t.active = true
                     AND t.status = 'ACTIVE'
-                    AND t.created_at >= CURRENT_DATE - :daysBack
-                    AND (:propertyId IS NULL OR t.property_id = :propertyId)
+                    AND t.created_at >= CURRENT_DATE - CAST(:daysBack AS INTEGER)
+                    AND (CAST(:propertyId AS UUID) IS NULL OR t.property_id = :propertyId)
                 ) as new_leases_count,
                 (
                     SELECT COUNT(*)
                     FROM tenant_checkouts tc
                     WHERE tc.status = 'COMPLETED'
-                    AND tc.actual_move_out_date >= CURRENT_DATE - :daysBack
-                    AND (:propertyId IS NULL OR tc.property_id = :propertyId)
+                    AND tc.actual_move_out_date >= CURRENT_DATE - CAST(:daysBack AS INTEGER)
+                    AND (CAST(:propertyId AS UUID) IS NULL OR tc.property_id = :propertyId)
                 ) as checkouts_count
             """;
 

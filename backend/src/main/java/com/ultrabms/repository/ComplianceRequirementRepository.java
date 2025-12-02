@@ -127,7 +127,7 @@ public interface ComplianceRequirementRepository extends JpaRepository<Complianc
         SELECT cr.* FROM compliance_requirements cr
         WHERE cr.status = 'ACTIVE'
         AND (cr.applicable_properties IS NULL
-             OR cr.applicable_properties @> :propertyIdJson::jsonb)
+             OR cr.applicable_properties @> CAST(:propertyIdJson AS JSONB))
         """, nativeQuery = true)
     List<ComplianceRequirement> findActiveRequirementsForProperty(@Param("propertyIdJson") String propertyIdJson);
 

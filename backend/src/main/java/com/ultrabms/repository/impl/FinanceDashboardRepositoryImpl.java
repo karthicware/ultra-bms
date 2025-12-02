@@ -34,7 +34,7 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
             FROM payments p
             JOIN invoices i ON p.invoice_id = i.id
             WHERE p.payment_date BETWEEN :startDate AND :endDate
-            AND (:propertyId IS NULL OR i.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR i.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -54,7 +54,7 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
             WHERE e.expense_date BETWEEN :startDate AND :endDate
             AND e.payment_status = 'PAID'
             AND (e.is_deleted IS NULL OR e.is_deleted = false)
-            AND (:propertyId IS NULL OR e.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR e.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -68,22 +68,9 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
 
     @Override
     public BigDecimal getTotalVatInPeriod(LocalDate startDate, LocalDate endDate, UUID propertyId) {
-        String sql = """
-            SELECT COALESCE(SUM(e.vat_amount), 0)
-            FROM expenses e
-            WHERE e.expense_date BETWEEN :startDate AND :endDate
-            AND e.payment_status = 'PAID'
-            AND (e.is_deleted IS NULL OR e.is_deleted = false)
-            AND (:propertyId IS NULL OR e.property_id = :propertyId)
-            """;
-
-        Query query = entityManager.createNativeQuery(sql);
-        query.setParameter("startDate", startDate);
-        query.setParameter("endDate", endDate);
-        query.setParameter("propertyId", propertyId);
-
-        Object result = query.getSingleResult();
-        return result != null ? new BigDecimal(result.toString()) : BigDecimal.ZERO;
+        // VAT tracking not implemented in expenses table - return 0
+        // TODO: Add vat_amount column to expenses table when VAT tracking is needed
+        return BigDecimal.ZERO;
     }
 
     // =================================================================
@@ -95,9 +82,9 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
     public List<Object[]> getIncomeVsExpenseByMonth(LocalDate startDate, LocalDate endDate, UUID propertyId) {
         String sql = """
             WITH months AS (
-                SELECT TO_CHAR(date_trunc('month', d::date), 'YYYY-MM') as month_year,
-                       TO_CHAR(date_trunc('month', d::date), 'Mon') as month_name
-                FROM generate_series(:startDate::date, :endDate::date, '1 month') d
+                SELECT TO_CHAR(date_trunc('month', CAST(d AS DATE)), 'YYYY-MM') as month_year,
+                       TO_CHAR(date_trunc('month', CAST(d AS DATE)), 'Mon') as month_name
+                FROM generate_series(CAST(:startDate AS DATE), CAST(:endDate AS DATE), CAST('1 month' AS INTERVAL)) d
             ),
             monthly_income AS (
                 SELECT TO_CHAR(date_trunc('month', p.payment_date), 'YYYY-MM') as month_year,
@@ -105,7 +92,7 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
                 FROM payments p
                 JOIN invoices i ON p.invoice_id = i.id
                 WHERE p.payment_date BETWEEN :startDate AND :endDate
-                AND (:propertyId IS NULL OR i.property_id = :propertyId)
+                AND (CAST(:propertyId AS UUID) IS NULL OR i.property_id = :propertyId)
                 GROUP BY date_trunc('month', p.payment_date)
             ),
             monthly_expenses AS (
@@ -115,7 +102,7 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
                 WHERE e.expense_date BETWEEN :startDate AND :endDate
                 AND e.payment_status = 'PAID'
                 AND (e.is_deleted IS NULL OR e.is_deleted = false)
-                AND (:propertyId IS NULL OR e.property_id = :propertyId)
+                AND (CAST(:propertyId AS UUID) IS NULL OR e.property_id = :propertyId)
                 GROUP BY date_trunc('month', e.expense_date)
             )
             SELECT m.month_name,
@@ -147,7 +134,7 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
             WHERE e.expense_date BETWEEN :startDate AND :endDate
             AND e.payment_status = 'PAID'
             AND (e.is_deleted IS NULL OR e.is_deleted = false)
-            AND (:propertyId IS NULL OR e.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR e.property_id = :propertyId)
             GROUP BY e.category
             ORDER BY amount DESC
             """;
@@ -168,26 +155,28 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
     @SuppressWarnings("unchecked")
     public List<Object[]> getOutstandingReceivablesByAging(LocalDate asOfDate, UUID propertyId) {
         String sql = """
+            WITH invoice_aging AS (
+                SELECT
+                    i.id,
+                    i.total_amount,
+                    i.paid_amount,
+                    CASE
+                        WHEN CAST(:asOfDate AS DATE) - i.due_date <= 30 THEN 'CURRENT'
+                        WHEN CAST(:asOfDate AS DATE) - i.due_date <= 60 THEN 'THIRTY_PLUS'
+                        WHEN CAST(:asOfDate AS DATE) - i.due_date <= 90 THEN 'SIXTY_PLUS'
+                        ELSE 'NINETY_PLUS'
+                    END as aging_bucket
+                FROM invoices i
+                WHERE i.status IN ('SENT', 'PARTIALLY_PAID', 'OVERDUE')
+                AND i.total_amount > COALESCE(i.paid_amount, 0)
+                AND (CAST(:propertyId AS UUID) IS NULL OR i.property_id = :propertyId)
+            )
             SELECT
-                CASE
-                    WHEN :asOfDate - i.due_date <= 30 THEN 'CURRENT'
-                    WHEN :asOfDate - i.due_date <= 60 THEN 'THIRTY_PLUS'
-                    WHEN :asOfDate - i.due_date <= 90 THEN 'SIXTY_PLUS'
-                    ELSE 'NINETY_PLUS'
-                END as aging_bucket,
-                COALESCE(SUM(i.total_amount - COALESCE(i.paid_amount, 0)), 0) as amount,
+                aging_bucket,
+                COALESCE(SUM(total_amount - COALESCE(paid_amount, 0)), 0) as amount,
                 COUNT(*) as count
-            FROM invoices i
-            WHERE i.status IN ('SENT', 'PARTIALLY_PAID', 'OVERDUE')
-            AND i.total_amount > COALESCE(i.paid_amount, 0)
-            AND (:propertyId IS NULL OR i.property_id = :propertyId)
-            GROUP BY
-                CASE
-                    WHEN :asOfDate - i.due_date <= 30 THEN 'CURRENT'
-                    WHEN :asOfDate - i.due_date <= 60 THEN 'THIRTY_PLUS'
-                    WHEN :asOfDate - i.due_date <= 90 THEN 'SIXTY_PLUS'
-                    ELSE 'NINETY_PLUS'
-                END
+            FROM invoice_aging
+            GROUP BY aging_bucket
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -204,11 +193,10 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
             FROM invoices i
             WHERE i.status IN ('SENT', 'PARTIALLY_PAID', 'OVERDUE')
             AND i.total_amount > COALESCE(i.paid_amount, 0)
-            AND (:propertyId IS NULL OR i.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR i.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
-        query.setParameter("asOfDate", asOfDate);
         query.setParameter("propertyId", propertyId);
 
         Object result = query.getSingleResult();
@@ -228,7 +216,7 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
                     p.id,
                     p.payment_date as date,
                     'INCOME' as type,
-                    COALESCE(t.company_name, CONCAT(t.first_name, ' ', t.last_name)) as description,
+                    CONCAT(t.first_name, ' ', t.last_name) as description,
                     p.amount,
                     'Rent Payment' as category,
                     p.payment_number as reference_number
@@ -236,7 +224,7 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
                 JOIN invoices i ON p.invoice_id = i.id
                 JOIN tenants t ON i.tenant_id = t.id
                 WHERE p.amount >= :threshold
-                AND (:propertyId IS NULL OR i.property_id = :propertyId)
+                AND (CAST(:propertyId AS UUID) IS NULL OR i.property_id = :propertyId)
             )
             UNION ALL
             (
@@ -252,7 +240,7 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
                 WHERE e.amount >= :threshold
                 AND e.payment_status = 'PAID'
                 AND (e.is_deleted IS NULL OR e.is_deleted = false)
-                AND (:propertyId IS NULL OR e.property_id = :propertyId)
+                AND (CAST(:propertyId AS UUID) IS NULL OR e.property_id = :propertyId)
             )
             ORDER BY date DESC
             LIMIT :limit
@@ -284,7 +272,7 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
             FROM pdcs p
             WHERE p.cheque_date BETWEEN :startDate AND :endDate
             AND p.status IN ('RECEIVED', 'DUE')
-            AND (:propertyId IS NULL OR EXISTS (
+            AND (CAST(:propertyId AS UUID) IS NULL OR EXISTS (
                 SELECT 1 FROM tenants t
                 JOIN units u ON t.unit_id = u.id
                 WHERE t.id = p.tenant_id AND u.property_id = :propertyId
@@ -305,7 +293,7 @@ public class FinanceDashboardRepositoryImpl implements FinanceDashboardRepositor
             SELECT COUNT(*), COALESCE(SUM(p.amount), 0)
             FROM pdcs p
             WHERE p.status = 'DEPOSITED'
-            AND (:propertyId IS NULL OR EXISTS (
+            AND (CAST(:propertyId AS UUID) IS NULL OR EXISTS (
                 SELECT 1 FROM tenants t
                 JOIN units u ON t.unit_id = u.id
                 WHERE t.id = p.tenant_id AND u.property_id = :propertyId

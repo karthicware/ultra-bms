@@ -197,21 +197,14 @@ export default function LeadDetailPage() {
   const handleDownloadDocument = async (docId: string, fileName: string) => {
     try {
       console.log('[PAGE] Starting download:', { docId, fileName, leadId });
-      const blob = await downloadDocument(leadId, docId);
-      console.log('[PAGE] Blob received:', { size: blob.size, type: blob.type });
+      const presignedUrl = await downloadDocument(leadId, docId);
 
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      // Open presigned URL directly - bypasses CORS issues with S3/LocalStack
+      window.open(presignedUrl, '_blank');
 
       toast({
         title: 'Success',
-        description: `Downloaded ${fileName}`,
+        description: `Opening ${fileName}`,
         variant: 'success',
       });
     } catch (error: any) {
@@ -408,36 +401,48 @@ export default function LeadDetailPage() {
                   No documents uploaded yet
                 </p>
               ) : (
-                <div className="space-y-2" data-testid="list-documents">
-                  {documents?.map((doc) => (
-                    <div
-                      key={doc.id}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{doc.fileName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {doc.documentType.replace('_', ' ')} • {(doc.fileSize / 1024).toFixed(0)} KB
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownloadDocument(doc.id, doc.fileName)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteDocument(doc.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                <div className="space-y-4 max-w-md" data-testid="list-documents">
+                  {Object.entries(
+                    documents?.reduce((acc, doc) => {
+                      const category = doc.documentType;
+                      if (!acc[category]) acc[category] = [];
+                      acc[category].push(doc);
+                      return acc;
+                    }, {} as Record<string, typeof documents>)
+                  ).map(([category, docs]) => (
+                    <div key={category} className="space-y-1.5">
+                      <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wide">
+                        {category.replace(/_/g, ' ')}
+                      </h4>
+                      <div className="space-y-1">
+                        {docs.map((doc, index) => (
+                          <div
+                            key={doc.id}
+                            className="inline-flex items-center gap-2 px-2 py-1.5 border rounded-md bg-muted/30"
+                          >
+                            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-sm">Document {index + 1}</span>
+                            <span className="text-xs text-muted-foreground">
+                              ({(doc.fileSize / 1024).toFixed(0)} KB)
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => handleDownloadDocument(doc.id, doc.fileName)}
+                            >
+                              <Download className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleDeleteDocument(doc.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}

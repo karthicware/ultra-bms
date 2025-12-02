@@ -19,12 +19,11 @@ services:
       retries: 5
 
   localstack:
-    image: localstack/localstack:3.0
+    image: localstack/localstack:latest
     container_name: ultra-bms-localstack
     environment:
       SERVICES: s3
       DEBUG: 0
-      DATA_DIR: /tmp/localstack/data
       PERSISTENCE: 1
       AWS_DEFAULT_REGION: me-central-1
       AWS_ACCESS_KEY_ID: test
@@ -32,7 +31,7 @@ services:
     ports:
       - "4566:4566"
     volumes:
-      - localstack_data:/tmp/localstack
+      - localstack_data:/var/lib/localstack
       - ./localstack-init.sh:/etc/localstack/init/ready.d/init-s3.sh
     networks:
       - ultra-bms-network
@@ -41,7 +40,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 20s
 
 volumes:
   postgres_data:

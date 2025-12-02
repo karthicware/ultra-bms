@@ -101,7 +101,7 @@ public class VendorDashboardRepositoryImpl implements VendorDashboardRepository 
             FROM vendor_documents vd
             JOIN vendors v ON vd.vendor_id = v.id
             WHERE vd.expiry_date IS NOT NULL
-            AND vd.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + :withinDays
+            AND vd.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + CAST(:withinDays AS INTEGER)
             AND vd.is_deleted = false
             AND v.is_deleted = false
             AND v.status = 'ACTIVE'
@@ -121,7 +121,7 @@ public class VendorDashboardRepositoryImpl implements VendorDashboardRepository 
             FROM vendor_documents vd
             JOIN vendors v ON vd.vendor_id = v.id
             WHERE vd.expiry_date IS NOT NULL
-            AND vd.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + :withinDays
+            AND vd.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + CAST(:withinDays AS INTEGER)
             AND vd.document_type IN ('TRADE_LICENSE', 'INSURANCE')
             AND vd.is_deleted = false
             AND v.is_deleted = false
@@ -154,7 +154,7 @@ public class VendorDashboardRepositoryImpl implements VendorDashboardRepository 
                     FROM vendors v
                     WHERE v.status = 'ACTIVE'
                     AND v.is_deleted = false
-                    AND v.service_categories::text LIKE '%' || wo.category || '%'
+                    AND CAST(v.service_categories AS TEXT) LIKE '%' || wo.category || '%'
                 ) as vendor_count
             FROM work_orders wo
             WHERE wo.status IN ('COMPLETED', 'CLOSED')
@@ -210,7 +210,7 @@ public class VendorDashboardRepositoryImpl implements VendorDashboardRepository 
             FROM vendor_documents vd
             JOIN vendors v ON vd.vendor_id = v.id
             WHERE vd.expiry_date IS NOT NULL
-            AND vd.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + :withinDays
+            AND vd.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + CAST(:withinDays AS INTEGER)
             AND vd.is_deleted = false
             AND v.is_deleted = false
             AND v.status = 'ACTIVE'

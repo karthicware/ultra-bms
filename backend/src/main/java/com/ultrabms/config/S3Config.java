@@ -11,6 +11,7 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 /**
@@ -62,7 +63,11 @@ public class S3Config {
 
         // Apply endpoint override for LocalStack (dev environment)
         if (endpoint != null && !endpoint.isEmpty()) {
-            builder.endpointOverride(URI.create(endpoint));
+            builder.endpointOverride(URI.create(endpoint))
+                    // Use path-style access for LocalStack (bucket in path, not subdomain)
+                    .serviceConfiguration(S3Configuration.builder()
+                            .pathStyleAccessEnabled(true)
+                            .build());
         }
 
         return builder.build();
@@ -93,7 +98,11 @@ public class S3Config {
 
         // Apply endpoint override for LocalStack (dev environment)
         if (endpoint != null && !endpoint.isEmpty()) {
-            builder.endpointOverride(URI.create(endpoint));
+            builder.endpointOverride(URI.create(endpoint))
+                    // Use path-style access for LocalStack (bucket in path, not subdomain)
+                    .serviceConfiguration(S3Configuration.builder()
+                            .pathStyleAccessEnabled(true)
+                            .build());
         }
 
         return builder.build();

@@ -32,7 +32,7 @@ public class MaintenanceDashboardRepositoryImpl implements MaintenanceDashboardR
             SELECT COUNT(*)
             FROM work_orders wo
             WHERE wo.status NOT IN ('COMPLETED', 'CLOSED')
-            AND (:propertyId IS NULL OR wo.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -49,8 +49,8 @@ public class MaintenanceDashboardRepositoryImpl implements MaintenanceDashboardR
             FROM work_orders wo
             WHERE wo.status NOT IN ('COMPLETED', 'CLOSED')
             AND wo.scheduled_date IS NOT NULL
-            AND wo.scheduled_date < :asOfDate
-            AND (:propertyId IS NULL OR wo.property_id = :propertyId)
+            AND wo.scheduled_date < CAST(:asOfDate AS TIMESTAMP)
+            AND (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -67,7 +67,7 @@ public class MaintenanceDashboardRepositoryImpl implements MaintenanceDashboardR
             SELECT COUNT(*)
             FROM work_orders wo
             WHERE wo.status = 'OPEN'
-            AND (:propertyId IS NULL OR wo.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -85,7 +85,7 @@ public class MaintenanceDashboardRepositoryImpl implements MaintenanceDashboardR
             WHERE wo.status IN ('COMPLETED', 'CLOSED')
             AND wo.completed_at IS NOT NULL
             AND wo.completed_at BETWEEN :startDate AND :endDate
-            AND (:propertyId IS NULL OR wo.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -109,7 +109,7 @@ public class MaintenanceDashboardRepositoryImpl implements MaintenanceDashboardR
                 wo.status,
                 COUNT(*) as count
             FROM work_orders wo
-            WHERE (:propertyId IS NULL OR wo.property_id = :propertyId)
+            WHERE (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
             GROUP BY wo.status
             ORDER BY
                 CASE wo.status
@@ -135,7 +135,7 @@ public class MaintenanceDashboardRepositoryImpl implements MaintenanceDashboardR
                 wo.priority,
                 COUNT(*) as count
             FROM work_orders wo
-            WHERE (:propertyId IS NULL OR wo.property_id = :propertyId)
+            WHERE (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
             GROUP BY wo.priority
             ORDER BY
                 CASE wo.priority
@@ -160,7 +160,7 @@ public class MaintenanceDashboardRepositoryImpl implements MaintenanceDashboardR
                 wo.category,
                 COUNT(*) as count
             FROM work_orders wo
-            WHERE (:propertyId IS NULL OR wo.property_id = :propertyId)
+            WHERE (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
             GROUP BY wo.category
             ORDER BY count DESC
             """;
@@ -195,13 +195,13 @@ public class MaintenanceDashboardRepositoryImpl implements MaintenanceDashboardR
                 wo.scheduled_date,
                 CASE
                     WHEN wo.scheduled_date IS NULL THEN 0
-                    WHEN wo.scheduled_date < :asOfDate THEN
-                        EXTRACT(DAY FROM :asOfDate - wo.scheduled_date)::integer
+                    WHEN wo.scheduled_date < CAST(:asOfDate AS TIMESTAMP) THEN
+                        CAST(EXTRACT(DAY FROM CAST(:asOfDate AS TIMESTAMP) - wo.scheduled_date) AS INTEGER)
                     ELSE 0
                 END as days_overdue,
                 CASE
                     WHEN wo.scheduled_date IS NULL THEN false
-                    ELSE wo.scheduled_date < :asOfDate
+                    ELSE wo.scheduled_date < CAST(:asOfDate AS TIMESTAMP)
                 END as is_overdue
             FROM work_orders wo
             JOIN properties p ON wo.property_id = p.id
@@ -209,12 +209,12 @@ public class MaintenanceDashboardRepositoryImpl implements MaintenanceDashboardR
             WHERE wo.status NOT IN ('COMPLETED', 'CLOSED')
             AND (
                 wo.priority IN ('HIGH', 'URGENT')
-                OR (wo.scheduled_date IS NOT NULL AND wo.scheduled_date < :asOfDate)
+                OR (wo.scheduled_date IS NOT NULL AND wo.scheduled_date < CAST(:asOfDate AS TIMESTAMP))
             )
-            AND (:propertyId IS NULL OR wo.property_id = :propertyId)
-            AND (:statusFilter IS NULL OR wo.status = :statusFilter)
+            AND (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
+            AND (CAST(:statusFilter AS VARCHAR) IS NULL OR wo.status = :statusFilter)
             ORDER BY
-                CASE WHEN wo.scheduled_date < :asOfDate THEN 0 ELSE 1 END,
+                CASE WHEN wo.scheduled_date < CAST(:asOfDate AS TIMESTAMP) THEN 0 ELSE 1 END,
                 CASE wo.priority
                     WHEN 'URGENT' THEN 1
                     WHEN 'HIGH' THEN 2
@@ -244,10 +244,10 @@ public class MaintenanceDashboardRepositoryImpl implements MaintenanceDashboardR
             WHERE wo.status NOT IN ('COMPLETED', 'CLOSED')
             AND (
                 wo.priority IN ('HIGH', 'URGENT')
-                OR (wo.scheduled_date IS NOT NULL AND wo.scheduled_date < :asOfDate)
+                OR (wo.scheduled_date IS NOT NULL AND wo.scheduled_date < CAST(:asOfDate AS TIMESTAMP))
             )
-            AND (:propertyId IS NULL OR wo.property_id = :propertyId)
-            AND (:statusFilter IS NULL OR wo.status = :statusFilter)
+            AND (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
+            AND (CAST(:statusFilter AS VARCHAR) IS NULL OR wo.status = :statusFilter)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -277,7 +277,7 @@ public class MaintenanceDashboardRepositoryImpl implements MaintenanceDashboardR
             JOIN properties p ON wo.property_id = p.id
             WHERE wo.status IN ('COMPLETED', 'CLOSED')
             AND wo.completed_at IS NOT NULL
-            AND (:propertyId IS NULL OR wo.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
             ORDER BY wo.completed_at DESC
             LIMIT :limit
             """;

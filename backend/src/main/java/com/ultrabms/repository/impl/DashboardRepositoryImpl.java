@@ -35,7 +35,7 @@ public class DashboardRepositoryImpl implements DashboardRepository {
             FROM invoices i
             WHERE i.status != 'CANCELLED'
             AND i.invoice_date BETWEEN :startDate AND :endDate
-            AND (:propertyId IS NULL OR i.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR i.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -54,7 +54,7 @@ public class DashboardRepositoryImpl implements DashboardRepository {
             FROM expenses e
             WHERE e.is_deleted = false
             AND e.expense_date BETWEEN :startDate AND :endDate
-            AND (:propertyId IS NULL OR e.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR e.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -75,7 +75,7 @@ public class DashboardRepositoryImpl implements DashboardRepository {
             FROM units u
             JOIN properties p ON u.property_id = p.id
             WHERE p.active = true
-            AND (:propertyId IS NULL OR u.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR u.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -90,8 +90,8 @@ public class DashboardRepositoryImpl implements DashboardRepository {
             SELECT COUNT(*)
             FROM work_orders wo
             WHERE wo.status NOT IN ('COMPLETED', 'CLOSED', 'CANCELLED')
-            AND wo.scheduled_date < :asOfDate
-            AND (:propertyId IS NULL OR wo.property_id = :propertyId)
+            AND wo.scheduled_date < CAST(:asOfDate AS TIMESTAMP)
+            AND (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -107,13 +107,13 @@ public class DashboardRepositoryImpl implements DashboardRepository {
         String sql = """
             SELECT
                 COALESCE(SUM(i.balance_amount), 0) as total_outstanding,
-                COALESCE(SUM(CASE WHEN i.due_date >= :asOfDate THEN i.balance_amount ELSE 0 END), 0) as current_amount,
-                COALESCE(SUM(CASE WHEN :asOfDate - i.due_date BETWEEN 1 AND 30 THEN i.balance_amount ELSE 0 END), 0) as thirty_plus,
-                COALESCE(SUM(CASE WHEN :asOfDate - i.due_date BETWEEN 31 AND 60 THEN i.balance_amount ELSE 0 END), 0) as sixty_plus,
-                COALESCE(SUM(CASE WHEN :asOfDate - i.due_date > 60 THEN i.balance_amount ELSE 0 END), 0) as ninety_plus
+                COALESCE(SUM(CASE WHEN i.due_date >= CAST(:asOfDate AS DATE) THEN i.balance_amount ELSE 0 END), 0) as current_amount,
+                COALESCE(SUM(CASE WHEN CAST(:asOfDate AS DATE) - i.due_date BETWEEN 1 AND 30 THEN i.balance_amount ELSE 0 END), 0) as thirty_plus,
+                COALESCE(SUM(CASE WHEN CAST(:asOfDate AS DATE) - i.due_date BETWEEN 31 AND 60 THEN i.balance_amount ELSE 0 END), 0) as sixty_plus,
+                COALESCE(SUM(CASE WHEN CAST(:asOfDate AS DATE) - i.due_date > 60 THEN i.balance_amount ELSE 0 END), 0) as ninety_plus
             FROM invoices i
             WHERE i.status IN ('SENT', 'PARTIALLY_PAID', 'OVERDUE')
-            AND (:propertyId IS NULL OR i.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR i.property_id = :propertyId)
             """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -143,7 +143,7 @@ public class DashboardRepositoryImpl implements DashboardRepository {
                 wo.scheduled_date,
                 CASE
                     WHEN wo.scheduled_date < CURRENT_DATE THEN
-                        EXTRACT(DAY FROM CURRENT_DATE - wo.scheduled_date::date)::integer
+                        (CURRENT_DATE - CAST(wo.scheduled_date AS DATE))
                     ELSE 0
                 END as days_overdue,
                 wo.scheduled_date < CURRENT_DATE as is_overdue
@@ -152,7 +152,7 @@ public class DashboardRepositoryImpl implements DashboardRepository {
             LEFT JOIN units u ON wo.unit_id = u.id
             WHERE wo.priority = 'HIGH'
             AND wo.status IN ('OPEN', 'ASSIGNED')
-            AND (:propertyId IS NULL OR wo.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
             ORDER BY wo.scheduled_date ASC
             LIMIT :limit
             """;
@@ -174,15 +174,15 @@ public class DashboardRepositoryImpl implements DashboardRepository {
         String sql = """
             SELECT
                 wo.category,
-                COUNT(CASE WHEN wo.scheduled_date >= CURRENT_DATE AND wo.scheduled_date <= CURRENT_DATE + :days THEN 1 END) as scheduled_count,
+                COUNT(CASE WHEN wo.scheduled_date >= CURRENT_DATE AND wo.scheduled_date <= CURRENT_DATE + CAST(:days AS INTEGER) THEN 1 END) as scheduled_count,
                 COUNT(CASE WHEN wo.scheduled_date < CURRENT_DATE AND wo.status NOT IN ('COMPLETED', 'CLOSED', 'CANCELLED') THEN 1 END) as overdue_count,
                 COUNT(*) as total_count
             FROM work_orders wo
             WHERE wo.pm_schedule_id IS NOT NULL
             AND wo.status NOT IN ('COMPLETED', 'CLOSED', 'CANCELLED')
-            AND (:propertyId IS NULL OR wo.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR wo.property_id = :propertyId)
             AND (
-                (wo.scheduled_date >= CURRENT_DATE AND wo.scheduled_date <= CURRENT_DATE + :days)
+                (wo.scheduled_date >= CURRENT_DATE AND wo.scheduled_date <= CURRENT_DATE + CAST(:days AS INTEGER))
                 OR (wo.scheduled_date < CURRENT_DATE)
             )
             GROUP BY wo.category
@@ -206,11 +206,11 @@ public class DashboardRepositoryImpl implements DashboardRepository {
         String sql = """
             WITH month_series AS (
                 SELECT
-                    EXTRACT(YEAR FROM gs)::integer as year,
-                    EXTRACT(MONTH FROM gs)::integer as month
+                    CAST(EXTRACT(YEAR FROM gs) AS INTEGER) as year,
+                    CAST(EXTRACT(MONTH FROM gs) AS INTEGER) as month
                 FROM generate_series(
                     DATE_TRUNC('month', CURRENT_DATE),
-                    DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' * :months - INTERVAL '1 day',
+                    DATE_TRUNC('month', CURRENT_DATE) + CAST(:months AS INTEGER) * INTERVAL '1 month' - INTERVAL '1 day',
                     INTERVAL '1 month'
                 ) as gs
             )
@@ -224,7 +224,7 @@ public class DashboardRepositoryImpl implements DashboardRepository {
                 AND EXTRACT(MONTH FROM t.lease_end_date) = ms.month
                 AND t.status = 'ACTIVE'
                 AND t.active = true
-                AND (:propertyId IS NULL OR t.property_id = :propertyId)
+                AND (CAST(:propertyId AS UUID) IS NULL OR t.property_id = :propertyId)
             GROUP BY ms.year, ms.month
             ORDER BY ms.year, ms.month
             """;
@@ -250,7 +250,7 @@ public class DashboardRepositoryImpl implements DashboardRepository {
                    COUNT(*) as count
             FROM compliance_schedules cs
             WHERE cs.status = 'OVERDUE'
-            AND (:propertyId IS NULL OR cs.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR cs.property_id = :propertyId)
 
             UNION ALL
 
@@ -258,7 +258,7 @@ public class DashboardRepositoryImpl implements DashboardRepository {
             SELECT 'EXPIRED_VENDOR_LICENSES' as alert_type, 'URGENT' as severity,
                    COUNT(*) as count
             FROM vendor_documents vd
-            WHERE vd.is_critical = true
+            WHERE vd.document_type IN ('TRADE_LICENSE', 'INSURANCE')
             AND vd.expiry_date < CURRENT_DATE
             AND vd.is_deleted = false
 
@@ -268,7 +268,7 @@ public class DashboardRepositoryImpl implements DashboardRepository {
             SELECT 'DOCUMENTS_EXPIRING_SOON' as alert_type, 'WARNING' as severity,
                    COUNT(*) as count
             FROM vendor_documents vd
-            WHERE vd.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + 7
+            WHERE vd.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + CAST(7 AS INTEGER)
             AND vd.is_deleted = false
 
             UNION ALL
@@ -279,7 +279,7 @@ public class DashboardRepositoryImpl implements DashboardRepository {
             FROM invoices i
             WHERE i.status = 'OVERDUE'
             AND i.balance_amount > 10000
-            AND (:propertyId IS NULL OR i.property_id = :propertyId)
+            AND (CAST(:propertyId AS UUID) IS NULL OR i.property_id = :propertyId)
 
             UNION ALL
 
@@ -293,10 +293,10 @@ public class DashboardRepositoryImpl implements DashboardRepository {
                 FROM properties p
                 LEFT JOIN units u ON u.property_id = p.id
                 WHERE p.active = true
-                AND (:propertyId IS NULL OR p.id = :propertyId)
+                AND (CAST(:propertyId AS UUID) IS NULL OR p.id = :propertyId)
                 GROUP BY p.id
                 HAVING COUNT(u.id) > 0
-                   AND (COUNT(CASE WHEN u.status = 'OCCUPIED' THEN 1 END)::float / COUNT(u.id)) < 0.7
+                   AND (CAST(COUNT(CASE WHEN u.status = 'OCCUPIED' THEN 1 END) AS FLOAT) / COUNT(u.id)) < 0.7
             ) low_occ
             """;
 
@@ -319,7 +319,7 @@ public class DashboardRepositoryImpl implements DashboardRepository {
                 p.name as property_name,
                 CASE
                     WHEN COUNT(u.id) = 0 THEN 0
-                    ELSE (COUNT(CASE WHEN u.status = 'OCCUPIED' THEN 1 END)::float / COUNT(u.id) * 100)
+                    ELSE (CAST(COUNT(CASE WHEN u.status = 'OCCUPIED' THEN 1 END) AS FLOAT) / COUNT(u.id) * 100)
                 END as occupancy_rate,
                 COALESCE((
                     SELECT SUM(e.amount)

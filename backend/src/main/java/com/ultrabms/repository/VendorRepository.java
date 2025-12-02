@@ -169,10 +169,10 @@ public interface VendorRepository extends JpaRepository<Vendor, UUID> {
      */
     @Query(value = "SELECT * FROM vendors v WHERE v.is_deleted = false AND " +
             "v.status = :#{#status.name()} AND " +
-            "v.service_categories @> :categoryJson::jsonb",
+            "v.service_categories @> CAST(:categoryJson AS JSONB)",
             countQuery = "SELECT COUNT(*) FROM vendors v WHERE v.is_deleted = false AND " +
                     "v.status = :#{#status.name()} AND " +
-                    "v.service_categories @> :categoryJson::jsonb",
+                    "v.service_categories @> CAST(:categoryJson AS JSONB)",
             nativeQuery = true)
     Page<Vendor> findByServiceCategoryAndStatus(
             @Param("categoryJson") String categoryJson,
@@ -188,7 +188,7 @@ public interface VendorRepository extends JpaRepository<Vendor, UUID> {
      */
     @Query(value = "SELECT * FROM vendors v WHERE v.is_deleted = false AND " +
             "v.status = 'ACTIVE' AND " +
-            "v.service_categories @> :categoryJson::jsonb " +
+            "v.service_categories @> CAST(:categoryJson AS JSONB) " +
             "ORDER BY v.rating DESC, v.company_name ASC",
             nativeQuery = true)
     List<Vendor> findActiveVendorsByServiceCategory(@Param("categoryJson") String categoryJson);
@@ -299,10 +299,10 @@ public interface VendorRepository extends JpaRepository<Vendor, UUID> {
      */
     @Query(value = "SELECT * FROM vendors v WHERE v.is_deleted = false AND " +
             "v.status = :#{#status.name()} AND " +
-            "v.service_categories @> :categoryJson::jsonb",
+            "v.service_categories @> CAST(:categoryJson AS JSONB)",
             countQuery = "SELECT COUNT(*) FROM vendors v WHERE v.is_deleted = false AND " +
                     "v.status = :#{#status.name()} AND " +
-                    "v.service_categories @> :categoryJson::jsonb",
+                    "v.service_categories @> CAST(:categoryJson AS JSONB)",
             nativeQuery = true)
     Page<Vendor> findByStatusAndServiceCategoriesContaining(
             @Param("status") VendorStatus status,

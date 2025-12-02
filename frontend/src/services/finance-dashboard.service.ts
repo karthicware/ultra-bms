@@ -16,7 +16,7 @@ import {
   PdcStatusSummary,
 } from '@/types/finance-dashboard';
 
-const BASE_URL = '/api/v1/dashboard/finance';
+const BASE_URL = '/v1/dashboard/finance';
 
 /**
  * Finance Dashboard Service

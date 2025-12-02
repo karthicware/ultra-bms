@@ -127,7 +127,7 @@ public class AssetsDashboardRepositoryImpl implements AssetsDashboardRepository 
                 END as category_display_name,
                 COUNT(*) as count,
                 CASE
-                    WHEN tc.total > 0 THEN ROUND((COUNT(*)::decimal / tc.total) * 100, 2)
+                    WHEN tc.total > 0 THEN ROUND((CAST(COUNT(*) AS DECIMAL) / tc.total) * 100, 2)
                     ELSE 0
                 END as percentage
             FROM assets a, total_count tc

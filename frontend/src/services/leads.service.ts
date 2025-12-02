@@ -297,28 +297,32 @@ export async function deleteDocument(leadId: string, documentId: string): Promis
  * window.URL.revokeObjectURL(url);
  * ```
  */
-export async function downloadDocument(leadId: string, documentId: string): Promise<Blob> {
+interface DownloadUrlResponse {
+  downloadUrl: string;
+  fileName: string;
+  fileSize: number;
+  contentType: string;
+}
+
+export async function downloadDocument(leadId: string, documentId: string): Promise<string> {
   try {
     console.log('[DOWNLOAD] Starting download:', { leadId, documentId });
-    const response = await apiClient.get<Blob>(
-      `${LEADS_BASE_PATH}/${leadId}/documents/${documentId}/download`,
-      {
-        responseType: 'blob',
-      }
+
+    // Get presigned URL from backend
+    const urlResponse = await apiClient.get<{ success: boolean; data: DownloadUrlResponse }>(
+      `${LEADS_BASE_PATH}/${leadId}/documents/${documentId}/download`
     );
-    console.log('[DOWNLOAD] Success:', {
-      status: response.status,
-      contentType: response.headers['content-type'],
-      size: response.data.size
-    });
-    return response.data;
+
+    const { downloadUrl } = urlResponse.data.data;
+    console.log('[DOWNLOAD] Got presigned URL');
+
+    // Return the presigned URL - caller will open it directly to bypass CORS
+    return downloadUrl;
   } catch (error: any) {
     console.error('[DOWNLOAD] Error details:', {
       message: error.message,
-      response: error.response,
-      request: error.request,
-      config: error.config,
-      error: error,
+      name: error.name,
+      stack: error.stack,
     });
     throw error;
   }

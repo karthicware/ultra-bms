@@ -25,7 +25,7 @@ import type {
   TopVendorsParams,
 } from '@/types/vendor-dashboard';
 
-const BASE_URL = '/api/v1/dashboard/vendor';
+const BASE_URL = '/v1/dashboard/vendor';
 
 /**
  * Fetch complete vendor dashboard data (AC-9)
