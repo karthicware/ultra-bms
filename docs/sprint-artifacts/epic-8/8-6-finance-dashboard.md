@@ -236,6 +236,20 @@ Execute lint check: `npm run lint`
 
 ## Dev Notes
 
+### UI Component Sourcing (Priority Order)
+**Reference:** Sprint Change Proposal 2025-12-01
+
+1. **Primary:** shadcn-studio-mcp blocks (install via `npx shadcn@latest add "https://shadcn-studio.com/r/{block-name}"`)
+   | UI Element | Block Name | Install Command |
+   |------------|------------|-----------------|
+   | Finance KPIs (Income, Expenses, Net Profit, VAT) | `statistics-component-05` | `npx shadcn@latest add "https://shadcn-studio.com/r/statistics-component-05"` |
+   | Income vs Expense Chart | `chart-component-11` | `npx shadcn@latest add "https://shadcn-studio.com/r/chart-component-11"` |
+   | Expense Categories Donut | `chart-component-03` | `npx shadcn@latest add "https://shadcn-studio.com/r/chart-component-03"` |
+   | Receivables/Transactions Table | `datatable-component-05` | `npx shadcn@latest add "https://shadcn-studio.com/r/datatable-component-05"` |
+   | PDC Status Widget | `widget-component-03` | `npx shadcn@latest add "https://shadcn-studio.com/r/widget-component-03"` |
+
+2. **Fallback:** If no matching shadcn-studio-mcp block, use shadcn-mcp or manual shadcn/ui components
+
 ### Relevant Architecture Patterns
 - Use Spring Cache with Ehcache for 5-minute caching [Source: docs/architecture.md#Caching-Strategy]
 - AED currency only [Source: docs/architecture.md#ADR-004]

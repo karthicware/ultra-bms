@@ -77,20 +77,19 @@ const amountSchema = z
  * - Required
  * - Must be a valid date
  * - Must be in the future (or today)
+ * Uses date string comparison to avoid timezone issues
  */
 const futureDateSchema = z
   .string()
   .min(1, 'Date is required')
   .refine((date) => {
-    const parsed = new Date(date);
-    return !isNaN(parsed.getTime());
+    return !isNaN(Date.parse(date));
   }, 'Invalid date format')
   .refine((date) => {
-    const parsed = new Date(date);
-    parsed.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return parsed >= today;
+    // Compare date strings directly to avoid timezone issues
+    const todayStr = new Date().toISOString().split('T')[0];
+    const valStr = date.split('T')[0];
+    return valStr >= todayStr;
   }, 'Date must be today or in the future');
 
 /**
@@ -556,14 +555,14 @@ export function isValidDateString(dateStr: string): boolean {
 
 /**
  * Check if a date is in the future (or today)
+ * Uses date string comparison to avoid timezone issues
  */
 export function isFutureOrTodayDate(dateStr: string): boolean {
   if (!isValidDateString(dateStr)) return false;
-  const parsed = new Date(dateStr);
-  parsed.setHours(0, 0, 0, 0);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return parsed >= today;
+  // Compare date strings directly to avoid timezone issues
+  const todayStr = new Date().toISOString().split('T')[0];
+  const valStr = dateStr.split('T')[0];
+  return valStr >= todayStr;
 }
 
 /**
@@ -608,14 +607,19 @@ export function validateDateRange(fromDate: string | null, toDate: string | null
 /**
  * Calculate days until cheque date
  * Returns negative if past, positive if future, 0 if today
+ * Uses UTC date comparison to avoid timezone issues
  */
 export function getDaysUntilDate(dateStr: string): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(dateStr);
-  target.setHours(0, 0, 0, 0);
+  // Get today's date in UTC (YYYY-MM-DD format)
+  const todayStr = new Date().toISOString().split('T')[0];
+  const targetStr = dateStr.split('T')[0];
+
+  // Parse as UTC dates to avoid timezone issues
+  const today = new Date(todayStr + 'T00:00:00Z');
+  const target = new Date(targetStr + 'T00:00:00Z');
+
   const diffTime = target.getTime() - today.getTime();
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.round(diffTime / (1000 * 60 * 60 * 24));
 }
 
 /**

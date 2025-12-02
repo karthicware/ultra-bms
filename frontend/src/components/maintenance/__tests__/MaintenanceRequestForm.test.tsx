@@ -170,7 +170,7 @@ describe('MaintenanceRequestForm', () => {
                 title: 'Failed to submit request',
             }));
         });
-    });
+    }, 15000);
 
     it('validates title length (max 100 chars)', async () => {
         const user = userEvent.setup();

@@ -23,7 +23,8 @@ import java.util.List;
  * Runs daily at 8 AM to send reminders for compliance items due within 14 days.
  *
  * Story 7.3: Compliance and Inspection Tracking
- * AC #26: Daily job at 8AM to send reminder notifications for items due within 14 days
+ * AC #26: Daily job at 8AM to send reminder notifications for items due within
+ * 14 days
  */
 @Component
 public class ComplianceReminderNotificationJob {
@@ -74,8 +75,7 @@ public class ComplianceReminderNotificationJob {
 
             // Get admin/property manager users to notify
             List<User> managers = userRepository.findByRoleIn(
-                    List.of(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.PROPERTY_MANAGER)
-            );
+                    List.of(UserRole.SUPER_ADMIN, UserRole.PROPERTY_MANAGER));
 
             if (managers.isEmpty()) {
                 LOGGER.warn("No managers found to send compliance reminders to");
@@ -108,8 +108,7 @@ public class ComplianceReminderNotificationJob {
                                 propertyName,
                                 dueDate,
                                 daysUntilDue,
-                                portalUrl
-                        );
+                                portalUrl);
                         sentCount++;
                     } catch (Exception e) {
                         LOGGER.error("Failed to send compliance reminder to {} for schedule {}: {}",

@@ -221,6 +221,7 @@ describe('CommentsSection', () => {
       expect(mockToast).toHaveBeenCalledWith({
         title: 'Success',
         description: 'Comment added successfully',
+        variant: 'success',
       });
       expect(mockOnCommentAdded).toHaveBeenCalled();
     });

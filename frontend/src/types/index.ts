@@ -43,12 +43,121 @@ export * from './vendor-documents';
 export * from './vendor-ratings';
 export * from './invoice';
 export * from './expense';
+// Dashboard exports - using named exports to avoid conflict with formatPercentage from reports.ts
+export {
+  // Enums
+  TrendDirection,
+  AlertSeverity,
+  AlertType,
+  PerformanceRank,
+  // Interfaces
+  type KpiCard,
+  type AgingBreakdown,
+  type ReceivablesKpi,
+  type KpiCards,
+  type MaintenanceQueueItem,
+  type PmJobChartData,
+  type LeaseExpirationTimeline,
+  type Alert,
+  type PropertyComparison,
+  type ExecutiveDashboard,
+  type DashboardFilter,
+  type MaintenanceQueueFilter,
+  type PmJobsFilter,
+  type LeaseExpirationsFilter,
+  type PropertyComparisonFilter,
+  type ExecutiveDashboardResponse,
+  type KpiCardsResponse,
+  type MaintenanceQueueResponse,
+  type PmJobsResponse,
+  type LeaseExpirationsResponse,
+  type AlertsResponse,
+  type PropertyComparisonResponse,
+  type AlertSeverityInfo,
+  type PerformanceRankInfo,
+  // Constants
+  ALERT_SEVERITY_OPTIONS,
+  PERFORMANCE_RANK_OPTIONS,
+  // Functions
+  getAlertSeverityInfo,
+  getPerformanceRankInfo,
+  getTrendIndicator,
+  formatDashboardCurrency,
+  formatDashboardPercentage,
+  getMonthName,
+} from './dashboard';
 export * from './lease';
 export * from './checkout';
 export * from './parking';
 export * from './pdc';
 export * from './asset';
-export * from './reports';
+// Reports exports - using named exports to avoid conflict with formatPercentage
+export {
+  // Enums
+  AgingBucket,
+  DateRangePreset,
+  ExportFormat,
+  ReportType,
+  RevenueType,
+  // Interfaces
+  type AgingBucketData,
+  type ARAgingFilter,
+  type ARAgingReport,
+  type ARAgingResponse,
+  type CashFlowResponse,
+  type CashFlowSummary,
+  type CategoryExpense,
+  type ComparativeCashFlow,
+  type ComparativeIncomeStatement,
+  type DateRange,
+  type EmailReportRequest,
+  type EmailReportResponse,
+  type ExpenseBreakdownItem,
+  type ExpenseBreakdownReport,
+  type ExpenseBreakdownResponse,
+  type ExportRequest,
+  type FinancialDashboard,
+  type FinancialDashboardResponse,
+  type FinancialInsights,
+  type FinancialKPIs,
+  type HighestExpenseCategory,
+  type IncomeStatement,
+  type IncomeStatementResponse,
+  type MonthlyCashFlow,
+  type MonthlyExpenseTrendData,
+  type MonthlyRevenueTrend,
+  type PropertyMaintenanceCost,
+  type PropertyRevenue,
+  type ReportFilter,
+  type RevenueBreakdown,
+  type RevenueBreakdownItem,
+  type RevenueBreakdownResponse,
+  type TenantAgingDetail,
+  type TopPerformingProperty,
+  type TypeRevenue,
+  type VarianceData,
+  type VendorPayment,
+  type YearOverYearRevenue,
+  // Constants
+  AGING_BUCKET_COLORS,
+  AGING_BUCKET_LABELS,
+  CHART_COLOR_PALETTE,
+  CHART_COLORS,
+  DATE_RANGE_PRESET_LABELS,
+  EXPORT_FORMAT_LABELS,
+  REPORT_TYPE_LABELS,
+  REVENUE_TYPE_COLORS,
+  REVENUE_TYPE_LABELS,
+  // Functions - excluding formatPercentage to avoid conflict with dashboard
+  formatReportCurrency,
+  formatReportPercentage,
+  getAgingBucketColor,
+  getDateRangePresetLabel,
+  getExportFormatLabel,
+  getReportTypeLabel,
+  getRevenueTypeLabel,
+  getVarianceColorClass,
+} from './reports';
 export * from './compliance';
 export * from './announcement';
 // Exclude conflicting types from document.ts that are already exported from vendor-documents.ts
@@ -98,3 +207,61 @@ export {
   isValidDocumentFileSize,
   COMMON_DOCUMENT_TYPES,
 } from './document';
+// Occupancy Dashboard exports (Story 8.3)
+export {
+  // Enums
+  LeaseActivityType,
+  // Interfaces
+  type OccupancyKpiValue,
+  type OccupancyKpis,
+  type OccupancySegment,
+  type PortfolioOccupancyChart,
+  type MonthlyExpiration,
+  type LeaseExpirationChart,
+  type LeaseExpirationItem,
+  type LeaseActivityItem,
+  type OccupancyDashboard,
+  type OccupancyDashboardFilter,
+  type LeaseExpirationsFilter as OccupancyLeaseExpirationsFilter,
+  type RecentActivityFilter,
+  type OccupancyDashboardResponse,
+  type LeaseExpirationsResponse as OccupancyLeaseExpirationsResponse,
+  type RecentActivityResponse,
+  type ActivityTypeInfo,
+  type RenewalStatusInfo,
+  // Constants
+  ACTIVITY_TYPE_OPTIONS,
+  OCCUPANCY_STATUS_COLORS,
+  RENEWAL_STATUS_OPTIONS,
+  // Functions
+  getActivityTypeInfo,
+  getRenewalStatusInfo,
+  getOccupancyStatusColor,
+  formatDaysRemaining,
+  getDaysRemainingUrgency,
+  getUrgencyClasses,
+} from './occupancy-dashboard';
+// Maintenance Dashboard exports (Story 8.4)
+export {
+  // Enums
+  MaintenanceJobPriority,
+  MaintenanceJobCategory,
+  // Interfaces
+  type MaintenanceKpi,
+  type JobsByStatus,
+  type JobsByPriority,
+  type JobsByCategory,
+  type HighPriorityJob,
+  type RecentlyCompletedJob,
+  type MaintenanceDashboard,
+  type HighPriorityJobsPage,
+  type MaintenanceDashboardFilters,
+  type HighPriorityJobsFilters,
+  // Constants
+  STATUS_COLORS,
+  PRIORITY_COLORS,
+  CATEGORY_COLORS,
+  STATUS_LABELS,
+  PRIORITY_LABELS,
+  CATEGORY_LABELS,
+} from './maintenance-dashboard';

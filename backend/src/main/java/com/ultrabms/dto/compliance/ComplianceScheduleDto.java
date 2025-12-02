@@ -26,6 +26,8 @@ import java.util.UUID;
 public class ComplianceScheduleDto {
 
     private UUID id;
+    private String scheduleNumber;
+    private UUID requirementId;
     private UUID complianceRequirementId;
     private String requirementNumber;
     private String requirementName;
@@ -39,9 +41,25 @@ public class ComplianceScheduleDto {
     private UUID completedBy;
     private String completedByName;
     private String notes;
+    private String certificateNumber;
+    private String certificateUrl;
     private String certificateFilePath;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    /**
+     * Alias for completedDate to match entity naming
+     */
+    public LocalDate getCompletionDate() {
+        return completedDate;
+    }
+
+    /**
+     * Alias setter for completedDate
+     */
+    public void setCompletionDate(LocalDate completionDate) {
+        this.completedDate = completionDate;
+    }
 
     // Related items
     private List<InspectionListDto> inspections;

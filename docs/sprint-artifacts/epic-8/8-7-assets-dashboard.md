@@ -233,6 +233,20 @@ Execute lint check: `npm run lint`
 
 ## Dev Notes
 
+### UI Component Sourcing (Priority Order)
+**Reference:** Sprint Change Proposal 2025-12-01
+
+1. **Primary:** shadcn-studio-mcp blocks (install via `npx shadcn@latest add "https://shadcn-studio.com/r/{block-name}"`)
+   | UI Element | Block Name | Install Command |
+   |------------|------------|-----------------|
+   | Asset KPIs (Total, Value, Overdue PM, TCO) | `statistics-component-02` | `npx shadcn@latest add "https://shadcn-studio.com/r/statistics-component-02"` |
+   | Assets by Category Donut | `chart-component-03` | `npx shadcn@latest add "https://shadcn-studio.com/r/chart-component-03"` |
+   | Maintenance Spend Bar | `chart-component-05` | `npx shadcn@latest add "https://shadcn-studio.com/r/chart-component-05"` |
+   | Overdue PM List | `widget-component-17` | `npx shadcn@latest add "https://shadcn-studio.com/r/widget-component-17"` |
+   | Depreciation Summary | `statistics-component-07` | `npx shadcn@latest add "https://shadcn-studio.com/r/statistics-component-07"` |
+
+2. **Fallback:** If no matching shadcn-studio-mcp block, use shadcn-mcp or manual shadcn/ui components
+
 ### Relevant Architecture Patterns
 - Use Spring Cache with Ehcache for 5-minute caching [Source: docs/architecture.md#Caching-Strategy]
 - Use Recharts for all charts [Source: docs/architecture.md#Decision-Summary]

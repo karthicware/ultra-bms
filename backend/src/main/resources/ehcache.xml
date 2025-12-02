@@ -64,6 +64,225 @@
         </resources>
     </cache>
 
+    <!-- ================================================================= -->
+    <!-- DASHBOARD CACHES (Story 8.1) -->
+    <!-- AC-18: 5-minute cache TTL for dashboard data -->
+    <!-- ================================================================= -->
+
+    <!-- Executive Dashboard Complete Data Cache -->
+    <cache alias="executiveDashboard">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.ExecutiveDashboardDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Dashboard KPI Cards Cache -->
+    <cache alias="dashboardKpis">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.KpiCardsDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Priority Maintenance Queue Cache -->
+    <cache alias="maintenanceQueue">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- PM Jobs Chart Data Cache -->
+    <cache alias="pmJobsChart">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Lease Expirations Timeline Cache -->
+    <cache alias="leaseExpirations">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Critical Alerts Cache -->
+    <cache alias="criticalAlerts">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Property Comparison Cache -->
+    <cache alias="propertyComparison">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- ================================================================= -->
+    <!-- OCCUPANCY DASHBOARD CACHES (Story 8.3) -->
+    <!-- AC-15: 5-minute cache TTL for occupancy dashboard data -->
+    <!-- ================================================================= -->
+
+    <!-- Occupancy Dashboard Complete Data Cache -->
+    <cache alias="occupancyDashboard">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.occupancy.OccupancyDashboardDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Occupancy Lease Expirations List Cache -->
+    <cache alias="occupancyLeaseExpirations">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Occupancy Recent Activity Cache -->
+    <cache alias="occupancyRecentActivity">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- ================================================================= -->
+    <!-- MAINTENANCE DASHBOARD CACHES (Story 8.4) -->
+    <!-- AC-18: 5-minute cache TTL for maintenance dashboard data -->
+    <!-- ================================================================= -->
+
+    <!-- Maintenance Dashboard Complete Data Cache -->
+    <cache alias="maintenanceDashboard">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.maintenance.MaintenanceDashboardDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Maintenance Dashboard KPIs Cache -->
+    <cache alias="maintenanceKpis">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.maintenance.MaintenanceKpiDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Jobs By Status Cache -->
+    <cache alias="jobsByStatus">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Jobs By Priority Cache -->
+    <cache alias="jobsByPriority">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Jobs By Category Cache -->
+    <cache alias="jobsByCategory">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- High Priority Overdue Jobs Cache -->
+    <cache alias="highPriorityOverdueJobs">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Recently Completed Jobs Cache -->
+    <cache alias="recentlyCompletedJobs">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
     <!-- Default cache template for other caches -->
     <cache-template name="default">
         <expiry>

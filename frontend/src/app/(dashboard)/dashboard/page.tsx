@@ -1,153 +1,143 @@
 'use client';
 
 /**
- * Dashboard Page
- * Main landing page after login
+ * Executive Summary Dashboard Page
+ * Story 8.1: Executive Summary Dashboard
+ * Main landing page after login with comprehensive property management KPIs
  */
 
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { AnnouncementsWidget } from '@/components/announcements/AnnouncementsWidget';
-import { Users, FileText, Settings, Building2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-export default function DashboardPage() {
-  const router = useRouter();
+// Dashboard components
+import { KpiCardsGrid } from '@/components/dashboard/KpiCard';
+import { MaintenanceQueueCard } from '@/components/dashboard/MaintenanceQueueCard';
+import { PmJobsChart } from '@/components/dashboard/PmJobsChart';
+import { LeaseExpirationTimeline } from '@/components/dashboard/LeaseExpirationTimeline';
+import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
+import { PropertyComparisonTable } from '@/components/dashboard/PropertyComparisonTable';
+import { DashboardFilters, type DashboardFilterValues } from '@/components/dashboard/DashboardFilters';
+
+// Hooks
+import { useExecutiveDashboard } from '@/hooks/useDashboard';
+
+// ============================================================================
+// MAIN PAGE COMPONENT
+// ============================================================================
+
+export default function ExecutiveDashboardPage() {
   const { user } = useAuth();
+  const [filters, setFilters] = useState<DashboardFilterValues>({});
 
-  const dashboardCards = [
-    {
-      title: 'Leads',
-      description: 'Manage potential tenant leads and track conversion',
-      icon: Users,
-      href: '/leads',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50 dark:bg-blue-950',
-      testId: 'card-leads',
-    },
-    {
-      title: 'Quotations',
-      description: 'Create and manage quotations for leads',
-      icon: FileText,
-      href: '/quotations',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50 dark:bg-purple-950',
-      testId: 'card-quotations',
-    },
-    {
-      title: 'Leads & Quotes',
-      description: 'Combined view of leads with their quotations',
-      icon: Building2,
-      href: '/leads-quotes',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50 dark:bg-green-950',
-      testId: 'card-leads-quotes',
-    },
-    {
-      title: 'Settings',
-      description: 'Manage your account and preferences',
-      icon: Settings,
-      href: '/settings',
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-50 dark:bg-gray-950',
-      testId: 'card-settings',
-    },
-  ];
+  // Fetch dashboard data with React Query
+  const {
+    data: dashboardData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching
+  } = useExecutiveDashboard(filters);
+
+  // Handle filter changes
+  const handleFilterChange = useCallback((newFilters: DashboardFilterValues) => {
+    setFilters(newFilters);
+  }, []);
+
+  // Handle refresh
+  const handleRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   return (
-    <div className="container mx-auto py-6 space-y-6" data-testid="dashboard-page">
+    <div className="container mx-auto space-y-6 py-6" data-testid="executive-dashboard-page">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back, {user?.firstName || 'User'}
-        </h1>
-        <p className="text-muted-foreground">
-          Here&apos;s what&apos;s happening with your business today
-        </p>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Welcome back, {user?.firstName || 'User'}
+          </h1>
+          <p className="text-muted-foreground">
+            Here&apos;s your property management overview
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isFetching}
+        >
+          <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+          {isFetching ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </div>
 
-      {/* Dashboard Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {dashboardCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <Card
-              key={card.href}
-              className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => router.push(card.href)}
-              data-testid={card.testId}
-            >
-              <CardHeader>
-                <div className={`w-12 h-12 rounded-lg ${card.bgColor} flex items-center justify-center mb-2`}>
-                  <Icon className={`h-6 w-6 ${card.color}`} />
-                </div>
-                <CardTitle>{card.title}</CardTitle>
-                <CardDescription>{card.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    router.push(card.href);
-                  }}
-                >
-                  Go to {card.title}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
+      {/* Filters - AC-10 */}
+      <DashboardFilters
+        onFilterChange={handleFilterChange}
+        isLoading={isLoading}
+      />
+
+      {/* Error State */}
+      {isError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error loading dashboard</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : 'Failed to load dashboard data. Please try again.'}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* KPI Cards - AC-1 to AC-5 */}
+      <KpiCardsGrid
+        kpis={dashboardData?.kpis ?? null}
+        isLoading={isLoading}
+      />
+
+      {/* Main Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Left Column */}
+        <div className="space-y-6">
+          {/* Maintenance Queue - AC-5 */}
+          <MaintenanceQueueCard
+            items={dashboardData?.priorityMaintenanceQueue ?? null}
+            isLoading={isLoading}
+          />
+
+          {/* Alerts Panel - AC-8 */}
+          <AlertsPanel
+            alerts={dashboardData?.criticalAlerts ?? null}
+            isLoading={isLoading}
+            maxItems={5}
+          />
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+          {/* PM Jobs Chart - AC-6 */}
+          <PmJobsChart
+            data={dashboardData?.upcomingPmJobs ?? null}
+            isLoading={isLoading}
+          />
+
+          {/* Lease Expiration Timeline - AC-7 */}
+          <LeaseExpirationTimeline
+            data={dashboardData?.leaseExpirations ?? null}
+            isLoading={isLoading}
+          />
+        </div>
       </div>
 
-      {/* Quick Stats - Placeholder for future implementation */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Leads</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              Coming soon
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Quotations</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              Coming soon
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              Coming soon
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Announcements Widget - Story 9.2 AC #64-70 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AnnouncementsWidget maxItems={5} />
-      </div>
+      {/* Property Comparison Table - AC-9 */}
+      <PropertyComparisonTable
+        properties={dashboardData?.propertyComparison ?? null}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

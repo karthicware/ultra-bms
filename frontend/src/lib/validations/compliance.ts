@@ -80,13 +80,15 @@ export const optionalDateStringSchema = z.string()
 
 /**
  * Future date validation (for scheduled inspections)
+ * Uses date string comparison to avoid timezone issues
  */
 export const futureDateSchema = z.string().refine(
   (val) => {
-    const date = new Date(val);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return !isNaN(date.getTime()) && date >= today;
+    if (!val || isNaN(Date.parse(val))) return false;
+    // Compare date strings directly to avoid timezone issues
+    const todayStr = new Date().toISOString().split('T')[0];
+    const valStr = val.split('T')[0]; // Handle both "YYYY-MM-DD" and ISO datetime
+    return valStr >= todayStr;
   },
   { message: 'Date must be today or in the future' }
 );
@@ -257,10 +259,11 @@ export const inspectionCreateSchema = z.object({
     .min(1, 'Scheduled date is required')
     .refine(
       (val) => {
-        const date = new Date(val);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return !isNaN(date.getTime()) && date >= today;
+        if (!val || isNaN(Date.parse(val))) return false;
+        // Compare date strings directly to avoid timezone issues
+        const todayStr = new Date().toISOString().split('T')[0];
+        const valStr = val.split('T')[0];
+        return valStr >= todayStr;
       },
       { message: 'Scheduled date must be today or in the future' }
     )

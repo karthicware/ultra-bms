@@ -1,9 +1,11 @@
 /**
  * Dashboard Stats Grid Component
  * Displays key metrics: outstanding balance, next payment, open requests, upcoming bookings
+ * Upgraded to use shadcn-studio statistics-card-03 pattern
  */
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
+import { Wallet, Calendar, Wrench, CalendarDays } from 'lucide-react';
+import StatisticsCard from '@/components/shadcn-studio/blocks/statistics-card-03';
 import type { DashboardStats } from '@/types/tenant-portal';
 
 interface DashboardStatsGridProps {
@@ -19,69 +21,76 @@ export function DashboardStatsGrid({ stats }: DashboardStatsGridProps) {
     }).format(amount);
   };
 
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('en-AE', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  // Determine balance trend (down is good for balance)
+  const balanceTrend = stats.outstandingBalance > 0 ? 'down' : 'up';
+  const balanceIconClass = stats.outstandingBalance > 0
+    ? 'bg-red-500/10 text-red-500'
+    : 'bg-green-500/10 text-green-500';
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {/* Outstanding Balance */}
-      <Card data-testid="card-outstanding-balance">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Outstanding Balance</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${stats.outstandingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-            {formatCurrency(stats.outstandingBalance)}
-          </div>
-        </CardContent>
-      </Card>
+      <div data-testid="card-outstanding-balance">
+        <StatisticsCard
+          icon={<Wallet />}
+          value={formatCurrency(stats.outstandingBalance)}
+          title="Outstanding Balance"
+          trend={balanceTrend}
+          changePercentage={stats.outstandingBalance > 0 ? 'Due' : 'Paid'}
+          badgeContent="Account Status"
+          iconClassName={balanceIconClass}
+        />
+      </div>
 
       {/* Next Payment Due */}
-      <Card data-testid="card-next-payment">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Next Payment Due</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {stats.nextPaymentDue ? (
-            <>
-              <div className="text-lg font-semibold">
-                {new Date(stats.nextPaymentDue.date).toLocaleDateString('en-AE', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                })}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {formatCurrency(stats.nextPaymentDue.amount)}
-              </div>
-            </>
-          ) : (
-            <div className="text-sm text-muted-foreground">No upcoming payments</div>
-          )}
-        </CardContent>
-      </Card>
+      <div data-testid="card-next-payment">
+        <StatisticsCard
+          icon={<Calendar />}
+          value={stats.nextPaymentDue ? formatDate(stats.nextPaymentDue.date) : 'None'}
+          title="Next Payment Due"
+          trend="up"
+          changePercentage={stats.nextPaymentDue ? formatCurrency(stats.nextPaymentDue.amount) : 'No payments'}
+          badgeContent="Payment Schedule"
+          iconClassName="bg-blue-500/10 text-blue-500"
+        />
+      </div>
 
       {/* Open Maintenance Requests */}
       <Link href="/tenant/requests?filter=open">
-        <Card data-testid="card-open-requests" className="cursor-pointer hover:bg-muted/50 transition-colors">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Open Requests</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.openRequestsCount}</div>
-            <div className="text-xs text-muted-foreground">🔧 Maintenance requests</div>
-          </CardContent>
-        </Card>
+        <div data-testid="card-open-requests" className="cursor-pointer transition-transform hover:scale-[1.02]">
+          <StatisticsCard
+            icon={<Wrench />}
+            value={String(stats.openRequestsCount)}
+            title="Open Requests"
+            trend={stats.openRequestsCount > 0 ? 'up' : 'down'}
+            changePercentage={stats.openRequestsCount > 0 ? 'Active' : 'None'}
+            badgeContent="Maintenance"
+            iconClassName="bg-orange-500/10 text-orange-500"
+          />
+        </div>
       </Link>
 
       {/* Upcoming Bookings */}
       <Link href="/tenant/amenities">
-        <Card data-testid="card-upcoming-bookings" className="cursor-pointer hover:bg-muted/50 transition-colors">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Bookings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.upcomingBookingsCount}</div>
-            <div className="text-xs text-muted-foreground">🏊 Amenity bookings</div>
-          </CardContent>
-        </Card>
+        <div data-testid="card-upcoming-bookings" className="cursor-pointer transition-transform hover:scale-[1.02]">
+          <StatisticsCard
+            icon={<CalendarDays />}
+            value={String(stats.upcomingBookingsCount)}
+            title="Upcoming Bookings"
+            trend={stats.upcomingBookingsCount > 0 ? 'up' : 'down'}
+            changePercentage={stats.upcomingBookingsCount > 0 ? 'Scheduled' : 'None'}
+            badgeContent="Amenities"
+            iconClassName="bg-purple-500/10 text-purple-500"
+          />
+        </div>
       </Link>
     </div>
   );

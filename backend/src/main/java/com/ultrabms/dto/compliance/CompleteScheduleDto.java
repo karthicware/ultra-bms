@@ -29,8 +29,34 @@ public class CompleteScheduleDto {
     private LocalDate completedDate;
 
     /**
+     * Certificate number issued upon completion (optional)
+     */
+    @Size(max = 100, message = "Certificate number must be less than 100 characters")
+    private String certificateNumber;
+
+    /**
+     * URL to certificate (for external certificates) (optional)
+     */
+    @Size(max = 500, message = "Certificate URL must be less than 500 characters")
+    private String certificateUrl;
+
+    /**
      * Notes about the completion (optional)
      */
     @Size(max = 1000, message = "Notes must be less than 1000 characters")
     private String notes;
+
+    /**
+     * Alias for completedDate to match entity naming
+     */
+    public LocalDate getCompletionDate() {
+        return completedDate;
+    }
+
+    /**
+     * Alias setter for completedDate
+     */
+    public void setCompletionDate(LocalDate completionDate) {
+        this.completedDate = completionDate;
+    }
 }

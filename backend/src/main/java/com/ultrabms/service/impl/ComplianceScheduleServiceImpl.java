@@ -46,8 +46,7 @@ public class ComplianceScheduleServiceImpl implements ComplianceScheduleService 
     public ComplianceScheduleServiceImpl(
             ComplianceScheduleRepository scheduleRepository,
             ComplianceRequirementRepository requirementRepository,
-            PropertyRepository propertyRepository
-    ) {
+            PropertyRepository propertyRepository) {
         this.scheduleRepository = scheduleRepository;
         this.requirementRepository = requirementRepository;
         this.propertyRepository = propertyRepository;
@@ -63,8 +62,7 @@ public class ComplianceScheduleServiceImpl implements ComplianceScheduleService 
             UUID propertyId,
             ComplianceCategory category,
             ComplianceScheduleStatus status,
-            Pageable pageable
-    ) {
+            Pageable pageable) {
         LOGGER.debug("Getting all compliance schedules - propertyId: {}, category: {}, status: {}",
                 propertyId, category, status);
 
@@ -150,8 +148,10 @@ public class ComplianceScheduleServiceImpl implements ComplianceScheduleService 
                 .orElseThrow(() -> new EntityNotFoundException("Property not found: " + propertyId));
 
         // Get all active requirements applicable to this property
+        // Convert UUID to JSON array format for PostgreSQL JSONB query
+        String propertyIdJson = "[\"" + propertyId.toString() + "\"]";
         List<ComplianceRequirement> requirements = requirementRepository
-                .findActiveRequirementsForProperty(propertyId);
+                .findActiveRequirementsForProperty(propertyIdJson);
 
         for (ComplianceRequirement requirement : requirements) {
             // Check if schedule already exists for this property-requirement combo
@@ -159,8 +159,7 @@ public class ComplianceScheduleServiceImpl implements ComplianceScheduleService 
                     .existsByPropertyIdAndRequirementIdAndStatusNot(
                             propertyId,
                             requirement.getId(),
-                            ComplianceScheduleStatus.COMPLETED
-                    );
+                            ComplianceScheduleStatus.COMPLETED);
 
             if (!exists) {
                 createSchedule(property, requirement, LocalDate.now().plusDays(30));
@@ -191,16 +190,14 @@ public class ComplianceScheduleServiceImpl implements ComplianceScheduleService 
         // Calculate next due date based on frequency
         LocalDate nextDueDate = calculateNextDueDate(
                 completed.getCompletionDate() != null ? completed.getCompletionDate() : completed.getDueDate(),
-                requirement.getFrequency()
-        );
+                requirement.getFrequency());
 
         // Check if next schedule already exists
         boolean exists = scheduleRepository
                 .existsByPropertyIdAndRequirementIdAndDueDateAndIsDeletedFalse(
                         completed.getProperty().getId(),
                         requirement.getId(),
-                        nextDueDate
-                );
+                        nextDueDate);
 
         if (!exists) {
             createSchedule(completed.getProperty(), requirement, nextDueDate);
@@ -270,7 +267,7 @@ public class ComplianceScheduleServiceImpl implements ComplianceScheduleService 
         ComplianceSchedule schedule = ComplianceSchedule.builder()
                 .scheduleNumber(scheduleNumber)
                 .property(property)
-                .requirement(requirement)
+                .complianceRequirement(requirement)
                 .dueDate(dueDate)
                 .status(ComplianceScheduleStatus.UPCOMING)
                 .build();
@@ -322,7 +319,7 @@ public class ComplianceScheduleServiceImpl implements ComplianceScheduleService 
                 .frequency(schedule.getRequirement().getFrequency())
                 .dueDate(schedule.getDueDate())
                 .status(schedule.getStatus())
-                .completionDate(schedule.getCompletionDate())
+                .completedDate(schedule.getCompletionDate())
                 .certificateNumber(schedule.getCertificateNumber())
                 .certificateUrl(schedule.getCertificateUrl())
                 .notes(schedule.getNotes())

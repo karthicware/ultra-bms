@@ -214,6 +214,19 @@ Execute lint check: `npm run lint`
 
 ## Dev Notes
 
+### UI Component Sourcing (Priority Order)
+**Reference:** Sprint Change Proposal 2025-12-01
+
+1. **Primary:** shadcn-studio-mcp blocks (install via `npx shadcn@latest add "https://shadcn-studio.com/r/{block-name}"`)
+   | UI Element | Block Name | Install Command |
+   |------------|------------|-----------------|
+   | Vendor KPIs (Active, SLA, Top Performer, Expiring Docs) | `statistics-component-04` | `npx shadcn@latest add "https://shadcn-studio.com/r/statistics-component-04"` |
+   | Performance Scatter Plot | `chart-component-13` | `npx shadcn@latest add "https://shadcn-studio.com/r/chart-component-13"` |
+   | Expiring Documents Widget | `widget-component-07` | `npx shadcn@latest add "https://shadcn-studio.com/r/widget-component-07"` |
+   | Top Vendors Table | `datatable-component-04` | `npx shadcn@latest add "https://shadcn-studio.com/r/datatable-component-04"` |
+
+2. **Fallback:** If no matching shadcn-studio-mcp block, use shadcn-mcp or manual shadcn/ui components
+
 ### Relevant Architecture Patterns
 - Use Spring Cache with Ehcache for 5-minute caching [Source: docs/architecture.md#Caching-Strategy]
 - Use Recharts ScatterChart for performance snapshot [Source: docs/architecture.md#Decision-Summary]

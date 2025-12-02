@@ -1,6 +1,6 @@
 # Story 8.4: Maintenance Dashboard
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -231,6 +231,19 @@ Execute lint check: `npm run lint`
 - Fix any errors before marking story complete
 
 ## Dev Notes
+
+### UI Component Sourcing (Priority Order)
+**Reference:** Sprint Change Proposal 2025-12-01
+
+1. **Primary:** shadcn-studio-mcp blocks (install via `npx shadcn@latest add "https://shadcn-studio.com/r/{block-name}"`)
+   | UI Element | Block Name | Install Command |
+   |------------|------------|-----------------|
+   | Job KPIs (Active, Overdue, Pending, Completed) | `statistics-component-01` | `npx shadcn@latest add "https://shadcn-studio.com/r/statistics-component-01"` |
+   | Jobs by Status Pie | `chart-component-03` | `npx shadcn@latest add "https://shadcn-studio.com/r/chart-component-03"` |
+   | High Priority/Overdue List | `widget-component-17` | `npx shadcn@latest add "https://shadcn-studio.com/r/widget-component-17"` |
+   | Recently Completed List | `widget-component-15` | `npx shadcn@latest add "https://shadcn-studio.com/r/widget-component-15"` |
+
+2. **Fallback:** If no matching shadcn-studio-mcp block, use shadcn-mcp or manual shadcn/ui components
 
 ### Relevant Architecture Patterns
 - Use Spring Cache with Ehcache for 5-minute caching [Source: docs/architecture.md#Caching-Strategy]
