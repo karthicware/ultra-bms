@@ -18,8 +18,8 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberInput } from '@/components/ui/number-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -223,24 +223,20 @@ export function PaymentScheduleStep({ data, totalMonthlyRent, onComplete, onBack
                     <Label htmlFor="pdcChequeCount" className="flex items-center gap-1">
                       Number of PDC Cheques <span className="text-destructive">*</span>
                     </Label>
-                    <div className="relative">
-                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <HashIcon className="size-4" />
-                      </div>
-                      <FormControl>
-                        <Input
-                          id="pdcChequeCount"
-                          className="pl-9"
-                          {...field}
-                          type="number"
-                          min="1"
-                          max="12"
-                          placeholder="1"
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                          data-testid="input-pdc-count"
-                        />
-                      </FormControl>
-                    </div>
+                    <FormControl>
+                      <NumberInput
+                        id="pdcChequeCount"
+                        min={1}
+                        max={12}
+                        step={1}
+                        placeholder="1"
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        data-testid="input-pdc-count"
+                      />
+                    </FormControl>
                     <p className="text-muted-foreground text-xs">
                       Number of post-dated cheques (1-12)
                     </p>

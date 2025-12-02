@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { NumberInput } from '@/components/ui/number-input';
 import {
   Select,
   SelectContent,
@@ -317,11 +318,13 @@ function CreateQuotationForm() {
                     <FormItem>
                       <FormLabel>Monthly Rent (AED) *</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        <NumberInput
+                          step={0.01}
+                          min={0}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                           data-testid="input-quotation-rent"
                         />
                       </FormControl>
@@ -337,11 +340,13 @@ function CreateQuotationForm() {
                     <FormItem>
                       <FormLabel>Service Charges (AED) *</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        <NumberInput
+                          step={0.01}
+                          min={0}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormMessage />
@@ -356,10 +361,12 @@ function CreateQuotationForm() {
                     <FormItem>
                       <FormLabel>Parking Spots *</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        <NumberInput
+                          min={0}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormMessage />
@@ -374,11 +381,13 @@ function CreateQuotationForm() {
                     <FormItem>
                       <FormLabel>Parking Fee per Spot (AED) *</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        <NumberInput
+                          step={0.01}
+                          min={0}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormMessage />
@@ -393,11 +402,13 @@ function CreateQuotationForm() {
                     <FormItem>
                       <FormLabel>Security Deposit (AED) *</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        <NumberInput
+                          step={0.01}
+                          min={0}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                           data-testid="input-quotation-deposit"
                         />
                       </FormControl>
@@ -413,11 +424,13 @@ function CreateQuotationForm() {
                     <FormItem>
                       <FormLabel>Admin Fee (AED) *</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        <NumberInput
+                          step={0.01}
+                          min={0}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormMessage />

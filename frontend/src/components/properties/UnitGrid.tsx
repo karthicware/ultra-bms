@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberInput } from '@/components/ui/number-input';
 import {
   Select,
   SelectContent,
@@ -213,18 +214,18 @@ export function UnitGrid({ units, onViewUnit, onEditUnit, onDeleteUnit, onStatus
             <div className="space-y-2">
               <Label>Floor Range</Label>
               <div className="flex gap-2">
-                <Input
-                  type="number"
+                <NumberInput
                   placeholder="Min"
-                  value={floorMin}
-                  onChange={(e) => setFloorMin(e.target.value)}
+                  min={0}
+                  value={floorMin ? parseInt(floorMin) : undefined}
+                  onChange={(val) => setFloorMin(val.toString())}
                   data-testid="input-floor-min"
                 />
-                <Input
-                  type="number"
+                <NumberInput
                   placeholder="Max"
-                  value={floorMax}
-                  onChange={(e) => setFloorMax(e.target.value)}
+                  min={0}
+                  value={floorMax ? parseInt(floorMax) : undefined}
+                  onChange={(val) => setFloorMax(val.toString())}
                   data-testid="input-floor-max"
                 />
               </div>
@@ -234,18 +235,20 @@ export function UnitGrid({ units, onViewUnit, onEditUnit, onDeleteUnit, onStatus
             <div className="space-y-2">
               <Label>Monthly Rent (AED)</Label>
               <div className="flex gap-2">
-                <Input
-                  type="number"
+                <NumberInput
                   placeholder="Min"
-                  value={rentMin}
-                  onChange={(e) => setRentMin(e.target.value)}
+                  min={0}
+                  step={0.01}
+                  value={rentMin ? parseFloat(rentMin) : undefined}
+                  onChange={(val) => setRentMin(val.toString())}
                   data-testid="input-rent-min"
                 />
-                <Input
-                  type="number"
+                <NumberInput
                   placeholder="Max"
-                  value={rentMax}
-                  onChange={(e) => setRentMax(e.target.value)}
+                  min={0}
+                  step={0.01}
+                  value={rentMax ? parseFloat(rentMax) : undefined}
+                  onChange={(val) => setRentMax(val.toString())}
                   data-testid="input-rent-max"
                 />
               </div>

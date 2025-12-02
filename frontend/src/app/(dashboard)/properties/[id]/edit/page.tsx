@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { NumberInput } from '@/components/ui/number-input';
 import {
   Select,
   SelectContent,
@@ -353,14 +354,15 @@ export default function EditPropertyPage() {
                           <HashIcon className="size-4" />
                         </div>
                         <FormControl>
-                          <Input
+                          <NumberInput
                             id="totalUnitsCount"
-                            type="number"
                             min={1}
                             placeholder="10"
                             className="pl-9"
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                             data-testid="input-total-units"
                           />
                         </FormControl>
@@ -432,16 +434,16 @@ export default function EditPropertyPage() {
                           <CalendarIcon className="size-4" />
                         </div>
                         <FormControl>
-                          <Input
+                          <NumberInput
                             id="yearBuilt"
-                            type="number"
                             min={1900}
                             max={new Date().getFullYear()}
                             placeholder="2020"
                             className="pl-9"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                            value={field.value || ''}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                             data-testid="input-year-built"
                           />
                         </FormControl>
@@ -467,16 +469,16 @@ export default function EditPropertyPage() {
                           <RulerIcon className="size-4" />
                         </div>
                         <FormControl>
-                          <Input
+                          <NumberInput
                             id="totalSquareFootage"
-                            type="number"
                             min={0}
-                            step="0.01"
+                            step={0.01}
                             placeholder="10000"
                             className="pl-9"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                            value={field.value || ''}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                             data-testid="input-square-footage"
                           />
                         </FormControl>

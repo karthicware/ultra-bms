@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -269,12 +270,13 @@ export function DepositCalculationStep({
                   <FormItem>
                     <FormLabel>Original Security Deposit (AED) *</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      <NumberInput
+                        min={0}
+                        step={0.01}
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
                       />
                     </FormControl>
                     <FormDescription>
@@ -371,14 +373,12 @@ export function DepositCalculationStep({
                           <FormItem>
                             <FormLabel className="text-xs">Amount (AED)</FormLabel>
                             <FormControl>
-                              <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(parseFloat(e.target.value) || 0)
-                                }
+                              <NumberInput
+                                min={0}
+                                step={0.01}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
                               />
                             </FormControl>
                             <FormMessage />

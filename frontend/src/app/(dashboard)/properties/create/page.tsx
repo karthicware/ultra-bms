@@ -23,6 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { NumberInput } from '@/components/ui/number-input';
 import {
   Select,
   SelectContent,
@@ -305,18 +306,15 @@ export default function CreatePropertyPage() {
                           <HashIcon className="size-4" />
                         </div>
                         <FormControl>
-                          <Input
+                          <NumberInput
                             id="totalUnitsCount"
-                            type="number"
                             className="pl-9"
                             min={1}
                             placeholder="10"
-                            {...field}
                             value={field.value ?? 1}
-                            onChange={(e) => {
-                              const value = e.target.value === '' ? 1 : parseInt(e.target.value, 10);
-                              field.onChange(isNaN(value) ? 1 : value);
-                            }}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                             data-testid="input-total-units"
                           />
                         </FormControl>
@@ -401,16 +399,16 @@ export default function CreatePropertyPage() {
                           <CalendarIcon className="size-4" />
                         </div>
                         <FormControl>
-                          <Input
+                          <NumberInput
                             id="yearBuilt"
-                            type="number"
                             className="pl-9"
                             min={1900}
                             max={new Date().getFullYear()}
                             placeholder="2020"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                            value={field.value || ''}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                             data-testid="input-year-built"
                           />
                         </FormControl>
@@ -435,16 +433,16 @@ export default function CreatePropertyPage() {
                           <RulerIcon className="size-4" />
                         </div>
                         <FormControl>
-                          <Input
+                          <NumberInput
                             id="totalSquareFootage"
-                            type="number"
                             className="pl-9 pr-12"
                             min={0}
-                            step="0.01"
+                            step={0.01}
                             placeholder="10000"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                            value={field.value || ''}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                             data-testid="input-square-footage"
                           />
                         </FormControl>

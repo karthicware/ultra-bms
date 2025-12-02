@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { NumberInput } from '@/components/ui/number-input';
 import {
   Select,
   SelectContent,
@@ -297,15 +298,16 @@ function CreateExpensePageContent() {
                           <DollarSignIcon className="size-4" />
                         </div>
                         <FormControl>
-                          <Input
+                          <NumberInput
                             id="amount"
-                            type="number"
                             className="pl-9 pr-14"
-                            step="0.01"
-                            min="0.01"
+                            step={0.01}
+                            min={0.01}
                             placeholder="0.00"
-                            {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                           />
                         </FormControl>
                         <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">

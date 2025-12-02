@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
 import {
   Form,
   FormControl,
@@ -300,11 +301,13 @@ export function PDCWithdrawModal({ pdc, open, onClose }: PDCWithdrawModalProps) 
                     <FormItem>
                       <FormLabel>Transfer Amount (AED)</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        <NumberInput
+                          step={0.01}
+                          min={0}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormMessage />

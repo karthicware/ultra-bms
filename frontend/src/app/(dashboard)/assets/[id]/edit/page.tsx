@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { NumberInput } from '@/components/ui/number-input';
 import {
   Select,
   SelectContent,
@@ -432,15 +433,15 @@ export default function EditAssetPage() {
                           <DollarSignIcon className="size-4" />
                         </div>
                         <FormControl>
-                          <Input
+                          <NumberInput
                             id="purchaseCost"
                             className="pl-9 pr-14"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                            value={field.value || ''}
+                            step={0.01}
+                            min={0}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                           />
                         </FormControl>
                         <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
@@ -463,15 +464,15 @@ export default function EditAssetPage() {
                           <ClockIcon className="size-4" />
                         </div>
                         <FormControl>
-                          <Input
+                          <NumberInput
                             id="estimatedUsefulLife"
                             className="pl-9 pr-16"
-                            type="number"
-                            min="1"
-                            max="100"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                            value={field.value || ''}
+                            min={1}
+                            max={100}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                           />
                         </FormControl>
                         <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">

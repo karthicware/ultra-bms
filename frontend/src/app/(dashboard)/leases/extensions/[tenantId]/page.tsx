@@ -41,6 +41,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
+import { NumberInput } from '@/components/ui/number-input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
@@ -575,17 +576,15 @@ export default function LeaseExtensionPage({ params }: PageProps) {
                         <FormItem>
                           <FormLabel>Percentage Increase (%)</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              step="0.1"
-                              min="0"
-                              max="100"
+                            <NumberInput
+                              step={0.1}
+                              min={0}
+                              max={100}
                               placeholder="e.g., 5"
-                              {...field}
-                              value={field.value ?? ''}
-                              onChange={(e) =>
-                                field.onChange(e.target.value ? parseFloat(e.target.value) : null)
-                              }
+                              value={field.value ?? undefined}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              name={field.name}
                             />
                           </FormControl>
                           <FormDescription>
@@ -606,15 +605,13 @@ export default function LeaseExtensionPage({ params }: PageProps) {
                         <FormItem>
                           <FormLabel>Flat Increase (AED)</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
+                            <NumberInput
+                              min={0}
                               placeholder="e.g., 500"
-                              {...field}
-                              value={field.value ?? ''}
-                              onChange={(e) =>
-                                field.onChange(e.target.value ? parseFloat(e.target.value) : null)
-                              }
+                              value={field.value ?? undefined}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              name={field.name}
                             />
                           </FormControl>
                           <FormDescription>
@@ -635,15 +632,13 @@ export default function LeaseExtensionPage({ params }: PageProps) {
                         <FormItem>
                           <FormLabel>Custom Monthly Rent (AED)</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              min="1"
+                            <NumberInput
+                              min={1}
                               placeholder="e.g., 5500"
-                              {...field}
-                              value={field.value ?? ''}
-                              onChange={(e) =>
-                                field.onChange(e.target.value ? parseFloat(e.target.value) : null)
-                              }
+                              value={field.value ?? undefined}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              name={field.name}
                             />
                           </FormControl>
                           <FormDescription>
@@ -738,16 +733,14 @@ export default function LeaseExtensionPage({ params }: PageProps) {
                       <FormItem>
                         <FormLabel>Payment Due Date (Day of Month)</FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            min="1"
-                            max="28"
+                          <NumberInput
+                            min={1}
+                            max={28}
                             placeholder="e.g., 1"
-                            {...field}
-                            value={field.value ?? ''}
-                            onChange={(e) =>
-                              field.onChange(e.target.value ? parseInt(e.target.value) : null)
-                            }
+                            value={field.value ?? undefined}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                           />
                         </FormControl>
                         <FormDescription>

@@ -36,6 +36,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberInput } from '@/components/ui/number-input';
 import {
   Form,
   FormControl,
@@ -278,14 +279,13 @@ export default function PDCRegistrationPage() {
                     <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                       <HashIcon className="size-4" />
                     </div>
-                    <Input
+                    <NumberInput
                       id="numCheques"
-                      type="number"
                       className="pl-9"
                       min={1}
                       max={24}
                       value={numberOfCheques}
-                      onChange={(e) => handleNumberOfChequesChange(parseInt(e.target.value) || 1)}
+                      onChange={(value) => handleNumberOfChequesChange(value)}
                     />
                   </div>
                 </div>
@@ -376,14 +376,15 @@ export default function PDCRegistrationPage() {
                                     <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                       <BanknoteIcon className="size-4" />
                                     </div>
-                                    <Input
-                                      type="number"
+                                    <NumberInput
                                       className="pl-9"
-                                      step="0.01"
-                                      min="0.01"
+                                      step={0.01}
+                                      min={0.01}
                                       placeholder="0.00"
-                                      {...field}
-                                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                      value={field.value}
+                                      onChange={field.onChange}
+                                      onBlur={field.onBlur}
+                                      name={field.name}
                                     />
                                   </div>
                                 </FormControl>

@@ -21,7 +21,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.ultrabms.security.CurrentUser;
+import com.ultrabms.security.UserPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -53,8 +54,8 @@ public class LeadController {
     @Operation(summary = "Create a new lead")
     public ResponseEntity<ApiResponse<LeadResponse>> createLead(
             @Valid @RequestBody CreateLeadRequest request,
-            @AuthenticationPrincipal UUID userId) {
-        LeadResponse response = leadService.createLead(request, userId);
+            @CurrentUser UserPrincipal currentUser) {
+        LeadResponse response = leadService.createLead(request, currentUser.getId());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Lead created successfully"));
@@ -98,8 +99,8 @@ public class LeadController {
     public ResponseEntity<ApiResponse<LeadResponse>> updateLeadStatus(
             @PathVariable UUID id,
             @RequestParam Lead.LeadStatus status,
-            @AuthenticationPrincipal UUID userId) {
-        LeadResponse response = leadService.updateLeadStatus(id, status, userId);
+            @CurrentUser UserPrincipal currentUser) {
+        LeadResponse response = leadService.updateLeadStatus(id, status, currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success(response, "Lead status updated successfully"));
     }
 
@@ -109,8 +110,8 @@ public class LeadController {
             @PathVariable UUID id,
             @RequestParam("file") MultipartFile file,
             @RequestParam("documentType") LeadDocument.DocumentType documentType,
-            @AuthenticationPrincipal UUID userId) {
-        LeadDocumentResponse response = leadService.uploadDocument(id, file, documentType, userId);
+            @CurrentUser UserPrincipal currentUser) {
+        LeadDocumentResponse response = leadService.uploadDocument(id, file, documentType, currentUser.getId());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Document uploaded successfully"));

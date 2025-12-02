@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -343,12 +344,13 @@ export function MarkCompleteDialog({
                   <FormItem>
                     <FormLabel>Hours Spent *</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        step="0.25"
-                        min="0.25"
+                      <NumberInput
+                        step={0.25}
+                        min={0.25}
                         placeholder="e.g., 2.5"
-                        {...field}
+                        value={field.value ? parseFloat(field.value) : undefined}
+                        onChange={(val) => field.onChange(val.toString())}
+                        onBlur={field.onBlur}
                         disabled={isSubmitting}
                         data-testid="input-hours-spent"
                       />
@@ -365,12 +367,13 @@ export function MarkCompleteDialog({
                   <FormItem>
                     <FormLabel>Total Cost (AED) *</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
+                      <NumberInput
+                        step={0.01}
+                        min={0}
                         placeholder="e.g., 350.00"
-                        {...field}
+                        value={field.value ? parseFloat(field.value) : undefined}
+                        onChange={(val) => field.onChange(val.toString())}
+                        onBlur={field.onBlur}
                         disabled={isSubmitting}
                         data-testid="input-total-cost"
                       />

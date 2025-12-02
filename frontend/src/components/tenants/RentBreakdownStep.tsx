@@ -18,10 +18,9 @@ import {
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberInput } from '@/components/ui/number-input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { DollarSignIcon } from 'lucide-react';
 
 import { rentBreakdownSchema, formatCurrency, type RentBreakdownFormData } from '@/lib/validations/tenant';
 
@@ -70,29 +69,21 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
                   <Label htmlFor="baseRent" className="flex items-center gap-1">
                     Base Rent (Monthly) <span className="text-destructive">*</span>
                   </Label>
-                  <div className="relative">
-                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <DollarSignIcon className="size-4" />
-                    </div>
-                    <FormControl>
-                      <Input
-                        id="baseRent"
-                        {...field}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        className="pl-9 pr-14"
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        data-testid="input-base-rent"
-                      />
-                    </FormControl>
-                    <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
-                      AED
-                    </span>
-                  </div>
+                  <FormControl>
+                    <NumberInput
+                      id="baseRent"
+                      step={0.01}
+                      min={0}
+                      placeholder="0.00"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      data-testid="input-base-rent"
+                    />
+                  </FormControl>
                   <p className="text-muted-foreground text-xs">
-                    Monthly base rent amount
+                    Monthly base rent amount (AED)
                   </p>
                   <FormMessage />
                 </FormItem>
@@ -106,29 +97,21 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <Label htmlFor="serviceCharge">Service Charge (Monthly)</Label>
-                  <div className="relative">
-                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <DollarSignIcon className="size-4" />
-                    </div>
-                    <FormControl>
-                      <Input
-                        id="serviceCharge"
-                        {...field}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        className="pl-9 pr-14"
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        data-testid="input-service-charge"
-                      />
-                    </FormControl>
-                    <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
-                      AED
-                    </span>
-                  </div>
+                  <FormControl>
+                    <NumberInput
+                      id="serviceCharge"
+                      step={0.01}
+                      min={0}
+                      placeholder="0.00"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      data-testid="input-service-charge"
+                    />
+                  </FormControl>
                   <p className="text-muted-foreground text-xs">
-                    Monthly service charge (optional)
+                    Monthly service charge - optional (AED)
                   </p>
                   <FormMessage />
                 </FormItem>
@@ -142,29 +125,21 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <Label htmlFor="adminFee">Admin Fee (One-time)</Label>
-                  <div className="relative">
-                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <DollarSignIcon className="size-4" />
-                    </div>
-                    <FormControl>
-                      <Input
-                        id="adminFee"
-                        {...field}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        className="pl-9 pr-14"
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        data-testid="input-admin-fee"
-                      />
-                    </FormControl>
-                    <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
-                      AED
-                    </span>
-                  </div>
+                  <FormControl>
+                    <NumberInput
+                      id="adminFee"
+                      step={0.01}
+                      min={0}
+                      placeholder="0.00"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      data-testid="input-admin-fee"
+                    />
+                  </FormControl>
                   <p className="text-muted-foreground text-xs">
-                    One-time administrative fee (optional)
+                    One-time administrative fee - optional (AED)
                   </p>
                   <FormMessage />
                 </FormItem>
@@ -180,29 +155,21 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
                   <Label htmlFor="securityDeposit" className="flex items-center gap-1">
                     Security Deposit <span className="text-destructive">*</span>
                   </Label>
-                  <div className="relative">
-                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <DollarSignIcon className="size-4" />
-                    </div>
-                    <FormControl>
-                      <Input
-                        id="securityDeposit"
-                        {...field}
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        placeholder="0.00"
-                        className="pl-9 pr-14"
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        data-testid="input-security-deposit"
-                      />
-                    </FormControl>
-                    <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
-                      AED
-                    </span>
-                  </div>
+                  <FormControl>
+                    <NumberInput
+                      id="securityDeposit"
+                      step={0.01}
+                      min={0.01}
+                      placeholder="0.00"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      data-testid="input-security-deposit"
+                    />
+                  </FormControl>
                   <p className="text-muted-foreground text-xs">
-                    Typically 1-2 months rent (refundable)
+                    Typically 1-2 months rent - refundable (AED)
                   </p>
                   <FormMessage />
                 </FormItem>

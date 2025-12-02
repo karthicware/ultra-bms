@@ -15,38 +15,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import {
   getLeadById,
   getLeadDocuments,
-  uploadDocument,
   deleteDocument,
   downloadDocument,
   getLeadHistory,
 } from '@/services/leads.service';
 import { getQuotationsByLeadId, convertToTenant } from '@/services/quotations.service';
-import type { Lead, LeadDocument, LeadHistory, Quotation, LeadDocumentType } from '@/types';
+import type { Lead, LeadDocument, LeadHistory, Quotation } from '@/types';
 import {
-  FileText,
-  Download,
-  Trash2,
   Upload,
   Mail,
   Phone,
@@ -54,6 +33,8 @@ import {
   User,
   Building,
 } from 'lucide-react';
+import LeadDocumentUploadDialog from '@/components/leads/lead-document-upload-dialog';
+import DocumentList from '@/components/leads/document-list';
 
 const LEAD_STATUS_COLORS: Record<string, string> = {
   NEW: 'bg-blue-100 text-blue-800',
@@ -76,10 +57,6 @@ export default function LeadDetailPage() {
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [history, setHistory] = useState<LeadHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedDocType, setSelectedDocType] = useState<LeadDocumentType>('EMIRATES_ID' as LeadDocumentType);
-  const [isUploading, setIsUploading] = useState(false);
   const [convertingQuotationId, setConvertingQuotationId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -148,31 +125,6 @@ export default function LeadDetailPage() {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleUploadDocument = async () => {
-    if (!selectedFile) return;
-
-    try {
-      setIsUploading(true);
-      await uploadDocument(leadId, selectedFile, selectedDocType);
-      toast({
-        title: 'Success',
-        description: 'Document uploaded successfully',
-        variant: 'success',
-      });
-      setIsUploadDialogOpen(false);
-      setSelectedFile(null);
-      fetchLeadData();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to upload document',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -342,112 +294,24 @@ export default function LeadDetailPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Uploaded Documents</CardTitle>
-              <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-                <DialogTrigger asChild>
+              <LeadDocumentUploadDialog
+                leadId={leadId}
+                onUploadComplete={fetchLeadData}
+                trigger={
                   <Button data-testid="btn-upload-document">
                     <Upload className="mr-2 h-4 w-4" />
                     Upload Document
                   </Button>
-                </DialogTrigger>
-                <DialogContent data-testid="modal-upload-document">
-                  <DialogHeader>
-                    <DialogTitle>Upload Document</DialogTitle>
-                    <DialogDescription>
-                      Upload Emirates ID, passport, or other documents (PDF, JPG, PNG, max 5MB)
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Document Type</Label>
-                      <Select
-                        value={selectedDocType}
-                        onValueChange={(v) => setSelectedDocType(v as LeadDocumentType)}
-                      >
-                        <SelectTrigger data-testid="select-document-type">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="EMIRATES_ID">Emirates ID</SelectItem>
-                          <SelectItem value="PASSPORT">Passport</SelectItem>
-                          <SelectItem value="MARRIAGE_CERTIFICATE">Marriage Certificate</SelectItem>
-                          <SelectItem value="VISA">Visa</SelectItem>
-                          <SelectItem value="OTHER">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>File</Label>
-                      <Input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                      />
-                    </div>
-                    <Button
-                      onClick={handleUploadDocument}
-                      disabled={!selectedFile || isUploading}
-                      className="w-full"
-                      data-testid="btn-upload"
-                    >
-                      {isUploading ? 'Uploading...' : 'Upload'}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                }
+              />
             </CardHeader>
             <CardContent>
-              {(documents?.length ?? 0) === 0 ? (
-                <p className="text-center py-8 text-muted-foreground">
-                  No documents uploaded yet
-                </p>
-              ) : (
-                <div className="space-y-4 max-w-md" data-testid="list-documents">
-                  {Object.entries(
-                    documents?.reduce((acc, doc) => {
-                      const category = doc.documentType;
-                      if (!acc[category]) acc[category] = [];
-                      acc[category].push(doc);
-                      return acc;
-                    }, {} as Record<string, typeof documents>)
-                  ).map(([category, docs]) => (
-                    <div key={category} className="space-y-1.5">
-                      <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wide">
-                        {category.replace(/_/g, ' ')}
-                      </h4>
-                      <div className="space-y-1">
-                        {docs.map((doc, index) => (
-                          <div
-                            key={doc.id}
-                            className="inline-flex items-center gap-2 px-2 py-1.5 border rounded-md bg-muted/30"
-                          >
-                            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                            <span className="text-sm">Document {index + 1}</span>
-                            <span className="text-xs text-muted-foreground">
-                              ({(doc.fileSize / 1024).toFixed(0)} KB)
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() => handleDownloadDocument(doc.id, doc.fileName)}
-                            >
-                              <Download className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDeleteDocument(doc.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <DocumentList
+                documents={documents || []}
+                onDownload={handleDownloadDocument}
+                onDelete={handleDeleteDocument}
+                data-testid="list-documents"
+              />
             </CardContent>
           </Card>
         </TabsContent>

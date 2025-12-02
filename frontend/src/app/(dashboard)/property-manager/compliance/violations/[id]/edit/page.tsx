@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { NumberInput } from '@/components/ui/number-input';
 import {
   Select,
   SelectContent,
@@ -249,12 +250,14 @@ export default function EditViolationPage() {
                     <FormItem>
                       <FormLabel>Fine Amount (AED)</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
+                        <NumberInput
                           placeholder="0.00"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                          value={field.value ?? ''}
+                          step={0.01}
+                          min={0}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormMessage />

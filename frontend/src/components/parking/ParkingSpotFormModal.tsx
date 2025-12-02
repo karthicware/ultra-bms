@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -261,31 +262,22 @@ export function ParkingSpotFormModal({
                   <Label htmlFor="defaultFee" className="flex items-center gap-1">
                     Monthly Fee <span className="text-destructive">*</span>
                   </Label>
-                  <div className="relative">
-                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <DollarSignIcon className="size-4" />
-                    </div>
-                    <FormControl>
-                      <Input
-                        id="defaultFee"
-                        type="number"
-                        className="pl-9 pr-14"
-                        step="0.01"
-                        min="0"
-                        max="99999.99"
-                        placeholder="e.g., 500.00"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        disabled={isSubmitting}
-                        data-testid="input-default-fee"
-                      />
-                    </FormControl>
-                    <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
-                      AED
-                    </span>
-                  </div>
+                  <FormControl>
+                    <NumberInput
+                      id="defaultFee"
+                      step={0.01}
+                      min={0}
+                      max={99999.99}
+                      placeholder="e.g., 500.00"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      disabled={isSubmitting}
+                      data-testid="input-default-fee"
+                    />
+                  </FormControl>
                   <p className="text-muted-foreground text-xs">
-                    Default monthly rental fee for this spot (0 - 99,999.99)
+                    Default monthly rental fee for this spot - AED (0 - 99,999.99)
                   </p>
                   <FormMessage />
                 </FormItem>

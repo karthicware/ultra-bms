@@ -28,6 +28,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -280,23 +281,17 @@ export function UnitFormModal({
                     render={({ field }) => (
                       <FormItem className="space-y-2">
                         <Label htmlFor="floor">Floor</Label>
-                        <div className="relative">
-                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <LayersIcon className="size-4" />
-                          </div>
-                          <FormControl>
-                            <Input
-                              id="floor"
-                              type="number"
-                              className="pl-9"
-                              placeholder="1"
-                              {...field}
-                              value={field.value ?? ''}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                              data-testid="input-floor"
-                            />
-                          </FormControl>
-                        </div>
+                        <FormControl>
+                          <NumberInput
+                            id="floor"
+                            min={-99}
+                            placeholder="1"
+                            value={field.value ?? undefined}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            data-testid="input-floor"
+                          />
+                        </FormControl>
                         <p className="text-muted-foreground text-xs">Can be negative for basement (-1, -2)</p>
                         <FormMessage />
                       </FormItem>
@@ -313,25 +308,19 @@ export function UnitFormModal({
                         <Label htmlFor="bedroomCount" className="flex items-center gap-1">
                           Bedrooms <span className="text-destructive">*</span>
                         </Label>
-                        <div className="relative">
-                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <BedDoubleIcon className="size-4" />
-                          </div>
-                          <FormControl>
-                            <Input
-                              id="bedroomCount"
-                              type="number"
-                              className="pl-9"
-                              step="0.5"
-                              min={0}
-                              max={10}
-                              placeholder="2"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                              data-testid="input-bedrooms"
-                            />
-                          </FormControl>
-                        </div>
+                        <FormControl>
+                          <NumberInput
+                            id="bedroomCount"
+                            step={0.5}
+                            min={0}
+                            max={10}
+                            placeholder="2"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            data-testid="input-bedrooms"
+                          />
+                        </FormControl>
                         <p className="text-muted-foreground text-xs">Can be decimal (e.g., 2.5 for studio with den)</p>
                         <FormMessage />
                       </FormItem>
@@ -346,25 +335,19 @@ export function UnitFormModal({
                         <Label htmlFor="bathroomCount" className="flex items-center gap-1">
                           Bathrooms <span className="text-destructive">*</span>
                         </Label>
-                        <div className="relative">
-                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <BathIcon className="size-4" />
-                          </div>
-                          <FormControl>
-                            <Input
-                              id="bathroomCount"
-                              type="number"
-                              className="pl-9"
-                              step="0.5"
-                              min={0}
-                              max={10}
-                              placeholder="1.5"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                              data-testid="input-bathrooms"
-                            />
-                          </FormControl>
-                        </div>
+                        <FormControl>
+                          <NumberInput
+                            id="bathroomCount"
+                            step={0.5}
+                            min={0}
+                            max={10}
+                            placeholder="1.5"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            data-testid="input-bathrooms"
+                          />
+                        </FormControl>
                         <p className="text-muted-foreground text-xs">Can be decimal (e.g., 1.5 for half bath)</p>
                         <FormMessage />
                       </FormItem>
@@ -381,28 +364,18 @@ export function UnitFormModal({
                         <Label htmlFor="squareFootage" className="flex items-center gap-1">
                           Square Footage <span className="text-destructive">*</span>
                         </Label>
-                        <div className="relative">
-                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <RulerIcon className="size-4" />
-                          </div>
-                          <FormControl>
-                            <Input
-                              id="squareFootage"
-                              type="number"
-                              className="pl-9 pr-14"
-                              step="0.01"
-                              min={0}
-                              placeholder="1200"
-                              {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                              value={field.value || ''}
-                              data-testid="input-square-footage"
-                            />
-                          </FormControl>
-                          <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
-                            sq ft
-                          </span>
-                        </div>
+                        <FormControl>
+                          <NumberInput
+                            id="squareFootage"
+                            step={0.01}
+                            min={0}
+                            placeholder="1200"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            data-testid="input-square-footage"
+                          />
+                        </FormControl>
                         <p className="text-muted-foreground text-xs">Unit area in square feet</p>
                         <FormMessage />
                       </FormItem>
@@ -417,28 +390,19 @@ export function UnitFormModal({
                         <Label htmlFor="monthlyRent" className="flex items-center gap-1">
                           Monthly Rent <span className="text-destructive">*</span>
                         </Label>
-                        <div className="relative">
-                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <DollarSignIcon className="size-4" />
-                          </div>
-                          <FormControl>
-                            <Input
-                              id="monthlyRent"
-                              type="number"
-                              className="pl-9 pr-14"
-                              step="0.01"
-                              min={0}
-                              placeholder="5000"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                              data-testid="input-monthly-rent"
-                            />
-                          </FormControl>
-                          <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
-                            AED
-                          </span>
-                        </div>
-                        <p className="text-muted-foreground text-xs">Base monthly rent amount</p>
+                        <FormControl>
+                          <NumberInput
+                            id="monthlyRent"
+                            step={0.01}
+                            min={0}
+                            placeholder="5000"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            data-testid="input-monthly-rent"
+                          />
+                        </FormControl>
+                        <p className="text-muted-foreground text-xs">Base monthly rent amount (AED)</p>
                         <FormMessage />
                       </FormItem>
                     )}

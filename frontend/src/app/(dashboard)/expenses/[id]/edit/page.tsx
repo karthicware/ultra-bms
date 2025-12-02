@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { NumberInput } from '@/components/ui/number-input';
 import {
   Select,
   SelectContent,
@@ -354,13 +355,14 @@ export default function EditExpensePage() {
                     <FormItem>
                       <FormLabel>Amount (AED) *</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0.01"
+                        <NumberInput
+                          step={0.01}
+                          min={0.01}
                           placeholder="0.00"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormMessage />

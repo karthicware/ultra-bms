@@ -39,6 +39,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
 import {
   Select,
   SelectContent,
@@ -244,13 +245,13 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
                         <FormItem>
                           <FormLabel>Number of Units *</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
+                            <NumberInput
                               min={1}
                               max={100}
                               placeholder="10"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
                               data-testid="input-unit-count"
                             />
                           </FormControl>
@@ -269,11 +270,12 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
                         <FormItem>
                           <FormLabel>Floor *</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
+                            <NumberInput
+                              min={-99}
                               placeholder="1"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
                               data-testid="input-floor-bulk"
                             />
                           </FormControl>
@@ -342,14 +344,14 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
                         <FormItem>
                           <FormLabel>Bedrooms *</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              step="0.5"
+                            <NumberInput
+                              step={0.5}
                               min={0}
                               max={10}
                               placeholder="2"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
                               data-testid="input-bedrooms-bulk"
                             />
                           </FormControl>
@@ -368,14 +370,14 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
                         <FormItem>
                           <FormLabel>Bathrooms *</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              step="0.5"
+                            <NumberInput
+                              step={0.5}
                               min={0}
                               max={10}
                               placeholder="1.5"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
                               data-testid="input-bathrooms-bulk"
                             />
                           </FormControl>
@@ -394,14 +396,13 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
                         <FormItem>
                           <FormLabel>Square Footage</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              step="0.01"
+                            <NumberInput
+                              step={0.01}
                               min={0}
                               placeholder="1200"
-                              {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                              value={field.value || ''}
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
                               data-testid="input-square-footage-bulk"
                             />
                           </FormControl>
@@ -420,13 +421,13 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
                         <FormItem>
                           <FormLabel>Monthly Rent (AED) *</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              step="0.01"
+                            <NumberInput
+                              step={0.01}
                               min={0}
                               placeholder="5000"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
                               data-testid="input-monthly-rent-bulk"
                             />
                           </FormControl>

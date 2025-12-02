@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/form';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -628,27 +629,19 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
                     <Label htmlFor="hourlyRate" className="flex items-center gap-1">
                       Hourly Rate <span className="text-destructive">*</span>
                     </Label>
-                    <div className="relative">
-                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <DollarSignIcon className="size-4" />
-                      </div>
-                      <FormControl>
-                        <Input
-                          id="hourlyRate"
-                          className="pl-9 pr-14"
-                          {...field}
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00"
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          data-testid="vendor-hourly-rate"
-                        />
-                      </FormControl>
-                      <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
-                        AED
-                      </span>
-                    </div>
+                    <FormControl>
+                      <NumberInput
+                        id="hourlyRate"
+                        min={0}
+                        step={0.01}
+                        placeholder="0.00"
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        data-testid="vendor-hourly-rate"
+                      />
+                    </FormControl>
+                    <p className="text-muted-foreground text-xs">Hourly rate in AED</p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -661,31 +654,19 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
                 render={({ field }) => (
                   <FormItem className="space-y-2">
                     <Label htmlFor="emergencyCalloutFee">Emergency Callout Fee</Label>
-                    <div className="relative">
-                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <DollarSignIcon className="size-4" />
-                      </div>
-                      <FormControl>
-                        <Input
-                          id="emergencyCalloutFee"
-                          className="pl-9 pr-14"
-                          {...field}
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00 (optional)"
-                          value={field.value || ''}
-                          onChange={(e) =>
-                            field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)
-                          }
-                          data-testid="vendor-emergency-fee"
-                        />
-                      </FormControl>
-                      <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
-                        AED
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground text-xs">Fee for emergency/after-hours service</p>
+                    <FormControl>
+                      <NumberInput
+                        id="emergencyCalloutFee"
+                        min={0}
+                        step={0.01}
+                        placeholder="0.00 (optional)"
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        data-testid="vendor-emergency-fee"
+                      />
+                    </FormControl>
+                    <p className="text-muted-foreground text-xs">Fee for emergency/after-hours service (AED)</p>
                     <FormMessage />
                   </FormItem>
                 )}
