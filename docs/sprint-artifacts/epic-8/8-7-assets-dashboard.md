@@ -1,6 +1,6 @@
 # Story 8.7: Assets Dashboard
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -292,3 +292,61 @@ Execute lint check: `npm run lint`
 ### Completion Notes List
 
 ### File List
+
+## Code Review Record
+
+### Review Date
+2025-12-02
+
+### Reviewer
+Claude Code (Opus 4.5)
+
+### Review Result
+**APPROVED** ✅
+
+### AC Validation Summary
+
+| AC Range | Description | Status |
+|----------|-------------|--------|
+| AC-1 to AC-4 | KPI Cards | ✅ All implemented |
+| AC-5, AC-6 | Charts (Donut, Bar) | ✅ Recharts with click nav |
+| AC-7, AC-8 | Tables (Overdue PM, Recent) | ✅ With quick actions |
+| AC-9 | Depreciation Summary | ✅ Straight-line calc |
+| AC-10 to AC-15 | API Endpoints | ✅ All 6 endpoints |
+| AC-16 | Recharts | ✅ Used for all charts |
+| AC-17 | Zod Validation | ✅ Full schema coverage |
+| AC-18 | 5-min Ehcache | ✅ 7 caches configured |
+| AC-19 | Sidebar Nav | ✅ `/assets/dashboard` |
+| AC-20 | Role-based Access | ✅ PreAuthorize annotations |
+| AC-21 | AED Currency | ✅ formatAssetDashboardCurrency() |
+| AC-22 | data-testid | ✅ All components |
+
+### Test Results
+- **Backend**: 19/19 tests pass (AssetsDashboardServiceTest)
+- **Frontend**: 9/9 tests pass (useAssetsDashboard.test.tsx)
+- **Frontend Build**: SUCCESS
+
+### Code Quality Notes
+- Architecture follows established dashboard patterns (8.1, 8.6)
+- Native SQL queries for optimized aggregations
+- Proper caching with @Cacheable annotations
+- TypeScript types with Zod validation
+- No security vulnerabilities detected
+
+### Files Reviewed
+**Backend:**
+- AssetsDashboardController.java
+- AssetsDashboardService.java / impl
+- AssetsDashboardRepository.java / impl
+- 7 DTO classes in dto/dashboard/assets/
+- ehcache.xml (cache config)
+- AssetsDashboardServiceTest.java
+
+**Frontend:**
+- page.tsx (assets/dashboard)
+- 6 components in assets-dashboard/
+- assets-dashboard.ts (types)
+- assets-dashboard.service.ts
+- useAssetsDashboard.ts (hooks)
+- useAssetsDashboard.test.tsx
+- AppSidebar.tsx (nav entry)

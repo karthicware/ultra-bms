@@ -1,6 +1,6 @@
 # Story 8.6: Finance Dashboard
 
-Status: review
+Status: done
 
 ## Story
 
@@ -294,3 +294,93 @@ Execute lint check: `npm run lint`
 ### Completion Notes List
 
 ### File List
+
+## Code Review
+
+### Review Date
+2024-12-02
+
+### Reviewer
+Amelia (Dev Agent) - Code Review Workflow
+
+### Review Outcome
+**APPROVED**
+
+### Acceptance Criteria Validation
+
+| AC | Description | Status | Evidence |
+|----|-------------|--------|----------|
+| AC-1 | Total Income YTD KPI card | ✓ PASS | `FinanceKpiCards.tsx:66-77`, `FinanceDashboardServiceImpl.java:72-117` |
+| AC-2 | Total Expenses YTD KPI card | ✓ PASS | `FinanceKpiCards.tsx:78-88` |
+| AC-3 | Net Profit/Loss YTD KPI card | ✓ PASS | `FinanceKpiCards.tsx:89-98`, green/red via `getProfitLossColor()` |
+| AC-4 | VAT Paid YTD KPI card | ✓ PASS | `FinanceKpiCards.tsx:99-109` |
+| AC-5 | Income vs Expense chart (12 months, stacked bar + line) | ✓ PASS | `IncomeExpenseChart.tsx:87-167`, ComposedChart with Bar + Line |
+| AC-6 | Expense Categories donut chart | ✓ PASS | `ExpenseCategoriesDonut.tsx:88-141`, PieChart with drill-down |
+| AC-7 | Outstanding Receivables card with aging | ✓ PASS | `OutstandingReceivablesCard.tsx:117-199`, aging buckets 0-30/30+/60+/90+ |
+| AC-8 | Recent High-Value Transactions table | ✓ PASS | `RecentTransactionsTable.tsx:103-206` |
+| AC-9 | PDC Status card | ✓ PASS | `PdcStatusCard.tsx:116-193` |
+| AC-10 | GET /api/v1/dashboard/finance endpoint | ✓ PASS | `FinanceDashboardController.java:37-42` |
+| AC-11 | GET /api/v1/dashboard/finance/income-vs-expense endpoint | ✓ PASS | `FinanceDashboardController.java:47-52` |
+| AC-12 | GET /api/v1/dashboard/finance/expense-categories endpoint | ✓ PASS | `FinanceDashboardController.java:57-62` |
+| AC-13 | GET /api/v1/dashboard/finance/outstanding-receivables endpoint | ✓ PASS | `FinanceDashboardController.java:67-72` |
+| AC-14 | GET /api/v1/dashboard/finance/recent-transactions endpoint | ✓ PASS | `FinanceDashboardController.java:77-84` |
+| AC-15 | GET /api/v1/dashboard/finance/pdc-status endpoint | ✓ PASS | `FinanceDashboardController.java:89-94` |
+| AC-16 | Recharts ComposedChart with line overlay | ✓ PASS | `IncomeExpenseChart.tsx:87,158-166` |
+| AC-17 | Net profit/loss color-coded | ✓ PASS | `FinanceKpiCards.tsx:132-133`, `getProfitLossColor()` |
+| AC-18 | Server-side Ehcache 5-minute caching | ✓ PASS | `@Cacheable` on all service methods |
+| AC-19 | Drill-down from donut to expense list | ✓ PASS | `ExpenseCategoriesDonut.tsx:67-69,98,151` |
+| AC-20 | Property filter dropdown | ✓ PASS | `page.tsx:52-54,92-108` |
+| AC-21 | AED currency formatting | ✓ PASS | `formatAedCurrency()`, `formatCompactCurrency()` in all components |
+| AC-22 | data-testid attributes on interactive elements | ✓ PASS | All 6 components have data-testid attributes |
+
+### Task Validation
+
+| Task | Description | Status | Evidence |
+|------|-------------|--------|----------|
+| Task 1 | Backend DTOs | ✓ PASS | 7 DTOs in `dto/dashboard/finance/` |
+| Task 2 | Repository queries | ✓ PASS | `FinanceDashboardRepository.java` |
+| Task 3 | Controller with RBAC | ✓ PASS | 6 endpoints with `@PreAuthorize` (SUPER_ADMIN, ADMIN, FINANCE_MANAGER) |
+| Task 4 | Service with caching | ✓ PASS | `@Cacheable` annotations on all methods |
+| Task 5 | Backend unit tests | ✓ PASS | 16 tests in `FinanceDashboardServiceTest.java` |
+| Task 6 | Frontend TypeScript types | ✓ PASS | `finance-dashboard.ts` with interfaces and helper functions |
+| Task 7 | Frontend API service | ✓ PASS | `finance-dashboard.service.ts` |
+| Task 8 | React Query hooks | ✓ PASS | 7 hooks in `useFinanceDashboard.ts` |
+| Task 9 | FinanceKpiCards component | ✓ PASS | `FinanceKpiCards.tsx` |
+| Task 10 | IncomeExpenseChart component | ✓ PASS | `IncomeExpenseChart.tsx` |
+| Task 11 | ExpenseCategoriesDonut component | ✓ PASS | `ExpenseCategoriesDonut.tsx` |
+| Task 12 | OutstandingReceivablesCard component | ✓ PASS | `OutstandingReceivablesCard.tsx` |
+| Task 13 | RecentTransactionsTable component | ✓ PASS | `RecentTransactionsTable.tsx` |
+| Task 14 | PdcStatusCard component | ✓ PASS | `PdcStatusCard.tsx` |
+| Task 15 | Dashboard page | ✓ PASS | `finance/dashboard/page.tsx` |
+| Task 16 | Frontend unit tests | ✓ PASS | 14 tests in `useFinanceDashboard.test.tsx` |
+
+### Code Quality Assessment
+
+| Category | Status | Notes |
+|----------|--------|-------|
+| Architecture | ✓ PASS | Clean separation: Controller → Service → Repository |
+| RBAC | ✓ PASS | All endpoints protected with @PreAuthorize |
+| Caching | ✓ PASS | @Cacheable on all service methods per AC-18 |
+| TypeScript | ✓ PASS | Proper interfaces, no any types |
+| React Query | ✓ PASS | Proper query keys, stale time, refetch interval |
+| Error Handling | ✓ PASS | Error states in UI, try-catch in service |
+| Loading States | ✓ PASS | Skeleton loaders in all components |
+| Empty States | ✓ PASS | All components handle empty/null data |
+| Accessibility | ✓ PASS | data-testid for testing |
+
+### Build Verification
+
+| Check | Status | Command |
+|-------|--------|---------|
+| Frontend Build | ✓ PASS | `npm run build` - Zero TypeScript errors |
+
+### Security Review
+
+- No SQL injection risks (uses JPA/repository pattern)
+- No XSS vulnerabilities (React escaping)
+- Proper RBAC on all endpoints
+- No secrets exposed in frontend
+
+### Summary
+
+Story 8.6 Finance Dashboard implementation is **APPROVED** for release. All 22 acceptance criteria validated with code evidence. All 16 tasks completed. Build passes. Code follows established patterns.

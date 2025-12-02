@@ -316,3 +316,33 @@ export {
   getTrendColor,
   getProfitLossColor,
 } from './finance-dashboard';
+// Assets Dashboard exports (Story 8.7)
+export {
+  // Interfaces
+  type MostExpensiveAssetKpi,
+  type AssetKpi,
+  type AssetsByCategory,
+  type TopMaintenanceSpend,
+  type OverduePmAsset,
+  type RecentAsset,
+  type DepreciationSummary,
+  type AssetsDashboard,
+  type AssetsDashboardResponse,
+  type AssetKpiResponse,
+  type AssetsByCategoryResponse,
+  type TopMaintenanceSpendResponse,
+  type OverduePmAssetsResponse,
+  type RecentAssetsResponse,
+  type DepreciationSummaryResponse,
+  // Constants
+  ASSET_CATEGORY_CHART_COLORS,
+  // Functions
+  formatAssetDashboardCurrency,
+  formatCompactCurrency as formatAssetCompactCurrency,
+  formatPercentage as formatAssetPercentage,
+  getOverdueSeverityClass,
+  getOverdueBadgeClass,
+  getCategoryChartColor,
+  formatDashboardDate as formatAssetDashboardDate,
+  formatDashboardDateTime as formatAssetDashboardDateTime,
+} from './assets-dashboard';

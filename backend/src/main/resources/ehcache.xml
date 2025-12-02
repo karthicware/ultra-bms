@@ -449,6 +449,95 @@
         </resources>
     </cache>
 
+    <!-- ================================================================= -->
+    <!-- ASSETS DASHBOARD CACHES (Story 8.7) -->
+    <!-- AC-18: 5-minute cache TTL for assets dashboard data -->
+    <!-- ================================================================= -->
+
+    <!-- Assets Dashboard Complete Data Cache -->
+    <cache alias="assetsDashboard">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.assets.AssetsDashboardDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Assets Dashboard KPIs Cache -->
+    <cache alias="assetsKpis">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.assets.AssetKpiDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Assets By Category Cache -->
+    <cache alias="assetsByCategory">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Top Maintenance Spend Cache -->
+    <cache alias="topMaintenanceSpend">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Overdue PM Assets Cache -->
+    <cache alias="overduePmAssets">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Recent Assets Cache -->
+    <cache alias="recentAssets">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.util.List</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
+    <!-- Depreciation Summary Cache -->
+    <cache alias="depreciationSummary">
+        <key-type>java.lang.String</key-type>
+        <value-type>com.ultrabms.dto.dashboard.assets.DepreciationSummaryDto</value-type>
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">100</heap>
+        </resources>
+    </cache>
+
     <!-- Default cache template for other caches -->
     <cache-template name="default">
         <expiry>
