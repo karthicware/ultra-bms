@@ -191,17 +191,27 @@ export type RentBreakdownFormData = z.infer<typeof rentBreakdownSchema>;
 
 // ===========================
 // Step 4: Parking Allocation Schema (Optional)
+// SCP-2025-12-02: Changed to single parking spot selection from inventory
 // ===========================
 
 export const parkingAllocationSchema = z.object({
+  // Single parking spot UUID (optional - from parking inventory)
+  parkingSpotId: z
+    .string()
+    .uuid('Invalid parking spot ID')
+    .nullable()
+    .optional(),
+  // Number of parking spots (0 or 1 for single spot)
   parkingSpots: z
     .number()
     .min(0, 'Parking spots must be 0 or greater')
-    .max(10, 'Maximum 10 parking spots allowed'),
+    .max(1, 'Maximum 1 parking spot allowed'),
+  // Editable parking fee (auto-filled from spot, can be overridden)
   parkingFeePerSpot: z
     .number()
     .min(0, 'Parking fee must be 0 or greater')
     .max(999999.99, 'Parking fee must be less than 1,000,000'),
+  // Spot number (auto-filled from selected spot)
   spotNumbers: z
     .string()
     .max(200, 'Spot numbers must be less than 200 characters')
@@ -222,19 +232,7 @@ export const parkingAllocationSchema = z.object({
     )
     .nullable()
     .optional(),
-}).refine(
-  (data) => {
-    // If parking spots > 0, parkingFeePerSpot and spotNumbers should be provided
-    if (data.parkingSpots > 0) {
-      return data.parkingFeePerSpot !== undefined && data.spotNumbers !== undefined && data.spotNumbers.length > 0;
-    }
-    return true;
-  },
-  {
-    message: 'Please provide parking fee and spot numbers when allocating parking',
-    path: ['spotNumbers'],
-  }
-);
+});
 
 export type ParkingAllocationFormData = z.infer<typeof parkingAllocationSchema>;
 
@@ -316,7 +314,8 @@ export const createTenantSchema = z.object({
   serviceCharge: rentBreakdownSchema.shape.serviceCharge,
   securityDeposit: rentBreakdownSchema.shape.securityDeposit,
 
-  // Step 4: Parking Allocation
+  // Step 4: Parking Allocation (SCP-2025-12-02: Single spot selection)
+  parkingSpotId: parkingAllocationSchema.shape.parkingSpotId,
   parkingSpots: parkingAllocationSchema.shape.parkingSpots,
   parkingFeePerSpot: parkingAllocationSchema.shape.parkingFeePerSpot,
   spotNumbers: parkingAllocationSchema.shape.spotNumbers,
@@ -372,14 +371,14 @@ export function calculateLeaseDuration(startDate: Date | string, endDate: Date |
 
 /**
  * Calculate total monthly rent (including parking)
+ * SCP-2025-12-02: Updated for single parking spot
  */
 export function calculateTotalMonthlyRent(
   baseRent: number,
   serviceCharge: number,
-  parkingSpots: number,
-  parkingFeePerSpot: number
+  parkingFee?: number
 ): number {
-  return baseRent + serviceCharge + (parkingSpots * parkingFeePerSpot);
+  return baseRent + serviceCharge + (parkingFee || 0);
 }
 
 /**

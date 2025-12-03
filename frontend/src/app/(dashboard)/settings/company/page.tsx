@@ -26,6 +26,7 @@ import {
 import { ArrowLeft, Loader2, Building2, Upload, Trash2, ImageIcon, AlertCircle, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { getValidImageSrc, isExternalImage } from '@/lib/utils/image-url';
 import { useToast } from '@/hooks/use-toast';
 import { usePermission } from '@/contexts/auth-context';
 import {
@@ -298,11 +299,12 @@ export default function CompanyProfilePage() {
                 <div className="relative h-32 w-32 rounded-lg border-2 border-dashed bg-muted flex items-center justify-center overflow-hidden">
                   {logoUrl ? (
                     <Image
-                      src={logoUrl}
+                      src={getValidImageSrc(logoUrl)}
                       alt="Company logo"
                       fill
                       className="object-contain p-2"
                       data-testid="company-logo-preview"
+                      unoptimized={isExternalImage(getValidImageSrc(logoUrl))}
                     />
                   ) : (
                     <ImageIcon className="h-10 w-10 text-muted-foreground" />

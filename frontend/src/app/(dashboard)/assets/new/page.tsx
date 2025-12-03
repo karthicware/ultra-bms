@@ -409,7 +409,7 @@ export default function NewAssetPage() {
                           <NumberInput
                             id="purchaseCost"
                             className="pl-9 pr-14"
-                            step={0.01}
+                            step={1}
                             min={0}
                             placeholder="0.00"
                             value={field.value}

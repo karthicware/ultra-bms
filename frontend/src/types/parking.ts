@@ -162,6 +162,20 @@ export interface BulkOperationResponse {
   message: string;
 }
 
+/**
+ * Response for parking spot counts by status
+ */
+export interface ParkingSpotCountsResponse {
+  /** Count of available spots */
+  available: number;
+  /** Count of assigned spots */
+  assigned: number;
+  /** Count of spots under maintenance */
+  underMaintenance: number;
+  /** Total count of all spots */
+  total: number;
+}
+
 // ===========================
 // Form Data Types
 // ===========================

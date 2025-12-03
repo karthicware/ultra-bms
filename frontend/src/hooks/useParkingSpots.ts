@@ -26,13 +26,13 @@ import type {
   ParkingSpot,
   ParkingSpotListResponse,
   ParkingSpotFilters,
-  ParkingSpotStatus,
   CreateParkingSpotRequest,
   UpdateParkingSpotRequest,
   ChangeParkingSpotStatusRequest,
   BulkDeleteParkingSpotRequest,
   BulkStatusChangeParkingSpotRequest,
-  BulkOperationResponse
+  BulkOperationResponse,
+  ParkingSpotCountsResponse
 } from '@/types/parking';
 
 // ============================================================================
@@ -491,7 +491,7 @@ export function useParkingSpotsByProperty(
  * ```
  */
 export function useParkingSpotCounts(propertyId?: string, enabled: boolean = true) {
-  return useQuery<Record<ParkingSpotStatus, number>>({
+  return useQuery<ParkingSpotCountsResponse>({
     queryKey: parkingSpotKeys.counts(propertyId),
     queryFn: () => getParkingSpotCounts(propertyId),
     staleTime: 5 * 60 * 1000, // 5 minutes

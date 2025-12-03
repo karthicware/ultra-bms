@@ -1,6 +1,7 @@
 package com.ultrabms.dto.properties;
 
 import com.ultrabms.entity.Property;
+import com.ultrabms.entity.User;
 import com.ultrabms.entity.enums.PropertyStatus;
 import com.ultrabms.entity.enums.PropertyType;
 import lombok.AllArgsConstructor;
@@ -28,6 +29,7 @@ public class PropertyResponse {
     private PropertyType propertyType;
     private Integer totalUnitsCount;
     private UUID managerId;
+    private ManagerInfo manager;
     private Integer yearBuilt;
     private BigDecimal totalSquareFootage;
     private List<String> amenities;
@@ -45,16 +47,46 @@ public class PropertyResponse {
     private Double occupancyRate;
 
     /**
+     * Nested DTO for manager information
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ManagerInfo {
+        private UUID id;
+        private String firstName;
+        private String lastName;
+        private String email;
+        private String phone;
+        private String avatar;
+
+        public static ManagerInfo fromUser(User user) {
+            if (user == null) return null;
+            return ManagerInfo.builder()
+                    .id(user.getId())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
+                    .avatar(user.getAvatarFilePath())
+                    .build();
+        }
+    }
+
+    /**
      * Convert Property entity to PropertyResponse DTO
      */
     public static PropertyResponse fromEntity(Property property) {
+        User managerUser = property.getManager();
         return PropertyResponse.builder()
                 .id(property.getId())
                 .name(property.getName())
                 .address(property.getAddress())
                 .propertyType(property.getPropertyType())
                 .totalUnitsCount(property.getTotalUnitsCount())
-                .managerId(property.getManager() != null ? property.getManager().getId() : null)
+                .managerId(managerUser != null ? managerUser.getId() : null)
+                .manager(ManagerInfo.fromUser(managerUser))
                 .yearBuilt(property.getYearBuilt())
                 .totalSquareFootage(property.getTotalSquareFootage())
                 .amenities(property.getAmenities())

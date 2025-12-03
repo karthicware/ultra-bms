@@ -29,6 +29,7 @@ public class PropertyImageResponse {
 
     /**
      * Convert PropertyImage entity to PropertyImageResponse DTO
+     * Note: filePath will contain S3 key - use fromEntityWithUrl for public URLs
      */
     public static PropertyImageResponse fromEntity(PropertyImage image) {
         return PropertyImageResponse.builder()
@@ -36,6 +37,24 @@ public class PropertyImageResponse {
                 .propertyId(image.getProperty().getId())
                 .fileName(image.getFileName())
                 .filePath(image.getFilePath())
+                .fileSize(image.getFileSize())
+                .displayOrder(image.getDisplayOrder())
+                .uploadedBy(image.getUploadedBy() != null ? image.getUploadedBy().getId() : null)
+                .uploadedAt(image.getCreatedAt())
+                .build();
+    }
+
+    /**
+     * Convert PropertyImage entity to PropertyImageResponse DTO with presigned URL
+     * @param image the PropertyImage entity
+     * @param presignedUrl the presigned S3 URL for accessing the image
+     */
+    public static PropertyImageResponse fromEntityWithUrl(PropertyImage image, String presignedUrl) {
+        return PropertyImageResponse.builder()
+                .id(image.getId())
+                .propertyId(image.getProperty().getId())
+                .fileName(image.getFileName())
+                .filePath(presignedUrl)  // Use presigned URL instead of S3 key
                 .fileSize(image.getFileSize())
                 .displayOrder(image.getDisplayOrder())
                 .uploadedBy(image.getUploadedBy() != null ? image.getUploadedBy().getId() : null)

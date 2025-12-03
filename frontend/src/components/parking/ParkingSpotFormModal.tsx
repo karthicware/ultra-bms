@@ -61,6 +61,8 @@ interface ParkingSpotFormModalProps {
   parkingSpot: ParkingSpot | null;
   onSuccess: () => void;
   properties: Property[];
+  /** Pre-selected property ID for new parking spots */
+  defaultPropertyId?: string;
 }
 
 export function ParkingSpotFormModal({
@@ -69,6 +71,7 @@ export function ParkingSpotFormModal({
   parkingSpot,
   onSuccess,
   properties,
+  defaultPropertyId,
 }: ParkingSpotFormModalProps) {
   const isEditing = !!parkingSpot;
   const { mutate: createSpot, isPending: isCreating } = useCreateParkingSpot();
@@ -96,15 +99,16 @@ export function ParkingSpotFormModal({
           notes: parkingSpot.notes || '',
         });
       } else {
+        // Pre-select property if defaultPropertyId is provided
         form.reset({
-          propertyId: '',
+          propertyId: defaultPropertyId || '',
           spotNumber: '',
           defaultFee: 0,
           notes: '',
         });
       }
     }
-  }, [open, parkingSpot, form]);
+  }, [open, parkingSpot, form, defaultPropertyId]);
 
   const handleSubmit = (data: CreateParkingSpotFormData | UpdateParkingSpotFormData) => {
     if (isEditing && parkingSpot) {
@@ -181,7 +185,7 @@ export function ParkingSpotFormModal({
                     </Label>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                       disabled={isSubmitting}
                     >
                       <FormControl>
@@ -253,22 +257,22 @@ export function ParkingSpotFormModal({
               )}
             />
 
-            {/* Default Monthly Fee */}
+            {/* Default Monthly Fee - Optional (0 = free parking) */}
             <FormField
               control={form.control}
               name="defaultFee"
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <Label htmlFor="defaultFee" className="flex items-center gap-1">
-                    Monthly Fee <span className="text-destructive">*</span>
+                    Monthly Fee (AED)
                   </Label>
                   <FormControl>
                     <NumberInput
                       id="defaultFee"
-                      step={0.01}
+                      step={1}
                       min={0}
                       max={99999.99}
-                      placeholder="e.g., 500.00"
+                      placeholder="0 for free parking"
                       value={field.value}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
@@ -277,7 +281,7 @@ export function ParkingSpotFormModal({
                     />
                   </FormControl>
                   <p className="text-muted-foreground text-xs">
-                    Default monthly rental fee for this spot - AED (0 - 99,999.99)
+                    Enter 0 for free parking or set a monthly rental fee (0 - 99,999.99)
                   </p>
                   <FormMessage />
                 </FormItem>

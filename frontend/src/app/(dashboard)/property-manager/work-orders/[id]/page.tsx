@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { AxiosError } from 'axios';
 import Image from 'next/image';
+import { getValidImageSrc, isExternalImage } from '@/lib/utils/image-url';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -735,10 +736,11 @@ export default function WorkOrderDetailPage() {
                       className="relative aspect-square rounded-lg border overflow-hidden hover:opacity-80 transition-opacity"
                     >
                       <Image
-                        src={photo}
+                        src={getValidImageSrc(photo)}
                         alt={`Work order photo ${index + 1}`}
                         fill
                         className="object-cover"
+                        unoptimized={isExternalImage(getValidImageSrc(photo))}
                       />
                     </button>
                   ))}
@@ -867,10 +869,11 @@ export default function WorkOrderDetailPage() {
           </DialogHeader>
           <div className="relative aspect-video">
             <Image
-              src={workOrder.attachments[currentPhotoIndex]}
+              src={getValidImageSrc(workOrder.attachments[currentPhotoIndex])}
               alt={`Work order photo ${currentPhotoIndex + 1}`}
               fill
               className="object-contain"
+              unoptimized={isExternalImage(getValidImageSrc(workOrder.attachments[currentPhotoIndex]))}
             />
           </div>
           <div className="flex justify-between">

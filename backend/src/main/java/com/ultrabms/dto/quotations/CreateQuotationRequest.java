@@ -54,11 +54,11 @@ public class CreateQuotationRequest {
     @Digits(integer = 10, fraction = 2, message = "Service charges must have at most 10 integer digits and 2 decimal places")
     private BigDecimal serviceCharges;
 
-    @NotNull(message = "Parking spots is required")
-    @Min(value = 0, message = "Parking spots must be non-negative")
-    private Integer parkingSpots;
+    // SCP-2025-12-02: Changed from parkingSpots count to optional single spot selection
+    // parkingSpotId references a ParkingSpot UUID from parking inventory
+    private UUID parkingSpotId;
 
-    @NotNull(message = "Parking fee is required")
+    // Optional parking fee - editable (auto-populated from spot, can be overridden)
     @DecimalMin(value = "0.00", message = "Parking fee must be non-negative")
     @Digits(integer = 10, fraction = 2, message = "Parking fee must have at most 10 integer digits and 2 decimal places")
     private BigDecimal parkingFee;

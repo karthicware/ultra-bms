@@ -272,7 +272,7 @@ export function DepositCalculationStep({
                     <FormControl>
                       <NumberInput
                         min={0}
-                        step={0.01}
+                        step={1}
                         value={field.value}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
@@ -375,7 +375,7 @@ export function DepositCalculationStep({
                             <FormControl>
                               <NumberInput
                                 min={0}
-                                step={0.01}
+                                step={1}
                                 value={field.value}
                                 onChange={field.onChange}
                                 onBlur={field.onBlur}

@@ -124,6 +124,7 @@ class QuotationServiceTest {
                 .createdBy(testUserId)
                 .build();
 
+        // SCP-2025-12-02: Changed from parkingSpots to parkingSpotId
         createQuotationRequest = CreateQuotationRequest.builder()
                 .leadId(testLeadId)
                 .propertyId(UUID.randomUUID())
@@ -133,7 +134,7 @@ class QuotationServiceTest {
                 .validityDate(LocalDate.now().plusDays(30))
                 .baseRent(new BigDecimal("5000"))
                 .serviceCharges(new BigDecimal("500"))
-                .parkingSpots(1)
+                .parkingSpotId(UUID.randomUUID())
                 .parkingFee(new BigDecimal("200"))
                 .securityDeposit(new BigDecimal("5000"))
                 .adminFee(new BigDecimal("1000"))
@@ -180,6 +181,7 @@ class QuotationServiceTest {
     @DisplayName("Should throw ValidationException when validity date is before issue date")
     void testCreateQuotation_InvalidDates() {
         // Arrange
+        // SCP-2025-12-02: Changed from parkingSpots to parkingSpotId
         CreateQuotationRequest invalidRequest = CreateQuotationRequest.builder()
                 .leadId(testLeadId)
                 .propertyId(UUID.randomUUID())
@@ -189,7 +191,7 @@ class QuotationServiceTest {
                 .validityDate(LocalDate.now().minusDays(1)) // Before issue date
                 .baseRent(new BigDecimal("5000"))
                 .serviceCharges(new BigDecimal("500"))
-                .parkingSpots(1)
+                .parkingSpotId(UUID.randomUUID())
                 .parkingFee(new BigDecimal("200"))
                 .securityDeposit(new BigDecimal("5000"))
                 .adminFee(new BigDecimal("1000"))

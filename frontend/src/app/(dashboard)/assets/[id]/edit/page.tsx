@@ -436,7 +436,7 @@ export default function EditAssetPage() {
                           <NumberInput
                             id="purchaseCost"
                             className="pl-9 pr-14"
-                            step={0.01}
+                            step={1}
                             min={0}
                             value={field.value}
                             onChange={field.onChange}

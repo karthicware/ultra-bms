@@ -72,7 +72,7 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
                   <FormControl>
                     <NumberInput
                       id="baseRent"
-                      step={0.01}
+                      step={1}
                       min={0}
                       placeholder="0.00"
                       value={field.value}
@@ -100,7 +100,7 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
                   <FormControl>
                     <NumberInput
                       id="serviceCharge"
-                      step={0.01}
+                      step={1}
                       min={0}
                       placeholder="0.00"
                       value={field.value}
@@ -128,7 +128,7 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
                   <FormControl>
                     <NumberInput
                       id="adminFee"
-                      step={0.01}
+                      step={1}
                       min={0}
                       placeholder="0.00"
                       value={field.value}
@@ -158,7 +158,7 @@ export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownSte
                   <FormControl>
                     <NumberInput
                       id="securityDeposit"
-                      step={0.01}
+                      step={1}
                       min={0.01}
                       placeholder="0.00"
                       value={field.value}

@@ -238,7 +238,7 @@ export function UnitGrid({ units, onViewUnit, onEditUnit, onDeleteUnit, onStatus
                 <NumberInput
                   placeholder="Min"
                   min={0}
-                  step={0.01}
+                  step={1}
                   value={rentMin ? parseFloat(rentMin) : undefined}
                   onChange={(val) => setRentMin(val.toString())}
                   data-testid="input-rent-min"
@@ -246,7 +246,7 @@ export function UnitGrid({ units, onViewUnit, onEditUnit, onDeleteUnit, onStatus
                 <NumberInput
                   placeholder="Max"
                   min={0}
-                  step={0.01}
+                  step={1}
                   value={rentMax ? parseFloat(rentMax) : undefined}
                   onChange={(val) => setRentMax(val.toString())}
                   data-testid="input-rent-max"

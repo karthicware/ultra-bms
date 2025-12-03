@@ -316,7 +316,10 @@ public class PropertyServiceImpl implements PropertyService {
 
         image = propertyImageRepository.save(image);
         log.info("Image uploaded successfully: {}", image.getId());
-        return PropertyImageResponse.fromEntity(image);
+
+        // Return response with presigned URL for immediate display
+        String presignedUrl = fileStorageService.getDownloadUrl(filePath);
+        return PropertyImageResponse.fromEntityWithUrl(image, presignedUrl);
     }
 
     @Override
@@ -326,7 +329,11 @@ public class PropertyServiceImpl implements PropertyService {
         findPropertyById(propertyId); // Validate property exists
         return propertyImageRepository.findByPropertyIdOrderByDisplayOrderAsc(propertyId)
                 .stream()
-                .map(PropertyImageResponse::fromEntity)
+                .map(image -> {
+                    // Convert S3 key to presigned URL for image access
+                    String presignedUrl = fileStorageService.getDownloadUrl(image.getFilePath());
+                    return PropertyImageResponse.fromEntityWithUrl(image, presignedUrl);
+                })
                 .collect(Collectors.toList());
     }
 

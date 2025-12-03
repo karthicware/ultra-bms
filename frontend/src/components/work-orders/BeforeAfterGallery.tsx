@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { getValidImageSrc, isExternalImage } from '@/lib/utils/image-url';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -181,10 +182,11 @@ export function BeforeAfterGallery({ beforePhotos, afterPhotos }: BeforeAfterGal
           <div className="relative aspect-video bg-black">
             {lightboxPhotos[lightboxIndex] && (
               <Image
-                src={lightboxPhotos[lightboxIndex]}
+                src={getValidImageSrc(lightboxPhotos[lightboxIndex])}
                 alt={`${lightboxTitle} ${lightboxIndex + 1}`}
                 fill
                 className="object-contain"
+                unoptimized={isExternalImage(getValidImageSrc(lightboxPhotos[lightboxIndex]))}
               />
             )}
 
@@ -229,10 +231,11 @@ export function BeforeAfterGallery({ beforePhotos, afterPhotos }: BeforeAfterGal
                   aria-current={index === lightboxIndex}
                 >
                   <Image
-                    src={photo}
+                    src={getValidImageSrc(photo)}
                     alt={`Thumbnail ${index + 1}`}
                     fill
                     className="object-cover"
+                    unoptimized={isExternalImage(getValidImageSrc(photo))}
                   />
                 </button>
               ))}
@@ -262,10 +265,11 @@ function PhotoGrid({
             aria-label={`View photo ${index + 1} of ${photos.length}`}
           >
           <Image
-            src={photo}
+            src={getValidImageSrc(photo)}
             alt={`Photo ${index + 1}`}
             fill
             className="object-cover group-hover:scale-105 transition-transform"
+            unoptimized={isExternalImage(getValidImageSrc(photo))}
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
             <Maximize2 className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -309,10 +313,11 @@ function ComparisonView({
                 aria-label={`Before photo ${index + 1}`}
               >
                 <Image
-                  src={beforePhotos[index]}
+                  src={getValidImageSrc(beforePhotos[index])}
                   alt={`Before photo ${index + 1}`}
                   fill
                   className="object-cover"
+                  unoptimized={isExternalImage(getValidImageSrc(beforePhotos[index]))}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                   <Maximize2 className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -337,10 +342,11 @@ function ComparisonView({
                 aria-label={`After photo ${index + 1}`}
               >
                 <Image
-                  src={afterPhotos[index]}
+                  src={getValidImageSrc(afterPhotos[index])}
                   alt={`After photo ${index + 1}`}
                   fill
                   className="object-cover"
+                  unoptimized={isExternalImage(getValidImageSrc(afterPhotos[index]))}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                   <Maximize2 className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />

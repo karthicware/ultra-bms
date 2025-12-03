@@ -666,7 +666,7 @@ export default function CreateWorkOrderPage() {
                           id="estimatedCost"
                           placeholder="0.00"
                           className="pl-9 pr-14"
-                          step={0.01}
+                          step={1}
                           min={0}
                           value={field.value}
                           onChange={field.onChange}

@@ -397,7 +397,7 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
                           <FormLabel>Square Footage</FormLabel>
                           <FormControl>
                             <NumberInput
-                              step={0.01}
+                              step={1}
                               min={0}
                               placeholder="1200"
                               value={field.value}
@@ -422,7 +422,7 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
                           <FormLabel>Monthly Rent (AED) *</FormLabel>
                           <FormControl>
                             <NumberInput
-                              step={0.01}
+                              step={1}
                               min={0}
                               placeholder="5000"
                               value={field.value}

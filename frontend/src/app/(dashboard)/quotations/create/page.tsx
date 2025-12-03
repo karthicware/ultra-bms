@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Car } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,6 +44,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { createQuotation } from '@/services/quotations.service';
 import { getLeadById } from '@/services/leads.service';
+import { getAvailableParkingSpots } from '@/services/parking.service';
+import { getProperties } from '@/services/properties.service';
+import type { Property } from '@/types/properties';
 import {
   createQuotationSchema,
   type CreateQuotationFormData,
@@ -52,6 +55,7 @@ import {
   getDefaultValidityDate,
 } from '@/lib/validations/quotations';
 import { StayType } from '@/types';
+import type { ParkingSpot } from '@/types/parking';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', minimumFractionDigits: 0 }).format(amount);
@@ -63,6 +67,10 @@ function CreateQuotationForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [leadName, setLeadName] = useState('');
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loadingProperties, setLoadingProperties] = useState(true);
+  const [availableParkingSpots, setAvailableParkingSpots] = useState<ParkingSpot[]>([]);
+  const [loadingParkingSpots, setLoadingParkingSpots] = useState(false);
 
   const leadId = searchParams.get('leadId') || '';
 
@@ -77,7 +85,7 @@ function CreateQuotationForm() {
       stayType: StayType.ONE_BHK,
       baseRent: 0,
       serviceCharges: 0,
-      parkingSpots: 0,
+      parkingSpotId: null,
       parkingFee: 0,
       securityDeposit: 0,
       adminFee: 0,
@@ -89,6 +97,25 @@ function CreateQuotationForm() {
     },
   });
 
+  // Fetch properties on mount
+  useEffect(() => {
+    setLoadingProperties(true);
+    getProperties({ size: 100 })
+      .then((response) => {
+        setProperties(response.content);
+      })
+      .catch(() => {
+        toast({
+          title: 'Error',
+          description: 'Failed to load properties',
+          variant: 'destructive',
+        });
+      })
+      .finally(() => {
+        setLoadingProperties(false);
+      });
+  }, [toast]);
+
   // Fetch lead name
   useEffect(() => {
     if (leadId) {
@@ -96,11 +123,50 @@ function CreateQuotationForm() {
     }
   }, [leadId]);
 
+  // Watch propertyId to fetch available parking spots
+  const watchedPropertyId = form.watch('propertyId');
+  const watchedParkingSpotId = form.watch('parkingSpotId');
+
+  // Fetch available parking spots when property changes
+  useEffect(() => {
+    if (watchedPropertyId) {
+      setLoadingParkingSpots(true);
+      getAvailableParkingSpots(watchedPropertyId)
+        .then((spots) => {
+          setAvailableParkingSpots(spots);
+        })
+        .catch(() => {
+          setAvailableParkingSpots([]);
+        })
+        .finally(() => {
+          setLoadingParkingSpots(false);
+        });
+      // Reset parking selection when property changes
+      form.setValue('parkingSpotId', null);
+      form.setValue('parkingFee', 0);
+    } else {
+      setAvailableParkingSpots([]);
+    }
+  }, [watchedPropertyId, form]);
+
+  // Handle parking spot selection - auto-populate fee
+  const handleParkingSpotChange = (spotId: string | null) => {
+    form.setValue('parkingSpotId', spotId);
+    if (spotId && spotId !== 'none') {
+      const selectedSpot = availableParkingSpots.find((s) => s.id === spotId);
+      if (selectedSpot) {
+        form.setValue('parkingFee', selectedSpot.defaultFee);
+      }
+    } else {
+      form.setValue('parkingSpotId', null);
+      form.setValue('parkingFee', 0);
+    }
+  };
+
   // Watch form values for real-time calculation
   const watchedValues = form.watch([
     'baseRent',
     'serviceCharges',
-    'parkingSpots',
     'parkingFee',
     'securityDeposit',
     'adminFee',
@@ -109,10 +175,9 @@ function CreateQuotationForm() {
   const totalFirstPayment = calculateTotalFirstPayment({
     baseRent: watchedValues[0] || 0,
     serviceCharges: watchedValues[1] || 0,
-    parkingSpots: watchedValues[2] || 0,
-    parkingFee: watchedValues[3] || 0,
-    securityDeposit: watchedValues[4] || 0,
-    adminFee: watchedValues[5] || 0,
+    parkingFee: watchedValues[2] || 0,
+    securityDeposit: watchedValues[3] || 0,
+    adminFee: watchedValues[4] || 0,
   });
 
   const onSubmit = async (data: CreateQuotationFormData) => {
@@ -237,15 +302,18 @@ function CreateQuotationForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Property *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loadingProperties}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select property" />
+                            <SelectValue placeholder={loadingProperties ? "Loading properties..." : "Select property"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="prop-1">Building A</SelectItem>
-                          <SelectItem value="prop-2">Building B</SelectItem>
+                          {properties.map((property) => (
+                            <SelectItem key={property.id} value={property.id}>
+                              {property.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -319,7 +387,7 @@ function CreateQuotationForm() {
                       <FormLabel>Monthly Rent (AED) *</FormLabel>
                       <FormControl>
                         <NumberInput
-                          step={0.01}
+                          step={1}
                           min={0}
                           value={field.value}
                           onChange={field.onChange}
@@ -341,7 +409,7 @@ function CreateQuotationForm() {
                       <FormLabel>Service Charges (AED) *</FormLabel>
                       <FormControl>
                         <NumberInput
-                          step={0.01}
+                          step={1}
                           min={0}
                           value={field.value}
                           onChange={field.onChange}
@@ -356,44 +424,71 @@ function CreateQuotationForm() {
 
                 <FormField
                   control={form.control}
-                  name="parkingSpots"
+                  name="parkingSpotId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Parking Spots *</FormLabel>
-                      <FormControl>
-                        <NumberInput
-                          min={0}
-                          value={field.value}
-                          onChange={field.onChange}
-                          onBlur={field.onBlur}
-                          name={field.name}
-                        />
-                      </FormControl>
+                      <FormLabel>Parking Spot (Optional)</FormLabel>
+                      <Select
+                        onValueChange={(value) => handleParkingSpotChange(value === 'none' ? null : value)}
+                        value={field.value || 'none'}
+                        disabled={!watchedPropertyId || loadingParkingSpots}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-parking-spot">
+                            <div className="flex items-center gap-2">
+                              <Car className="h-4 w-4 text-muted-foreground" />
+                              <SelectValue placeholder={loadingParkingSpots ? 'Loading...' : 'Select parking spot'} />
+                            </div>
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">No parking needed</SelectItem>
+                          {availableParkingSpots.map((spot) => (
+                            <SelectItem key={spot.id} value={spot.id}>
+                              {spot.spotNumber} - {formatCurrency(spot.defaultFee)}/mo
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        {!watchedPropertyId
+                          ? 'Select a property first'
+                          : availableParkingSpots.length === 0 && !loadingParkingSpots
+                          ? 'No parking spots available'
+                          : 'Select a parking spot from the property inventory'}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="parkingFee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Parking Fee per Spot (AED) *</FormLabel>
-                      <FormControl>
-                        <NumberInput
-                          step={0.01}
-                          min={0}
-                          value={field.value}
-                          onChange={field.onChange}
-                          onBlur={field.onBlur}
-                          name={field.name}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Only show parking fee field when a parking spot is selected */}
+                {watchedParkingSpotId && (
+                  <FormField
+                    control={form.control}
+                    name="parkingFee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Parking Fee (AED)</FormLabel>
+                        <FormControl>
+                          <NumberInput
+                            step={1}
+                            min={0}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            data-testid="input-parking-fee"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Auto-filled from spot. You can override if needed.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}
@@ -403,7 +498,7 @@ function CreateQuotationForm() {
                       <FormLabel>Security Deposit (AED) *</FormLabel>
                       <FormControl>
                         <NumberInput
-                          step={0.01}
+                          step={1}
                           min={0}
                           value={field.value}
                           onChange={field.onChange}
@@ -425,7 +520,7 @@ function CreateQuotationForm() {
                       <FormLabel>Admin Fee (AED) *</FormLabel>
                       <FormControl>
                         <NumberInput
-                          step={0.01}
+                          step={1}
                           min={0}
                           value={field.value}
                           onChange={field.onChange}

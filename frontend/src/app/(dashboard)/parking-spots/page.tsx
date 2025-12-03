@@ -5,6 +5,9 @@
  * Parking Spot List Page
  * Story 3.8: Parking Spot Inventory Management
  * AC#1, AC#2, AC#3, AC#4: Table with columns, status badges, search, filters, pagination, sorting
+ *
+ * Updated: Property selection is now required before showing parking spots data.
+ * Data is filtered by property to ensure visibility control.
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -27,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -46,6 +49,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Plus,
   Search,
@@ -57,6 +61,8 @@ import {
   ArrowDown,
   MoreHorizontal,
   RefreshCw,
+  Building2,
+  Info,
 } from 'lucide-react';
 import { useParkingSpots, useParkingSpotCounts } from '@/hooks/useParkingSpots';
 import { getProperties } from '@/services/properties.service';
@@ -76,11 +82,14 @@ import { BulkActionsBar } from '@/components/parking/BulkActionsBar';
 
 /**
  * Parking Spot List Page Component
+ * Requires property selection before showing parking spots data
  */
 export default function ParkingSpotListPage() {
-  // Filter and search state
+  // Property selection is required - empty string means no selection
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>('');
+
+  // Filter and search state (only used after property is selected)
   const [searchTerm, setSearchTerm] = useState('');
-  const [propertyFilter, setPropertyFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
@@ -99,29 +108,37 @@ export default function ParkingSpotListPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isAllSelected, setIsAllSelected] = useState(false);
 
-  // Properties for filter dropdown
+  // Properties for dropdown
   const [properties, setProperties] = useState<Property[]>([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(true);
 
-  // Build filters object for query
+  // Get selected property details
+  const selectedProperty = useMemo(() =>
+    properties.find(p => p.id === selectedPropertyId),
+    [properties, selectedPropertyId]
+  );
+
+  // Build filters object for query - only when property is selected
   const filters = useMemo(() => ({
-    propertyId: propertyFilter !== 'all' ? propertyFilter : undefined,
+    propertyId: selectedPropertyId || undefined,
     status: statusFilter !== 'all' ? statusFilter as ParkingSpotStatus : undefined,
     search: searchTerm || undefined,
     page: currentPage,
     size: pageSize,
     sort: `${sortField},${sortDirection}`,
-  }), [propertyFilter, statusFilter, searchTerm, currentPage, pageSize, sortField, sortDirection]);
+  }), [selectedPropertyId, statusFilter, searchTerm, currentPage, pageSize, sortField, sortDirection]);
 
-  // Fetch parking spots
+  // Only fetch parking spots when a property is selected
   const {
     data: parkingSpotData,
     isLoading,
     refetch: refetchSpots,
-  } = useParkingSpots(filters);
+  } = useParkingSpots(filters, !!selectedPropertyId);
 
-  // Fetch parking spot counts
-  const { data: counts } = useParkingSpotCounts(
-    propertyFilter !== 'all' ? propertyFilter : undefined
+  // Fetch parking spot counts for selected property (only when property is selected)
+  const { data: counts, refetch: refetchCounts } = useParkingSpotCounts(
+    selectedPropertyId || undefined,
+    !!selectedPropertyId
   );
 
   // Debounced search (300ms)
@@ -136,24 +153,38 @@ export default function ParkingSpotListPage() {
   // Fetch properties on mount
   useEffect(() => {
     const fetchProperties = async () => {
+      setPropertiesLoading(true);
       try {
         const response = await getProperties({ size: 100 });
         setProperties(response.content || []);
       } catch (error) {
         console.error('Failed to load properties:', error);
         setProperties([]);
+      } finally {
+        setPropertiesLoading(false);
       }
     };
     fetchProperties();
   }, []);
 
-  // Clear selection when filters change
+  // Clear selection and reset filters when property changes
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setSelectedIds(new Set());
+    setIsAllSelected(false);
+    setSearchTerm('');
+    setStatusFilter('all');
+    setCurrentPage(0);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [selectedPropertyId]);
+
+  // Clear selection when other filters change
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
     setSelectedIds(new Set());
     setIsAllSelected(false);
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [propertyFilter, statusFilter, searchTerm, currentPage]);
+  }, [statusFilter, searchTerm, currentPage]);
 
   // Cleanup debounce
   useEffect(() => {
@@ -184,19 +215,25 @@ export default function ParkingSpotListPage() {
   const handleFormSuccess = () => {
     setFormModalOpen(false);
     setEditingSpot(null);
+    // Refresh both the list and counts for immediate UI update
     refetchSpots();
+    refetchCounts();
   };
 
   const handleDeleteSuccess = () => {
     setDeleteDialogOpen(false);
     setSpotToDelete(null);
+    // Refresh both the list and counts for immediate UI update
     refetchSpots();
+    refetchCounts();
   };
 
   const handleStatusChangeSuccess = () => {
     setStatusDialogOpen(false);
     setSpotToChangeStatus(null);
+    // Refresh both the list and counts for immediate UI update
     refetchSpots();
+    refetchCounts();
   };
 
   const handlePageChange = (newPage: number) => {
@@ -254,7 +291,9 @@ export default function ParkingSpotListPage() {
   const handleBulkActionComplete = () => {
     setSelectedIds(new Set());
     setIsAllSelected(false);
+    // Refresh both the list and counts for immediate UI update
     refetchSpots();
+    refetchCounts();
   };
 
   // Get property name by ID
@@ -284,43 +323,96 @@ export default function ParkingSpotListPage() {
           onClick={handleCreateParkingSpot}
           data-testid="btn-create-parking-spot"
           className="gap-2"
+          disabled={!selectedPropertyId}
         >
           <Plus className="h-4 w-4" />
           Add Parking Spot
         </Button>
       </div>
 
-      {/* Summary Stats */}
-      {counts && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold">
-                {(counts.AVAILABLE || 0) + (counts.ASSIGNED || 0) + (counts.UNDER_MAINTENANCE || 0)}
-              </div>
-              <p className="text-sm text-muted-foreground">Total Spots</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-green-600">{counts.AVAILABLE || 0}</div>
-              <p className="text-sm text-muted-foreground">Available</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-blue-600">{counts.ASSIGNED || 0}</div>
-              <p className="text-sm text-muted-foreground">Assigned</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-yellow-600">{counts.UNDER_MAINTENANCE || 0}</div>
-              <p className="text-sm text-muted-foreground">Under Maintenance</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* Property Selection Card - Always visible at top */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Building2 className="h-5 w-5" />
+            Select Property
+          </CardTitle>
+          <CardDescription>
+            Choose a property to view and manage its parking spots
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={selectedPropertyId}
+            onValueChange={setSelectedPropertyId}
+            disabled={propertiesLoading}
+          >
+            <SelectTrigger
+              className="w-full md:w-[400px]"
+              data-testid="select-property"
+            >
+              <SelectValue placeholder={propertiesLoading ? "Loading properties..." : "Select a property"} />
+            </SelectTrigger>
+            <SelectContent>
+              {properties.map((property) => (
+                <SelectItem key={property.id} value={property.id}>
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <span>{property.name}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      {/* Show content only when property is selected */}
+      {!selectedPropertyId ? (
+        /* No Property Selected - Show placeholder */
+        <Card className="py-12">
+          <CardContent className="text-center">
+            <Car className="mx-auto h-16 w-16 text-muted-foreground/30 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Select a Property</h3>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Please select a property above to view and manage its parking spots.
+              Each property's parking inventory is managed separately.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Summary Stats - Only show when property is selected */}
+          {counts && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-2xl font-bold">
+                    {counts.total || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground">Total Spots</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-2xl font-bold text-green-600">{counts.available || 0}</div>
+                  <p className="text-sm text-muted-foreground">Available</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-2xl font-bold text-blue-600">{counts.assigned || 0}</div>
+                  <p className="text-sm text-muted-foreground">Assigned</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-2xl font-bold text-yellow-600">{counts.underMaintenance || 0}</div>
+                  <p className="text-sm text-muted-foreground">Under Maintenance</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
       {/* Bulk Actions Bar */}
       {selectedIds.size > 0 && (
@@ -337,14 +429,17 @@ export default function ParkingSpotListPage() {
 
       {/* Unified Datatable Card */}
       <Card className="py-0">
-        {/* Filters Section */}
-        {parkingSpots.length > 0 && (
-          <div className="border-b">
-            <div className="flex flex-col gap-4 p-6">
-              <span className="text-xl font-semibold">Filter</span>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Filters Section - Search and Status filter only (property is selected above) */}
+        <div className="border-b">
+          <div className="flex flex-col gap-4 p-6">
+            <div className="flex items-center justify-between">
+              <span className="text-xl font-semibold">
+                {selectedProperty?.name} - Parking Spots
+              </span>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
               {/* Search */}
-              <div className="relative lg:col-span-1">
+              <div className="relative flex-1 w-full md:w-auto">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by spot number or tenant..."
@@ -355,30 +450,12 @@ export default function ParkingSpotListPage() {
                 />
               </div>
 
-              {/* Property Filter */}
-              <Select value={propertyFilter} onValueChange={(value) => {
-                setPropertyFilter(value);
-                setCurrentPage(0);
-              }}>
-                <SelectTrigger data-testid="select-filter-property">
-                  <SelectValue placeholder="All Properties" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Properties</SelectItem>
-                  {properties.map((property) => (
-                    <SelectItem key={property.id} value={property.id}>
-                      {property.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
               {/* Status Filter */}
               <Select value={statusFilter} onValueChange={(value) => {
                 setStatusFilter(value);
                 setCurrentPage(0);
               }}>
-                <SelectTrigger data-testid="select-filter-status">
+                <SelectTrigger data-testid="select-filter-status" className="w-full md:w-[180px]">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -389,9 +466,9 @@ export default function ParkingSpotListPage() {
                 </SelectContent>
               </Select>
 
-              {/* Page Size Selector */}
+              {/* Page Size Selector - Right aligned */}
               <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-                <SelectTrigger data-testid="select-page-size">
+                <SelectTrigger data-testid="select-page-size" className="w-full md:w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -403,7 +480,6 @@ export default function ParkingSpotListPage() {
             </div>
           </div>
         </div>
-        )}
 
         {/* Table Section */}
         <div className="border-b">
@@ -420,11 +496,11 @@ export default function ParkingSpotListPage() {
               <Car className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-semibold mb-2">No parking spots found</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm || propertyFilter !== 'all' || statusFilter !== 'all'
+                {searchTerm || statusFilter !== 'all'
                   ? 'Try adjusting your filters'
-                  : 'Get started by adding your first parking spot'}
+                  : `No parking spots configured for ${selectedProperty?.name || 'this property'}`}
               </p>
-              {!searchTerm && propertyFilter === 'all' && statusFilter === 'all' && (
+              {!searchTerm && statusFilter === 'all' && (
                 <Button onClick={handleCreateParkingSpot} className="gap-2">
                   <Plus className="h-4 w-4" />
                   Add Parking Spot
@@ -628,6 +704,8 @@ export default function ParkingSpotListPage() {
           </div>
         )}
       </Card>
+        </>
+      )}
 
       {/* Create/Edit Modal */}
       <ParkingSpotFormModal
@@ -636,6 +714,7 @@ export default function ParkingSpotListPage() {
         parkingSpot={editingSpot}
         onSuccess={handleFormSuccess}
         properties={properties}
+        defaultPropertyId={selectedPropertyId}
       />
 
       {/* Delete Confirmation Dialog */}

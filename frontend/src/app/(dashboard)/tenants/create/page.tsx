@@ -247,14 +247,13 @@ function CreateTenantWizard() {
     if (step === 3 || step === 4) {
       const baseRent = step === 3 ? stepData.baseRent : formData.rentBreakdown.baseRent;
       const serviceCharge = step === 3 ? stepData.serviceCharge : formData.rentBreakdown.serviceCharge;
-      const parkingSpots = step === 4 ? stepData.parkingSpots : formData.parkingAllocation.parkingSpots;
-      const parkingFeePerSpot = step === 4 ? stepData.parkingFeePerSpot : formData.parkingAllocation.parkingFeePerSpot;
+      // SCP-2025-12-02: Updated for single parking spot - fee is direct value now
+      const parkingFee = step === 4 ? stepData.parkingFeePerSpot : formData.parkingAllocation.parkingFeePerSpot;
 
       const totalMonthlyRent = calculateTotalMonthlyRent(
         baseRent,
         serviceCharge,
-        parkingSpots,
-        parkingFeePerSpot
+        parkingFee
       );
 
       setFormData((prev) => ({

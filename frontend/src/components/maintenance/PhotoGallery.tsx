@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { getValidImageSrc, isExternalImage } from '@/lib/utils/image-url';
 import { X } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -35,11 +36,12 @@ export function PhotoGallery({ photos }: PhotoGalleryProps) {
             data-testid={`photo-thumbnail-${index}`}
           >
             <Image
-              src={photo}
+              src={getValidImageSrc(photo)}
               alt={`Photo ${index + 1}`}
               fill
               className="object-cover"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              unoptimized={isExternalImage(getValidImageSrc(photo))}
             />
           </div>
         ))}
@@ -51,11 +53,12 @@ export function PhotoGallery({ photos }: PhotoGalleryProps) {
           <div className="relative">
             {selectedPhoto && (
               <Image
-                src={selectedPhoto}
+                src={getValidImageSrc(selectedPhoto)}
                 alt="Full size photo"
                 width={1200}
                 height={800}
                 className="w-full h-auto"
+                unoptimized={isExternalImage(getValidImageSrc(selectedPhoto))}
               />
             )}
             <Button

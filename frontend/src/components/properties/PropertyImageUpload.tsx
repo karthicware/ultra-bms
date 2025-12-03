@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { compressImage, formatFileSize } from '@/lib/utils/image-compression';
+import { getValidImageSrc, isExternalImage } from '@/lib/utils/image-url';
 import {
   uploadPropertyImage,
   deletePropertyImage,
@@ -201,11 +202,12 @@ export function PropertyImageUpload({
               className="relative aspect-square rounded-lg overflow-hidden border bg-muted group"
             >
               <Image
-                src={img.filePath}
-                alt={img.fileName}
+                src={getValidImageSrc(img.filePath)}
+                alt={img.fileName || 'Property image'}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 50vw, 20vw"
+                unoptimized={isExternalImage(getValidImageSrc(img.filePath))}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Button

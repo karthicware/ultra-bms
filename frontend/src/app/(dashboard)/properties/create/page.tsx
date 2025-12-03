@@ -437,7 +437,7 @@ export default function CreatePropertyPage() {
                             id="totalSquareFootage"
                             className="pl-9 pr-12"
                             min={0}
-                            step={0.01}
+                            step={1}
                             placeholder="10000"
                             value={field.value}
                             onChange={field.onChange}

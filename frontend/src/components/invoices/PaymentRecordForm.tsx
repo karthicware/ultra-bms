@@ -100,7 +100,7 @@ export default function PaymentRecordForm({
               <FormLabel>Payment Amount (AED)</FormLabel>
               <FormControl>
                 <NumberInput
-                  step={0.01}
+                  step={1}
                   min={0}
                   placeholder="0.00"
                   value={field.value}

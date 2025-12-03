@@ -361,22 +361,20 @@ export function UnitFormModal({
                     name="squareFootage"
                     render={({ field }) => (
                       <FormItem className="space-y-2">
-                        <Label htmlFor="squareFootage" className="flex items-center gap-1">
-                          Square Footage <span className="text-destructive">*</span>
-                        </Label>
+                        <Label htmlFor="squareFootage">Square Footage</Label>
                         <FormControl>
                           <NumberInput
                             id="squareFootage"
-                            step={0.01}
+                            step={1}
                             min={0}
                             placeholder="1200"
-                            value={field.value}
+                            value={field.value ?? undefined}
                             onChange={field.onChange}
                             onBlur={field.onBlur}
                             data-testid="input-square-footage"
                           />
                         </FormControl>
-                        <p className="text-muted-foreground text-xs">Unit area in square feet</p>
+                        <p className="text-muted-foreground text-xs">Unit area in square feet (optional)</p>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -393,7 +391,7 @@ export function UnitFormModal({
                         <FormControl>
                           <NumberInput
                             id="monthlyRent"
-                            step={0.01}
+                            step={1}
                             min={0}
                             placeholder="5000"
                             value={field.value}

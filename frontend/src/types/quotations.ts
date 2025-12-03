@@ -44,8 +44,9 @@ export interface Quotation {
   // Rent breakdown
   baseRent: number; // Monthly rent
   serviceCharges: number;
-  parkingSpots: number;
-  parkingFee: number; // Per spot
+  parkingSpotId?: string | null; // Optional parking spot UUID
+  parkingSpotNumber?: string | null; // Spot number for display
+  parkingFee?: number; // Optional parking fee (editable)
   securityDeposit: number;
   adminFee: number; // One-time
   totalFirstPayment: number; // Calculated
@@ -83,8 +84,8 @@ export interface CreateQuotationRequest {
   stayType: StayType;
   baseRent: number;
   serviceCharges: number;
-  parkingSpots: number;
-  parkingFee: number;
+  parkingSpotId?: string | null; // Optional parking spot UUID
+  parkingFee?: number; // Optional parking fee (editable)
   securityDeposit: number;
   adminFee: number;
   documentRequirements: string[];
@@ -102,7 +103,7 @@ export interface UpdateQuotationRequest {
   stayType?: StayType;
   baseRent?: number;
   serviceCharges?: number;
-  parkingSpots?: number;
+  parkingSpotId?: string | null;
   parkingFee?: number;
   securityDeposit?: number;
   adminFee?: number;
@@ -188,8 +189,8 @@ export interface QuotationFormData {
   stayType: StayType;
   baseRent: number;
   serviceCharges: number;
-  parkingSpots: number;
-  parkingFee: number;
+  parkingSpotId?: string | null;
+  parkingFee?: number;
   securityDeposit: number;
   adminFee: number;
   documentRequirements: string[];
@@ -210,7 +211,7 @@ export interface RejectQuotationFormData {
 export interface QuotationCalculation {
   baseRent: number;
   serviceCharges: number;
-  parkingTotal: number; // parkingSpots × parkingFee
+  parkingFee: number; // Single spot fee (or 0 if no parking)
   securityDeposit: number;
   adminFee: number;
   totalFirstPayment: number; // Sum of all above
@@ -308,8 +309,8 @@ export interface LeadConversionResponse {
   unitId: string;
   baseRent: number;
   serviceCharges: number;
-  parkingSpots: number;
-  parkingFee: number;
+  parkingSpotId?: string | null;
+  parkingFee?: number;
   securityDeposit: number;
   adminFee: number;
   totalFirstPayment: number;

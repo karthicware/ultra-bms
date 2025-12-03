@@ -67,11 +67,20 @@ public class Quotation {
     @Column(name = "service_charges", nullable = false, precision = 10, scale = 2)
     private BigDecimal serviceCharges;
 
-    @Column(name = "parking_spots", nullable = false)
-    private Integer parkingSpots;
+    // SCP-2025-12-02: Changed from multiple spots to single spot selection from inventory
+    // parkingSpotId references a ParkingSpot from parking inventory (Story 3.8)
+    @Column(name = "parking_spot_id")
+    private UUID parkingSpotId;
 
-    @Column(name = "parking_fee", nullable = false, precision = 10, scale = 2)
-    private BigDecimal parkingFee;
+    // Kept for backward compatibility - now either 0 or 1
+    @Column(name = "parking_spots", nullable = false)
+    @Builder.Default
+    private Integer parkingSpots = 0;
+
+    // Parking fee - editable field (auto-populated from spot but can be overridden)
+    @Column(name = "parking_fee", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal parkingFee = BigDecimal.ZERO;
 
     @Column(name = "security_deposit", nullable = false, precision = 10, scale = 2)
     private BigDecimal securityDeposit;
@@ -142,7 +151,8 @@ public class Quotation {
     }
 
     private void calculateTotalFirstPayment() {
-        BigDecimal parkingTotal = parkingFee.multiply(BigDecimal.valueOf(parkingSpots));
+        // SCP-2025-12-02: parkingFee is now the total fee for the single spot (not per-spot)
+        BigDecimal parkingTotal = parkingFee != null ? parkingFee : BigDecimal.ZERO;
         totalFirstPayment = securityDeposit
                 .add(adminFee)
                 .add(baseRent)

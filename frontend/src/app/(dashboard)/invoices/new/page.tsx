@@ -409,7 +409,7 @@ function CreateInvoicePageContent() {
                         <NumberInput
                           id="baseRent"
                           className="pl-9 pr-14"
-                          step={0.01}
+                          step={1}
                           min={0}
                           placeholder="0.00"
                           value={field.value}
@@ -444,7 +444,7 @@ function CreateInvoicePageContent() {
                         <NumberInput
                           id="serviceCharges"
                           className="pl-9 pr-14"
-                          step={0.01}
+                          step={1}
                           min={0}
                           placeholder="0.00"
                           value={field.value}
@@ -479,7 +479,7 @@ function CreateInvoicePageContent() {
                         <NumberInput
                           id="parkingFees"
                           className="pl-9 pr-14"
-                          step={0.01}
+                          step={1}
                           min={0}
                           placeholder="0.00"
                           value={field.value}
@@ -550,7 +550,7 @@ function CreateInvoicePageContent() {
                                 <FormControl>
                                   <NumberInput
                                     className="pl-9"
-                                    step={0.01}
+                                    step={1}
                                     min={0}
                                     placeholder="0.00"
                                     value={field.value}

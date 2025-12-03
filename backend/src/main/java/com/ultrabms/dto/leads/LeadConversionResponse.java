@@ -37,7 +37,8 @@ public class LeadConversionResponse {
     private UUID unitId;
     private BigDecimal baseRent;
     private BigDecimal serviceCharges;
-    private Integer parkingSpots;
+    // SCP-2025-12-02: Changed from parkingSpots count to parkingSpotId
+    private UUID parkingSpotId;
     private BigDecimal parkingFee;
     private BigDecimal securityDeposit;
     private BigDecimal adminFee;

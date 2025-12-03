@@ -67,6 +67,7 @@ public class QuotationServiceImpl implements QuotationService {
         }
 
         // Create quotation entity
+        // SCP-2025-12-02: Changed from parkingSpots count to parkingSpotId (single spot from inventory)
         Quotation quotation = Quotation.builder()
                 .quotationNumber(quotationNumberGenerator.generate())
                 .leadId(request.getLeadId())
@@ -77,7 +78,8 @@ public class QuotationServiceImpl implements QuotationService {
                 .validityDate(request.getValidityDate())
                 .baseRent(request.getBaseRent())
                 .serviceCharges(request.getServiceCharges())
-                .parkingSpots(request.getParkingSpots())
+                .parkingSpotId(request.getParkingSpotId())
+                .parkingSpots(request.getParkingSpotId() != null ? 1 : 0)
                 .parkingFee(request.getParkingFee())
                 .securityDeposit(request.getSecurityDeposit())
                 .adminFee(request.getAdminFee())
@@ -145,8 +147,10 @@ public class QuotationServiceImpl implements QuotationService {
         if (request.getServiceCharges() != null) {
             quotation.setServiceCharges(request.getServiceCharges());
         }
-        if (request.getParkingSpots() != null) {
-            quotation.setParkingSpots(request.getParkingSpots());
+        // SCP-2025-12-02: Handle parkingSpotId instead of parkingSpots count
+        if (request.getParkingSpotId() != null) {
+            quotation.setParkingSpotId(request.getParkingSpotId());
+            quotation.setParkingSpots(1);
         }
         if (request.getParkingFee() != null) {
             quotation.setParkingFee(request.getParkingFee());
@@ -366,6 +370,7 @@ public class QuotationServiceImpl implements QuotationService {
         );
 
         // Build conversion response with pre-populated data for tenant onboarding
+        // SCP-2025-12-02: Changed from parkingSpots to parkingSpotId
         LeadConversionResponse response = LeadConversionResponse.builder()
                 // Lead information
                 .leadId(lead.getId())
@@ -384,7 +389,7 @@ public class QuotationServiceImpl implements QuotationService {
                 .unitId(quotation.getUnitId())
                 .baseRent(quotation.getBaseRent())
                 .serviceCharges(quotation.getServiceCharges())
-                .parkingSpots(quotation.getParkingSpots())
+                .parkingSpotId(quotation.getParkingSpotId())
                 .parkingFee(quotation.getParkingFee())
                 .securityDeposit(quotation.getSecurityDeposit())
                 .adminFee(quotation.getAdminFee())

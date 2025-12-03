@@ -201,10 +201,13 @@ public class PropertyController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @DeleteMapping("/images/{imageId}")
+    @DeleteMapping("/{id}/images/{imageId}")
     @Operation(summary = "Delete property image")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROPERTY_MANAGER')")
-    public ResponseEntity<ApiResponse<Void>> deleteImage(@PathVariable UUID imageId) {
+    public ResponseEntity<ApiResponse<Void>> deleteImage(
+            @PathVariable UUID id,
+            @PathVariable UUID imageId
+    ) {
         propertyService.deleteImage(imageId);
         return ResponseEntity.ok(ApiResponse.success(null, "Image deleted successfully"));
     }

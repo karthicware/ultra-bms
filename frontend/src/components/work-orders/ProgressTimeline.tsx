@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import { getValidImageSrc, isExternalImage } from '@/lib/utils/image-url';
 import { format } from 'date-fns';
 import {
   FileText,
@@ -266,10 +267,11 @@ export function ProgressTimeline({ timeline, isLoading, showCost = true }: Progr
                                     className="relative aspect-square rounded-lg overflow-hidden border"
                                   >
                                     <Image
-                                      src={url}
+                                      src={getValidImageSrc(url)}
                                       alt={`Photo ${photoIndex + 1}`}
                                       fill
                                       className="object-cover"
+                                      unoptimized={isExternalImage(getValidImageSrc(url))}
                                     />
                                   </div>
                                 ))}

@@ -53,9 +53,8 @@ export const createQuotationSchema = z
     stayType: z.nativeEnum(StayType),
     baseRent: positiveNumberSchema('Base rent'),
     serviceCharges: nonNegativeNumberSchema('Service charges'),
-    parkingSpots: nonNegativeNumberSchema('Parking spots')
-      .int('Parking spots must be a whole number'),
-    parkingFee: nonNegativeNumberSchema('Parking fee per spot'),
+    parkingSpotId: z.string().uuid().optional().nullable(),
+    parkingFee: nonNegativeNumberSchema('Parking fee').optional(),
     securityDeposit: positiveNumberSchema('Security deposit'),
     adminFee: nonNegativeNumberSchema('Admin fee'),
     documentRequirements: z
@@ -101,10 +100,8 @@ export const updateQuotationSchema = z
     stayType: z.nativeEnum(StayType).optional(),
     baseRent: positiveNumberSchema('Base rent').optional(),
     serviceCharges: nonNegativeNumberSchema('Service charges').optional(),
-    parkingSpots: nonNegativeNumberSchema('Parking spots')
-      .int('Parking spots must be a whole number')
-      .optional(),
-    parkingFee: nonNegativeNumberSchema('Parking fee per spot').optional(),
+    parkingSpotId: z.string().uuid().optional().nullable(),
+    parkingFee: nonNegativeNumberSchema('Parking fee').optional(),
     securityDeposit: positiveNumberSchema('Security deposit').optional(),
     adminFee: nonNegativeNumberSchema('Admin fee').optional(),
     documentRequirements: z.array(z.string()).optional(),
@@ -161,30 +158,29 @@ export type QuotationSearchFormData = z.infer<typeof quotationSearchSchema>;
 
 /**
  * Calculate total first payment
+ * parkingFee is now the total parking fee (single spot), not per-spot fee
  */
 export function calculateTotalFirstPayment(data: {
   baseRent: number;
   serviceCharges: number;
-  parkingSpots: number;
-  parkingFee: number;
+  parkingFee?: number;
   securityDeposit: number;
   adminFee: number;
 }): number {
-  const parkingTotal = data.parkingSpots * data.parkingFee;
   return (
     data.securityDeposit +
     data.adminFee +
     data.baseRent +
     data.serviceCharges +
-    parkingTotal
+    (data.parkingFee || 0)
   );
 }
 
 /**
- * Calculate parking total
+ * Get parking fee (now a direct value since only one spot allowed)
  */
-export function calculateParkingTotal(parkingSpots: number, parkingFee: number): number {
-  return parkingSpots * parkingFee;
+export function getParkingFee(parkingFee?: number): number {
+  return parkingFee || 0;
 }
 
 /**

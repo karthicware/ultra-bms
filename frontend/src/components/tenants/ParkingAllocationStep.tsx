@@ -5,29 +5,37 @@
  * Step 4: Parking Allocation (Optional)
  * Story 3.8 Integration: Select from available parking spots in inventory
  * AC#14: Integration with tenant onboarding - parking allocation dropdown
- * Updated: shadcn-studio form styling (SCP-2025-11-30)
+ * Updated: SCP-2025-12-02 - Changed to single parking spot selection with editable fee
  */
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { NumberInput } from '@/components/ui/number-input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { InfoIcon, Upload, X, Car, AlertTriangle } from 'lucide-react';
 
 import { parkingAllocationSchema, formatFileSize, type ParkingAllocationFormData } from '@/lib/validations/tenant';
@@ -44,7 +52,8 @@ interface ParkingAllocationStepProps {
 
 export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: ParkingAllocationStepProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(data.mulkiyaFile ?? null);
-  const [selectedSpotIds, setSelectedSpotIds] = useState<Set<string>>(new Set());
+  const [selectedSpotId, setSelectedSpotId] = useState<string | null>(data.parkingSpotId ?? null);
+  const [parkingFee, setParkingFee] = useState<number>(data.parkingFeePerSpot ?? 0);
 
   // Fetch available parking spots for the property
   const {
@@ -58,49 +67,41 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: 
     defaultValues: data,
   });
 
-  // Get selected spots details
-  const selectedSpots = useMemo(() => {
-    if (!availableSpots) return [];
-    return availableSpots.filter((spot: ParkingSpot) => selectedSpotIds.has(spot.id));
-  }, [availableSpots, selectedSpotIds]);
+  // Get selected spot details
+  const selectedSpot = availableSpots?.find((spot: ParkingSpot) => spot.id === selectedSpotId) ?? null;
 
-  // Calculate totals from selected spots
-  const parkingSpots = selectedSpots.length;
-  const totalParkingFee = selectedSpots.reduce((sum: number, spot: ParkingSpot) => sum + spot.defaultFee, 0);
-  const avgFeePerSpot = parkingSpots > 0 ? totalParkingFee / parkingSpots : 0;
-  const spotNumbers = selectedSpots.map((spot: ParkingSpot) => spot.spotNumber).join(', ');
-  const spotIds = selectedSpots.map((spot: ParkingSpot) => spot.id);
+  // Handle parking spot selection - auto-populate fee
+  const handleSpotChange = (spotId: string | null) => {
+    setSelectedSpotId(spotId);
+    if (spotId && spotId !== 'none') {
+      const spot = availableSpots?.find((s: ParkingSpot) => s.id === spotId);
+      if (spot) {
+        setParkingFee(spot.defaultFee);
+      }
+    } else {
+      setSelectedSpotId(null);
+      setParkingFee(0);
+    }
+  };
 
   // Update form values when selection changes
   useEffect(() => {
-    form.setValue('parkingSpots', parkingSpots);
-    form.setValue('parkingFeePerSpot', avgFeePerSpot);
-    form.setValue('spotNumbers', spotNumbers);
-    // Store spot IDs for backend processing
-    form.setValue('spotIds' as any, spotIds);
-  }, [selectedSpots, parkingSpots, avgFeePerSpot, spotNumbers, spotIds, form]);
-
-  const handleSpotToggle = (spotId: string, checked: boolean) => {
-    setSelectedSpotIds((prev) => {
-      const newSet = new Set(prev);
-      if (checked) {
-        newSet.add(spotId);
-      } else {
-        newSet.delete(spotId);
-      }
-      return newSet;
-    });
-  };
+    form.setValue('parkingSpotId' as any, selectedSpotId);
+    form.setValue('parkingFeePerSpot', parkingFee);
+    form.setValue('spotNumbers', selectedSpot?.spotNumber ?? '');
+    form.setValue('parkingSpots', selectedSpotId ? 1 : 0);
+  }, [selectedSpotId, parkingFee, selectedSpot, form]);
 
   const onSubmit = (values: ParkingAllocationFormData) => {
-    // Extend form data with spotIds for backend parking assignment
+    // Build form data for backend
     const formData = {
       ...values,
-      parkingSpots,
-      parkingFeePerSpot: avgFeePerSpot,
-      spotNumbers,
+      parkingSpotId: selectedSpotId,
+      parkingSpots: selectedSpotId ? 1 : 0,
+      parkingFeePerSpot: parkingFee,
+      spotNumbers: selectedSpot?.spotNumber ?? '',
       mulkiyaFile: selectedFile,
-      spotIds,
+      spotIds: selectedSpotId ? [selectedSpotId] : [],
     };
     onComplete(formData as ParkingAllocationFormData);
   };
@@ -121,11 +122,12 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: 
   const handleSkip = () => {
     // Skip parking allocation
     onComplete({
+      parkingSpotId: null,
       parkingSpots: 0,
       parkingFeePerSpot: 0,
       spotNumbers: '',
       mulkiyaFile: null,
-    });
+    } as ParkingAllocationFormData);
   };
 
   return (
@@ -165,80 +167,73 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: 
               </Alert>
             )}
 
-            {/* Available Parking Spots */}
+            {/* Parking Spot Selection */}
             {propertyId && (
-              <div className="space-y-3">
-                <Label>Available Parking Spots</Label>
-
-                {isLoadingSpots ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
-                  </div>
-                ) : spotsError ? (
-                  <Alert variant="destructive">
-                    <AlertDescription>
-                      Failed to load available parking spots. Please try again.
-                    </AlertDescription>
-                  </Alert>
-                ) : availableSpots && availableSpots.length > 0 ? (
-                  <ScrollArea className="h-64 border rounded-md p-3">
-                    <div className="space-y-2">
-                      {availableSpots.map((spot: ParkingSpot) => (
-                        <label
-                          key={spot.id}
-                          className={`flex items-center justify-between p-3 border rounded-md cursor-pointer transition-colors ${
-                            selectedSpotIds.has(spot.id)
-                              ? 'border-primary bg-primary/5'
-                              : 'hover:bg-accent'
-                          }`}
-                          data-testid={`parking-spot-option-${spot.id}`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Checkbox
-                              checked={selectedSpotIds.has(spot.id)}
-                              onCheckedChange={(checked) =>
-                                handleSpotToggle(spot.id, checked as boolean)
-                              }
-                              data-testid={`checkbox-spot-${spot.id}`}
-                            />
-                            <div>
-                              <span className="font-medium">{spot.spotNumber}</span>
-                              {spot.notes && (
-                                <p className="text-xs text-muted-foreground">{spot.notes}</p>
-                              )}
-                            </div>
+              <div className="space-y-4">
+                <FormItem>
+                  <FormLabel>Select Parking Spot (Optional)</FormLabel>
+                  {isLoadingSpots ? (
+                    <Skeleton className="h-10 w-full" />
+                  ) : spotsError ? (
+                    <Alert variant="destructive">
+                      <AlertDescription>
+                        Failed to load available parking spots. Please try again.
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <Select
+                      onValueChange={(value) => handleSpotChange(value === 'none' ? null : value)}
+                      value={selectedSpotId || 'none'}
+                    >
+                      <FormControl>
+                        <SelectTrigger data-testid="select-parking-spot">
+                          <div className="flex items-center gap-2">
+                            <Car className="h-4 w-4 text-muted-foreground" />
+                            <SelectValue placeholder="Select parking spot" />
                           </div>
-                          <Badge variant="outline">{formatParkingFee(spot.defaultFee)}/mo</Badge>
-                        </label>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                ) : (
-                  <Alert>
-                    <Car className="h-4 w-4" />
-                    <AlertDescription>
-                      No available parking spots for this property. You can add parking spots from the Parking Spots management page.
-                    </AlertDescription>
-                  </Alert>
-                )}
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">No parking needed</SelectItem>
+                        {availableSpots && availableSpots.map((spot: ParkingSpot) => (
+                          <SelectItem key={spot.id} value={spot.id}>
+                            {spot.spotNumber} - {formatParkingFee(spot.defaultFee)}/mo
+                            {spot.notes && ` (${spot.notes})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <FormDescription>
+                    {availableSpots && availableSpots.length === 0
+                      ? 'No available parking spots for this property.'
+                      : 'Select one parking spot from the property inventory.'}
+                  </FormDescription>
+                </FormItem>
 
-                {availableSpots && availableSpots.length > 0 && (
-                  <p className="text-muted-foreground text-xs">
-                    Select one or more parking spots from the available inventory.
-                    {selectedSpotIds.size > 0 && (
-                      <span className="ml-2 font-medium text-primary">
-                        {selectedSpotIds.size} spot{selectedSpotIds.size !== 1 ? 's' : ''} selected
-                      </span>
-                    )}
-                  </p>
+                {/* Editable Parking Fee - only show when spot is selected */}
+                {selectedSpotId && (
+                  <FormItem>
+                    <FormLabel>Parking Fee (AED)</FormLabel>
+                    <FormControl>
+                      <NumberInput
+                        step={1}
+                        min={0}
+                        value={parkingFee}
+                        onChange={(val) => setParkingFee(val)}
+                        data-testid="input-parking-fee"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Auto-filled from spot. You can override if needed.
+                    </FormDescription>
+                  </FormItem>
                 )}
               </div>
             )}
 
-            {/* Selected Spots Summary */}
-            {parkingSpots > 0 && (
+            {/* Selected Spot Summary - only show when spot is selected */}
+            {selectedSpotId && selectedSpot && (
               <>
                 {/* Mulkiya Document Upload */}
                 <div className="space-y-2">
@@ -293,17 +288,13 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: 
                     <h4 className="font-medium mb-3">Parking Allocation Summary</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>Selected Spots:</span>
-                        <span className="font-medium">{spotNumbers || 'None'}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Number of Spots:</span>
-                        <span className="font-medium">{parkingSpots}</span>
+                        <span>Selected Spot:</span>
+                        <span className="font-medium">{selectedSpot.spotNumber}</span>
                       </div>
                       <div className="flex justify-between border-t pt-2 mt-2">
-                        <span className="font-medium">Total Monthly Fee:</span>
+                        <span className="font-medium">Monthly Fee:</span>
                         <span className="font-bold text-primary" data-testid="text-total-parking-fee">
-                          {formatParkingFee(totalParkingFee)}
+                          {formatParkingFee(parkingFee)}
                         </span>
                       </div>
                     </div>
@@ -313,9 +304,9 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: 
             )}
 
             {/* Hidden fields to store values */}
-            <input type="hidden" {...form.register('parkingSpots')} value={parkingSpots} />
-            <input type="hidden" {...form.register('parkingFeePerSpot')} value={avgFeePerSpot} />
-            <input type="hidden" {...form.register('spotNumbers')} value={spotNumbers} />
+            <input type="hidden" {...form.register('parkingSpots')} value={selectedSpotId ? 1 : 0} />
+            <input type="hidden" {...form.register('parkingFeePerSpot')} value={parkingFee} />
+            <input type="hidden" {...form.register('spotNumbers')} value={selectedSpot?.spotNumber ?? ''} />
 
             {/* Actions */}
             <div className="flex justify-between pt-4">

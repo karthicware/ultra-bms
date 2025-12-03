@@ -378,7 +378,7 @@ export default function PDCRegistrationPage() {
                                     </div>
                                     <NumberInput
                                       className="pl-9"
-                                      step={0.01}
+                                      step={1}
                                       min={0.01}
                                       placeholder="0.00"
                                       value={field.value}

@@ -633,7 +633,7 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
                       <NumberInput
                         id="hourlyRate"
                         min={0}
-                        step={0.01}
+                        step={1}
                         placeholder="0.00"
                         value={field.value}
                         onChange={field.onChange}
@@ -658,7 +658,7 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
                       <NumberInput
                         id="emergencyCalloutFee"
                         min={0}
-                        step={0.01}
+                        step={1}
                         placeholder="0.00 (optional)"
                         value={field.value}
                         onChange={field.onChange}

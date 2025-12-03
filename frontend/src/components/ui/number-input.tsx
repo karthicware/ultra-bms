@@ -44,11 +44,20 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
     // Convert null/string values to number or undefined
     const numericValue = value === null || value === '' ? undefined : typeof value === 'string' ? parseFloat(value) || undefined : value
 
+    // Handle onChange to ensure NaN is converted properly
+    const handleChange = React.useCallback((newValue: number) => {
+      if (onChange) {
+        // React Aria NumberField returns NaN when the field is empty
+        // We need to pass the value as-is (NaN will fail validation, which is correct)
+        onChange(newValue)
+      }
+    }, [onChange])
+
     return (
       <NumberField
         value={numericValue}
         defaultValue={defaultValue}
-        onChange={onChange}
+        onChange={handleChange}
         minValue={min}
         maxValue={max}
         step={step}

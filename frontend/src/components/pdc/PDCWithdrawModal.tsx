@@ -302,7 +302,7 @@ export function PDCWithdrawModal({ pdc, open, onClose }: PDCWithdrawModalProps) 
                       <FormLabel>Transfer Amount (AED)</FormLabel>
                       <FormControl>
                         <NumberInput
-                          step={0.01}
+                          step={1}
                           min={0}
                           value={field.value}
                           onChange={field.onChange}

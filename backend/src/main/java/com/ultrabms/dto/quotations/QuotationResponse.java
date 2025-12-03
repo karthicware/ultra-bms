@@ -30,7 +30,8 @@ public class QuotationResponse {
     private LocalDate validityDate;
     private BigDecimal baseRent;
     private BigDecimal serviceCharges;
-    private Integer parkingSpots;
+    // SCP-2025-12-02: Changed from parkingSpots to parkingSpotId
+    private UUID parkingSpotId;
     private BigDecimal parkingFee;
     private BigDecimal securityDeposit;
     private BigDecimal adminFee;
@@ -64,7 +65,7 @@ public class QuotationResponse {
                 .validityDate(quotation.getValidityDate())
                 .baseRent(quotation.getBaseRent())
                 .serviceCharges(quotation.getServiceCharges())
-                .parkingSpots(quotation.getParkingSpots())
+                .parkingSpotId(quotation.getParkingSpotId())
                 .parkingFee(quotation.getParkingFee())
                 .securityDeposit(quotation.getSecurityDeposit())
                 .adminFee(quotation.getAdminFee())

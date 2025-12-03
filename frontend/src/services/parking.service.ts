@@ -10,13 +10,13 @@ import type {
   ParkingSpot,
   ParkingSpotListResponse,
   ParkingSpotFilters,
-  ParkingSpotStatus,
   CreateParkingSpotRequest,
   UpdateParkingSpotRequest,
   ChangeParkingSpotStatusRequest,
   BulkDeleteParkingSpotRequest,
   BulkStatusChangeParkingSpotRequest,
-  BulkOperationResponse
+  BulkOperationResponse,
+  ParkingSpotCountsResponse
 } from '@/types/parking';
 
 const PARKING_SPOTS_BASE_PATH = '/v1/parking-spots';
@@ -363,10 +363,10 @@ export async function getParkingSpotsByProperty(
  */
 export async function getParkingSpotCounts(
   propertyId?: string
-): Promise<Record<ParkingSpotStatus, number>> {
+): Promise<ParkingSpotCountsResponse> {
   const response = await apiClient.get<{
     success: boolean;
-    data: Record<ParkingSpotStatus, number>;
+    data: ParkingSpotCountsResponse;
   }>(`${PARKING_SPOTS_BASE_PATH}/counts`, {
     params: propertyId ? { propertyId } : undefined
   });

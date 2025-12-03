@@ -368,7 +368,7 @@ export function MarkCompleteDialog({
                     <FormLabel>Total Cost (AED) *</FormLabel>
                     <FormControl>
                       <NumberInput
-                        step={0.01}
+                        step={1}
                         min={0}
                         placeholder="e.g., 350.00"
                         value={field.value ? parseFloat(field.value) : undefined}

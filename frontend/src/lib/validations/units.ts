@@ -55,13 +55,15 @@ const bathroomCountSchema = z
   });
 
 /**
- * Square footage validation (for units) - Required
+ * Square footage validation (for units) - Optional
  */
 const unitSquareFootageSchema = z
-  .number({ message: 'Square footage is required' })
+  .number()
   .positive('Square footage must be positive')
   .min(100, 'Unit must be at least 100 sq ft')
-  .max(50000, 'Unit cannot exceed 50,000 sq ft');
+  .max(50000, 'Unit cannot exceed 50,000 sq ft')
+  .optional()
+  .nullable();
 
 /**
  * Square footage validation (for units) - Optional (for updates)
@@ -78,11 +80,11 @@ const unitSquareFootageOptionalSchema = z
  * Monthly rent validation
  */
 const monthlyRentSchema = z
-  .number()
-  .positive('Monthly rent must be positive')
-  .min(500, 'Monthly rent must be at least AED 500')
-  .max(1000000, 'Monthly rent cannot exceed AED 1,000,000')
-  .multipleOf(0.01, 'Monthly rent must be a valid currency amount');
+  .number({ error: 'Monthly rent is required' })
+  .refine((val) => !Number.isNaN(val), { message: 'Monthly rent is required' })
+  .refine((val) => val > 0, { message: 'Monthly rent must be positive' })
+  .refine((val) => val >= 500, { message: 'Monthly rent must be at least AED 500' })
+  .refine((val) => val <= 1000000, { message: 'Monthly rent cannot exceed AED 1,000,000' });
 
 /**
  * Property ID validation

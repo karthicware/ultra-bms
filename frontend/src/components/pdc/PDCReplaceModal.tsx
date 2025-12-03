@@ -141,7 +141,7 @@ export function PDCReplaceModal({ pdc, open, onClose }: PDCReplaceModalProps) {
                     <FormLabel>Amount (AED) *</FormLabel>
                     <FormControl>
                       <NumberInput
-                        step={0.01}
+                        step={1}
                         min={0.01}
                         value={field.value}
                         onChange={field.onChange}

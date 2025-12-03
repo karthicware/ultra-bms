@@ -472,7 +472,7 @@ export default function EditPropertyPage() {
                           <NumberInput
                             id="totalSquareFootage"
                             min={0}
-                            step={0.01}
+                            step={1}
                             placeholder="10000"
                             className="pl-9"
                             value={field.value}

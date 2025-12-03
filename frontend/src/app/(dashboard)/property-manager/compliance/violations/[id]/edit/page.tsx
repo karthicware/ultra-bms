@@ -252,7 +252,7 @@ export default function EditViolationPage() {
                       <FormControl>
                         <NumberInput
                           placeholder="0.00"
-                          step={0.01}
+                          step={1}
                           min={0}
                           value={field.value}
                           onChange={field.onChange}
