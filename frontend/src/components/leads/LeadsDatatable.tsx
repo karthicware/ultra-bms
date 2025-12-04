@@ -7,7 +7,9 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronUpIcon,
+  PencilIcon,
   Users,
+  Trash2,
 } from 'lucide-react';
 
 import type { Column, ColumnDef, ColumnFiltersState, PaginationState } from '@tanstack/react-table';
@@ -29,6 +31,18 @@ import { Label } from '@/components/ui/label';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 import { usePagination } from '@/hooks/use-pagination';
 import { cn } from '@/lib/utils';
@@ -49,12 +63,14 @@ const LEAD_STATUS_STYLES: Record<LeadStatus, string> = {
 interface LeadsDatatableProps {
   data: LeadItem[];
   onCreateQuotation?: (leadId: string) => void;
+  onDelete?: (leadId: string) => void;
   pageSize?: number;
 }
 
 const LeadsDatatable = ({
   data,
   onCreateQuotation,
+  onDelete,
   pageSize: initialPageSize = 10,
 }: LeadsDatatableProps) => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -82,12 +98,20 @@ const LeadsDatatable = ({
       {
         header: 'Name',
         accessorKey: 'fullName',
-        cell: ({ row }) => (
-          <div className="flex flex-col">
-            <span className="font-medium">{row.getValue('fullName')}</span>
-            <span className="text-xs text-muted-foreground">{row.original.email}</span>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const fullName = row.getValue('fullName') as string;
+          const titleCaseName = fullName
+            .toLowerCase()
+            .split(' ')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          return (
+            <div className="flex flex-col">
+              <span className="font-medium">{titleCaseName}</span>
+              <span className="text-xs text-muted-foreground">{row.original.email}</span>
+            </div>
+          );
+        },
         size: 200,
       },
       {
@@ -137,8 +161,56 @@ const LeadsDatatable = ({
         ),
         size: 120,
       },
+      {
+        id: 'actions',
+        header: () => <div className="text-center">Actions</div>,
+        cell: ({ row }) => (
+          <div className="flex justify-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Edit lead" asChild>
+                  <Link href={`/leads/${row.original.id}/edit`}>
+                    <PencilIcon className="size-4.5" />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Edit</p>
+              </TooltipContent>
+            </Tooltip>
+
+            {onDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                    <Trash2 className="size-4.5" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Lead</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this lead? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-red-600 text-white hover:bg-red-700"
+                      onClick={() => onDelete(row.original.id)}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+        ),
+        size: 100,
+      },
     ],
-    [onCreateQuotation]
+    [onCreateQuotation, onDelete]
   );
 
   const table = useReactTable({

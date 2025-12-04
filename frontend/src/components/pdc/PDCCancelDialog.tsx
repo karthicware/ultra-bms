@@ -58,7 +58,7 @@ export function PDCCancelDialog({ pdc, open, onClose }: PDCCancelDialogProps) {
           <Button variant="outline" onClick={onClose}>
             Keep PDC
           </Button>
-          <Button variant="destructive" onClick={handleCancel} disabled={isPending}>
+          <Button className="bg-red-600 text-white hover:bg-red-700" onClick={handleCancel} disabled={isPending}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Yes, Cancel PDC
           </Button>

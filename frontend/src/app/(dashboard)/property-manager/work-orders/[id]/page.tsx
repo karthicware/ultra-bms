@@ -911,7 +911,7 @@ export default function WorkOrderDetailPage() {
             <AlertDialogAction
               onClick={handleCancel}
               disabled={isCancelling}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-red-600 text-white hover:bg-red-700"
             >
               {isCancelling ? 'Cancelling...' : 'Confirm Cancellation'}
             </AlertDialogAction>

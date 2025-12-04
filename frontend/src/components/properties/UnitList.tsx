@@ -310,7 +310,7 @@ export function UnitList({
                         onClick={() => handleDelete(unit.id, unit.unitNumber)}
                         data-testid={`btn-delete-unit-${unit.id}`}
                         title="Delete Unit"
-                        className="text-destructive hover:text-destructive"
+                        className="text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

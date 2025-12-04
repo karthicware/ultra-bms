@@ -221,7 +221,7 @@ export function PDCBounceModal({ pdc, open, onClose }: PDCBounceModalProps) {
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" variant="destructive" disabled={isPending}>
+              <Button type="submit" className="bg-red-600 text-white hover:bg-red-700" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Confirm Bounce
               </Button>

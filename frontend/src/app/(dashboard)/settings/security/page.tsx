@@ -364,7 +364,7 @@ export default function SecurityPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => revokeSession(session.sessionId)}
-                        className="text-destructive hover:text-destructive"
+                        className="text-red-600 hover:text-red-700"
                       >
                         Revoke
                       </Button>

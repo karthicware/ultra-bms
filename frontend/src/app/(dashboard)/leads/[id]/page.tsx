@@ -6,34 +6,51 @@
  * Shows complete lead information, documents, quotations, and history
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/auth-context';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   getLeadById,
   getLeadDocuments,
-  deleteDocument,
   downloadDocument,
   getLeadHistory,
+  deleteLead,
 } from '@/services/leads.service';
 import { getQuotationsByLeadId, convertToTenant } from '@/services/quotations.service';
 import type { Lead, LeadDocument, LeadHistory, Quotation } from '@/types';
 import {
-  Upload,
   Mail,
   Phone,
   MapPin,
-  User,
   Building,
+  Calendar,
+  FileText,
+  CreditCard,
+  ArrowLeft,
+  Plus,
+  Trash2,
+  PencilIcon
 } from 'lucide-react';
-import LeadDocumentUploadDialog from '@/components/leads/lead-document-upload-dialog';
 import DocumentList from '@/components/leads/document-list';
 
 const LEAD_STATUS_COLORS: Record<string, string> = {
@@ -59,19 +76,7 @@ export default function LeadDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [convertingQuotationId, setConvertingQuotationId] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Wait for auth to finish loading before fetching data
-    if (!authLoading) {
-      if (isAuthenticated) {
-        fetchLeadData();
-      } else {
-        // Auth loaded but user not authenticated - redirect to login
-        router.push('/login');
-      }
-    }
-  }, [leadId, authLoading, isAuthenticated, router]);
-
-  const fetchLeadData = async () => {
+  const fetchLeadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [leadData, docsData, quoteData, historyData] = await Promise.allSettled([
@@ -117,7 +122,7 @@ export default function LeadDetailPage() {
         console.error('Failed to fetch history:', historyData.reason);
         setHistory([]);
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to load lead details',
@@ -126,21 +131,33 @@ export default function LeadDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [leadId, toast]);
 
-  const handleDeleteDocument = async (docId: string) => {
+  useEffect(() => {
+    // Wait for auth to finish loading before fetching data
+    if (!authLoading) {
+      if (isAuthenticated) {
+        fetchLeadData();
+      } else {
+        // Auth loaded but user not authenticated - redirect to login
+        router.push('/login');
+      }
+    }
+  }, [leadId, authLoading, isAuthenticated, router, fetchLeadData]);
+
+  const handleDeleteLead = async () => {
     try {
-      await deleteDocument(leadId, docId);
+      await deleteLead(leadId);
       toast({
         title: 'Success',
-        description: 'Document deleted successfully',
+        description: 'Lead deleted successfully',
         variant: 'success',
       });
-      fetchLeadData();
-    } catch (error) {
+      router.push('/leads');
+    } catch {
       toast({
         title: 'Error',
-        description: 'Failed to delete document',
+        description: 'Failed to delete lead',
         variant: 'destructive',
       });
     }
@@ -203,208 +220,298 @@ export default function LeadDetailPage() {
     );
   }
 
+  // Get initials for Avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">{lead.fullName}</h1>
-            <Badge className={LEAD_STATUS_COLORS[lead.status]}>
-              {lead.status.replace('_', ' ')}
-            </Badge>
+    <div className="container mx-auto py-6 space-y-8 max-w-7xl">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{lead.fullName}</h1>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+              <span>{lead.leadNumber}</span>
+              <span>•</span>
+              <Badge variant="outline" className={LEAD_STATUS_COLORS[lead.status] + ' border-0'}>
+                {lead.status.replace('_', ' ')}
+              </Badge>
+            </div>
           </div>
-          <p className="text-muted-foreground">Lead Number: {lead.leadNumber}</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => router.push(`/quotations/create?leadId=${leadId}`)}>
+        <div className="flex gap-3 w-full md:w-auto">
+          <Button 
+            variant="outline"
+            className="flex-1 md:flex-none"
+            onClick={() => router.push(`/leads/${leadId}/edit`)}
+          >
+            <PencilIcon className="mr-2 h-4 w-4" />
+            Edit Lead
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="flex-1 md:flex-none text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Lead
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Lead</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this lead? This action cannot be undone and will remove all associated documents and history.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction className="bg-red-600 text-white hover:bg-red-700" onClick={handleDeleteLead}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <Button 
+            onClick={() => router.push(`/quotations/create?leadId=${leadId}`)} 
+            className="flex-1 md:flex-none"
+          >
+            <Plus className="mr-2 h-4 w-4" />
             Create Quotation
           </Button>
         </div>
       </div>
 
-      {/* Lead Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card data-testid="card-lead-details">
-          <CardHeader>
-            <CardTitle>Contact Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <span>{lead.email}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-muted-foreground" />
-              <span>{lead.contactNumber}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span>{lead.homeCountry}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span>Emirates ID: {lead.emiratesId}</span>
-            </div>
-            {lead.propertyInterest && (
-              <div className="flex items-center gap-2">
-                <Building className="h-4 w-4 text-muted-foreground" />
-                <span>Interested in: {lead.propertyInterest}</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Identity Documents</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <label className="text-sm font-medium">Passport Number</label>
-              <p className="text-sm">{lead.passportNumber}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Passport Expiry</label>
-              <p className="text-sm">{format(new Date(lead.passportExpiryDate), 'PPP')}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Lead Source</label>
-              <p className="text-sm">{lead.leadSource.replace('_', ' ')}</p>
-            </div>
-            {lead.notes && (
-              <div>
-                <label className="text-sm font-medium">Notes</label>
-                <p className="text-sm text-muted-foreground">{lead.notes}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabs for Documents, Quotations, History */}
-      <Tabs defaultValue="documents" className="w-full">
-        <TabsList>
-          <TabsTrigger value="documents">Documents ({documents?.length ?? 0})</TabsTrigger>
-          <TabsTrigger value="quotations">Quotations ({quotations?.length ?? 0})</TabsTrigger>
-          <TabsTrigger value="history">History ({history?.length ?? 0})</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="documents" className="mt-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Sidebar: Customer Info */}
+        <div className="space-y-6 lg:col-span-1">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Uploaded Documents</CardTitle>
-              <LeadDocumentUploadDialog
-                leadId={leadId}
-                onUploadComplete={fetchLeadData}
-                trigger={
-                  <Button data-testid="btn-upload-document">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Document
-                  </Button>
-                }
-              />
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16 border-2 border-primary/10">
+                  <AvatarFallback className="text-lg bg-primary/5 text-primary font-semibold">
+                    {getInitials(lead.fullName)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <CardTitle className="text-lg">{lead.fullName}</CardTitle>
+                  <CardDescription>{lead.leadNumber}</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
-              <DocumentList
-                documents={documents || []}
-                onDownload={handleDownloadDocument}
-                onDelete={handleDeleteDocument}
-                data-testid="list-documents"
-              />
+            <Separator />
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="truncate" title={lead.email}>{lead.email}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span>{lead.contactNumber}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span>{lead.homeCountry}</span>
+                </div>
+              </div>
+
+              <Separator />
+              
+              <div className="space-y-3 pt-2">
+                <h4 className="text-sm font-medium flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-primary" /> Identity Details
+                </h4>
+                <div className="grid grid-cols-1 gap-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Emirates ID</span>
+                    <span className="font-medium">{lead.emiratesId}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Passport Number</span>
+                    <span className="font-medium">{lead.passportNumber}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Passport Expiry</span>
+                    <span className="font-medium">{format(new Date(lead.passportExpiryDate), 'PPP')}</span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="quotations" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Quotations Issued</CardTitle>
+              <CardTitle className="text-base">Lead Information</CardTitle>
             </CardHeader>
-            <CardContent>
-              {(quotations?.length ?? 0) === 0 ? (
-                <p className="text-center py-8 text-muted-foreground">
-                  No quotations created yet
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {quotations?.map((quote) => (
-                    <div
-                      key={quote.id}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div
-                        className="flex-1 cursor-pointer"
-                        onClick={() => router.push(`/quotations/${quote.id}`)}
-                        role="button"
-                        tabIndex={0}
+            <CardContent className="space-y-4">
+               <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Source</span>
+                  <Badge variant="secondary">{lead.leadSource.replace('_', ' ')}</Badge>
+               </div>
+               {lead.propertyInterest && (
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Interested Property</span>
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Building className="h-4 w-4 text-muted-foreground" />
+                    {lead.propertyInterest}
+                  </div>
+                </div>
+               )}
+               {lead.notes && (
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Notes</span>
+                  <p className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
+                    {lead.notes}
+                  </p>
+                </div>
+               )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column: Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          <Tabs defaultValue="quotations" className="w-full">
+            <TabsList className="w-full justify-start h-12 p-1 bg-muted/50">
+              <TabsTrigger value="quotations" className="flex-1 md:flex-none px-6">
+                Quotations ({quotations?.length ?? 0})
+              </TabsTrigger>
+              <TabsTrigger value="documents" className="flex-1 md:flex-none px-6">
+                Documents ({documents?.length ?? 0})
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex-1 md:flex-none px-6">
+                History ({history?.length ?? 0})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="quotations" className="mt-6 space-y-4">
+              <div className="flex items-center justify-between">
+                 <h3 className="text-lg font-medium">Quotations</h3>
+                 {/* Optional secondary action here if needed */}
+              </div>
+              <Card>
+                <CardContent className="p-0">
+                  {(quotations?.length ?? 0) === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                      <FileText className="h-12 w-12 mb-4 opacity-20" />
+                      <p>No quotations created yet</p>
+                      <Button 
+                        variant="link" 
+                        onClick={() => router.push(`/quotations/create?leadId=${leadId}`)}
                       >
-                        <p className="font-medium">{quote.quotationNumber}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {quote.propertyName} • AED {quote.totalFirstPayment.toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge>{quote.status}</Badge>
-                        {quote.status === 'ACCEPTED' && (
-                          <Button
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleConvertToTenant(quote.id);
-                            }}
-                            disabled={convertingQuotationId === quote.id}
-                            data-testid="btn-convert-to-tenant"
-                          >
-                            {convertingQuotationId === quote.id ? 'Converting...' : 'Convert to Tenant'}
-                          </Button>
-                        )}
-                      </div>
+                        Create your first quotation
+                      </Button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  ) : (
+                    <div className="divide-y">
+                      {quotations?.map((quote) => (
+                        <div
+                          key={quote.id}
+                          className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer gap-4"
+                          onClick={() => router.push(`/quotations/${quote.id}`)}
+                        >
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-primary">{quote.quotationNumber}</span>
+                              <Badge variant={quote.status === 'ACCEPTED' ? 'default' : 'secondary'}>
+                                {quote.status}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Building className="h-3 w-3" />
+                              <span>{quote.propertyName}</span>
+                              <span>•</span>
+                              <span>AED {quote.totalFirstPayment.toLocaleString()}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 w-full md:w-auto">
+                             {quote.status === 'ACCEPTED' && (
+                              <Button
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleConvertToTenant(quote.id);
+                                }}
+                                disabled={convertingQuotationId === quote.id}
+                                className="w-full md:w-auto"
+                              >
+                                {convertingQuotationId === quote.id ? 'Converting...' : 'Convert to Tenant'}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-        <TabsContent value="history" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Communication History</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(history?.length ?? 0) === 0 ? (
-                <p className="text-center py-8 text-muted-foreground">No history available</p>
-              ) : (
-                <div className="space-y-4" data-testid="timeline-lead-history">
-                  {history?.map((item, index) => (
-                    <div key={item.id} className="flex gap-4" data-testid={`timeline-item-${index}`}>
-                      <div className="flex flex-col items-center">
-                        <div className="w-3 h-3 rounded-full bg-primary" />
-                        {index < (history?.length ?? 0) - 1 && (
-                          <div className="w-0.5 h-full bg-border mt-2" />
-                        )}
-                      </div>
-                      <div className="flex-1 pb-4">
-                        <p className="font-medium">{item.eventType.replace('_', ' ')}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {format(new Date(item.createdAt), 'PPP p')}
-                        </p>
-                        {item.eventData && Object.keys(item.eventData).length > 0 && (
-                          <pre className="text-xs mt-2 p-2 bg-muted rounded">
-                            {JSON.stringify(item.eventData, null, 2)}
-                          </pre>
-                        )}
-                      </div>
+            <TabsContent value="documents" className="mt-6 space-y-4">
+              <div className="flex items-center justify-between">
+                 <h3 className="text-lg font-medium">Documents</h3>
+              </div>
+                  <DocumentList
+                    leadId={leadId}
+                    documents={documents || []}
+                    onDownload={handleDownloadDocument}
+                    data-testid="list-documents"
+                  />
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-6 space-y-4">
+              <div className="flex items-center justify-between">
+                 <h3 className="text-lg font-medium">Timeline</h3>
+              </div>
+              <Card>
+                <CardContent className="p-6">
+                  {(history?.length ?? 0) === 0 ? (
+                    <p className="text-center py-8 text-muted-foreground">No history available</p>
+                  ) : (
+                    <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-muted before:to-transparent" data-testid="timeline-lead-history">
+                      {history?.map((item) => (
+                        <div key={item.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                          {/* Icon/Dot */}
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full border bg-background shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                             <Calendar className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          
+                          {/* Content Card */}
+                          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-card p-4 rounded border shadow-sm">
+                            <div className="flex items-center justify-between space-x-2 mb-1">
+                              <div className="font-bold text-sm text-primary">{item.eventType.replace('_', ' ')}</div>
+                              <time className="font-mono text-xs text-muted-foreground">{format(new Date(item.createdAt), 'MMM d, yyyy p')}</time>
+                            </div>
+                             {item.eventData && Object.keys(item.eventData).length > 0 && (
+                              <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded mt-2 overflow-x-auto">
+                                <pre className="whitespace-pre-wrap font-mono">
+                                  {JSON.stringify(item.eventData, null, 2).replace(/[{}"\[\]]/g, '')}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 }

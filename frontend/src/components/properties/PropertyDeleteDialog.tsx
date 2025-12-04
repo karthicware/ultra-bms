@@ -103,7 +103,7 @@ export function PropertyDeleteDialog({
           <AlertDialogAction
             onClick={handleConfirmedDelete}
             disabled={isDeleting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-red-600 text-white hover:bg-red-700"
           >
             {isDeleting ? 'Archiving...' : 'Archive Property'}
           </AlertDialogAction>

@@ -67,7 +67,7 @@ export function CancelRequestButton({ requestId, requestNumber }: CancelRequestB
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="sm" data-testid="btn-cancel-request">
+        <Button variant="outline" size="sm" className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700" data-testid="btn-cancel-request">
           <Trash2 className="mr-2 h-4 w-4" />
           Cancel Request
         </Button>
@@ -84,7 +84,7 @@ export function CancelRequestButton({ requestId, requestNumber }: CancelRequestB
           <AlertDialogAction
             onClick={handleCancel}
             disabled={isCancelling}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-red-600 text-white hover:bg-red-700"
             data-testid="btn-confirm-cancel"
           >
             {isCancelling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

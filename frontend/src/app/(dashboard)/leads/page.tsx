@@ -5,13 +5,13 @@
  * Displays all leads with filters, search, and pagination
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { getLeads } from '@/services/leads.service';
+import { getLeads, deleteLead } from '@/services/leads.service';
 import type { Lead } from '@/types';
 import { Plus, UserPlus } from 'lucide-react'; // Added UserPlus import
 import LeadsDatatable from '@/components/leads/LeadsDatatable';
@@ -26,32 +26,50 @@ export default function LeadsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch all leads for client-side filtering
-  useEffect(() => {
-    const fetchLeads = async () => {
-      try {
-        setIsLoading(true);
-        const response = await getLeads({
-          page: 0,
-          size: 1000, // Fetch all for client-side filtering
-        });
-        setLeads(response.data.content);
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to load leads. Please try again.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchLeads();
+  const fetchLeads = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await getLeads({
+        page: 0,
+        size: 1000, // Fetch all for client-side filtering
+      });
+      setLeads(response.data.content);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load leads. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }, [toast]);
+
+  useEffect(() => {
+    fetchLeads();
+  }, [fetchLeads]);
 
   // Handlers
   const handleCreateLead = () => {
     router.push('/leads/create');
+  };
+
+  const handleDeleteLead = async (leadId: string) => {
+    try {
+      await deleteLead(leadId);
+      toast({
+        title: 'Success',
+        description: 'Lead deleted successfully',
+        variant: 'success',
+      });
+      fetchLeads();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete lead',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (isLoading) {
@@ -107,7 +125,7 @@ export default function LeadsPage() {
 
       {/* Datatable Section */}
       <Card className="shadow-sm">
-        <LeadsDatatable data={leads} />
+        <LeadsDatatable data={leads} onDelete={handleDeleteLead} />
       </Card>
     </div>
   );

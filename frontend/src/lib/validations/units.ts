@@ -52,15 +52,13 @@ const bathroomCountSchema = z
   .max(20, 'Bathroom count cannot exceed 20');
 
 /**
- * Square footage validation (for units) - Optional
+ * Square footage validation (for units) - Required
  */
 const unitSquareFootageSchema = z
-  .number()
+  .number({ error: 'Square footage is required' })
   .positive('Square footage must be positive')
   .min(100, 'Unit must be at least 100 sq ft')
-  .max(50000, 'Unit cannot exceed 50,000 sq ft')
-  .optional()
-  .nullable();
+  .max(50000, 'Unit cannot exceed 50,000 sq ft');
 
 /**
  * Square footage validation (for units) - Optional (for updates)

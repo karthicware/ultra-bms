@@ -109,7 +109,7 @@ export function UnitFormModal({
       floor: undefined as unknown as number,
       bedroomCount: undefined as unknown as number,
       bathroomCount: undefined as unknown as number,
-      squareFootage: undefined as unknown as number,
+      squareFootage: undefined as unknown as number, // Required field - validation will catch empty
       monthlyRent: undefined as unknown as number,
       status: UnitStatus.AVAILABLE,
       features: {},
@@ -148,7 +148,6 @@ export function UnitFormModal({
         const updatePayload = {
           ...payload,
           floor: payload.floor ?? undefined,
-          squareFootage: payload.squareFootage ?? undefined,
         };
         const updatedUnit = await updateUnit(unit.id, updatePayload);
 
@@ -367,14 +366,14 @@ export function UnitFormModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-1.5">
-                        <Ruler className="h-3.5 w-3.5 text-muted-foreground" /> Size (sq ft) <span className="text-muted-foreground text-xs">(optional)</span>
+                        <Ruler className="h-3.5 w-3.5 text-muted-foreground" /> Size (sq ft) <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
                         <NumberInput
                           step={1}
-                          min={0}
+                          min={100}
                           placeholder="e.g. 1200"
-                          value={field.value ?? undefined}
+                          value={field.value}
                           onChange={field.onChange}
                           onBlur={field.onBlur}
                           data-testid="input-square-footage"

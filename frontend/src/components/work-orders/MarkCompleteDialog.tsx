@@ -297,7 +297,7 @@ export function MarkCompleteDialog({
                       <button
                         type="button"
                         onClick={() => removePhoto(index)}
-                        className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        className="absolute top-1 right-1 p-1 rounded-full bg-red-600 text-white hover:bg-red-700"
                         disabled={isSubmitting}
                         aria-label={`Remove photo ${index + 1}`}
                       >

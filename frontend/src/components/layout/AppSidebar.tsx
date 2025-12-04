@@ -9,15 +9,12 @@ import {
   Building2,
   Wrench,
   UserPlus,
-  FileText,
   Settings,
   LogOut,
   Truck,
   UserCog,
-  LogOut as LogOutIcon,
   Receipt,
   DollarSign,
-  RefreshCw,
   Car,
   Landmark,
   ChevronRight,
@@ -26,6 +23,7 @@ import {
   Package,
   Megaphone,
   ShieldCheck,
+  BarChart3,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -98,28 +96,45 @@ const menuSections: MenuSection[] = [
         items: [
           { label: 'Executive Summary', href: '/dashboard' },
           { label: 'Occupancy', href: '/dashboard/occupancy' },
+          { label: 'Financial', href: '/finance/dashboard' },
           { label: 'Maintenance', href: '/maintenance/dashboard' },
           { label: 'Vendors', href: '/vendors/dashboard' },
-          { label: 'Finance', href: '/finance/dashboard' },
           { label: 'Assets', href: '/assets/dashboard' },
         ],
       },
     ],
   },
   {
-    groupLabel: 'Main',
+    groupLabel: 'Portfolio',
+    items: [
+      {
+        icon: Building2,
+        label: 'Properties',
+        href: '/properties',
+        permission: 'properties:read',
+      },
+      {
+        icon: Car,
+        label: 'Parking Spots',
+        href: '/parking-spots',
+        permission: 'properties:read',
+      },
+      {
+        icon: Package,
+        label: 'Assets',
+        href: '/assets',
+        permission: 'properties:read',
+      },
+    ],
+  },
+  {
+    groupLabel: 'Leasing',
     items: [
       {
         icon: UserPlus,
         label: 'Leads & Quotes',
         href: '/leads',
         permission: 'leads:read',
-      },
-      {
-        icon: Building2,
-        label: 'Properties',
-        href: '/properties',
-        permission: 'properties:read',
       },
       {
         icon: Users,
@@ -131,23 +146,16 @@ const menuSections: MenuSection[] = [
           { label: 'Lease Extensions', href: '/leases/extensions', permission: 'tenants:read' },
         ],
       },
-      {
-        icon: Car,
-        label: 'Parking Spots',
-        href: '/parking-spots',
-        permission: 'properties:read',
-      },
+    ],
+  },
+  {
+    groupLabel: 'Maintenance',
+    items: [
       {
         icon: Wrench,
         label: 'Work Orders',
         href: '/property-manager/work-orders',
         permission: 'work-orders:read',
-      },
-      {
-        icon: Truck,
-        label: 'Vendors',
-        href: '/property-manager/vendors',
-        permission: 'vendor:read',
       },
       {
         icon: CalendarClock,
@@ -156,10 +164,10 @@ const menuSections: MenuSection[] = [
         permission: 'work-orders:read',
       },
       {
-        icon: Package,
-        label: 'Assets',
-        href: '/assets',
-        permission: 'properties:read',
+        icon: Truck,
+        label: 'Vendors',
+        href: '/property-manager/vendors',
+        permission: 'vendor:read',
       },
       {
         icon: ShieldCheck,
@@ -180,7 +188,7 @@ const menuSections: MenuSection[] = [
       },
       {
         icon: CreditCard,
-        label: 'PDC',
+        label: 'PDC Management',
         href: '/pdc',
         permission: 'pdc:read',
       },
@@ -199,24 +207,13 @@ const menuSections: MenuSection[] = [
     ],
   },
   {
-    groupLabel: 'Documents',
+    groupLabel: 'Administration',
     items: [
       {
-        icon: FileText,
+        icon: BarChart3,
         label: 'Reports',
         href: '/reports',
         permission: 'reports:read',
-      },
-    ],
-  },
-  {
-    groupLabel: 'Admin',
-    items: [
-      {
-        icon: UserCog,
-        label: 'User Management',
-        href: '/settings/users',
-        permission: 'users:read',
       },
       {
         icon: Megaphone,
@@ -225,11 +222,17 @@ const menuSections: MenuSection[] = [
         role: 'ADMIN',
       },
       {
+        icon: UserCog,
+        label: 'User Management',
+        href: '/settings/users',
+        permission: 'users:read',
+      },
+      {
         icon: Settings,
         label: 'Settings',
         items: [
           { label: 'Profile Settings', href: '/settings/profile' },
-          { label: 'General Preferences', href: '/settings' },
+          { label: 'System Preferences', href: '/settings' },
         ],
       },
     ],
@@ -271,7 +274,7 @@ function SidebarGroupedMenuItems({
         <SidebarMenu>
           {filteredItems.map((item) =>
             item.items ? (
-              <Collapsible className="group/collapsible" key={item.label}>
+              <Collapsible className="group/collapsible" key={item.label} defaultOpen={item.label === 'Dashboards'}>
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton tooltip={item.label} className="truncate">

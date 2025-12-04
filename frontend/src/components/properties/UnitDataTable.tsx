@@ -248,7 +248,7 @@ export function UnitDataTable({
                   size="icon"
                   onClick={() => handleDelete(row.original.id, row.original.unitNumber)}
                   aria-label="Delete unit"
-                  className="text-destructive hover:text-destructive"
+                  className="text-red-600 hover:text-red-700"
                 >
                   <Trash2 className="size-4" />
                 </Button>
@@ -417,7 +417,7 @@ export function UnitDataTable({
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDelete(unit.id, unit.unitNumber)}
-                          className="text-destructive focus:text-destructive"
+                          className="text-red-600 focus:text-red-700"
                         >
                           <Trash2 className="h-4 w-4 mr-2" /> Delete Unit
                         </DropdownMenuItem>
