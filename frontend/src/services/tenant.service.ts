@@ -315,3 +315,24 @@ export async function uploadTenantDocument(
     },
   });
 }
+
+/**
+ * Get tenants by property ID
+ *
+ * @param propertyId - Property UUID
+ *
+ * @returns Promise that resolves to array of tenants for the property
+ *
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ *
+ * @example
+ * ```typescript
+ * const tenants = await getTenantsByProperty('550e8400-e29b-41d4-a716-446655440000');
+ * ```
+ */
+export async function getTenantsByProperty(propertyId: string): Promise<TenantResponse[]> {
+  const response = await apiClient.get<{ success: boolean; data: TenantResponse[] }>(
+    `${TENANTS_BASE_PATH}/by-property/${propertyId}`
+  );
+  return response.data.data;
+}

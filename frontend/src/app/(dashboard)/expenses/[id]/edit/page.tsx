@@ -86,6 +86,8 @@ export default function EditExpensePage() {
   // Form setup
   const form = useForm<ExpenseUpdateFormData>({
     resolver: zodResolver(expenseUpdateSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       category: undefined,
       propertyId: undefined,

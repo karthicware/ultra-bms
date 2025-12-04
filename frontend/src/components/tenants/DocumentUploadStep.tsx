@@ -34,6 +34,8 @@ export function DocumentUploadStep({ data, onComplete, onBack }: DocumentUploadS
 
   const form = useForm<TenantDocumentUploadFormData>({
     resolver: zodResolver(documentUploadSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: data,
   });
 

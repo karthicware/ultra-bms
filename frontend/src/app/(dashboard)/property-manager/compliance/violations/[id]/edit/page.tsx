@@ -61,6 +61,8 @@ export default function EditViolationPage() {
 
   const form = useForm<UpdateViolationFormData>({
     resolver: zodResolver(updateViolationSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       description: '',
       fineAmount: undefined,

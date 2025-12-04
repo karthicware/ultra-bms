@@ -78,6 +78,8 @@ export function ProgressUpdateDialog({
 
   const form = useForm<ProgressUpdateFormData>({
     resolver: zodResolver(progressUpdateSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       progressNotes: '',
       estimatedCompletionDate: '',

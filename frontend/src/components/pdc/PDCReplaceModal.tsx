@@ -63,6 +63,8 @@ export function PDCReplaceModal({ pdc, open, onClose }: PDCReplaceModalProps) {
 
   const form = useForm<ReplaceFormData>({
     resolver: zodResolver(replaceSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       newChequeNumber: '',
       bankName: pdc.bankName, // Default to same bank

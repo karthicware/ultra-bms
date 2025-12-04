@@ -64,6 +64,8 @@ const NATIONALITIES = [
 export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepProps) {
   const form = useForm<PersonalInfoFormData>({
     resolver: zodResolver(personalInfoSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: data,
   });
 

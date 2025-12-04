@@ -44,6 +44,10 @@ export interface Property {
   occupiedUnits?: number;
   underMaintenanceUnits?: number;
   reservedUnits?: number;
+
+  // Images (optional, included when fetching property list with images)
+  images?: PropertyImage[];
+  thumbnailUrl?: string; // Primary/thumbnail image URL
 }
 
 export interface PropertyImage {

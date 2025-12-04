@@ -7,10 +7,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronUpIcon,
-  EllipsisVerticalIcon,
-  EyeIcon,
-  FileText,
-  UserPlus,
   Users,
 } from 'lucide-react';
 
@@ -29,20 +25,10 @@ import {
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { usePagination } from '@/hooks/use-pagination';
 import { cn } from '@/lib/utils';
@@ -72,7 +58,6 @@ const LeadsDatatable = ({
   pageSize: initialPageSize = 10,
 }: LeadsDatatableProps) => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [rowSelection, setRowSelection] = useState({});
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -81,24 +66,6 @@ const LeadsDatatable = ({
 
   const columns: ColumnDef<LeadItem>[] = useMemo(
     () => [
-      {
-        id: 'select',
-        header: ({ table }) => (
-          <Checkbox
-            checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
-            onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
-            aria-label="Select all"
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
-        ),
-        size: 50,
-      },
       {
         header: 'Lead #',
         accessorKey: 'leadNumber',
@@ -170,43 +137,6 @@ const LeadsDatatable = ({
         ),
         size: 120,
       },
-      {
-        id: 'actions',
-        header: () => 'Actions',
-        cell: ({ row }) => (
-          <div className="flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="View lead" asChild>
-                  <Link href={`/leads/${row.original.id}`}>
-                    <EyeIcon className="size-4.5" />
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>View Details</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Create quotation"
-                  onClick={() => onCreateQuotation?.(row.original.id)}
-                >
-                  <FileText className="size-4.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Create Quotation</p>
-              </TooltipContent>
-            </Tooltip>
-            <RowActions lead={row.original} onCreateQuotation={onCreateQuotation} />
-          </div>
-        ),
-        enableHiding: false,
-      },
     ],
     [onCreateQuotation]
   );
@@ -217,10 +147,8 @@ const LeadsDatatable = ({
     state: {
       columnFilters,
       pagination,
-      rowSelection,
     },
     onColumnFiltersChange: setColumnFilters,
-    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -287,7 +215,7 @@ const LeadsDatatable = ({
                         )}
                         onClick={header.column.getToggleSortingHandler()}
                         onKeyDown={(e) => {
-                          if (header.column.getCanSort() && (e.key === 'Enter' || e.key === ' ')) {
+                          if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
                             header.column.getToggleSortingHandler()?.(e);
                           }
@@ -453,37 +381,5 @@ function Filter({ column, label }: { column: Column<LeadItem, unknown>; label: s
         </SelectContent>
       </Select>
     </div>
-  );
-}
-
-function RowActions({
-  lead,
-  onCreateQuotation,
-}: {
-  lead: LeadItem;
-  onCreateQuotation?: (leadId: string) => void;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="flex">
-          <Button size="icon" variant="ghost" className="rounded-full p-2" aria-label="More actions">
-            <EllipsisVerticalIcon className="size-4.5" aria-hidden="true" />
-          </Button>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
-            <Link href={`/leads/${lead.id}`}>View Details</Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onCreateQuotation?.(lead.id)}>
-            <FileText className="mr-2 h-4 w-4" />
-            Create Quotation
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

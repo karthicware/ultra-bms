@@ -43,6 +43,8 @@ export function FeedbackForm({ requestId }: FeedbackFormProps) {
 
   const form = useForm<SubmitFeedbackFormData>({
     resolver: zodResolver(submitFeedbackSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       rating: 0,
       comment: '',

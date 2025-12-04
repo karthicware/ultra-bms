@@ -222,7 +222,7 @@ public class PropertyServiceImpl implements PropertyService {
         }
 
         return propertyRepository.findAll(spec, pageable)
-                .map(PropertyResponse::fromEntity);
+                .map(this::buildPropertyResponseWithOccupancy);
     }
 
     @Override
@@ -230,7 +230,7 @@ public class PropertyServiceImpl implements PropertyService {
     public Page<PropertyResponse> getAllProperties(Pageable pageable) {
         log.info("Fetching all active properties");
         return propertyRepository.findByStatus(PropertyStatus.ACTIVE, pageable)
-                .map(PropertyResponse::fromEntity);
+                .map(this::buildPropertyResponseWithOccupancy);
     }
 
     @Override
@@ -431,7 +431,7 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     /**
-     * Helper method to build PropertyResponse with occupancy data
+     * Helper method to build PropertyResponse with occupancy data and images
      */
     private PropertyResponse buildPropertyResponseWithOccupancy(Property property) {
         int occupied = (int) unitRepository.countByPropertyIdAndStatus(property.getId(), UnitStatus.OCCUPIED);
@@ -439,12 +439,31 @@ public class PropertyServiceImpl implements PropertyService {
         int underMaintenance = (int) unitRepository.countByPropertyIdAndStatus(property.getId(), UnitStatus.UNDER_MAINTENANCE);
         int reserved = (int) unitRepository.countByPropertyIdAndStatus(property.getId(), UnitStatus.RESERVED);
 
-        return PropertyResponse.fromEntityWithOccupancy(
+        PropertyResponse response = PropertyResponse.fromEntityWithOccupancy(
                 property,
                 occupied,
                 available,
                 underMaintenance,
                 reserved
         );
+
+        // Add images with presigned URLs
+        List<PropertyImage> images = propertyImageRepository.findByPropertyIdOrderByDisplayOrderAsc(property.getId());
+        if (images != null && !images.isEmpty()) {
+            List<PropertyResponse.PropertyImageInfo> imageInfos = images.stream()
+                    .map(img -> PropertyResponse.PropertyImageInfo.builder()
+                            .id(img.getId())
+                            .fileName(img.getFileName())
+                            .filePath(fileStorageService.getDownloadUrl(img.getFilePath()))
+                            .fileSize(img.getFileSize())
+                            .displayOrder(img.getDisplayOrder())
+                            .build())
+                    .collect(Collectors.toList());
+            response.setImages(imageInfos);
+            // Set thumbnail URL to the first image (presigned URL)
+            response.setThumbnailUrl(fileStorageService.getDownloadUrl(images.get(0).getFilePath()));
+        }
+
+        return response;
     }
 }

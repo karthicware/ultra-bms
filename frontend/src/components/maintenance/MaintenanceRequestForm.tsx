@@ -92,6 +92,8 @@ export function MaintenanceRequestForm() {
 
   const form = useForm<CreateMaintenanceRequestFormData>({
     resolver: zodResolver(createMaintenanceRequestSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       priority: MaintenancePriority.MEDIUM,
       preferredAccessTime: PreferredAccessTime.ANY_TIME,

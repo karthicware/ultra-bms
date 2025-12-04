@@ -69,4 +69,12 @@ public interface TenantService {
      * @return True if available, false if exists
      */
     boolean isEmailAvailable(String email);
+
+    /**
+     * Get tenants by property ID
+     *
+     * @param propertyId Property UUID
+     * @return List of tenant responses
+     */
+    List<TenantResponse> getTenantsByProperty(UUID propertyId);
 }

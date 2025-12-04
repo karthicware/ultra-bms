@@ -80,6 +80,8 @@ export function ParkingSpotFormModal({
 
   const form = useForm<CreateParkingSpotFormData | UpdateParkingSpotFormData>({
     resolver: zodResolver(isEditing ? updateParkingSpotSchema : createParkingSpotSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       propertyId: '',
       spotNumber: '',

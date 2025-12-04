@@ -54,6 +54,8 @@ export default function CompleteSchedulePage() {
 
   const form = useForm<CompleteScheduleFormData>({
     resolver: zodResolver(completeScheduleSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       completionDate: new Date().toISOString().split('T')[0],
       certificateNumber: '',

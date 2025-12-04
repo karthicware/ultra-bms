@@ -108,6 +108,8 @@ function CreateInvoicePageContent() {
   const invoiceResolver: any = zodResolver(invoiceCreateSchema);
   const form = useForm<InvoiceCreateFormData>({
     resolver: invoiceResolver,
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       ...invoiceCreateDefaults,
       tenantId: preselectedTenantId || '',

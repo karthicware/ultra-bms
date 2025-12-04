@@ -46,6 +46,25 @@ public class PropertyResponse {
     private Integer reservedUnits;
     private Double occupancyRate;
 
+    // Images
+    private List<PropertyImageInfo> images;
+    private String thumbnailUrl;
+
+    /**
+     * Nested DTO for property image information
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PropertyImageInfo {
+        private UUID id;
+        private String fileName;
+        private String filePath;
+        private Long fileSize;
+        private Integer displayOrder;
+    }
+
     /**
      * Nested DTO for manager information
      */

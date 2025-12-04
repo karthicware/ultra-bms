@@ -174,6 +174,27 @@ public class TenantController {
         return ResponseEntity.ok(responseBody);
     }
 
+    /**
+     * Get tenants by property ID
+     * GET /api/v1/tenants/by-property/{propertyId}
+     */
+    @GetMapping("/by-property/{propertyId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'PROPERTY_MANAGER', 'ADMIN')")
+    @Operation(summary = "Get tenants by property", description = "Retrieve all tenants for a specific property")
+    public ResponseEntity<Map<String, Object>> getTenantsByProperty(@PathVariable UUID propertyId) {
+        LOGGER.info("Getting tenants for property: {}", propertyId);
+
+        List<TenantResponse> tenants = tenantService.getTenantsByProperty(propertyId);
+
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("success", true);
+        responseBody.put("data", tenants);
+        responseBody.put("count", tenants.size());
+        responseBody.put("timestamp", java.time.LocalDateTime.now());
+
+        return ResponseEntity.ok(responseBody);
+    }
+
     // =================================================================
     // DOCUMENT ENDPOINTS (Story 7.2)
     // =================================================================

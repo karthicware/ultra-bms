@@ -131,6 +131,8 @@ export function VendorForm({ initialData, mode, onSubmit, isSubmitting = false }
 
   const form = useForm<VendorFormData>({
     resolver: zodResolver(vendorSchema) as Resolver<VendorFormData>,
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues,
   });
 

@@ -60,6 +60,8 @@ function NewInspectionContent() {
 
   const form = useForm<CreateInspectionFormData>({
     resolver: zodResolver(createInspectionSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       complianceScheduleId: preselectedScheduleId || '',
       scheduledDate: '',

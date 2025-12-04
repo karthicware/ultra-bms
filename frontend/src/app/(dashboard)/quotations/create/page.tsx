@@ -76,6 +76,8 @@ function CreateQuotationForm() {
 
   const form = useForm<CreateQuotationFormData>({
     resolver: zodResolver(createQuotationSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       leadId: leadId,
       issueDate: new Date(),

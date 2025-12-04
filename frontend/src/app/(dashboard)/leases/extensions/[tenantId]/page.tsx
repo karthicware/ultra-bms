@@ -100,6 +100,8 @@ export default function LeaseExtensionPage({ params }: PageProps) {
   // Form
   const form = useForm<LeaseExtensionFormData>({
     resolver: zodResolver(leaseExtensionSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: leaseExtensionFormDefaults,
   });
 

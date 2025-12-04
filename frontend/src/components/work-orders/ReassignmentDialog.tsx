@@ -90,6 +90,8 @@ export function ReassignmentDialog({
 
   const form = useForm<ReassignWorkOrderFormData>({
     resolver: zodResolver(reassignWorkOrderSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       newAssigneeType: AssigneeType.INTERNAL_STAFF,
       newAssigneeId: '',

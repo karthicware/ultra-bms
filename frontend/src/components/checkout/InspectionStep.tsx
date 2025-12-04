@@ -88,6 +88,8 @@ export function InspectionStep({ checkout, onInspectionSaved, onBack }: Inspecti
   // Initialize form with existing data or defaults
   const form = useForm<InspectionFormData>({
     resolver: zodResolver(inspectionSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       inspectionDate: checkout.inspectionDate ? new Date(checkout.inspectionDate) : new Date(),
       inspectionTimeSlot: (checkout.inspectionTime as InspectionTimeSlot) ?? InspectionTimeSlot.MORNING,

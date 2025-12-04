@@ -82,6 +82,8 @@ export function PDCWithdrawModal({ pdc, open, onClose }: PDCWithdrawModalProps) 
 
   const form = useForm<WithdrawFormData>({
     resolver: zodResolver(withdrawSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       withdrawalDate: format(new Date(), 'yyyy-MM-dd'),
       withdrawalReason: '',

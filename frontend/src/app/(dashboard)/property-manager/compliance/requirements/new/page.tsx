@@ -52,6 +52,8 @@ export default function NewRequirementPage() {
 
   const form = useForm<CreateRequirementFormData>({
     resolver: zodResolver(createRequirementSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       name: '',
       description: '',

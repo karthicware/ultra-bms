@@ -117,6 +117,8 @@ export function BankAccountFormModal({
 
   const form = useForm<BankAccountFormData>({
     resolver: zodResolver(isEditing ? updateBankAccountSchema : createBankAccountSchema) as Resolver<BankAccountFormData>,
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       bankName: '',
       accountName: '',

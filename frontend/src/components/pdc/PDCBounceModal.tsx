@@ -67,6 +67,8 @@ export function PDCBounceModal({ pdc, open, onClose }: PDCBounceModalProps) {
 
   const form = useForm<BounceFormData>({
     resolver: zodResolver(bounceSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       bouncedDate: format(new Date(), 'yyyy-MM-dd'),
       bounceReason: '',

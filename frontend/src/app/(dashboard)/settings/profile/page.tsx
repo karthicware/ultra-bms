@@ -56,6 +56,8 @@ export default function UserProfilePage() {
 
   const form = useForm<UserProfileFormData>({
     resolver: zodResolver(userProfileSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       displayName: '',
       contactPhone: '',

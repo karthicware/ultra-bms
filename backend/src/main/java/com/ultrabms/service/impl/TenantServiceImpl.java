@@ -230,6 +230,13 @@ public class TenantServiceImpl implements TenantService {
         return !tenantRepository.existsByEmail(email);
     }
 
+    @Override
+    public List<TenantResponse> getTenantsByProperty(UUID propertyId) {
+        return tenantRepository.findByPropertyIdAndActive(propertyId, true).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     // =============================
     // PRIVATE HELPER METHODS
     // =============================

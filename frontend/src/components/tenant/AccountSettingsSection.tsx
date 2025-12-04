@@ -26,6 +26,8 @@ export function AccountSettingsSection() {
 
   const form = useForm<TenantChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       currentPassword: '',
       newPassword: '',

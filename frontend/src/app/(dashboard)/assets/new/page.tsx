@@ -62,6 +62,8 @@ export default function NewAssetPage() {
 
   const form = useForm({
     resolver: zodResolver(assetCreateSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       assetName: '',
       category: undefined as any,

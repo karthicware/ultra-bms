@@ -41,6 +41,8 @@ export function CommentsSection({ workOrderId, comments, onCommentAdded }: Comme
 
   const form = useForm<AddCommentFormData>({
     resolver: zodResolver(addCommentSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       commentText: '',
     },

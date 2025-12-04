@@ -33,6 +33,8 @@ interface RentBreakdownStepProps {
 export function RentBreakdownStep({ data, onComplete, onBack }: RentBreakdownStepProps) {
   const form = useForm<RentBreakdownFormData>({
     resolver: zodResolver(rentBreakdownSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: data,
   });
 

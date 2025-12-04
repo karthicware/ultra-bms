@@ -73,6 +73,8 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
 
   const form = useForm<BulkCreateUnitsFormData>({
     resolver: zodResolver(bulkCreateUnitsSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       startingUnitNumber: '',
       count: 1,
@@ -345,7 +347,7 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
                           <FormLabel>Bedrooms *</FormLabel>
                           <FormControl>
                             <NumberInput
-                              step={0.5}
+                              step={1}
                               min={0}
                               max={10}
                               placeholder="2"
@@ -371,10 +373,10 @@ export function BulkUnitCreateModal({ propertyId, onSuccess, trigger }: BulkUnit
                           <FormLabel>Bathrooms *</FormLabel>
                           <FormControl>
                             <NumberInput
-                              step={0.5}
+                              step={1}
                               min={0}
                               max={10}
-                              placeholder="1.5"
+                              placeholder="2"
                               value={field.value}
                               onChange={field.onChange}
                               onBlur={field.onBlur}

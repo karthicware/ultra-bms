@@ -33,26 +33,23 @@ const floorSchema = z
 
 /**
  * Bedroom count validation
- * Allows half increments for studio with den (e.g., 0.5, 1.5, 2.5)
+ * Requires whole numbers (0 for studio, 1, 2, 3, etc.)
  */
 const bedroomCountSchema = z
-  .number()
+  .number({ error: 'Bedroom count is required' })
+  .int('Bedroom count must be a whole number')
   .min(0, 'Bedroom count cannot be negative')
-  .max(20, 'Bedroom count cannot exceed 20')
-  .refine((val) => val % 0.5 === 0, {
-    message: 'Bedroom count must be in 0.5 increments (e.g., 0.5, 1, 1.5)',
-  });
+  .max(20, 'Bedroom count cannot exceed 20');
 
 /**
  * Bathroom count validation
+ * Requires whole numbers
  */
 const bathroomCountSchema = z
-  .number()
-  .min(0.5, 'Bathroom count must be at least 0.5')
-  .max(20, 'Bathroom count cannot exceed 20')
-  .refine((val) => val % 0.5 === 0, {
-    message: 'Bathroom count must be in 0.5 increments (e.g., 1.5, 2, 2.5)',
-  });
+  .number({ error: 'Bathroom count is required' })
+  .int('Bathroom count must be a whole number')
+  .min(1, 'Bathroom count must be at least 1')
+  .max(20, 'Bathroom count cannot exceed 20');
 
 /**
  * Square footage validation (for units) - Optional

@@ -70,6 +70,8 @@ export default function EditPropertyPage() {
 
   const form = useForm<UpdatePropertyFormData>({
     resolver: zodResolver(updatePropertySchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       name: '',
       address: '',

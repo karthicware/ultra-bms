@@ -58,6 +58,8 @@ export default function EditRequirementPage() {
 
   const form = useForm<UpdateRequirementFormData>({
     resolver: zodResolver(updateRequirementSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       name: '',
       description: '',

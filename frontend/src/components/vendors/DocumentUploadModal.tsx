@@ -102,6 +102,8 @@ export function DocumentUploadModal({
   // Form setup
   const form = useForm<VendorDocumentUploadFormData>({
     resolver: zodResolver(vendorDocumentUploadSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       documentType: DocumentType.TRADE_LICENSE,
       expiryDate: undefined,

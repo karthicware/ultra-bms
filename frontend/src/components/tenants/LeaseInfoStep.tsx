@@ -50,6 +50,8 @@ export function LeaseInfoStep({ data, onComplete, onBack }: LeaseInfoStepProps) 
 
   const form = useForm<LeaseInfoFormData>({
     resolver: zodResolver(leaseInfoSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: data,
   });
 

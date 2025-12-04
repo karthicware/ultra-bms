@@ -81,6 +81,8 @@ export default function CompanyProfilePage() {
 
   const form = useForm<CompanyProfileFormData>({
     resolver: zodResolver(companyProfileSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: companyProfileDefaults,
   });
 

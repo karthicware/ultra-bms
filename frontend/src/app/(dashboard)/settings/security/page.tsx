@@ -44,6 +44,8 @@ export default function SecurityPage() {
 
   const form = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       currentPassword: '',
       newPassword: '',

@@ -10,7 +10,9 @@ import com.ultrabms.dto.units.UnitHistoryResponse;
 import com.ultrabms.dto.units.UnitResponse;
 import com.ultrabms.dto.units.UpdateUnitRequest;
 import com.ultrabms.dto.units.UpdateUnitStatusRequest;
+import com.ultrabms.entity.User;
 import com.ultrabms.entity.enums.UnitStatus;
+import com.ultrabms.repository.UserRepository;
 import com.ultrabms.service.UnitService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -53,6 +55,7 @@ import java.util.UUID;
 public class UnitController {
 
     private final UnitService unitService;
+    private final UserRepository userRepository;
 
     @PostMapping
     @Operation(summary = "Create a new unit")
@@ -215,9 +218,19 @@ public class UnitController {
         if (principal instanceof UUID) {
             return (UUID) principal;
         } else if (principal instanceof UserDetails) {
-            return UUID.fromString(((UserDetails) principal).getUsername());
+            // Look up user by email to get UUID
+            User user = userRepository.findByEmail(((UserDetails) principal).getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found: " + ((UserDetails) principal).getUsername()));
+            return user.getId();
         } else if (principal instanceof String) {
-            return UUID.fromString((String) principal);
+            // Try to parse as UUID first, if that fails, look up by email
+            try {
+                return UUID.fromString((String) principal);
+            } catch (IllegalArgumentException e) {
+                User user = userRepository.findByEmail((String) principal)
+                        .orElseThrow(() -> new RuntimeException("User not found: " + principal));
+                return user.getId();
+            }
         }
         throw new IllegalArgumentException("Unsupported principal type: " + principal.getClass().getName());
     }

@@ -67,6 +67,8 @@ export default function RecordInspectionResultsPage() {
 
   const form = useForm<RecordInspectionResultsFormData>({
     resolver: zodResolver(recordInspectionResultsSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       inspectionDate: new Date().toISOString().split('T')[0],
       result: '',

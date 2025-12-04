@@ -94,6 +94,8 @@ export default function ExpensePaymentDialog({
 
   const form = useForm<PaymentFormData>({
     resolver: zodResolver(paymentSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       paymentMethod: PaymentMethod.BANK_TRANSFER,
       paymentDate: new Date(),

@@ -5,7 +5,7 @@
  * Unit Form Modal Component
  * Modal dialog for creating or editing a unit with comprehensive validation
  * AC: #3, #17 - Unit creation/editing with validation and features
- * Updated: shadcn-studio form styling (SCP-2025-11-30)
+ * Updated: Redesigned layout for better UX
  */
 
 import { useState, useEffect } from 'react';
@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,10 +27,10 @@ import {
   FormField,
   FormItem,
   FormMessage,
+  FormLabel,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { NumberInput } from '@/components/ui/number-input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -37,8 +38,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { createUnit, updateUnit } from '@/services/units.service';
 import { createUnitSchema, type CreateUnitFormData } from '@/lib/validations/units';
@@ -47,17 +48,19 @@ import {
   Plus,
   X,
   Pencil,
-  HashIcon,
-  LayersIcon,
-  BedDoubleIcon,
-  BathIcon,
-  RulerIcon,
-  DollarSignIcon,
-  CheckCircleIcon,
-  WrenchIcon,
-  CircleDotIcon,
-  TagIcon,
-  SparklesIcon,
+  Hash,
+  Layers,
+  BedDouble,
+  Bath,
+  Ruler,
+  DollarSign,
+  CheckCircle2,
+  Wrench,
+  Clock,
+  Tag,
+  Sparkles,
+  Home,
+  Building2,
 } from 'lucide-react';
 
 interface UnitFormModalProps {
@@ -98,14 +101,16 @@ export function UnitFormModal({
 
   const form = useForm<CreateUnitFormData>({
     resolver: zodResolver(createUnitSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       propertyId,
       unitNumber: '',
-      floor: 0,
-      bedroomCount: 1,
-      bathroomCount: 1,
+      floor: undefined as unknown as number,
+      bedroomCount: undefined as unknown as number,
+      bathroomCount: undefined as unknown as number,
       squareFootage: undefined as unknown as number,
-      monthlyRent: 0,
+      monthlyRent: undefined as unknown as number,
       status: UnitStatus.AVAILABLE,
       features: {},
     },
@@ -233,304 +238,303 @@ export function UnitFormModal({
           )}
         </DialogTrigger>
       )}
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Edit Unit' : 'Create New Unit'}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            {isEditMode ? <Pencil className="h-5 w-5 text-primary" /> : <Plus className="h-5 w-5 text-primary" />}
+            {isEditMode ? 'Edit Unit' : 'Create New Unit'}
+          </DialogTitle>
           <DialogDescription>
-            {isEditMode ? `Update unit ${unit?.unitNumber} details` : 'Add a new unit to this property'}
+            {isEditMode ? `Update unit ${unit?.unitNumber} details` : 'Add a new unit to this property. Fill in the details below.'}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-testid={isEditMode ? 'form-unit-edit' : 'form-unit-create'}>
-            {/* Basic Info */}
-            <Card>
-              <CardContent className="pt-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="unitNumber"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <Label htmlFor="unitNumber" className="flex items-center gap-1">
-                          Unit Number <span className="text-destructive">*</span>
-                        </Label>
-                        <div className="relative">
-                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <HashIcon className="size-4" />
-                          </div>
-                          <FormControl>
-                            <Input
-                              id="unitNumber"
-                              className="pl-9"
-                              placeholder="101"
-                              {...field}
-                              data-testid="input-unit-number"
-                            />
-                          </FormControl>
-                        </div>
-                        <p className="text-muted-foreground text-xs">Must be unique within property</p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 py-4" data-testid={isEditMode ? 'form-unit-edit' : 'form-unit-create'}>
+            
+            {/* Section 1: Unit Identification */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                <Home className="h-4 w-4" />
+                <h3>Identification & Location</h3>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="unitNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1.5">
+                        <Hash className="h-3.5 w-3.5 text-muted-foreground" /> Unit Number <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g. 101, A-12"
+                          {...field}
+                          data-testid="input-unit-number"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="floor"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <Label htmlFor="floor">Floor</Label>
-                        <FormControl>
-                          <NumberInput
-                            id="floor"
-                            min={-99}
-                            placeholder="1"
-                            value={field.value ?? undefined}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            data-testid="input-floor"
-                          />
-                        </FormControl>
-                        <p className="text-muted-foreground text-xs">Can be negative for basement (-1, -2)</p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="floor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1.5">
+                        <Layers className="h-3.5 w-3.5 text-muted-foreground" /> Floor Number
+                      </FormLabel>
+                      <FormControl>
+                        <NumberInput
+                          min={-99}
+                          placeholder="e.g. 1, 2, -1"
+                          value={field.value ?? undefined}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          data-testid="input-floor"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="bedroomCount"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <Label htmlFor="bedroomCount" className="flex items-center gap-1">
-                          Bedrooms <span className="text-destructive">*</span>
-                        </Label>
-                        <FormControl>
-                          <NumberInput
-                            id="bedroomCount"
-                            step={0.5}
-                            min={0}
-                            max={10}
-                            placeholder="2"
-                            value={field.value}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            data-testid="input-bedrooms"
-                          />
-                        </FormControl>
-                        <p className="text-muted-foreground text-xs">Can be decimal (e.g., 2.5 for studio with den)</p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            {/* Section 2: Specifications */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                <Building2 className="h-4 w-4" />
+                <h3>Specifications</h3>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <FormField
+                  control={form.control}
+                  name="bedroomCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1.5">
+                        <BedDouble className="h-3.5 w-3.5 text-muted-foreground" /> Bedrooms <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <NumberInput
+                          step={1}
+                          min={0}
+                          max={10}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          data-testid="input-bedrooms"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="bathroomCount"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <Label htmlFor="bathroomCount" className="flex items-center gap-1">
-                          Bathrooms <span className="text-destructive">*</span>
-                        </Label>
-                        <FormControl>
-                          <NumberInput
-                            id="bathroomCount"
-                            step={0.5}
-                            min={0}
-                            max={10}
-                            placeholder="1.5"
-                            value={field.value}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            data-testid="input-bathrooms"
-                          />
-                        </FormControl>
-                        <p className="text-muted-foreground text-xs">Can be decimal (e.g., 1.5 for half bath)</p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="bathroomCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1.5">
+                         <Bath className="h-3.5 w-3.5 text-muted-foreground" /> Bathrooms <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <NumberInput
+                          step={1}
+                          min={0}
+                          max={10}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          data-testid="input-bathrooms"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="squareFootage"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <Label htmlFor="squareFootage">Square Footage</Label>
-                        <FormControl>
-                          <NumberInput
-                            id="squareFootage"
-                            step={1}
-                            min={0}
-                            placeholder="1200"
-                            value={field.value ?? undefined}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            data-testid="input-square-footage"
-                          />
-                        </FormControl>
-                        <p className="text-muted-foreground text-xs">Unit area in square feet (optional)</p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={form.control}
+                  name="squareFootage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1.5">
+                        <Ruler className="h-3.5 w-3.5 text-muted-foreground" /> Size (sq ft) <span className="text-muted-foreground text-xs">(optional)</span>
+                      </FormLabel>
+                      <FormControl>
+                        <NumberInput
+                          step={1}
+                          min={0}
+                          placeholder="e.g. 1200"
+                          value={field.value ?? undefined}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          data-testid="input-square-footage"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
 
-                  <FormField
-                    control={form.control}
-                    name="monthlyRent"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <Label htmlFor="monthlyRent" className="flex items-center gap-1">
-                          Monthly Rent <span className="text-destructive">*</span>
-                        </Label>
-                        <FormControl>
-                          <NumberInput
-                            id="monthlyRent"
-                            step={1}
-                            min={0}
-                            placeholder="5000"
-                            value={field.value}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            data-testid="input-monthly-rent"
-                          />
-                        </FormControl>
-                        <p className="text-muted-foreground text-xs">Base monthly rent amount (AED)</p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+            {/* Section 3: Status & Financials */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                <DollarSign className="h-4 w-4" />
+                <h3>Status & Financials</h3>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="monthlyRent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1.5">
+                         <DollarSign className="h-3.5 w-3.5 text-muted-foreground" /> Monthly Rent (AED) <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <NumberInput
+                          step={100}
+                          min={0}
+                          placeholder="e.g. 5000"
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          data-testid="input-monthly-rent"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
                   name="status"
                   render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <Label>Status</Label>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-unit-status" className="w-full">
-                            <SelectValue placeholder="Select status" />
+                            <SelectValue />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value={UnitStatus.AVAILABLE}>
                             <div className="flex items-center gap-2">
-                              <CheckCircleIcon className="size-4 text-green-600" />
+                              <CheckCircle2 className="size-4 text-green-600" />
                               <span>Available</span>
                             </div>
                           </SelectItem>
                           <SelectItem value={UnitStatus.RESERVED}>
                             <div className="flex items-center gap-2">
-                              <CircleDotIcon className="size-4 text-yellow-600" />
+                              <Clock className="size-4 text-purple-600" />
                               <span>Reserved</span>
                             </div>
                           </SelectItem>
                           <SelectItem value={UnitStatus.UNDER_MAINTENANCE}>
                             <div className="flex items-center gap-2">
-                              <WrenchIcon className="size-4 text-orange-600" />
+                              <Wrench className="size-4 text-orange-600" />
                               <span>Under Maintenance</span>
                             </div>
                           </SelectItem>
                         </SelectContent>
                       </Select>
-                      <p className="text-muted-foreground text-xs">Initial unit status (default: Available)</p>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* Features */}
-            <Card>
-              <CardContent className="pt-6 space-y-6">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-1">
-                    <SparklesIcon className="size-4 mr-1 text-muted-foreground" />
-                    Unit Features
-                  </Label>
-                  <p className="text-muted-foreground text-xs mb-3">
-                    Add custom features like balcony, view, floor plan type, parking spots, etc.
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="relative">
-                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <TagIcon className="size-4" />
-                      </div>
-                      <Input
-                        className="pl-9"
-                        placeholder="Feature name (e.g., balcony)"
-                        value={featureKey}
-                        onChange={(e) => setFeatureKey(e.target.value)}
-                        onKeyDown={handleFeatureKeyDown}
-                        data-testid="input-feature-key"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
+            {/* Section 4: Features */}
+            <div className="space-y-4 bg-muted/30 p-4 rounded-lg border">
+              <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                <Sparkles className="h-4 w-4" />
+                <h3>Additional Features</h3>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2 items-end">
+                  <div className="space-y-2">
+                     <FormLabel className="text-xs text-muted-foreground">Feature Name</FormLabel>
+                     <div className="relative">
                         <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                          <SparklesIcon className="size-4" />
+                          <Tag className="size-3.5" />
                         </div>
                         <Input
-                          className="pl-9"
-                          placeholder="Value (e.g., true, sea, 2)"
-                          value={featureValue}
-                          onChange={(e) => setFeatureValue(e.target.value)}
+                          className="pl-8 h-9 text-sm"
+                          placeholder="e.g. Balcony"
+                          value={featureKey}
+                          onChange={(e) => setFeatureKey(e.target.value)}
                           onKeyDown={handleFeatureKeyDown}
-                          data-testid="input-feature-value"
+                          data-testid="input-feature-key"
                         />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleAddFeature}
-                        data-testid="btn-add-feature"
-                      >
-                        Add
-                      </Button>
-                    </div>
+                     </div>
                   </div>
-
-                  {Object.keys(features).length > 0 && (
-                    <div className="mt-3 space-y-2">
-                      {Object.entries(features).map(([key, value]) => (
-                        <div
-                          key={key}
-                          className="flex items-center justify-between p-2 bg-muted rounded"
-                        >
-                          <div className="flex gap-2">
-                            <Badge variant="outline">{key}</Badge>
-                            <span className="text-sm">{String(value)}</span>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveFeature(key)}
-                            data-testid={`btn-remove-feature-${key}`}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                     <FormLabel className="text-xs text-muted-foreground">Value</FormLabel>
+                     <Input
+                        className="h-9 text-sm"
+                        placeholder="e.g. Yes, Sea View"
+                        value={featureValue}
+                        onChange={(e) => setFeatureValue(e.target.value)}
+                        onKeyDown={handleFeatureKeyDown}
+                        data-testid="input-feature-value"
+                      />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleAddFeature}
+                    disabled={!featureKey.trim() || !featureValue.trim()}
+                    data-testid="btn-add-feature"
+                    className="h-9"
+                  >
+                    Add
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Form Actions */}
-            <div className="flex gap-4 justify-end">
+                {Object.keys(features).length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {Object.entries(features).map(([key, value]) => (
+                      <Badge key={key} variant="outline" className="pl-2 pr-1 py-1 bg-background">
+                        <span className="font-medium mr-1">{key}:</span>
+                        <span className="text-muted-foreground mr-2">{String(value)}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 rounded-full hover:bg-destructive/20 hover:text-destructive"
+                          onClick={() => handleRemoveFeature(key)}
+                          data-testid={`btn-remove-feature-${key}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 pt-4 border-t">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => setOpen(false)}
                 disabled={isSubmitting}
               >
@@ -540,10 +544,18 @@ export function UnitFormModal({
                 type="submit"
                 disabled={isSubmitting}
                 data-testid="btn-submit-unit"
+                className="min-w-[120px]"
               >
-                {isSubmitting ? (isEditMode ? 'Saving...' : 'Creating...') : (isEditMode ? 'Save Changes' : 'Create Unit')}
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin mr-2">⏳</span> 
+                    {isEditMode ? 'Saving...' : 'Creating...'}
+                  </>
+                ) : (
+                  isEditMode ? 'Save Changes' : 'Create Unit'
+                )}
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </Form>
       </DialogContent>

@@ -64,6 +64,8 @@ export function PDCDepositModal({ pdc, open, onClose }: PDCDepositModalProps) {
 
   const form = useForm<DepositFormData>({
     resolver: zodResolver(depositSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       depositDate: format(new Date(), 'yyyy-MM-dd'),
       bankAccountId: '',

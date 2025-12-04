@@ -81,6 +81,8 @@ export function FinalSettlementStep({
   // Form setup
   const form = useForm<FinalSettlementFormData>({
     resolver: zodResolver(finalSettlementSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       settlementType: hasRefund ? 'FULL' : 'PARTIAL',
       settlementNotes: '',

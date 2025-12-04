@@ -64,6 +64,8 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: 
 
   const form = useForm<ParkingAllocationFormData>({
     resolver: zodResolver(parkingAllocationSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: data,
   });
 

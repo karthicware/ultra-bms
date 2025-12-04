@@ -67,6 +67,8 @@ export default function EditAssetPage() {
 
   const form = useForm({
     resolver: zodResolver(assetUpdateSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       assetName: '',
       category: undefined as any,

@@ -106,6 +106,8 @@ export function MarkCompleteDialog({
 
   const form = useForm<MarkCompleteFormData>({
     resolver: zodResolver(markCompleteSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       completionNotes: '',
       hoursSpent: '',

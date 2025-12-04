@@ -96,6 +96,8 @@ export default function PDCRegistrationPage() {
 
   const form = useForm<PDCBulkCreateFormData>({
     resolver: zodResolver(pdcBulkCreateSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       tenantId: '',
       leaseId: null,

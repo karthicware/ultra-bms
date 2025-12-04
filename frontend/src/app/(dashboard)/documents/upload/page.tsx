@@ -69,6 +69,8 @@ export default function DocumentUploadPage() {
 
   const form = useForm<DocumentUploadFormInput>({
     resolver: zodResolver(documentUploadSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: documentUploadDefaults,
   });
 

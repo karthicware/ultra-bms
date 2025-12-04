@@ -38,6 +38,8 @@ interface PaymentScheduleStepProps {
 export function PaymentScheduleStep({ data, totalMonthlyRent, onComplete, onBack }: PaymentScheduleStepProps) {
   const form = useForm<PaymentScheduleFormData>({
     resolver: zodResolver(paymentScheduleSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: data,
   });
 

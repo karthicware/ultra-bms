@@ -80,6 +80,8 @@ export default function EditPMSchedulePage({ params }: PageProps) {
   // Create a modified schema for edit (removing start date validation since we can't edit it)
   const form = useForm({
     resolver: zodResolver(updatePMScheduleSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       scheduleName: '',
       description: '',

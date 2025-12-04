@@ -98,6 +98,8 @@ export function DocumentReplaceModal({
   // Form setup
   const form = useForm<ReplaceFormData>({
     resolver: zodResolver(replaceFormSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       expiryDate: document.expiryDate || undefined,
       notes: '',

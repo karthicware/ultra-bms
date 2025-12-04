@@ -89,6 +89,8 @@ export function AssignmentDialog({
 
   const form = useForm<AssignWorkOrderFormData>({
     resolver: zodResolver(assignWorkOrderSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       assigneeType: AssigneeType.INTERNAL_STAFF,
       assigneeId: '',

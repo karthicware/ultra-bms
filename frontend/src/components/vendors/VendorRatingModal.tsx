@@ -81,6 +81,8 @@ export function VendorRatingModal({
   // Form setup
   const form = useForm<VendorRatingFormData>({
     resolver: zodResolver(vendorRatingSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: vendorRatingFormDefaults
   });
 

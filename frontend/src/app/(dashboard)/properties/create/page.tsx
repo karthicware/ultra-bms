@@ -5,7 +5,7 @@
  * Create Property Page
  * Form for creating a new property with validation and image upload
  * AC: #1, #17 - Property creation with comprehensive validation
- * Updated: shadcn-studio form styling (SCP-2025-11-30)
+ * Updated: Redesigned to match the "Redefined" aesthetic
  */
 
 import { useState, useEffect } from 'react';
@@ -19,9 +19,9 @@ import {
   FormField,
   FormItem,
   FormMessage,
+  FormLabel,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { NumberInput } from '@/components/ui/number-input';
 import {
@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { createProperty, uploadPropertyImage } from '@/services/properties.service';
 import { getPropertyManagers, type PropertyManager } from '@/services/users.service';
@@ -42,15 +43,17 @@ import { PropertyImageUpload } from '@/components/properties/PropertyImageUpload
 import {
   Building2,
   X,
-  MapPinIcon,
-  HashIcon,
-  CalendarIcon,
-  RulerIcon,
-  UserIcon,
-  SparklesIcon,
-  HomeIcon,
-  BuildingIcon,
-  StoreIcon,
+  MapPin,
+  Hash,
+  Calendar,
+  Ruler,
+  User,
+  Sparkles,
+  Home,
+  Store,
+  ArrowLeft,
+  CheckCircle2,
+  ImageIcon,
 } from 'lucide-react';
 
 export default function CreatePropertyPage() {
@@ -65,6 +68,8 @@ export default function CreatePropertyPage() {
 
   const form = useForm<CreatePropertyFormData>({
     resolver: zodResolver(createPropertySchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       name: '',
       address: '',
@@ -85,7 +90,6 @@ export default function CreatePropertyPage() {
         const response = await getPropertyManagers();
         setManagers(response.content);
       } catch (error) {
-        // Silently handle error - property manager assignment is optional
         console.error('Failed to fetch managers:', error);
         setManagers([]);
       } finally {
@@ -94,7 +98,6 @@ export default function CreatePropertyPage() {
     };
 
     fetchManagers();
-
   }, []);
 
   const onSubmit = async (data: CreatePropertyFormData) => {
@@ -120,7 +123,6 @@ export default function CreatePropertyPage() {
             await uploadPropertyImage(property.id, selectedImages[i], i);
             uploadedCount++;
           } catch {
-            // Continue with other images if one fails
             console.error(`Failed to upload image ${i + 1}`);
           }
         }
@@ -177,354 +179,352 @@ export default function CreatePropertyPage() {
   };
 
   return (
-    <div className="container max-w-4xl mx-auto py-6">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Building2 className="h-8 w-8 text-primary" />
+    <div className="container max-w-5xl mx-auto py-8 space-y-8">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-10 w-10">
+          <ArrowLeft className="h-6 w-6" />
+        </Button>
+        <div>
           <h1 className="text-3xl font-bold tracking-tight">Create Property</h1>
+          <p className="text-muted-foreground mt-1">Add a new property to your portfolio.</p>
         </div>
-        <p className="text-muted-foreground">Add a new property to the system</p>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-testid="form-property-create">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-              <CardDescription>Required property details</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <Label htmlFor="name" className="flex items-center gap-1">
-                      Property Name <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="relative">
-                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <Building2 className="size-4" />
-                      </div>
-                      <FormControl>
-                        <Input
-                          id="name"
-                          className="pl-9"
-                          placeholder="Sunset Towers"
-                          {...field}
-                          data-testid="input-property-name"
-                        />
-                      </FormControl>
-                    </div>
-                    <p className="text-muted-foreground text-xs">Maximum 200 characters</p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <Label htmlFor="address" className="flex items-center gap-1">
-                      Address <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="relative">
-                      <div className="text-muted-foreground pointer-events-none absolute top-3 left-0 flex items-start pl-3">
-                        <MapPinIcon className="size-4" />
-                      </div>
-                      <FormControl>
-                        <Textarea
-                          id="address"
-                          className="pl-9 resize-none min-h-[80px]"
-                          placeholder="123 Main Street, Dubai, UAE"
-                          {...field}
-                          data-testid="input-property-address"
-                          rows={3}
-                        />
-                      </FormControl>
-                    </div>
-                    <p className="text-muted-foreground text-xs">Full address (maximum 500 characters)</p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="propertyType"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <Label className="flex items-center gap-1">
-                        Property Type <span className="text-destructive">*</span>
-                      </Label>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-property-type" className="w-full">
-                            <SelectValue placeholder="Select property type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value={PropertyType.RESIDENTIAL}>
-                            <div className="flex items-center gap-2">
-                              <HomeIcon className="size-4 text-blue-600" />
-                              <span>Residential</span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value={PropertyType.COMMERCIAL}>
-                            <div className="flex items-center gap-2">
-                              <StoreIcon className="size-4 text-green-600" />
-                              <span>Commercial</span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value={PropertyType.MIXED_USE}>
-                            <div className="flex items-center gap-2">
-                              <BuildingIcon className="size-4 text-purple-600" />
-                              <span>Mixed Use</span>
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="totalUnitsCount"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <Label htmlFor="totalUnitsCount" className="flex items-center gap-1">
-                        Total Units <span className="text-destructive">*</span>
-                      </Label>
-                      <div className="relative">
-                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                          <HashIcon className="size-4" />
-                        </div>
-                        <FormControl>
-                          <NumberInput
-                            id="totalUnitsCount"
-                            className="pl-9"
-                            min={1}
-                            placeholder="10"
-                            value={field.value ?? 1}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            data-testid="input-total-units"
-                          />
-                        </FormControl>
-                      </div>
-                      <p className="text-muted-foreground text-xs">Minimum 1 unit</p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Additional Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Additional Details</CardTitle>
-              <CardDescription>Optional property information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Property Manager */}
-              <FormField
-                control={form.control}
-                name="managerId"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <Label className="flex items-center gap-1">
-                      <UserIcon className="size-4 mr-1 text-muted-foreground" />
-                      Assigned Manager
-                    </Label>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={isLoadingManagers || managers.length === 0}
-                    >
-                      <FormControl>
-                        <SelectTrigger data-testid="select-property-manager" className="w-full">
-                          <SelectValue placeholder={
-                            isLoadingManagers
-                              ? "Loading managers..."
-                              : managers.length === 0
-                                ? "No managers available (optional)"
-                                : "Select a manager (optional)"
-                          } />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="unassigned">
-                          <div className="flex items-center gap-2">
-                            <UserIcon className="size-4 text-gray-400" />
-                            <span>Unassigned</span>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8" data-testid="form-property-create">
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left Column - Main Info */}
+            <div className="lg:col-span-8 space-y-8">
+              
+              {/* Card 1: Basic Information */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2 text-primary mb-1">
+                    <Building2 className="h-5 w-5" />
+                    <h3 className="font-semibold">Basic Information</h3>
+                  </div>
+                  <CardDescription>Essential details about the property.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-1">
+                          Property Name <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <div className="relative">
+                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <Building2 className="size-4" />
                           </div>
-                        </SelectItem>
-                        {managers.map((manager) => (
-                          <SelectItem key={manager.id} value={manager.id}>
-                            <div className="flex items-center gap-2">
-                              <UserIcon className="size-4 text-blue-600" />
-                              <span>{manager.firstName} {manager.lastName}</span>
+                          <FormControl>
+                            <Input
+                              className="pl-9"
+                              placeholder="e.g. Sunset Towers"
+                              {...field}
+                              data-testid="input-property-name"
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-1">
+                          Address <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <div className="relative">
+                          <div className="text-muted-foreground pointer-events-none absolute top-3 left-0 flex items-start pl-3">
+                            <MapPin className="size-4" />
+                          </div>
+                          <FormControl>
+                            <Textarea
+                              className="pl-9 min-h-[100px] resize-none"
+                              placeholder="e.g. 123 Main Street, Downtown, Dubai, UAE"
+                              {...field}
+                              data-testid="input-property-address"
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="propertyType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-1">
+                            Property Type <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-property-type">
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value={PropertyType.RESIDENTIAL}>
+                                <div className="flex items-center gap-2">
+                                  <Home className="size-4 text-blue-600" />
+                                  <span>Residential</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value={PropertyType.COMMERCIAL}>
+                                <div className="flex items-center gap-2">
+                                  <Store className="size-4 text-purple-600" />
+                                  <span>Commercial</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value={PropertyType.MIXED_USE}>
+                                <div className="flex items-center gap-2">
+                                  <Building2 className="size-4 text-orange-600" />
+                                  <span>Mixed Use</span>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="totalUnitsCount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-1">
+                            Total Units <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <div className="relative">
+                            <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                              <Hash className="size-4" />
                             </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-muted-foreground text-xs">Assign a property manager to this property</p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="yearBuilt"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <Label htmlFor="yearBuilt" className="flex items-center gap-1">
-                        <CalendarIcon className="size-4 mr-1 text-muted-foreground" />
-                        Year Built
-                      </Label>
-                      <div className="relative">
-                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                          <CalendarIcon className="size-4" />
-                        </div>
-                        <FormControl>
-                          <NumberInput
-                            id="yearBuilt"
-                            className="pl-9"
-                            min={1900}
-                            max={new Date().getFullYear()}
-                            placeholder="2020"
-                            value={field.value}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            data-testid="input-year-built"
-                          />
-                        </FormControl>
-                      </div>
-                      <p className="text-muted-foreground text-xs">Between 1900 and {new Date().getFullYear()}</p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="totalSquareFootage"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <Label htmlFor="totalSquareFootage" className="flex items-center gap-1">
-                        <RulerIcon className="size-4 mr-1 text-muted-foreground" />
-                        Total Square Footage
-                      </Label>
-                      <div className="relative">
-                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                          <RulerIcon className="size-4" />
-                        </div>
-                        <FormControl>
-                          <NumberInput
-                            id="totalSquareFootage"
-                            className="pl-9 pr-12"
-                            min={0}
-                            step={1}
-                            placeholder="10000"
-                            value={field.value}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            data-testid="input-square-footage"
-                          />
-                        </FormControl>
-                        <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm">
-                          sq ft
-                        </span>
-                      </div>
-                      <p className="text-muted-foreground text-xs">Total area in square feet</p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Amenities */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1">
-                  <SparklesIcon className="size-4 mr-1 text-muted-foreground" />
-                  Amenities
-                </Label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <SparklesIcon className="size-4" />
-                    </div>
-                    <Input
-                      className="pl-9"
-                      placeholder="e.g., Pool, Gym, Parking"
-                      value={amenitiesInput}
-                      onChange={(e) => setAmenitiesInput(e.target.value)}
-                      onKeyDown={handleAmenitiesKeyDown}
-                      data-testid="input-amenities"
+                            <FormControl>
+                              <NumberInput
+                                className="pl-9"
+                                min={1}
+                                placeholder="e.g. 10"
+                                value={field.value ?? 1}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                data-testid="input-total-units"
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleAddAmenity}
-                    data-testid="btn-add-amenity"
-                  >
-                    Add
-                  </Button>
-                </div>
-                <p className="text-muted-foreground text-xs">Press Enter or click Add to include amenities</p>
-                {amenities.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {amenities.map((amenity) => (
-                      <Badge key={amenity} variant="secondary" className="gap-1">
-                        {amenity}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveAmenity(amenity)}
-                          className="hover:bg-destructive/20 rounded-full p-0.5"
-                          data-testid={`btn-remove-amenity-${amenity}`}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
+                </CardContent>
+              </Card>
+
+              {/* Card 2: Media */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2 text-primary mb-1">
+                    <ImageIcon className="h-5 w-5" />
+                    <h3 className="font-semibold">Property Media</h3>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  <CardDescription>Add high-quality images to showcase the property.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PropertyImageUpload
+                    mode="create"
+                    onImagesChange={setSelectedImages}
+                    maxImages={5}
+                  />
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* Property Images */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Property Images</CardTitle>
-              <CardDescription>Upload up to 5 images (JPG/PNG/WebP, max 10MB each)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PropertyImageUpload
-                mode="create"
-                onImagesChange={setSelectedImages}
-                maxImages={5}
-              />
-            </CardContent>
-          </Card>
+            {/* Right Column - Additional Details */}
+            <div className="lg:col-span-4 space-y-8">
+              
+              {/* Card 3: Specifications */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2 text-primary mb-1">
+                    <Ruler className="h-5 w-5" />
+                    <h3 className="font-semibold">Specifications</h3>
+                  </div>
+                  <CardDescription>Physical details and dimensions.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="yearBuilt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Year Built</FormLabel>
+                        <div className="relative">
+                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <Calendar className="size-4" />
+                          </div>
+                          <FormControl>
+                            <NumberInput
+                              className="pl-9"
+                              min={1900}
+                              max={new Date().getFullYear()}
+                              placeholder="e.g. 2020"
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              data-testid="input-year-built"
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-          {/* Form Actions */}
-          <div className="flex gap-4 justify-end">
+                  <FormField
+                    control={form.control}
+                    name="totalSquareFootage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Area (sq ft)</FormLabel>
+                        <div className="relative">
+                          <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <Ruler className="size-4" />
+                          </div>
+                          <FormControl>
+                            <NumberInput
+                              className="pl-9"
+                              min={0}
+                              step={1}
+                              placeholder="e.g. 15000"
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              data-testid="input-square-footage"
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Card 4: Management & Amenities */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2 text-primary mb-1">
+                    <User className="h-5 w-5" />
+                    <h3 className="font-semibold">Management</h3>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="managerId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Property Manager</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          disabled={isLoadingManagers || managers.length === 0}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-property-manager">
+                              <SelectValue placeholder={
+                                isLoadingManagers
+                                  ? "Loading..."
+                                  : "Select manager (optional)"
+                              } />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="unassigned">
+                              <span className="text-muted-foreground">Unassigned</span>
+                            </SelectItem>
+                            {managers.map((manager) => (
+                              <SelectItem key={manager.id} value={manager.id}>
+                                {manager.firstName} {manager.lastName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Separator />
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-primary">
+                      <Sparkles className="h-4 w-4" />
+                      <h4 className="font-medium text-sm">Amenities</h4>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          placeholder="Add amenity..."
+                          value={amenitiesInput}
+                          onChange={(e) => setAmenitiesInput(e.target.value)}
+                          onKeyDown={handleAmenitiesKeyDown}
+                          data-testid="input-amenities"
+                          className="h-9 text-sm"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleAddAmenity}
+                        disabled={!amenitiesInput.trim()}
+                        data-testid="btn-add-amenity"
+                      >
+                        Add
+                      </Button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 min-h-[2rem]">
+                      {amenities.length === 0 && (
+                        <span className="text-xs text-muted-foreground italic">No amenities added yet.</span>
+                      )}
+                      {amenities.map((amenity) => (
+                        <Badge key={amenity} variant="secondary" className="pl-2 pr-1 py-0.5 h-7">
+                          {amenity}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveAmenity(amenity)}
+                            className="ml-1 hover:bg-destructive/20 hover:text-destructive rounded-full p-0.5"
+                            data-testid={`btn-remove-amenity-${amenity}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="flex items-center justify-end gap-4 pt-4 border-t">
             <Button
               type="button"
               variant="outline"
@@ -537,8 +537,17 @@ export default function CreatePropertyPage() {
               type="submit"
               disabled={isSubmitting}
               data-testid="btn-submit-property"
+              className="min-w-[150px]"
             >
-              {isSubmitting ? 'Creating...' : 'Create Property'}
+              {isSubmitting ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span> Creating...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" /> Create Property
+                </>
+              )}
             </Button>
           </div>
         </form>

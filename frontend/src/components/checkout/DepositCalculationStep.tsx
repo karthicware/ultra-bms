@@ -136,6 +136,8 @@ export function DepositCalculationStep({
   // Form setup
   const form = useForm<DepositCalculationFormData>({
     resolver: zodResolver(depositCalculationSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       originalDeposit: checkout.securityDeposit ?? 0,
       deductions: getInitialDeductions(),

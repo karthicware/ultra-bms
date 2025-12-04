@@ -82,6 +82,8 @@ export default function CreateWorkOrderPage() {
 
   const form = useForm<CreateWorkOrderFormData>({
     resolver: zodResolver(createWorkOrderSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       propertyId: '',
       unitId: '',
@@ -94,8 +96,6 @@ export default function CreateWorkOrderPage() {
       accessInstructions: '',
       maintenanceRequestId: '',
     },
-    mode: 'onSubmit',
-    reValidateMode: 'onSubmit',
   });
 
   const watchedPropertyId = form.watch('propertyId');

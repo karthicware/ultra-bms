@@ -80,6 +80,8 @@ export function NoticeDetailsStep({
   // Form setup
   const form = useForm<NoticeDetailsFormData>({
     resolver: zodResolver(noticeDetailsSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       noticeDate: checkout?.noticeDate ? new Date(checkout.noticeDate) : new Date(),
       expectedMoveOutDate: checkout?.expectedMoveOutDate

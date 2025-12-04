@@ -8,13 +8,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getLeads } from '@/services/leads.service';
 import type { Lead } from '@/types';
-import { Plus, UserPlus } from 'lucide-react';
+import { Plus, UserPlus } from 'lucide-react'; // Added UserPlus import
 import LeadsDatatable from '@/components/leads/LeadsDatatable';
+import { LeadsKPI } from '@/components/leads/LeadsKPI';
 
 export default function LeadsPage() {
   const router = useRouter();
@@ -55,16 +56,26 @@ export default function LeadsPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <Skeleton className="h-10 w-48" />
+      <div className="container mx-auto p-6 space-y-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1.5">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
           <Skeleton className="h-10 w-32" />
         </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 rounded-xl" />
+          ))}
+        </div>
+
         <Card>
           <CardContent className="p-6">
             <div className="space-y-4">
               <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-[400px] w-full" />
             </div>
           </CardContent>
         </Card>
@@ -73,26 +84,29 @@ export default function LeadsPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <UserPlus className="h-8 w-8 text-primary" />
+    <div className="container mx-auto p-6 space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3"> {/* Added this div for icon and title */}
+          <UserPlus className="h-8 w-8 text-primary" /> {/* Re-added icon */}
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
-            <p className="text-muted-foreground">
-              Manage potential tenant leads and track conversion
+            <h1 className="text-3xl font-bold tracking-tight">Leads Management</h1>
+            <p className="text-muted-foreground mt-1">
+              Track potential tenants, manage inquiries, and monitor conversion rates.
             </p>
           </div>
         </div>
-        <Button onClick={handleCreateLead} data-testid="btn-create-lead">
+        <Button onClick={handleCreateLead} data-testid="btn-create-lead" className="shadow-sm">
           <Plus className="mr-2 h-4 w-4" />
-          Create Lead
+          Add New Lead
         </Button>
       </div>
 
-      {/* Datatable */}
-      <Card className="py-0">
+      {/* KPI Dashboard */}
+      <LeadsKPI leads={leads} />
+
+      {/* Datatable Section */}
+      <Card className="shadow-sm">
         <LeadsDatatable data={leads} />
       </Card>
     </div>

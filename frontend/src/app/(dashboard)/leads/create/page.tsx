@@ -63,6 +63,8 @@ export default function CreateLeadPage() {
 
   const form = useForm<CreateLeadFormData>({
     resolver: zodResolver(createLeadSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       fullName: '',
       emiratesId: '',

@@ -32,7 +32,7 @@ import {
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,7 +89,6 @@ interface PropertyDatatableProps {
 
 const PropertyDatatable = ({ data, onDelete, pageSize: initialPageSize = 10 }: PropertyDatatableProps) => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [rowSelection, setRowSelection] = useState({});
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -98,24 +97,7 @@ const PropertyDatatable = ({ data, onDelete, pageSize: initialPageSize = 10 }: P
 
   const columns: ColumnDef<PropertyItem>[] = useMemo(
     () => [
-      {
-        id: 'select',
-        header: ({ table }) => (
-          <Checkbox
-            checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
-            onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
-            aria-label="Select all"
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
-        ),
-        size: 50,
-      },
+
       {
         header: 'Property',
         accessorKey: 'name',
@@ -256,10 +238,8 @@ const PropertyDatatable = ({ data, onDelete, pageSize: initialPageSize = 10 }: P
     state: {
       columnFilters,
       pagination,
-      rowSelection,
     },
     onColumnFiltersChange: setColumnFilters,
-    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),

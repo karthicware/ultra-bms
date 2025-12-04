@@ -38,6 +38,8 @@ function ResetPasswordContent() {
 
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       token,
       newPassword: '',

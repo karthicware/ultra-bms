@@ -132,6 +132,8 @@ export default function TenantLeaseRenewalPage() {
   // Form
   const form = useForm<RenewalRequestFormData>({
     resolver: zodResolver(renewalRequestSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: renewalRequestFormDefaults,
   });
 

@@ -55,6 +55,8 @@ export function PDCClearModal({ pdc, open, onClose }: PDCClearModalProps) {
 
   const form = useForm<ClearFormData>({
     resolver: zodResolver(clearSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       clearedDate: format(new Date(), 'yyyy-MM-dd'),
     },

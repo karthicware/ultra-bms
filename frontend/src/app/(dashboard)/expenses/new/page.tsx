@@ -108,6 +108,8 @@ function CreateExpensePageContent() {
   // Form setup
   const form = useForm<ExpenseCreateFormData>({
     resolver: zodResolver(expenseCreateSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       ...expenseCreateDefaults,
       vendorId: preselectedVendorId || undefined,

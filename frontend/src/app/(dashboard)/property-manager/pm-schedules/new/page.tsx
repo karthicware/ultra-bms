@@ -61,6 +61,8 @@ export default function CreatePMSchedulePage() {
 
   const form = useForm({
     resolver: zodResolver(createPMScheduleSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       scheduleName: '',
       propertyId: null as string | null,

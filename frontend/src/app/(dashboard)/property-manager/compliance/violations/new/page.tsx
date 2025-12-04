@@ -63,6 +63,8 @@ function NewViolationContent() {
 
   const form = useForm<CreateViolationFormData>({
     resolver: zodResolver(createViolationSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       complianceScheduleId: preselectedScheduleId || '',
       violationDate: new Date().toISOString().split('T')[0],

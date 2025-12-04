@@ -76,6 +76,8 @@ export default function DocumentEditPage() {
   // Form setup
   const form = useForm<DocumentUpdateFormInput>({
     resolver: zodResolver(documentUpdateSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       title: '',
       description: '',

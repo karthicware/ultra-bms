@@ -81,6 +81,8 @@ export default function CreateAnnouncementPage() {
   // Form setup
   const form = useForm<AnnouncementFormData>({
     resolver: zodResolver(announcementFormSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       ...announcementFormDefaults,
       expiresAt: format(addDays(new Date(), 30), 'yyyy-MM-dd'),

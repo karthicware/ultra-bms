@@ -168,6 +168,8 @@ function AnnouncementDetailContent() {
   // Form setup
   const form = useForm<AnnouncementFormData>({
     resolver: zodResolver(announcementFormSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       title: '',
       message: '',

@@ -118,6 +118,8 @@ export default function PendingPaymentsPage() {
   // Form for batch payment
   const form = useForm<BatchPaymentFormData>({
     resolver: zodResolver(batchPaymentSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       paymentMethod: PaymentMethod.BANK_TRANSFER,
       paymentDate: new Date(),
