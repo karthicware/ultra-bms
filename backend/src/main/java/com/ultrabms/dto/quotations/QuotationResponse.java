@@ -41,6 +41,15 @@ public class QuotationResponse {
     private String moveinProcedures;
     private String cancellationPolicy;
     private String specialTerms;
+    // SCP-2025-12-04: Identity document fields (moved from Lead)
+    private String emiratesIdNumber;
+    private LocalDate emiratesIdExpiry;
+    private String passportNumber;
+    private LocalDate passportExpiry;
+    private String nationality;
+    private String emiratesIdFrontPath;
+    private String emiratesIdBackPath;
+    private String passportPath;
     private Quotation.QuotationStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -75,6 +84,15 @@ public class QuotationResponse {
                 .moveinProcedures(quotation.getMoveinProcedures())
                 .cancellationPolicy(quotation.getCancellationPolicy())
                 .specialTerms(quotation.getSpecialTerms())
+                // SCP-2025-12-04: Identity document fields
+                .emiratesIdNumber(quotation.getEmiratesIdNumber())
+                .emiratesIdExpiry(quotation.getEmiratesIdExpiry())
+                .passportNumber(quotation.getPassportNumber())
+                .passportExpiry(quotation.getPassportExpiry())
+                .nationality(quotation.getNationality())
+                .emiratesIdFrontPath(quotation.getEmiratesIdFrontPath())
+                .emiratesIdBackPath(quotation.getEmiratesIdBackPath())
+                .passportPath(quotation.getPassportPath())
                 .status(quotation.getStatus())
                 .createdAt(quotation.getCreatedAt())
                 .updatedAt(quotation.getUpdatedAt())

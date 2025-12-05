@@ -5,7 +5,6 @@
  * Story 8.5: Vendor Dashboard (AC-6, AC-14, AC-15, AC-17)
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   ScatterChart,
@@ -74,33 +73,31 @@ export function VendorPerformanceScatter({ data, isLoading }: VendorPerformanceS
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Vendor Performance Snapshot</CardTitle>
-          <CardDescription>SLA compliance vs customer rating (bubble size = jobs)</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[350px] flex items-center justify-center">
-            <Skeleton className="h-full w-full" />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-6">
+        <div className="space-y-1 mb-6">
+          <Skeleton className="h-6 w-64" />
+          <Skeleton className="h-4 w-full max-w-sm" />
+        </div>
+        <div className="h-[350px] flex items-center justify-center">
+          <Skeleton className="h-full w-full" />
+        </div>
+      </div>
     );
   }
 
   if (!data || data.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Vendor Performance Snapshot</CardTitle>
-          <CardDescription>SLA compliance vs customer rating (bubble size = jobs)</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[350px] flex items-center justify-center text-muted-foreground">
-            No vendor performance data available
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-6">
+        <div className="space-y-1 mb-6">
+          <h3 className="font-semibold text-lg">Vendor Performance Snapshot</h3>
+          <p className="text-sm text-muted-foreground">
+            SLA compliance vs customer rating (bubble size = jobs completed)
+          </p>
+        </div>
+        <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+          No vendor performance data available
+        </div>
+      </div>
     );
   }
 
@@ -118,81 +115,79 @@ export function VendorPerformanceScatter({ data, isLoading }: VendorPerformanceS
   };
 
   return (
-    <Card data-testid="vendor-performance-scatter-chart">
-      <CardHeader>
-        <CardTitle>Vendor Performance Snapshot</CardTitle>
-        <CardDescription>
+    <div className="p-6 h-full flex flex-col" data-testid="vendor-performance-scatter-chart">
+      <div className="space-y-1 mb-6">
+        <h3 className="font-semibold text-lg">Vendor Performance Snapshot</h3>
+        <p className="text-sm text-muted-foreground">
           SLA compliance vs customer rating (bubble size = jobs completed)
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="h-[350px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                type="number"
-                dataKey="slaCompliance"
-                name="SLA Compliance"
-                domain={[0, 100]}
-                tickFormatter={(v) => `${v}%`}
-                label={{
-                  value: 'SLA Compliance %',
-                  position: 'insideBottom',
-                  offset: -10,
-                }}
-              />
-              <YAxis
-                type="number"
-                dataKey="rating"
-                name="Rating"
-                domain={[0, 5]}
-                label={{
-                  value: 'Rating',
-                  angle: -90,
-                  position: 'insideLeft',
-                  offset: 0,
-                }}
-              />
-              <ZAxis type="number" dataKey="z" range={[BUBBLE_SIZE.MIN, BUBBLE_SIZE.MAX]} />
-              <Tooltip content={<CustomTooltip />} />
-              <Scatter
-                name="Vendors"
-                data={chartData}
-                cursor="pointer"
-                onClick={(props) => handlePointClick(props.payload as VendorPerformanceSnapshot)}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={PERFORMANCE_TIER_COLORS[entry.performanceTier]}
-                    fillOpacity={0.7}
-                    stroke={PERFORMANCE_TIER_COLORS[entry.performanceTier]}
-                    strokeWidth={1}
-                    data-testid={`vendor-scatter-point-${entry.vendorId}`}
-                  />
-                ))}
-              </Scatter>
-            </ScatterChart>
-          </ResponsiveContainer>
-        </div>
+        </p>
+      </div>
+      <div className="flex-1 min-h-[350px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              type="number"
+              dataKey="slaCompliance"
+              name="SLA Compliance"
+              domain={[0, 100]}
+              tickFormatter={(v) => `${v}%`}
+              label={{
+                value: 'SLA Compliance %',
+                position: 'insideBottom',
+                offset: -10,
+              }}
+            />
+            <YAxis
+              type="number"
+              dataKey="rating"
+              name="Rating"
+              domain={[0, 5]}
+              label={{
+                value: 'Rating',
+                angle: -90,
+                position: 'insideLeft',
+                offset: 0,
+              }}
+            />
+            <ZAxis type="number" dataKey="z" range={[BUBBLE_SIZE.MIN, BUBBLE_SIZE.MAX]} />
+            <Tooltip content={<CustomTooltip />} />
+            <Scatter
+              name="Vendors"
+              data={chartData}
+              cursor="pointer"
+              onClick={(props) => handlePointClick(props.payload as VendorPerformanceSnapshot)}
+            >
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={PERFORMANCE_TIER_COLORS[entry.performanceTier]}
+                  fillOpacity={0.7}
+                  stroke={PERFORMANCE_TIER_COLORS[entry.performanceTier]}
+                  strokeWidth={1}
+                  data-testid={`vendor-scatter-point-${entry.vendorId}`}
+                />
+              ))}
+            </Scatter>
+          </ScatterChart>
+        </ResponsiveContainer>
+      </div>
 
-        {/* Legend */}
-        <div className="mt-4 flex flex-wrap justify-center gap-4">
-          {(['GREEN', 'YELLOW', 'RED'] as const).map((tier) => (
-            <div key={tier} className="flex items-center gap-2">
-              <span
-                className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: PERFORMANCE_TIER_COLORS[tier] }}
-              />
-              <span className="text-sm text-muted-foreground">
-                {PERFORMANCE_TIER_LABELS[tier]}
-              </span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+      {/* Legend */}
+      <div className="mt-6 flex flex-wrap justify-center gap-4">
+        {(['GREEN', 'YELLOW', 'RED'] as const).map((tier) => (
+          <div key={tier} className="flex items-center gap-2">
+            <span
+              className="h-3 w-3 rounded-full"
+              style={{ backgroundColor: PERFORMANCE_TIER_COLORS[tier] }}
+            />
+            <span className="text-sm text-muted-foreground">
+              {PERFORMANCE_TIER_LABELS[tier]}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

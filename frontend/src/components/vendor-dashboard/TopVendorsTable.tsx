@@ -5,7 +5,6 @@
  * Story 8.5: Vendor Dashboard (AC-8)
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -73,35 +72,31 @@ export function TopVendorsTable({ data, isLoading }: TopVendorsTableProps) {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Top Vendors</CardTitle>
-          <CardDescription>Top 5 vendors by jobs completed this month</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-6">
+        <div className="space-y-1 mb-6">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
     );
   }
 
   if (!data || data.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Top Vendors</CardTitle>
-          <CardDescription>Top 5 vendors by jobs completed this month</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-32 items-center justify-center text-muted-foreground">
-            No vendor activity this month
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-6">
+        <div className="space-y-1 mb-6">
+          <h3 className="font-semibold text-lg">Top Vendors</h3>
+          <p className="text-sm text-muted-foreground">Top 5 vendors by jobs completed this month</p>
+        </div>
+        <div className="flex h-32 items-center justify-center text-muted-foreground">
+          No vendor activity this month
+        </div>
+      </div>
     );
   }
 
@@ -110,68 +105,66 @@ export function TopVendorsTable({ data, isLoading }: TopVendorsTableProps) {
   };
 
   return (
-    <Card data-testid="vendor-top-vendors-table">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <div className="p-6" data-testid="vendor-top-vendors-table">
+      <div className="space-y-1 mb-6">
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-lg">Top Vendors</h3>
           <Trophy className="h-5 w-5 text-amber-500" />
-          Top Vendors
-        </CardTitle>
-        <CardDescription>Top 5 vendors by jobs completed this month</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-16">Rank</TableHead>
-                <TableHead>Vendor Name</TableHead>
-                <TableHead className="text-center">Jobs This Month</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((vendor) => (
-                <TableRow
-                  key={vendor.vendorId}
-                  className={cn(vendor.rank === 1 && 'bg-amber-50 dark:bg-amber-950/20')}
-                  data-testid={`vendor-top-vendor-row-${vendor.vendorId}`}
-                >
-                  <TableCell>
-                    <RankBadge rank={vendor.rank} />
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{vendor.vendorName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {vendor.totalJobsCompleted} total jobs
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className="text-lg font-semibold">{vendor.jobsCompletedThisMonth}</span>
-                  </TableCell>
-                  <TableCell>
-                    <StarRating rating={vendor.avgRating} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewProfile(vendor.vendorId)}
-                      data-testid={`vendor-top-vendor-view-${vendor.vendorId}`}
-                    >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      View Profile
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
         </div>
-      </CardContent>
-    </Card>
+        <p className="text-sm text-muted-foreground">Top 5 vendors by jobs completed this month</p>
+      </div>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-16">Rank</TableHead>
+              <TableHead>Vendor Name</TableHead>
+              <TableHead className="text-center">Jobs This Month</TableHead>
+              <TableHead>Rating</TableHead>
+              <TableHead className="text-right">Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((vendor) => (
+              <TableRow
+                key={vendor.vendorId}
+                className={cn(vendor.rank === 1 && 'bg-amber-50 dark:bg-amber-950/20')}
+                data-testid={`vendor-top-vendor-row-${vendor.vendorId}`}
+              >
+                <TableCell>
+                  <RankBadge rank={vendor.rank} />
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <p className="font-medium">{vendor.vendorName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {vendor.totalJobsCompleted} total jobs
+                    </p>
+                  </div>
+                </TableCell>
+                <TableCell className="text-center">
+                  <span className="text-lg font-semibold">{vendor.jobsCompletedThisMonth}</span>
+                </TableCell>
+                <TableCell>
+                  <StarRating rating={vendor.avgRating} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleViewProfile(vendor.vendorId)}
+                    data-testid={`vendor-top-vendor-view-${vendor.vendorId}`}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    View Profile
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 }
 

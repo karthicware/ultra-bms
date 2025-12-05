@@ -9,6 +9,7 @@ import com.ultrabms.dto.quotations.QuotationStatusUpdateRequest;
 import com.ultrabms.dto.quotations.UpdateQuotationRequest;
 import com.ultrabms.entity.Quotation;
 import com.ultrabms.service.QuotationService;
+import com.ultrabms.service.S3Service;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,8 +34,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -48,6 +53,7 @@ import java.util.UUID;
 public class QuotationController {
 
     private final QuotationService quotationService;
+    private final S3Service s3Service;
 
     @PostMapping
     @Operation(summary = "Create a new quotation")
@@ -146,6 +152,67 @@ public class QuotationController {
         UUID convertedBy = getUserId(userDetails);
         LeadConversionResponse response = quotationService.convertLeadToTenant(id, convertedBy);
         return ResponseEntity.ok(ApiResponse.success(response, "Lead converted to tenant successfully"));
+    }
+
+    /**
+     * Upload identity documents for quotation
+     * SCP-2025-12-04: Document upload endpoint for quotation identity documents
+     *
+     * @param documentType Type of document: emirates_id_front, emirates_id_back, or passport
+     * @param file The file to upload (JPG, PNG, or PDF, max 5MB)
+     * @return S3 file path
+     */
+    @PostMapping(value = "/documents/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload identity document for quotation")
+    public ResponseEntity<ApiResponse<Map<String, String>>> uploadDocument(
+            @RequestParam("documentType") String documentType,
+            @RequestPart("file") MultipartFile file
+    ) {
+        // Validate document type
+        if (!isValidDocumentType(documentType)) {
+            return ResponseEntity.badRequest().body(
+                    ApiResponse.error("Invalid document type. Must be: emirates_id_front, emirates_id_back, or passport")
+            );
+        }
+
+        // Upload to S3 with quotation documents directory
+        String directory = "quotations/identity-documents/" + documentType;
+        String filePath = s3Service.uploadFile(file, directory);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("filePath", filePath);
+        response.put("documentType", documentType);
+
+        return ResponseEntity.ok(ApiResponse.success(response, "Document uploaded successfully"));
+    }
+
+    /**
+     * Get presigned URL for document download
+     */
+    @GetMapping("/documents/download")
+    @Operation(summary = "Get presigned download URL for identity document")
+    public ResponseEntity<ApiResponse<Map<String, String>>> getDocumentUrl(
+            @RequestParam("filePath") String filePath
+    ) {
+        String presignedUrl = s3Service.getPresignedUrl(filePath);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("downloadUrl", presignedUrl);
+        response.put("filePath", filePath);
+        response.put("validFor", "5 minutes");
+
+        return ResponseEntity.ok(ApiResponse.success(response, "Download URL generated successfully"));
+    }
+
+    /**
+     * Validate document type
+     */
+    private boolean isValidDocumentType(String documentType) {
+        return documentType != null && (
+                documentType.equals("emirates_id_front") ||
+                documentType.equals("emirates_id_back") ||
+                documentType.equals("passport")
+        );
     }
 
     @DeleteMapping("/{id}")

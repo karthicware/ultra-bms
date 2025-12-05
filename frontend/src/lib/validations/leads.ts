@@ -102,10 +102,6 @@ const notesSchema = z
 
 export const createLeadSchema = z.object({
   fullName: fullNameSchema,
-  emiratesId: emiratesIdSchema,
-  passportNumber: passportNumberSchema,
-  passportExpiryDate: passportExpirySchema,
-  homeCountry: homeCountrySchema,
   email: emailSchema,
   contactNumber: phoneSchema,
   leadSource: z.nativeEnum(LeadSource),
@@ -121,10 +117,6 @@ export type CreateLeadFormData = z.infer<typeof createLeadSchema>;
 
 export const updateLeadSchema = z.object({
   fullName: fullNameSchema.optional(),
-  emiratesId: emiratesIdSchema.optional(),
-  passportNumber: passportNumberSchema.optional(),
-  passportExpiryDate: passportExpirySchema.optional(),
-  homeCountry: homeCountrySchema.optional(),
   email: emailSchema.optional(),
   contactNumber: phoneSchema.optional(),
   leadSource: z.nativeEnum(LeadSource).optional(),

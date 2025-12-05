@@ -34,7 +34,7 @@ public class CreateQuotationRequest {
     @NotNull(message = "Unit ID is required")
     private UUID unitId;
 
-    @NotNull(message = "Stay type is required")
+    // SCP-2025-12-04: Made optional as it's being removed from frontend
     private Quotation.StayType stayType;
 
     @NotNull(message = "Issue date is required")
@@ -74,6 +74,27 @@ public class CreateQuotationRequest {
     private BigDecimal adminFee;
 
     private String documentRequirements;
+
+    // SCP-2025-12-04: Identity document fields (moved from Lead)
+    @NotBlank(message = "Emirates ID number is required")
+    private String emiratesIdNumber;
+
+    @NotNull(message = "Emirates ID expiry date is required")
+    private LocalDate emiratesIdExpiry;
+
+    @NotBlank(message = "Passport number is required")
+    private String passportNumber;
+
+    @NotNull(message = "Passport expiry date is required")
+    private LocalDate passportExpiry;
+
+    @NotBlank(message = "Nationality is required")
+    private String nationality;
+
+    // Document file paths (will be set after S3 upload)
+    private String emiratesIdFrontPath;
+    private String emiratesIdBackPath;
+    private String passportPath;
 
     @NotBlank(message = "Payment terms is required")
     private String paymentTerms;

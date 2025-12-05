@@ -66,4 +66,16 @@ public class UpdateQuotationRequest {
     private String cancellationPolicy;
 
     private String specialTerms;
+
+    // SCP-2025-12-04: Identity document fields (moved from Lead)
+    private String emiratesIdNumber;
+    private LocalDate emiratesIdExpiry;
+    private String passportNumber;
+    private LocalDate passportExpiry;
+    private String nationality;
+
+    // Document file paths (will be set after S3 upload)
+    private String emiratesIdFrontPath;
+    private String emiratesIdBackPath;
+    private String passportPath;
 }

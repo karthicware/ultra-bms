@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { QuotationStatus, StayType } from '@/types/quotations';
+import { QuotationStatus } from '@/types/quotations';
 
 // ===========================
 // Common Validation Rules
@@ -50,7 +50,6 @@ export const createQuotationSchema = z
     validityDate: futureDateSchema('Validity date'),
     propertyId: z.string().min(1, 'Please select a property'),
     unitId: z.string().min(1, 'Please select a unit'),
-    stayType: z.nativeEnum(StayType),
     baseRent: positiveNumberSchema('Base rent'),
     serviceCharges: nonNegativeNumberSchema('Service charges'),
     parkingSpotId: z.string().uuid().optional().nullable(),
@@ -97,7 +96,6 @@ export const updateQuotationSchema = z
     validityDate: z.date().optional(),
     propertyId: z.string().optional(),
     unitId: z.string().optional(),
-    stayType: z.nativeEnum(StayType).optional(),
     baseRent: positiveNumberSchema('Base rent').optional(),
     serviceCharges: nonNegativeNumberSchema('Service charges').optional(),
     parkingSpotId: z.string().uuid().optional().nullable(),

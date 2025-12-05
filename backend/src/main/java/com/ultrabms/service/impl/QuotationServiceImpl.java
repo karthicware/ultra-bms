@@ -68,12 +68,13 @@ public class QuotationServiceImpl implements QuotationService {
 
         // Create quotation entity
         // SCP-2025-12-02: Changed from parkingSpots count to parkingSpotId (single spot from inventory)
+        // SCP-2025-12-04: Added identity document fields (moved from Lead)
         Quotation quotation = Quotation.builder()
                 .quotationNumber(quotationNumberGenerator.generate())
                 .leadId(request.getLeadId())
                 .propertyId(request.getPropertyId())
                 .unitId(request.getUnitId())
-                .stayType(request.getStayType())
+                .stayType(request.getStayType()) // Optional now
                 .issueDate(request.getIssueDate())
                 .validityDate(request.getValidityDate())
                 .baseRent(request.getBaseRent())
@@ -84,6 +85,15 @@ public class QuotationServiceImpl implements QuotationService {
                 .securityDeposit(request.getSecurityDeposit())
                 .adminFee(request.getAdminFee())
                 .documentRequirements(request.getDocumentRequirements())
+                // Identity document fields
+                .emiratesIdNumber(request.getEmiratesIdNumber())
+                .emiratesIdExpiry(request.getEmiratesIdExpiry())
+                .passportNumber(request.getPassportNumber())
+                .passportExpiry(request.getPassportExpiry())
+                .nationality(request.getNationality())
+                .emiratesIdFrontPath(request.getEmiratesIdFrontPath())
+                .emiratesIdBackPath(request.getEmiratesIdBackPath())
+                .passportPath(request.getPassportPath())
                 .paymentTerms(request.getPaymentTerms())
                 .moveinProcedures(request.getMoveinProcedures())
                 .cancellationPolicy(request.getCancellationPolicy())
@@ -175,6 +185,31 @@ public class QuotationServiceImpl implements QuotationService {
         }
         if (request.getSpecialTerms() != null) {
             quotation.setSpecialTerms(request.getSpecialTerms());
+        }
+        // SCP-2025-12-04: Identity document fields
+        if (request.getEmiratesIdNumber() != null) {
+            quotation.setEmiratesIdNumber(request.getEmiratesIdNumber());
+        }
+        if (request.getEmiratesIdExpiry() != null) {
+            quotation.setEmiratesIdExpiry(request.getEmiratesIdExpiry());
+        }
+        if (request.getPassportNumber() != null) {
+            quotation.setPassportNumber(request.getPassportNumber());
+        }
+        if (request.getPassportExpiry() != null) {
+            quotation.setPassportExpiry(request.getPassportExpiry());
+        }
+        if (request.getNationality() != null) {
+            quotation.setNationality(request.getNationality());
+        }
+        if (request.getEmiratesIdFrontPath() != null) {
+            quotation.setEmiratesIdFrontPath(request.getEmiratesIdFrontPath());
+        }
+        if (request.getEmiratesIdBackPath() != null) {
+            quotation.setEmiratesIdBackPath(request.getEmiratesIdBackPath());
+        }
+        if (request.getPassportPath() != null) {
+            quotation.setPassportPath(request.getPassportPath());
         }
 
         quotation = quotationRepository.save(quotation);
@@ -371,15 +406,17 @@ public class QuotationServiceImpl implements QuotationService {
 
         // Build conversion response with pre-populated data for tenant onboarding
         // SCP-2025-12-02: Changed from parkingSpots to parkingSpotId
+        // SCP-2025-12-04: Identity documents now come from quotation instead of lead
         LeadConversionResponse response = LeadConversionResponse.builder()
                 // Lead information
                 .leadId(lead.getId())
                 .leadNumber(lead.getLeadNumber())
                 .fullName(lead.getFullName())
-                .emiratesId(lead.getEmiratesId())
-                .passportNumber(lead.getPassportNumber())
-                .passportExpiryDate(lead.getPassportExpiryDate())
-                .homeCountry(lead.getHomeCountry())
+                // Identity docs now from quotation
+                .emiratesId(quotation.getEmiratesIdNumber())
+                .passportNumber(quotation.getPassportNumber())
+                .passportExpiryDate(quotation.getPassportExpiry())
+                .homeCountry(quotation.getNationality())
                 .email(lead.getEmail())
                 .contactNumber(lead.getContactNumber())
                 // Quotation information

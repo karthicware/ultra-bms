@@ -60,6 +60,16 @@ export interface Quotation {
   cancellationPolicy: string;
   specialTerms?: string;
 
+  // SCP-2025-12-04: Identity document fields (moved from Lead)
+  emiratesIdNumber?: string;
+  emiratesIdExpiry?: string; // ISO date string
+  passportNumber?: string;
+  passportExpiry?: string; // ISO date string
+  nationality?: string;
+  emiratesIdFrontPath?: string;
+  emiratesIdBackPath?: string;
+  passportPath?: string;
+
   // Status and timestamps
   status: QuotationStatus;
   createdAt: string; // ISO date string
@@ -81,7 +91,6 @@ export interface CreateQuotationRequest {
   validityDate: string; // ISO date string
   propertyId: string;
   unitId: string;
-  stayType: StayType;
   baseRent: number;
   serviceCharges: number;
   parkingSpotId?: string | null; // Optional parking spot UUID
@@ -89,6 +98,16 @@ export interface CreateQuotationRequest {
   securityDeposit: number;
   adminFee: number;
   documentRequirements: string[];
+  // SCP-2025-12-04: Identity document fields (moved from Lead)
+  emiratesIdNumber: string;
+  emiratesIdExpiry: string; // ISO date string
+  passportNumber: string;
+  passportExpiry: string; // ISO date string
+  nationality: string;
+  // Document file paths (set after S3 upload)
+  emiratesIdFrontPath?: string;
+  emiratesIdBackPath?: string;
+  passportPath?: string;
   paymentTerms: string;
   moveinProcedures: string;
   cancellationPolicy: string;
@@ -100,7 +119,6 @@ export interface UpdateQuotationRequest {
   validityDate?: string;
   propertyId?: string;
   unitId?: string;
-  stayType?: StayType;
   baseRent?: number;
   serviceCharges?: number;
   parkingSpotId?: string | null;
@@ -108,6 +126,15 @@ export interface UpdateQuotationRequest {
   securityDeposit?: number;
   adminFee?: number;
   documentRequirements?: string[];
+  // SCP-2025-12-04: Identity document fields (moved from Lead)
+  emiratesIdNumber?: string;
+  emiratesIdExpiry?: string;
+  passportNumber?: string;
+  passportExpiry?: string;
+  nationality?: string;
+  emiratesIdFrontPath?: string;
+  emiratesIdBackPath?: string;
+  passportPath?: string;
   paymentTerms?: string;
   moveinProcedures?: string;
   cancellationPolicy?: string;

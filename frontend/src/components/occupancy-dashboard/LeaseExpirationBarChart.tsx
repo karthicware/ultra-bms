@@ -9,7 +9,6 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   BarChart,
@@ -59,16 +58,12 @@ const COLORS = {
 
 function ChartSkeleton() {
   return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-6 w-56" />
-      </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
-          <Skeleton className="h-full w-full" />
-        </div>
-      </CardContent>
-    </Card>
+    <div className="p-6">
+      <Skeleton className="h-6 w-56 mb-6" />
+      <div className="h-[300px]">
+        <Skeleton className="h-full w-full" />
+      </div>
+    </div>
   );
 }
 
@@ -152,111 +147,107 @@ export function LeaseExpirationBarChart({
   const { monthlyData, totalExpiring } = data;
 
   return (
-    <Card data-testid="lease-expiration-bar-chart">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Lease Expirations by Month</CardTitle>
-          <div className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{totalExpiring}</span>{' '}
-            total expiring
-          </div>
+    <div className="flex flex-col h-full p-6" data-testid="lease-expiration-bar-chart">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="font-semibold text-lg">Lease Expirations by Month</h3>
+        <div className="text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">{totalExpiring}</span>{' '}
+          total expiring
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={monthlyData}
-              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+      </div>
+      <div className="flex-1 min-h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={monthlyData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              className="stroke-muted"
+            />
+            <XAxis
+              dataKey="month"
+              tick={{ fontSize: 12 }}
+              tickLine={false}
+              axisLine={false}
+              className="text-muted-foreground"
+            />
+            <YAxis
+              tick={{ fontSize: 12 }}
+              tickLine={false}
+              axisLine={false}
+              className="text-muted-foreground"
+              allowDecimals={false}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend content={<CustomLegend />} />
+            <Bar
+              dataKey="renewedCount"
+              name="Renewed"
+              stackId="a"
+              fill={COLORS.renewed}
+              radius={[0, 0, 0, 0]}
+              className="cursor-pointer"
+              onClick={(_, index) => handleBarClick(monthlyData[index])}
             >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                className="stroke-muted"
-              />
-              <XAxis
-                dataKey="month"
-                tick={{ fontSize: 12 }}
-                tickLine={false}
-                axisLine={false}
-                className="text-muted-foreground"
-              />
-              <YAxis
-                tick={{ fontSize: 12 }}
-                tickLine={false}
-                axisLine={false}
-                className="text-muted-foreground"
-                allowDecimals={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend content={<CustomLegend />} />
-              <Bar
-                dataKey="renewedCount"
-                name="Renewed"
-                stackId="a"
-                fill={COLORS.renewed}
-                radius={[0, 0, 0, 0]}
-                className="cursor-pointer"
-                onClick={(_, index) => handleBarClick(monthlyData[index])}
-              >
-                {monthlyData.map((_, index) => (
-                  <Cell
-                    key={`renewed-${index}`}
-                    className="cursor-pointer hover:opacity-80 transition-opacity"
-                    data-testid={`bar-renewed-${index}`}
-                  />
-                ))}
-              </Bar>
-              <Bar
-                dataKey="pendingCount"
-                name="Pending"
-                stackId="a"
-                fill={COLORS.pending}
-                radius={[4, 4, 0, 0]}
-                className="cursor-pointer"
-                onClick={(_, index) => handleBarClick(monthlyData[index])}
-              >
-                {monthlyData.map((_, index) => (
-                  <Cell
-                    key={`pending-${index}`}
-                    className="cursor-pointer hover:opacity-80 transition-opacity"
-                    data-testid={`bar-pending-${index}`}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+              {monthlyData.map((_, index) => (
+                <Cell
+                  key={`renewed-${index}`}
+                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                  data-testid={`bar-renewed-${index}`}
+                />
+              ))}
+            </Bar>
+            <Bar
+              dataKey="pendingCount"
+              name="Pending"
+              stackId="a"
+              fill={COLORS.pending}
+              radius={[4, 4, 0, 0]}
+              className="cursor-pointer"
+              onClick={(_, index) => handleBarClick(monthlyData[index])}
+            >
+              {monthlyData.map((_, index) => (
+                <Cell
+                  key={`pending-${index}`}
+                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                  data-testid={`bar-pending-${index}`}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
-        {/* Summary statistics */}
-        <div className="mt-4 grid grid-cols-3 gap-4 border-t pt-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">
-              {monthlyData.reduce((sum, m) => sum + m.renewedCount, 0)}
-            </p>
-            <p className="text-xs text-muted-foreground">Renewed</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-amber-600">
-              {monthlyData.reduce((sum, m) => sum + m.pendingCount, 0)}
-            </p>
-            <p className="text-xs text-muted-foreground">Pending</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold">
-              {totalExpiring > 0
-                ? (
-                    (monthlyData.reduce((sum, m) => sum + m.renewedCount, 0) /
-                      totalExpiring) *
-                    100
-                  ).toFixed(0)
-                : 0}
-              %
-            </p>
-            <p className="text-xs text-muted-foreground">Renewal Rate</p>
-          </div>
+      {/* Summary statistics */}
+      <div className="mt-6 grid grid-cols-3 gap-4 border-t pt-4">
+        <div className="text-center">
+          <p className="text-2xl font-bold text-green-600">
+            {monthlyData.reduce((sum, m) => sum + m.renewedCount, 0)}
+          </p>
+          <p className="text-xs text-muted-foreground">Renewed</p>
         </div>
-      </CardContent>
-    </Card>
+        <div className="text-center">
+          <p className="text-2xl font-bold text-amber-600">
+            {monthlyData.reduce((sum, m) => sum + m.pendingCount, 0)}
+          </p>
+          <p className="text-xs text-muted-foreground">Pending</p>
+        </div>
+        <div className="text-center">
+          <p className="text-2xl font-bold">
+            {totalExpiring > 0
+              ? (
+                  (monthlyData.reduce((sum, m) => sum + m.renewedCount, 0) /
+                    totalExpiring) *
+                  100
+                ).toFixed(0)
+              : 0}
+            %
+          </p>
+          <p className="text-xs text-muted-foreground">Renewal Rate</p>
+        </div>
+      </div>
+    </div>
   );
 }

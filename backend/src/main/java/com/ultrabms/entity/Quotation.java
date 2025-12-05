@@ -50,8 +50,9 @@ public class Quotation {
     @Column(name = "unit_id", nullable = false)
     private UUID unitId;
 
+    // SCP-2025-12-04: Made optional as it's being removed from frontend
     @Enumerated(EnumType.STRING)
-    @Column(name = "stay_type", nullable = false, length = 20)
+    @Column(name = "stay_type", length = 20)
     private StayType stayType;
 
     @Column(name = "issue_date", nullable = false)
@@ -107,6 +108,32 @@ public class Quotation {
 
     @Column(name = "special_terms", columnDefinition = "TEXT")
     private String specialTerms;
+
+    // SCP-2025-12-04: Identity document fields (moved from Lead)
+    @Column(name = "emirates_id_number", length = 50)
+    private String emiratesIdNumber;
+
+    @Column(name = "emirates_id_expiry")
+    private LocalDate emiratesIdExpiry;
+
+    @Column(name = "passport_number", length = 50)
+    private String passportNumber;
+
+    @Column(name = "passport_expiry")
+    private LocalDate passportExpiry;
+
+    @Column(name = "nationality", length = 100)
+    private String nationality;
+
+    // Document file paths (S3 storage)
+    @Column(name = "emirates_id_front_path", length = 500)
+    private String emiratesIdFrontPath;
+
+    @Column(name = "emirates_id_back_path", length = 500)
+    private String emiratesIdBackPath;
+
+    @Column(name = "passport_path", length = 500)
+    private String passportPath;
 
     // Status and timestamps
     @Enumerated(EnumType.STRING)

@@ -9,7 +9,6 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -54,18 +53,14 @@ interface UpcomingLeaseExpirationsProps {
 
 function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-6 w-56" />
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {Array.from({ length: rows }).map((_, index) => (
-            <Skeleton key={index} className="h-12 w-full" />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="p-6">
+      <Skeleton className="h-6 w-56 mb-6" />
+      <div className="space-y-3">
+        {Array.from({ length: rows }).map((_, index) => (
+          <Skeleton key={index} className="h-12 w-full" />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -156,9 +151,9 @@ export function UpcomingLeaseExpirations({
   };
 
   return (
-    <Card data-testid="upcoming-lease-expirations">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">Upcoming Lease Expirations</CardTitle>
+    <div className="p-6" data-testid="upcoming-lease-expirations">
+      <div className="flex flex-row items-center justify-between mb-6">
+        <h3 className="font-semibold text-lg">Upcoming Lease Expirations</h3>
         {showViewAll && hasMoreItems && (
           <Button
             variant="ghost"
@@ -171,8 +166,7 @@ export function UpcomingLeaseExpirations({
             <ChevronRight className="h-4 w-4" />
           </Button>
         )}
-      </CardHeader>
-      <CardContent>
+      </div>
         {displayItems.length === 0 ? (
           <EmptyState />
         ) : (
@@ -297,7 +291,6 @@ export function UpcomingLeaseExpirations({
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+    </div>
   );
 }

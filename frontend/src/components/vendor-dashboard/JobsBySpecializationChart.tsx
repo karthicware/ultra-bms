@@ -5,7 +5,6 @@
  * Story 8.5: Vendor Dashboard (AC-5)
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   BarChart,
@@ -51,33 +50,29 @@ export function JobsBySpecializationChart({ data, isLoading }: JobsBySpecializat
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Jobs by Specialization</CardTitle>
-          <CardDescription>Distribution of completed work across service categories</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
-            <Skeleton className="h-full w-full" />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-6">
+        <div className="space-y-1 mb-6">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="h-[300px] flex items-center justify-center">
+          <Skeleton className="h-full w-full" />
+        </div>
+      </div>
     );
   }
 
   if (!data || data.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Jobs by Specialization</CardTitle>
-          <CardDescription>Distribution of completed work across service categories</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-            No job data available
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-6">
+        <div className="space-y-1 mb-6">
+          <h3 className="font-semibold text-lg">Jobs by Specialization</h3>
+          <p className="text-sm text-muted-foreground">Distribution of completed work across service categories</p>
+        </div>
+        <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+          No job data available
+        </div>
+      </div>
     );
   }
 
@@ -94,48 +89,46 @@ export function JobsBySpecializationChart({ data, isLoading }: JobsBySpecializat
   };
 
   return (
-    <Card data-testid="vendor-jobs-by-specialization-chart">
-      <CardHeader>
-        <CardTitle>Jobs by Specialization</CardTitle>
-        <CardDescription>Distribution of completed work across service categories</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+    <div className="p-6 h-full flex flex-col" data-testid="vendor-jobs-by-specialization-chart">
+      <div className="space-y-1 mb-6">
+        <h3 className="font-semibold text-lg">Jobs by Specialization</h3>
+        <p className="text-sm text-muted-foreground">Distribution of completed work across service categories</p>
+      </div>
+      <div className="flex-1 min-h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={chartData}
+            layout="vertical"
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+            <XAxis type="number" />
+            <YAxis
+              dataKey="name"
+              type="category"
+              width={100}
+              tick={{ fontSize: 12 }}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Bar
+              dataKey="jobCount"
+              name="Jobs"
+              radius={[0, 4, 4, 0]}
+              cursor="pointer"
+              onClick={(_data, index) => handleBarClick(chartData[index])}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-              <XAxis type="number" />
-              <YAxis
-                dataKey="name"
-                type="category"
-                width={100}
-                tick={{ fontSize: 12 }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar
-                dataKey="jobCount"
-                name="Jobs"
-                radius={[0, 4, 4, 0]}
-                cursor="pointer"
-                onClick={(_data, index) => handleBarClick(chartData[index])}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.fill}
-                    data-testid={`vendor-specialization-bar-${entry.specialization}`}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.fill}
+                  data-testid={`vendor-specialization-bar-${entry.specialization}`}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   );
 }
 

@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 import {
   Table,
   TableBody,
@@ -170,184 +171,181 @@ export default function CheckoutsPage() {
     setPage(0);
   };
 
+  // Date for header
+  const today = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto py-8 space-y-8 max-w-7xl">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Checkouts</h1>
-          <p className="text-muted-foreground">Manage tenant checkout and deposit refund processes</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-card p-6 rounded-xl border shadow-sm">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Checkouts</h1>
+          <div className="flex items-center text-muted-foreground text-sm gap-2">
+            <Calendar className="h-4 w-4" />
+            <span>{today}</span>
+            <span className="text-border">|</span>
+            <span>Manage tenant checkout and deposit refund processes</span>
+          </div>
         </div>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <Clock className="h-5 w-5 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.pending}</p>
-                <p className="text-xs text-muted-foreground">Pending</p>
-              </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="shadow-sm">
+          <CardContent className="p-6 flex items-center gap-4">
+            <div className="p-2 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
+              <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground font-medium">Pending</p>
+              <h3 className="text-2xl font-bold">{stats.pending}</h3>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Loader2 className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.inProgress}</p>
-                <p className="text-xs text-muted-foreground">In Progress</p>
-              </div>
+        <Card className="shadow-sm">
+          <CardContent className="p-6 flex items-center gap-4">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+              <Loader2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground font-medium">In Progress</p>
+              <h3 className="text-2xl font-bold">{stats.inProgress}</h3>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.completed}</p>
-                <p className="text-xs text-muted-foreground">Completed</p>
-              </div>
+        <Card className="shadow-sm">
+          <CardContent className="p-6 flex items-center gap-4">
+            <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+              <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground font-medium">Completed</p>
+              <h3 className="text-2xl font-bold">{stats.completed}</h3>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <DollarSign className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.pendingRefunds}</p>
-                <p className="text-xs text-muted-foreground">Pending Refunds</p>
-              </div>
+        <Card className="shadow-sm">
+          <CardContent className="p-6 flex items-center gap-4">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
+              <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground font-medium">Pending Refunds</p>
+              <h3 className="text-2xl font-bold">{stats.pendingRefunds}</h3>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
+      {/* Main Content Card */}
+      <Card className="shadow-sm border">
+        {/* Toolbar */}
+        <div className="p-6 border-b space-y-4">
+          <div className="flex flex-col md:flex-row justify-between gap-4">
+            <div className="relative flex-1 md:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by tenant name, checkout #, property..."
-                className="pl-10"
+                placeholder="Search checkouts..."
+                className="pl-9"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
               />
             </div>
+            
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Statuses</SelectItem>
+                  {Object.entries(STATUS_CONFIG).map(([value, config]) => (
+                    <SelectItem key={value} value={value}>
+                      {config.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {/* Status Filter */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Statuses</SelectItem>
-                {Object.entries(STATUS_CONFIG).map(([value, config]) => (
-                  <SelectItem key={value} value={value}>
-                    {config.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[130px] justify-start text-left font-normal">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {dateFrom ? format(dateFrom, 'dd MMM') : 'From'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <CalendarComponent
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={setDateFrom}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
 
-            {/* Date From */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full md:w-40 justify-start">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  {dateFrom ? format(dateFrom, 'dd MMM') : 'From Date'}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[130px] justify-start text-left font-normal">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {dateTo ? format(dateTo, 'dd MMM') : 'To'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <CalendarComponent
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={setDateTo}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {(searchTerm || statusFilter !== 'ALL' || dateFrom || dateTo) && (
+                <Button variant="ghost" onClick={handleClearFilters}>
+                  Clear
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  mode="single"
-                  selected={dateFrom}
-                  onSelect={setDateFrom}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-
-            {/* Date To */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full md:w-40 justify-start">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  {dateTo ? format(dateTo, 'dd MMM') : 'To Date'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  mode="single"
-                  selected={dateTo}
-                  onSelect={setDateTo}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-
-            {/* Clear Filters */}
-            {(searchTerm || statusFilter !== 'ALL' || dateFrom || dateTo) && (
-              <Button variant="ghost" onClick={handleClearFilters}>
-                Clear Filters
-              </Button>
-            )}
+              )}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Checkouts Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Checkouts</CardTitle>
-          <CardDescription>
-            {totalCount} checkout{totalCount !== 1 ? 's' : ''} found
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        {/* Table Content */}
+        <CardContent className="p-0">
           {isLoading ? (
-            <div className="space-y-4">
+            <div className="p-6 space-y-4">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
           ) : checkouts.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <div className="text-center py-16">
+              <div className="bg-muted/30 p-4 rounded-full inline-block mb-4">
+                <FileText className="h-8 w-8 text-muted-foreground" />
+              </div>
               <h3 className="text-lg font-medium">No checkouts found</h3>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mt-1">
                 {searchTerm || statusFilter !== 'ALL' || dateFrom || dateTo
-                  ? 'Try adjusting your filters'
-                  : 'No checkouts have been initiated yet'}
+                  ? 'Try adjusting your filters to find what you looking for.'
+                  : 'No checkout records available.'}
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>
-                  <TableHead>Checkout #</TableHead>
+                  <TableHead className="pl-6">Checkout #</TableHead>
                   <TableHead>Tenant</TableHead>
                   <TableHead>Property / Unit</TableHead>
                   <TableHead>Move-out Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Refund</TableHead>
-                  <TableHead className="w-12"></TableHead>
+                  <TableHead className="w-12 pr-6"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -361,8 +359,8 @@ export default function CheckoutsPage() {
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => handleViewCheckout(checkout)}
                     >
-                      <TableCell>
-                        <span className="font-mono text-sm">{checkout.checkoutNumber}</span>
+                      <TableCell className="pl-6">
+                        <span className="font-mono text-sm font-medium">{checkout.checkoutNumber}</span>
                       </TableCell>
                       <TableCell>
                         <div>
@@ -384,8 +382,8 @@ export default function CheckoutsPage() {
                           : 'N/A'}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={statusConfig?.variant ?? 'secondary'}>
-                          <StatusIcon className="h-3 w-3 mr-1" />
+                        <Badge variant={statusConfig?.variant ?? 'secondary'} className="gap-1">
+                          <StatusIcon className="h-3 w-3" />
                           {statusConfig?.label ?? checkout.status}
                         </Badge>
                       </TableCell>
@@ -403,10 +401,10 @@ export default function CheckoutsPage() {
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="pr-6">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -427,7 +425,7 @@ export default function CheckoutsPage() {
 
           {/* Pagination Footer */}
           {checkouts.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t bg-muted/5">
             <div className="text-sm text-muted-foreground">
               Showing {checkouts.length} of {totalCount} checkouts
             </div>
@@ -483,10 +481,6 @@ export default function CheckoutsPage() {
                 </PaginationContent>
               </Pagination>
             )}
-
-            <div className="text-sm text-muted-foreground">
-              Page {page + 1} of {Math.ceil(totalCount / pageSize) || 1}
-            </div>
           </div>
           )}
         </CardContent>

@@ -483,3 +483,71 @@ export async function getDashboardMetrics(): Promise<QuotationDashboard> {
   );
   return response.data.data;
 }
+
+// =================================================================
+// DOCUMENT UPLOAD FUNCTIONS - SCP-2025-12-04
+// =================================================================
+
+/**
+ * Upload identity document for quotation
+ *
+ * Uploads a document file to S3 and returns the file path.
+ * Supported document types: emirates_id_front, emirates_id_back, passport
+ *
+ * @param file - The file to upload (JPG, PNG, or PDF, max 5MB)
+ * @param documentType - Type of document: 'emirates_id_front' | 'emirates_id_back' | 'passport'
+ * @returns Promise that resolves to the S3 file path
+ *
+ * @throws {ValidationException} When file type or size is invalid (400)
+ * @throws {UnauthorizedException} When JWT token is missing or invalid (401)
+ *
+ * @example
+ * ```typescript
+ * const filePath = await uploadQuotationDocument(file, 'emirates_id_front');
+ * console.log(filePath); // "quotations/identity-documents/emirates_id_front/abc123.pdf"
+ * ```
+ */
+export async function uploadQuotationDocument(
+  file: File,
+  documentType: 'emirates_id_front' | 'emirates_id_back' | 'passport'
+): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('documentType', documentType);
+
+  const response = await apiClient.post<{
+    success: boolean;
+    data: { filePath: string; documentType: string };
+    message: string;
+  }>(`${QUOTATIONS_BASE_PATH}/documents/upload`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data.data.filePath;
+}
+
+/**
+ * Get presigned download URL for a quotation document
+ *
+ * @param filePath - S3 file path of the document
+ * @returns Promise that resolves to presigned URL (valid for 5 minutes)
+ *
+ * @example
+ * ```typescript
+ * const url = await getQuotationDocumentUrl('quotations/identity-documents/emirates_id_front/abc123.pdf');
+ * window.open(url, '_blank');
+ * ```
+ */
+export async function getQuotationDocumentUrl(filePath: string): Promise<string> {
+  const response = await apiClient.get<{
+    success: boolean;
+    data: { downloadUrl: string; filePath: string; validFor: string };
+    message: string;
+  }>(`${QUOTATIONS_BASE_PATH}/documents/download`, {
+    params: { filePath },
+  });
+
+  return response.data.data.downloadUrl;
+}

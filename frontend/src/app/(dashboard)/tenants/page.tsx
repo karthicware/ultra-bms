@@ -8,11 +8,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getAllTenants } from '@/services/tenant.service';
 import type { TenantResponse } from '@/types/tenant';
-import { Plus, Users } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 import TenantsDatatable from '@/components/tenants/TenantsDatatable';
 
 export default function TenantsPage() {
@@ -45,42 +45,51 @@ export default function TenantsPage() {
     router.push('/tenants/create');
   };
 
+  // Date for header
+  const today = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-48" />
+      <div className="container mx-auto py-8 space-y-8 max-w-7xl">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-card p-6 rounded-xl border shadow-sm">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
           <Skeleton className="h-10 w-32" />
         </div>
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-          </CardContent>
+        <Card className="border-none shadow-sm">
+          <div className="p-6 space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-96 w-full" />
+          </div>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto py-8 space-y-8 max-w-7xl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Users className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Tenants</h1>
-            <p className="text-muted-foreground">
-              Manage tenants and view lease information
-            </p>
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between bg-card p-6 rounded-xl border shadow-sm">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Tenants</h1>
+          <div className="flex items-center text-muted-foreground text-sm gap-2">
+            <Calendar className="h-4 w-4" />
+            <span>{today}</span>
+            <span className="text-border">|</span>
+            <span>Manage tenants and view lease information</span>
           </div>
         </div>
         <Button
           onClick={handleCreateTenant}
           data-testid="btn-create-tenant"
-          className="gap-2"
+          className="gap-2 shadow-sm"
         >
           <Plus className="h-4 w-4" />
           Add Tenant
@@ -88,7 +97,7 @@ export default function TenantsPage() {
       </div>
 
       {/* Datatable */}
-      <Card className="py-0">
+      <Card className="shadow-sm border">
         <TenantsDatatable data={tenants} />
       </Card>
     </div>

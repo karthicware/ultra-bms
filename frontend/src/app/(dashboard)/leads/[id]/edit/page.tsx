@@ -10,21 +10,17 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
 import {
   ArrowLeft,
-  CalendarIcon,
   UserIcon,
   MailIcon,
   PhoneIcon,
-  CreditCardIcon,
   GlobeIcon,
-  FileTextIcon,
   BuildingIcon,
   MessageSquareIcon,
   SparklesIcon,
+  FileTextIcon,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -43,12 +39,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -71,10 +61,6 @@ export default function EditLeadPage() {
     reValidateMode: 'onChange',
     defaultValues: {
       fullName: '',
-      emiratesId: '',
-      passportNumber: '',
-      passportExpiryDate: undefined,
-      homeCountry: '',
       email: '',
       contactNumber: '',
       leadSource: LeadSource.WEBSITE,
@@ -93,10 +79,6 @@ export default function EditLeadPage() {
         // Populate form with existing data
         form.reset({
           fullName: leadData.fullName,
-          emiratesId: leadData.emiratesId,
-          passportNumber: leadData.passportNumber,
-          passportExpiryDate: new Date(leadData.passportExpiryDate),
-          homeCountry: leadData.homeCountry,
           email: leadData.email,
           contactNumber: leadData.contactNumber,
           leadSource: leadData.leadSource,
@@ -122,13 +104,7 @@ export default function EditLeadPage() {
     try {
       setIsSubmitting(true);
 
-      // Convert date to ISO string if present
-      const payload = {
-        ...data,
-        passportExpiryDate: data.passportExpiryDate?.toISOString(),
-      };
-
-      await updateLead(leadId, payload);
+      await updateLead(leadId, data);
 
       toast({
         title: 'Success',
@@ -269,141 +245,6 @@ export default function EditLeadPage() {
                   )}
                 />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Identity Documents */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Identity Documents</CardTitle>
-              <CardDescription>Emirates ID and passport information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <FormField
-                control={form.control}
-                name="emiratesId"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <Label htmlFor="emiratesId" className="flex items-center gap-1">
-                      Emirates ID <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="relative">
-                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <CreditCardIcon className="size-4" />
-                      </div>
-                      <FormControl>
-                        <Input
-                          id="emiratesId"
-                          className="pl-9"
-                          placeholder="784-1234-1234567-1"
-                          {...field}
-                          data-testid="input-lead-emirates-id"
-                        />
-                      </FormControl>
-                    </div>
-                    <p className="text-muted-foreground text-xs">Format: XXX-XXXX-XXXXXXX-X</p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="passportNumber"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <Label htmlFor="passportNumber" className="flex items-center gap-1">
-                        Passport Number <span className="text-destructive">*</span>
-                      </Label>
-                      <div className="relative">
-                        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                          <FileTextIcon className="size-4" />
-                        </div>
-                        <FormControl>
-                          <Input
-                            id="passportNumber"
-                            className="pl-9"
-                            placeholder="A12345678"
-                            {...field}
-                            data-testid="input-lead-passport"
-                          />
-                        </FormControl>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="passportExpiryDate"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <Label className="flex items-center gap-1">
-                        Passport Expiry Date <span className="text-destructive">*</span>
-                      </Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                'w-full pl-3 text-left font-normal',
-                                !field.value && 'text-muted-foreground'
-                              )}
-                              data-testid="btn-passport-expiry-date"
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {field.value ? (
-                                format(field.value, 'PPP')
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date < new Date()}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="homeCountry"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <Label htmlFor="homeCountry" className="flex items-center gap-1">
-                      Home Country <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="relative">
-                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <GlobeIcon className="size-4" />
-                      </div>
-                      <FormControl>
-                        <Input
-                          id="homeCountry"
-                          className="pl-9"
-                          placeholder="United Kingdom"
-                          {...field}
-                        />
-                      </FormControl>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </CardContent>
           </Card>
 

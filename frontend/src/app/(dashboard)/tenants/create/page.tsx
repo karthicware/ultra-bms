@@ -8,16 +8,14 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { differenceInMonths } from 'date-fns';
 
-import { ArrowLeft, Users } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Stepper,
   StepperDescription,
@@ -38,12 +36,6 @@ import { ReviewSubmitStep } from '@/components/tenants/ReviewSubmitStep';
 
 import { createTenant, getLeadConversionData } from '@/services/tenant.service';
 import {
-  personalInfoSchema,
-  leaseInfoSchema,
-  rentBreakdownSchema,
-  parkingAllocationSchema,
-  paymentScheduleSchema,
-  documentUploadSchema,
   calculateLeaseDuration,
   calculateTotalMonthlyRent,
 } from '@/lib/validations/tenant';
@@ -342,7 +334,7 @@ function CreateTenantWizard() {
         submitData.append('mulkiyaFile', formData.parkingAllocation.mulkiyaFile);
       }
       if (formData.documentUpload.additionalFiles && formData.documentUpload.additionalFiles.length > 0) {
-        formData.documentUpload.additionalFiles.forEach((file, index) => {
+        formData.documentUpload.additionalFiles.forEach((file) => {
           submitData.append(`additionalFiles`, file);
         });
       }
@@ -386,32 +378,29 @@ function CreateTenantWizard() {
   }
 
   return (
-    <div className="container mx-auto py-6 max-w-4xl" data-testid="wizard-tenant-create">
+    <div className="container mx-auto py-8 space-y-8 max-w-5xl" data-testid="wizard-tenant-create">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/tenants')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <div className="flex items-center gap-3">
-              <Users className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold">Tenant Onboarding</h1>
-            </div>
-            <p className="text-muted-foreground mt-2">
-              Complete the 7-step wizard to register a new tenant
-            </p>
+      <div className="bg-card p-6 rounded-xl border shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => router.push('/tenants')} className="-ml-2">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold tracking-tight">Tenant Onboarding</h1>
           </div>
+          <p className="text-muted-foreground text-sm pl-10">
+            Complete the 7-step wizard to register a new tenant
+          </p>
         </div>
         {isLeadConversion && (
-          <Badge variant="secondary" className="mt-2" data-testid="badge-prefilled-from-quotation">
+          <Badge variant="secondary" className="text-sm py-1 px-3" data-testid="badge-prefilled-from-quotation">
             Pre-filled from Quotation #{fromQuotation}
           </Badge>
         )}
       </div>
 
       {/* Stepper Navigation */}
-      <Card className="mb-6">
+      <Card className="shadow-sm border">
         <CardContent className="pt-6">
           <Stepper
             value={parseInt(currentStep)}
@@ -431,8 +420,8 @@ function CreateTenantWizard() {
                 <StepperTrigger className="flex-col gap-2 rounded">
                   <StepperIndicator className="size-8" />
                   <div className="space-y-0.5 px-1 text-center">
-                    <StepperTitle className="text-xs sm:text-sm">{title}</StepperTitle>
-                    <StepperDescription className="hidden lg:block text-xs">
+                    <StepperTitle className="text-xs sm:text-sm font-medium">{title}</StepperTitle>
+                    <StepperDescription className="hidden lg:block text-xs text-muted-foreground">
                       {description}
                     </StepperDescription>
                   </div>
@@ -447,10 +436,11 @@ function CreateTenantWizard() {
       </Card>
 
       {/* Wizard Content */}
-      <Tabs value={currentStep} className="w-full">
+      <div className="mt-6">
+        <Tabs value={currentStep} className="w-full">
 
         {/* Step 1: Personal Information */}
-        <TabsContent value="1">
+        <TabsContent value="1" className="mt-0">
           <PersonalInfoStep
             data={formData.personalInfo}
             onComplete={(data) => handleStepComplete(data, 1)}
@@ -459,7 +449,7 @@ function CreateTenantWizard() {
         </TabsContent>
 
         {/* Step 2: Lease Information */}
-        <TabsContent value="2">
+        <TabsContent value="2" className="mt-0">
           <LeaseInfoStep
             data={formData.leaseInfo}
             onComplete={(data) => handleStepComplete(data, 2)}
@@ -468,7 +458,7 @@ function CreateTenantWizard() {
         </TabsContent>
 
         {/* Step 3: Rent Breakdown */}
-        <TabsContent value="3">
+        <TabsContent value="3" className="mt-0">
           <RentBreakdownStep
             data={formData.rentBreakdown}
             onComplete={(data) => handleStepComplete(data, 3)}
@@ -477,7 +467,7 @@ function CreateTenantWizard() {
         </TabsContent>
 
         {/* Step 4: Parking Allocation */}
-        <TabsContent value="4">
+        <TabsContent value="4" className="mt-0">
           <ParkingAllocationStep
             data={formData.parkingAllocation}
             onComplete={(data) => handleStepComplete(data, 4)}
@@ -487,7 +477,7 @@ function CreateTenantWizard() {
         </TabsContent>
 
         {/* Step 5: Payment Schedule */}
-        <TabsContent value="5">
+        <TabsContent value="5" className="mt-0">
           <PaymentScheduleStep
             data={formData.paymentSchedule}
             totalMonthlyRent={formData.rentBreakdown.totalMonthlyRent}
@@ -497,7 +487,7 @@ function CreateTenantWizard() {
         </TabsContent>
 
         {/* Step 6: Document Upload */}
-        <TabsContent value="6">
+        <TabsContent value="6" className="mt-0">
           <DocumentUploadStep
             data={formData.documentUpload}
             onComplete={(data) => handleStepComplete(data, 6)}
@@ -506,7 +496,7 @@ function CreateTenantWizard() {
         </TabsContent>
 
         {/* Step 7: Review and Submit */}
-        <TabsContent value="7">
+        <TabsContent value="7" className="mt-0">
           <ReviewSubmitStep
             formData={formData}
             onSubmit={handleFinalSubmit}
@@ -516,6 +506,7 @@ function CreateTenantWizard() {
           />
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }
@@ -523,10 +514,14 @@ function CreateTenantWizard() {
 export default function CreateTenantPage() {
   return (
     <Suspense fallback={
-      <div className="container max-w-6xl mx-auto py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Create New Tenant</h1>
-          <p className="text-muted-foreground">Loading...</p>
+      <div className="container max-w-5xl mx-auto py-8 space-y-8">
+        <div className="bg-card p-6 rounded-xl border shadow-sm">
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="space-y-4">
+           <Skeleton className="h-24 w-full rounded-xl" />
+           <Skeleton className="h-96 w-full rounded-xl" />
         </div>
       </div>
     }>

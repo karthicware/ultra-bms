@@ -92,10 +92,6 @@ export interface LeadHistory {
 
 export interface CreateLeadRequest {
   fullName: string;
-  emiratesId: string;
-  passportNumber: string;
-  passportExpiryDate: string; // ISO date string or date object
-  homeCountry: string;
   email: string;
   contactNumber: string;
   leadSource: LeadSource;

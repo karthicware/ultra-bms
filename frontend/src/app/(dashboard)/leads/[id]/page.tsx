@@ -19,6 +19,12 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -49,7 +55,8 @@ import {
   ArrowLeft,
   Plus,
   Trash2,
-  PencilIcon
+  PencilIcon,
+  MoreVertical
 } from 'lucide-react';
 import DocumentList from '@/components/leads/document-list';
 
@@ -249,23 +256,45 @@ export default function LeadDetailPage() {
             </div>
           </div>
         </div>
-        <div className="flex gap-3 w-full md:w-auto">
+        <div className="flex items-center gap-2 w-full md:w-auto">
           <Button 
             variant="outline"
-            className="flex-1 md:flex-none"
+            className="hidden md:flex"
             onClick={() => router.push(`/leads/${leadId}/edit`)}
           >
             <PencilIcon className="mr-2 h-4 w-4" />
             Edit Lead
           </Button>
 
+          <Button 
+            onClick={() => router.push(`/quotations/create?leadId=${leadId}`)} 
+            className="flex-1 md:flex-none"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create Quotation
+          </Button>
+
           <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" className="flex-1 md:flex-none text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Lead
-              </Button>
-            </AlertDialogTrigger>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => router.push(`/leads/${leadId}/edit`)} className="md:hidden">
+                  <PencilIcon className="mr-2 h-4 w-4" />
+                  Edit Lead
+                </DropdownMenuItem>
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50" onSelect={(e) => e.preventDefault()}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Lead
+                  </DropdownMenuItem>
+                </AlertDialogTrigger>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Lead</AlertDialogTitle>
@@ -281,14 +310,6 @@ export default function LeadDetailPage() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-
-          <Button 
-            onClick={() => router.push(`/quotations/create?leadId=${leadId}`)} 
-            className="flex-1 md:flex-none"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Quotation
-          </Button>
         </div>
       </div>
 

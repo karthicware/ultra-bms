@@ -17,9 +17,9 @@
  */
 
 import { useState, useCallback } from 'react';
-import { useAuth } from '@/contexts/auth-context';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { AlertCircle, RefreshCw, Building2 } from 'lucide-react';
+import { AlertCircle, RefreshCw, Building2, Calendar } from 'lucide-react';
 
 // Occupancy Dashboard components
 import {
@@ -78,7 +78,7 @@ function OccupancyDashboardFilters({
           defaultValue="all"
           disabled={isLoading || loadingProperties}
         >
-          <SelectTrigger className="w-[200px]" data-testid="property-filter">
+          <SelectTrigger className="w-[200px] bg-background" data-testid="property-filter">
             <SelectValue placeholder="Select property" />
           </SelectTrigger>
           <SelectContent>
@@ -100,7 +100,6 @@ function OccupancyDashboardFilters({
 // ============================================================================
 
 export default function OccupancyDashboardPage() {
-  const { user } = useAuth();
   const [filters, setFilters] = useState<OccupancyFilterValues>({});
 
   // Fetch dashboard data with React Query (AC-16: renders on page load)
@@ -123,40 +122,55 @@ export default function OccupancyDashboardPage() {
     refetch();
   }, [refetch]);
 
+  // Get current date formatted
+  const today = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   return (
     <div
-      className="container mx-auto space-y-6 py-6"
+      className="container mx-auto space-y-8 py-8 max-w-7xl"
       data-testid="occupancy-dashboard-page"
     >
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-card p-6 rounded-xl border shadow-sm">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Occupancy Dashboard
           </h1>
-          <p className="text-muted-foreground">
-            Portfolio occupancy metrics and lease management insights
-          </p>
+          <div className="flex items-center text-muted-foreground text-sm gap-2">
+            <Calendar className="h-4 w-4" />
+            <span>{today}</span>
+            <span className="text-border">|</span>
+            <span>Portfolio occupancy metrics and lease insights</span>
+          </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={isFetching}
-          data-testid="refresh-button"
-        >
-          <RefreshCw
-            className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`}
-          />
-          {isFetching ? 'Refreshing...' : 'Refresh'}
-        </Button>
+        
+        <div className="flex flex-col sm:flex-row gap-3 items-center">
+          <div className="bg-background rounded-md border px-3 py-1">
+             <OccupancyDashboardFilters
+              onFilterChange={handleFilterChange}
+              isLoading={isLoading}
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="default"
+            onClick={handleRefresh}
+            disabled={isFetching}
+            data-testid="refresh-button"
+            className="shrink-0"
+          >
+            <RefreshCw
+              className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`}
+            />
+            {isFetching ? 'Refreshing...' : 'Refresh Data'}
+          </Button>
+        </div>
       </div>
-
-      {/* Property Filter */}
-      <OccupancyDashboardFilters
-        onFilterChange={handleFilterChange}
-        isLoading={isLoading}
-      />
 
       {/* Error State */}
       {isError && (
@@ -172,31 +186,40 @@ export default function OccupancyDashboardPage() {
       )}
 
       {/* KPI Cards - AC-1 to AC-4 */}
-      <OccupancyKpiCards
-        kpis={dashboardData?.kpis ?? null}
-        isLoading={isLoading}
-        expiryPeriodDays={dashboardData?.expiryPeriodDays ?? 100}
-      />
+      <section>
+        <h2 className="text-lg font-semibold mb-4 tracking-tight">Key Performance Indicators</h2>
+        <OccupancyKpiCards
+          kpis={dashboardData?.kpis ?? null}
+          isLoading={isLoading}
+          expiryPeriodDays={dashboardData?.expiryPeriodDays ?? 100}
+        />
+      </section>
 
-      {/* Charts Row - AC-5 and AC-6 (AC-13: Uses Recharts, AC-17: Responsive) */}
+      <Separator className="my-6" />
+
+      {/* Charts Row - AC-5 and AC-6 */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Portfolio Occupancy Donut Chart - AC-5 */}
-        <PortfolioOccupancyChart
-          data={dashboardData?.occupancyChart ?? null}
-          isLoading={isLoading}
-        />
+        <div className="bg-card rounded-xl border shadow-sm overflow-hidden p-1">
+          <PortfolioOccupancyChart
+            data={dashboardData?.occupancyChart ?? null}
+            isLoading={isLoading}
+          />
+        </div>
 
         {/* Lease Expiration Bar Chart - AC-6 */}
-        <LeaseExpirationBarChart
-          data={dashboardData?.leaseExpirationChart ?? null}
-          isLoading={isLoading}
-        />
+        <div className="bg-card rounded-xl border shadow-sm overflow-hidden p-1">
+          <LeaseExpirationBarChart
+            data={dashboardData?.leaseExpirationChart ?? null}
+            isLoading={isLoading}
+          />
+        </div>
       </div>
 
-      {/* Detail Section - AC-7 and AC-8 (AC-17: Responsive) */}
+      {/* Detail Section - AC-7 and AC-8 */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Upcoming Lease Expirations Table - AC-7 */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 bg-card rounded-xl border shadow-sm overflow-hidden">
           <UpcomingLeaseExpirations
             items={dashboardData?.upcomingExpirations ?? null}
             isLoading={isLoading}
@@ -206,7 +229,7 @@ export default function OccupancyDashboardPage() {
         </div>
 
         {/* Lease Activity Feed - AC-8 */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 bg-card rounded-xl border shadow-sm overflow-hidden">
           <LeaseActivityFeed
             activities={dashboardData?.recentActivity ?? null}
             isLoading={isLoading}
