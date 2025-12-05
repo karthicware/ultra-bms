@@ -4,6 +4,7 @@
  * Expense List Page
  * Story 6.2: Expense Management and Vendor Payments
  * AC #6: Expense list with filtering by date range, category, property, vendor, payment status
+ * Updated: Redesigned with neutral styling and improved layout
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -20,11 +21,11 @@ import {
 } from '@/types/expense';
 import {
   Plus,
-  DollarSign,
   Clock,
-  CheckCircle,
-  CreditCard,
-  Receipt,
+  CheckCircle2,
+  CreditCardIcon,
+  ReceiptIcon,
+  WalletIcon,
 } from 'lucide-react';
 import { ExpenseSummaryCharts } from '@/components/expenses/ExpenseSummaryCharts';
 import ExpensesDatatable from '@/components/expenses/ExpensesDatatable';
@@ -93,7 +94,9 @@ export default function ExpensesPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center">
+            <WalletIcon className="h-4 w-4 text-foreground" />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
@@ -105,7 +108,9 @@ export default function ExpensesPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Paid</CardTitle>
-          <CheckCircle className="h-4 w-4 text-green-500" />
+          <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center">
+             <CheckCircle2 className="h-4 w-4 text-foreground" />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-green-600">
@@ -119,7 +124,9 @@ export default function ExpensesPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Pending</CardTitle>
-          <Clock className="h-4 w-4 text-amber-500" />
+          <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center">
+            <Clock className="h-4 w-4 text-foreground" />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-amber-600">
@@ -133,7 +140,9 @@ export default function ExpensesPage() {
       <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={handleViewPendingPayments}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Vendor Payments</CardTitle>
-          <CreditCard className="h-4 w-4 text-blue-500" />
+           <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center">
+            <CreditCardIcon className="h-4 w-4 text-foreground" />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-blue-600">
@@ -147,9 +156,12 @@ export default function ExpensesPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto space-y-6" data-testid="page-expenses">
+      <div className="container mx-auto max-w-7xl p-6 space-y-8" data-testid="page-expenses">
         <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-48" />
+          <div>
+             <Skeleton className="h-10 w-48 mb-2" />
+             <Skeleton className="h-4 w-64" />
+          </div>
           <div className="flex gap-2">
             <Skeleton className="h-10 w-40" />
             <Skeleton className="h-10 w-32" />
@@ -174,21 +186,23 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="container mx-auto space-y-6" data-testid="page-expenses">
+    <div className="container mx-auto max-w-7xl p-6 space-y-8" data-testid="page-expenses">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Receipt className="h-8 w-8 text-primary" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center hidden sm:flex">
+            <ReceiptIcon className="h-5 w-5 text-foreground" />
+          </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Expenses</h1>
             <p className="text-muted-foreground">
-              Manage expenses and vendor payments
+              Manage operational expenses and vendor payments
             </p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleViewPendingPayments}>
-            <CreditCard className="mr-2 h-4 w-4" />
+            <CreditCardIcon className="mr-2 h-4 w-4" />
             Pending Payments
           </Button>
           <Button onClick={handleCreateExpense}>
@@ -205,7 +219,7 @@ export default function ExpensesPage() {
       <ExpenseSummaryCharts summary={summary} isLoading={isLoading} />
 
       {/* Datatable */}
-      <Card className="py-0">
+      <Card className="py-0 border-none shadow-none">
         <ExpensesDatatable data={expenses} />
       </Card>
     </div>

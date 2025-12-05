@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getInvoices, getInvoiceSummary } from '@/services/invoice.service';
@@ -24,7 +24,7 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  FileText,
+  Calendar
 } from 'lucide-react';
 import InvoicesDatatable from '@/components/invoices/InvoicesDatatable';
 
@@ -82,59 +82,78 @@ export default function InvoicesPage() {
     router.push('/invoices/new');
   };
 
+  // Date for header
+  const today = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   // Summary cards
   const SummaryCards = () => (
-    <div className="grid gap-4 md:grid-cols-4 mb-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Invoiced</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {summary ? formatCurrency(summary.totalInvoiced) : <Skeleton className="h-8 w-24" />}
+    <div className="grid gap-4 md:grid-cols-4">
+      <Card className="shadow-sm">
+        <CardContent className="p-6 flex items-center gap-4">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <DollarSign className="h-6 w-6 text-primary" />
           </div>
-          <p className="text-xs text-muted-foreground">This month</p>
+          <div>
+            <p className="text-sm text-muted-foreground font-medium">Total Invoiced</p>
+            <h3 className="text-2xl font-bold">
+              {summary ? formatCurrency(summary.totalInvoiced) : <Skeleton className="h-8 w-24" />}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">This month</p>
+          </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Collected</CardTitle>
-          <CheckCircle className="h-4 w-4 text-green-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-green-600">
-            {summary ? formatCurrency(summary.totalCollected) : <Skeleton className="h-8 w-24" />}
+
+      <Card className="shadow-sm">
+        <CardContent className="p-6 flex items-center gap-4">
+          <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+            <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
           </div>
-          <p className="text-xs text-muted-foreground">
-            {summary ? `${summary.collectionRate.toFixed(1)}% collection rate` : ''}
-          </p>
+          <div>
+            <p className="text-sm text-muted-foreground font-medium">Collected</p>
+            <h3 className="text-2xl font-bold text-green-600">
+              {summary ? formatCurrency(summary.totalCollected) : <Skeleton className="h-8 w-24" />}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              {summary ? `${summary.collectionRate.toFixed(1)}% rate` : ''}
+            </p>
+          </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
-          <Clock className="h-4 w-4 text-amber-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-amber-600">
-            {summary ? formatCurrency(summary.totalOutstanding) : <Skeleton className="h-8 w-24" />}
+
+      <Card className="shadow-sm">
+        <CardContent className="p-6 flex items-center gap-4">
+          <div className="p-2 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
+            <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
           </div>
-          <p className="text-xs text-muted-foreground">Pending payment</p>
+          <div>
+            <p className="text-sm text-muted-foreground font-medium">Outstanding</p>
+            <h3 className="text-2xl font-bold text-amber-600">
+              {summary ? formatCurrency(summary.totalOutstanding) : <Skeleton className="h-8 w-24" />}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">Pending payment</p>
+          </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-          <AlertCircle className="h-4 w-4 text-red-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-red-600">
-            {summary ? formatCurrency(summary.overdueAmount) : <Skeleton className="h-8 w-24" />}
+
+      <Card className="shadow-sm">
+        <CardContent className="p-6 flex items-center gap-4">
+          <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
+            <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
           </div>
-          <p className="text-xs text-muted-foreground">
-            {summary ? `${summary.overdueCount} invoices` : ''}
-          </p>
+          <div>
+            <p className="text-sm text-muted-foreground font-medium">Overdue</p>
+            <h3 className="text-2xl font-bold text-red-600">
+              {summary ? formatCurrency(summary.overdueAmount) : <Skeleton className="h-8 w-24" />}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              {summary ? `${summary.overdueCount} invoices` : ''}
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -142,44 +161,44 @@ export default function InvoicesPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-48" />
+      <div className="container mx-auto py-8 space-y-8 max-w-7xl">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-card p-6 rounded-xl border shadow-sm">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
           <Skeleton className="h-10 w-32" />
         </div>
         <div className="grid gap-4 md:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <Skeleton className="h-20 w-full" />
-              </CardContent>
-            </Card>
+            <Skeleton key={i} className="h-24 w-full rounded-xl" />
           ))}
         </div>
-        <Card>
-          <CardContent className="p-6">
-            <Skeleton className="h-64 w-full" />
-          </CardContent>
+        <Card className="border-none shadow-sm">
+          <div className="p-6 space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-96 w-full" />
+          </div>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto space-y-6">
+    <div className="container mx-auto py-8 space-y-8 max-w-7xl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <FileText className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
-            <p className="text-muted-foreground">
-              Manage rent invoices and track payments
-            </p>
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between bg-card p-6 rounded-xl border shadow-sm">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Invoices</h1>
+          <div className="flex items-center text-muted-foreground text-sm gap-2">
+            <Calendar className="h-4 w-4" />
+            <span>{today}</span>
+            <span className="text-border">|</span>
+            <span>Manage rent invoices and track payments</span>
           </div>
         </div>
-        <Button onClick={handleCreateInvoice}>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button onClick={handleCreateInvoice} className="gap-2 shadow-sm">
+          <Plus className="h-4 w-4" />
           Create Invoice
         </Button>
       </div>
@@ -188,7 +207,7 @@ export default function InvoicesPage() {
       <SummaryCards />
 
       {/* Datatable */}
-      <Card className="py-0">
+      <Card className="shadow-sm border">
         <InvoicesDatatable data={invoices} />
       </Card>
     </div>

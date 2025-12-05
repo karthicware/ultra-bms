@@ -24,6 +24,11 @@ import {
   Megaphone,
   ShieldCheck,
   BarChart3,
+  Sparkles,
+  ChevronsUpDown,
+  BadgeCheck,
+  Bell,
+  HelpCircle,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -40,6 +45,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarRail,
 } from '@/components/ui/sidebar';
 import {
   Collapsible,
@@ -49,11 +55,15 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { usePermission, useAuth } from '@/contexts/auth-context';
 import { useState, useEffect } from 'react';
 import { getMyProfile } from '@/services/user-profile.service';
@@ -269,22 +279,35 @@ function SidebarGroupedMenuItems({
 
   return (
     <SidebarGroup>
-      {groupLabel && <SidebarGroupLabel>{groupLabel}</SidebarGroupLabel>}
+      {groupLabel && (
+        <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 px-3">
+          {groupLabel}
+        </SidebarGroupLabel>
+      )}
       <SidebarGroupContent>
         <SidebarMenu>
           {filteredItems.map((item) =>
             item.items ? (
-              <Collapsible className="group/collapsible" key={item.label} defaultOpen={item.label === 'Dashboards'}>
+              <Collapsible
+                className="group/collapsible"
+                key={item.label}
+                defaultOpen={item.label === 'Dashboards'}
+              >
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip={item.label} className="truncate">
-                      <item.icon className="size-4" />
-                      <span>{item.label}</span>
-                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    <SidebarMenuButton
+                      tooltip={item.label}
+                      className="truncate group/menu-button hover:bg-primary/5 transition-colors rounded-lg mx-1"
+                    >
+                      <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-muted/50 group-hover/menu-button:bg-primary/10 transition-colors">
+                        <item.icon className="size-4 text-muted-foreground group-hover/menu-button:text-primary transition-colors" />
+                      </div>
+                      <span className="font-medium">{item.label}</span>
+                      <ChevronRight className="ml-auto size-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <SidebarMenuSub>
+                    <SidebarMenuSub className="ml-4 border-l border-border/50 pl-3">
                       {item.items
                         .filter((subItem) => {
                           if (subItem.role && !hasRole(subItem.role)) return false;
@@ -294,16 +317,25 @@ function SidebarGroupedMenuItems({
                         .map((subItem) => (
                           <SidebarMenuSubItem key={subItem.label}>
                             <SidebarMenuSubButton
-                              className="justify-between"
+                              className={`justify-between rounded-lg transition-all hover:bg-primary/5 ${
+                                isItemActive(subItem.href)
+                                  ? 'bg-primary/10 text-primary font-medium'
+                                  : ''
+                              }`}
                               asChild
                               isActive={isItemActive(subItem.href)}
                             >
                               <Link href={subItem.href}>
-                                {subItem.label}
+                                <span className="flex items-center gap-2">
+                                  <span className={`h-1.5 w-1.5 rounded-full ${
+                                    isItemActive(subItem.href) ? 'bg-primary' : 'bg-muted-foreground/30'
+                                  }`} />
+                                  {subItem.label}
+                                </span>
                                 {subItem.badge && (
-                                  <span className="bg-primary/10 flex h-5 min-w-5 items-center justify-center rounded-full text-xs">
+                                  <Badge variant="secondary" className="h-5 px-1.5 text-xs font-medium">
                                     {subItem.badge}
-                                  </span>
+                                  </Badge>
                                 )}
                               </Link>
                             </SidebarMenuSubButton>
@@ -319,15 +351,32 @@ function SidebarGroupedMenuItems({
                   tooltip={item.label}
                   asChild
                   isActive={isItemActive(item.href)}
+                  className={`group/menu-button hover:bg-primary/5 transition-colors rounded-lg mx-1 ${
+                    isItemActive(item.href) ? 'bg-primary/10' : ''
+                  }`}
                 >
                   <Link href={item.href}>
-                    <item.icon className="size-4" />
-                    <span>{item.label}</span>
+                    <div className={`flex items-center justify-center h-8 w-8 rounded-lg transition-colors ${
+                      isItemActive(item.href)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted/50 group-hover/menu-button:bg-primary/10'
+                    }`}>
+                      <item.icon className={`size-4 transition-colors ${
+                        isItemActive(item.href)
+                          ? ''
+                          : 'text-muted-foreground group-hover/menu-button:text-primary'
+                      }`} />
+                    </div>
+                    <span className={`font-medium ${isItemActive(item.href) ? 'text-primary' : ''}`}>
+                      {item.label}
+                    </span>
                   </Link>
                 </SidebarMenuButton>
                 {item.badge && (
-                  <SidebarMenuBadge className="bg-primary/10 rounded-full">
-                    {item.badge}
+                  <SidebarMenuBadge>
+                    <Badge variant="secondary" className="h-5 px-1.5 text-xs font-medium">
+                      {item.badge}
+                    </Badge>
                   </SidebarMenuBadge>
                 )}
               </SidebarMenuItem>
@@ -362,22 +411,53 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     fetchProfile();
   }, [user, authLoading, isAuthenticated]);
 
+  const getRoleBadgeColor = (role?: string) => {
+    switch (role) {
+      case 'ADMIN':
+        return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
+      case 'PROPERTY_MANAGER':
+        return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  const formatRole = (role?: string) => {
+    if (!role) return 'User';
+    return role.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ');
+  };
+
   return (
-    <Sidebar collapsible="icon" className="[&_[data-slot=sidebar-inner]]:bg-muted !border-r-0" {...props}>
-      <SidebarHeader>
+    <Sidebar
+      collapsible="icon"
+      className="!border-r-0 [&_[data-slot=sidebar-inner]]:bg-muted"
+      {...props}
+    >
+      {/* Header with Logo */}
+      <SidebarHeader className="pb-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="gap-2.5 !bg-transparent [&>svg]:size-8" asChild>
+            <SidebarMenuButton
+              size="lg"
+              className="gap-3 !bg-transparent hover:!bg-primary/5 transition-colors rounded-xl group"
+              asChild
+            >
               <Link href="/dashboard">
-                <Logo className="[&_rect]:fill-muted [&_rect:first-child]:fill-primary" />
-                <span className="text-xl font-semibold">Ultra BMS</span>
+                <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
+                  <Logo className="h-6 w-6 [&_rect]:fill-primary-foreground [&_line]:stroke-primary-foreground [&_path]:stroke-primary-foreground" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-lg font-bold tracking-tight">Ultra BMS</span>
+                  <span className="text-xs text-muted-foreground">Property Management</span>
+                </div>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      {/* Main Navigation Content */}
+      <SidebarContent className="px-2 py-4">
         {menuSections.map((section, idx) => (
           <SidebarGroupedMenuItems
             key={idx}
@@ -390,51 +470,138 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ))}
       </SidebarContent>
 
-      <SidebarFooter>
+      {/* Footer with User Profile */}
+      <SidebarFooter className="p-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  className="data-[state=open]:bg-primary/5 hover:bg-primary/5 rounded-xl transition-colors w-full"
                 >
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile photo" />}
-                    <AvatarFallback className="rounded-lg bg-primary/10 text-sm font-medium">
-                      {user ? getUserInitials(displayName, user.firstName, user.lastName) : '?'}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar className="h-10 w-10 rounded-xl border-2 border-border/50 shadow-sm">
+                      {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile photo" />}
+                      <AvatarFallback className="rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-sm font-semibold">
+                        {user ? getUserInitials(displayName, user.firstName, user.lastName) : '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="absolute -bottom-0.5 -right-0.5 block h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-background" />
+                  </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">
+                    <span className="truncate font-semibold">
                       {user ? getDisplayNameOrFullName(displayName, user.firstName, user.lastName) : 'User'}
                     </span>
-                    <span className="truncate text-xs">{user?.email}</span>
+                    <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
                   </div>
+                  <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-64 rounded-xl p-2"
                 side="top"
                 align="start"
-                sideOffset={4}
+                sideOffset={8}
               >
-                <DropdownMenuItem asChild>
-                  <Link href="/settings/profile">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Profile Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => logout()}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
+                <DropdownMenuLabel className="p-0 font-normal">
+                  <div className="flex items-center gap-3 px-2 py-3 text-left">
+                    <div className="relative">
+                      <Avatar className="h-12 w-12 rounded-xl border-2 border-border/50">
+                        {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile photo" />}
+                        <AvatarFallback className="rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 font-semibold">
+                          {user ? getUserInitials(displayName, user.firstName, user.lastName) : '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="absolute -bottom-0.5 -right-0.5 block h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-background" />
+                    </div>
+                    <div className="grid flex-1 text-left leading-tight">
+                      <span className="truncate font-semibold text-base">
+                        {user ? getDisplayNameOrFullName(displayName, user.firstName, user.lastName) : 'User'}
+                      </span>
+                      <span className="truncate text-sm text-muted-foreground">{user?.email}</span>
+                      <Badge variant="outline" className={`mt-1.5 w-fit text-xs ${getRoleBadgeColor(user?.role)}`}>
+                        <BadgeCheck className="h-3 w-3 mr-1" />
+                        {formatRole(user?.role)}
+                      </Badge>
+                    </div>
+                  </div>
+                </DropdownMenuLabel>
+
+                <DropdownMenuSeparator className="my-2" />
+
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                    <Link href="/settings/profile" className="flex items-center gap-3 px-2 py-2">
+                      <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-muted/50">
+                        <Sparkles className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium">My Profile</span>
+                        <span className="text-xs text-muted-foreground">View and edit profile</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                    <Link href="/settings" className="flex items-center gap-3 px-2 py-2">
+                      <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-muted/50">
+                        <Settings className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium">Settings</span>
+                        <span className="text-xs text-muted-foreground">Manage preferences</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                    <Link href="#" className="flex items-center gap-3 px-2 py-2">
+                      <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-muted/50">
+                        <Bell className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium">Notifications</span>
+                        <span className="text-xs text-muted-foreground">Configure alerts</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+
+                <DropdownMenuSeparator className="my-2" />
+
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                    <Link href="#" className="flex items-center gap-3 px-2 py-2">
+                      <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-muted/50">
+                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium">Help & Support</span>
+                        <span className="text-xs text-muted-foreground">Get assistance</span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+
+                <DropdownMenuSeparator className="my-2" />
+
+                <DropdownMenuItem
+                  onClick={() => logout()}
+                  className="rounded-lg cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                >
+                  <div className="flex items-center gap-3 px-2 py-1">
+                    <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-destructive/10">
+                      <LogOut className="h-4 w-4" />
+                    </div>
+                    <span className="font-medium">Sign out</span>
+                  </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+
+      <SidebarRail />
     </Sidebar>
   );
 }

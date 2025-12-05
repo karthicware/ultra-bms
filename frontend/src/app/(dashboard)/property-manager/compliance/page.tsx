@@ -10,17 +10,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
-  ArrowUpDown,
-  Loader2,
   RefreshCw,
   MoreHorizontal,
   Eye,
   CheckCircle2,
   Calendar,
   AlertTriangle,
-  Clock,
   ShieldCheck,
   ClipboardList,
   FileWarning,
@@ -29,8 +25,8 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -82,7 +78,6 @@ export default function CompliancePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
 
   // Load dashboard data
   const loadDashboard = useCallback(async () => {
@@ -115,7 +110,6 @@ export default function CompliancePage() {
 
       setSchedules(response.data?.content || []);
       setTotalPages(response.data?.totalPages || 0);
-      setTotalElements(response.data?.totalElements || 0);
     } catch (error) {
       console.error('Failed to load schedules:', error);
       toast({
@@ -159,121 +153,138 @@ export default function CompliancePage() {
     });
   };
 
+  // Date for header
+  const today = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   return (
-    <div className="container mx-auto space-y-6" data-testid="compliance-page">
+    <div className="container mx-auto py-8 space-y-8 max-w-7xl" data-testid="compliance-page">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight" data-testid="compliance-page-title">
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between bg-card p-6 rounded-xl border shadow-sm">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground" data-testid="compliance-page-title">
             Compliance & Inspections
           </h1>
-          <p className="text-muted-foreground">
-            Track compliance requirements, inspections, and violations
-          </p>
+          <div className="flex items-center text-muted-foreground text-sm gap-2">
+            <Calendar className="h-4 w-4" />
+            <span>{today}</span>
+            <span className="text-border">|</span>
+            <span>Track compliance requirements, inspections, and violations</span>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleRefresh} disabled={dashboardLoading || schedulesLoading}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${(dashboardLoading || schedulesLoading) ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
+        <Button 
+          variant="outline" 
+          onClick={handleRefresh} 
+          disabled={dashboardLoading || schedulesLoading}
+          className="shadow-sm"
+        >
+          <RefreshCw className={`mr-2 h-4 w-4 ${(dashboardLoading || schedulesLoading) ? 'animate-spin' : ''}`} />
+          Refresh Data
+        </Button>
       </div>
 
       {/* Dashboard KPIs */}
       {dashboardLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center h-24">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              </CardContent>
-            </Card>
+            <Skeleton key={i} className="h-32 w-full rounded-xl" />
           ))}
         </div>
       ) : dashboard && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Compliance Rate */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Compliance Rate</CardTitle>
-              <ShieldCheck className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboard.complianceRatePercentage?.toFixed(1)}%</div>
-              <Progress value={dashboard.complianceRatePercentage || 0} className="mt-2" />
-              <p className="text-xs text-muted-foreground mt-2">Overall compliance status</p>
+          <Card className="shadow-sm">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+                <ShieldCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <div className="space-y-1 w-full">
+                <p className="text-sm text-muted-foreground font-medium">Compliance Rate</p>
+                <h3 className="text-2xl font-bold">{dashboard.complianceRatePercentage?.toFixed(1)}%</h3>
+                <Progress value={dashboard.complianceRatePercentage || 0} className="h-1.5 w-full" />
+              </div>
             </CardContent>
           </Card>
 
           {/* Upcoming Inspections */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Upcoming Inspections</CardTitle>
-              <Calendar className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboard.upcomingInspections}</div>
-              <p className="text-xs text-muted-foreground mt-2">Next 30 days</p>
+          <Card className="shadow-sm">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground font-medium">Upcoming Inspections</p>
+                <h3 className="text-2xl font-bold">{dashboard.upcomingInspections}</h3>
+                <p className="text-xs text-muted-foreground mt-1">Next 30 days</p>
+              </div>
             </CardContent>
           </Card>
 
           {/* Overdue Items */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Overdue Items</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{dashboard.overdueComplianceItems}</div>
-              <p className="text-xs text-muted-foreground mt-2">Requires attention</p>
+          <Card className="shadow-sm">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground font-medium">Overdue Items</p>
+                <h3 className="text-2xl font-bold text-red-600">{dashboard.overdueComplianceItems}</h3>
+                <p className="text-xs text-muted-foreground mt-1">Requires attention</p>
+              </div>
             </CardContent>
           </Card>
 
           {/* Recent Violations */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Recent Violations</CardTitle>
-              <FileWarning className="h-4 w-4 text-yellow-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboard.recentViolationsCount}</div>
-              <p className="text-xs text-muted-foreground mt-2">Last 30 days</p>
+          <Card className="shadow-sm">
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
+                <FileWarning className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground font-medium">Recent Violations</p>
+                <h3 className="text-2xl font-bold">{dashboard.recentViolationsCount}</h3>
+                <p className="text-xs text-muted-foreground mt-1">Last 30 days</p>
+              </div>
             </CardContent>
           </Card>
         </div>
       )}
 
       {/* Navigation Tabs */}
-      <Tabs defaultValue="schedules" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="schedules">
-            <ClipboardList className="h-4 w-4 mr-2" />
-            Schedules
-          </TabsTrigger>
-          <TabsTrigger value="inspections" onClick={() => router.push('/property-manager/compliance/inspections')}>
-            <Calendar className="h-4 w-4 mr-2" />
-            Inspections
-          </TabsTrigger>
-          <TabsTrigger value="violations" onClick={() => router.push('/property-manager/compliance/violations')}>
-            <FileWarning className="h-4 w-4 mr-2" />
-            Violations
-          </TabsTrigger>
-          <TabsTrigger value="requirements" onClick={() => router.push('/property-manager/compliance/requirements')}>
-            <ShieldCheck className="h-4 w-4 mr-2" />
-            Requirements
-          </TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="schedules" className="space-y-6">
+        <div className="bg-card p-1 rounded-lg border shadow-sm inline-flex">
+          <TabsList className="bg-transparent h-9">
+            <TabsTrigger value="schedules" className="data-[state=active]:bg-muted data-[state=active]:shadow-sm">
+              <ClipboardList className="h-4 w-4 mr-2" />
+              Schedules
+            </TabsTrigger>
+            <TabsTrigger value="inspections" onClick={() => router.push('/property-manager/compliance/inspections')} className="data-[state=active]:bg-muted">
+              <Calendar className="h-4 w-4 mr-2" />
+              Inspections
+            </TabsTrigger>
+            <TabsTrigger value="violations" onClick={() => router.push('/property-manager/compliance/violations')} className="data-[state=active]:bg-muted">
+              <FileWarning className="h-4 w-4 mr-2" />
+              Violations
+            </TabsTrigger>
+            <TabsTrigger value="requirements" onClick={() => router.push('/property-manager/compliance/requirements')} className="data-[state=active]:bg-muted">
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              Requirements
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="schedules" className="space-y-4">
-          {/* Filters */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row gap-4">
+        <TabsContent value="schedules" className="space-y-4 mt-0">
+          <Card className="shadow-sm border">
+            <div className="p-6 border-b flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <h3 className="font-semibold text-lg">Compliance Schedules</h3>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 {/* Status Filter */}
                 <Select value={selectedStatus} onValueChange={(value) => { setSelectedStatus(value); setPage(0); }}>
-                  <SelectTrigger className="w-[180px]" data-testid="schedule-status-filter">
+                  <SelectTrigger className="w-full sm:w-[180px]" data-testid="schedule-status-filter">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -288,7 +299,7 @@ export default function CompliancePage() {
 
                 {/* Category Filter */}
                 <Select value={selectedCategory} onValueChange={(value) => { setSelectedCategory(value); setPage(0); }}>
-                  <SelectTrigger className="w-[200px]" data-testid="schedule-category-filter">
+                  <SelectTrigger className="w-full sm:w-[200px]" data-testid="schedule-category-filter">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -301,38 +312,37 @@ export default function CompliancePage() {
                   </SelectContent>
                 </Select>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Schedules Table */}
-          <Card>
             <CardContent className="p-0">
               {schedulesLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <div className="p-6 space-y-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
                 </div>
               ) : schedules.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                  <ClipboardList className="h-12 w-12 mb-4" />
+                  <ClipboardList className="h-12 w-12 mb-4 opacity-20" />
                   <h3 className="text-lg font-semibold mb-1">No schedules found</h3>
                   <p className="text-sm">
                     {selectedStatus !== 'all' || selectedCategory !== 'all'
                       ? 'Try adjusting your filters'
-                      : 'No compliance schedules have been created yet'}
+                      : 'No compliance schedules available'}
                   </p>
                 </div>
               ) : (
                 <>
                   <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-muted/50">
                       <TableRow>
-                        <TableHead className="w-[140px]">Schedule #</TableHead>
+                        <TableHead className="w-[140px] pl-6">Schedule #</TableHead>
                         <TableHead>Property</TableHead>
                         <TableHead>Requirement</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead>Due Date</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="text-right pr-6">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -343,14 +353,10 @@ export default function CompliancePage() {
                           data-testid={`schedule-row-${schedule.id}`}
                           onClick={() => router.push(`/property-manager/compliance/schedules/${schedule.id}`)}
                         >
-                          <TableCell className="font-mono text-sm">
-                            <Link
-                              href={`/property-manager/compliance/schedules/${schedule.id}`}
-                              className="hover:underline text-primary"
-                              onClick={(e) => e.stopPropagation()}
-                            >
+                          <TableCell className="font-mono text-sm pl-6">
+                            <span className="text-primary hover:underline font-medium">
                               {schedule.requirementNumber || schedule.id.substring(0, 8)}
-                            </Link>
+                            </span>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
@@ -360,16 +366,16 @@ export default function CompliancePage() {
                           </TableCell>
                           <TableCell>{schedule.requirementName}</TableCell>
                           <TableCell>
-                            <Badge variant="outline">
+                            <Badge variant="outline" className="font-normal">
                               {getCategoryLabel(schedule.category)}
                             </Badge>
                           </TableCell>
                           <TableCell>{formatDate(schedule.dueDate)}</TableCell>
                           <TableCell>{getStatusBadge(schedule.status)}</TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right pr-6">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <Button variant="ghost" size="icon">
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
                                   <MoreHorizontal className="h-4 w-4" />
                                   <span className="sr-only">Actions</span>
                                 </Button>
@@ -405,7 +411,7 @@ export default function CompliancePage() {
 
                   {/* Pagination */}
                   {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-4 py-4 border-t">
+                    <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/5">
                       <p className="text-sm text-muted-foreground">
                         Page {page + 1} of {totalPages}
                       </p>

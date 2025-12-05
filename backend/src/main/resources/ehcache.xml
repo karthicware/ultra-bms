@@ -538,6 +538,23 @@
         </resources>
     </cache>
 
+    <!-- ================================================================= -->
+    <!-- COMPANY PROFILE CACHE (Story 2.8) -->
+    <!-- AC: Singleton company profile cached for fast access -->
+    <!-- ================================================================= -->
+
+    <!-- Company Profile Cache -->
+    <cache alias="companyProfile">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.lang.Object</value-type>
+        <expiry>
+            <ttl unit="minutes">30</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">1</heap>
+        </resources>
+    </cache>
+
     <!-- Default cache template for other caches -->
     <cache-template name="default">
         <expiry>
