@@ -10,6 +10,11 @@ import {
   ChevronUpIcon,
   EyeIcon,
   Users,
+  UserPlus,
+  Building2,
+  Mail,
+  Phone,
+  Calendar,
 } from 'lucide-react';
 
 import type { Column, ColumnDef, ColumnFiltersState, PaginationState } from '@tanstack/react-table';
@@ -50,11 +55,13 @@ const STATUS_STYLES: Record<TenantStatus, string> = {
 interface TenantsDatatableProps {
   data: TenantItem[];
   pageSize?: number;
+  showFilters?: boolean;
 }
 
 const TenantsDatatable = ({
   data,
   pageSize: initialPageSize = 10,
+  showFilters = true,
 }: TenantsDatatableProps) => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -70,6 +77,19 @@ const TenantsDatatable = ({
       return format(new Date(dateString), 'dd MMM yyyy');
     } catch {
       return '-';
+    }
+  };
+
+  // Calculate days until lease end
+  const getDaysUntilExpiry = (dateString: string | null | undefined) => {
+    if (!dateString) return null;
+    try {
+      const leaseEnd = new Date(dateString);
+      const today = new Date();
+      const diffTime = leaseEnd.getTime() - today.getTime();
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    } catch {
+      return null;
     }
   };
 
@@ -94,62 +114,93 @@ const TenantsDatatable = ({
         size: 50,
       },
       {
-        header: 'Tenant #',
-        accessorKey: 'tenantNumber',
-        cell: ({ row }) => (
-          <Link
-            href={`/tenants/${row.original.id}`}
-            className="font-mono text-sm font-medium text-primary hover:underline"
-          >
-            {row.getValue('tenantNumber') || '-'}
-          </Link>
-        ),
-        size: 120,
-      },
-      {
-        header: 'Name',
+        header: 'Tenant',
         accessorKey: 'firstName',
         cell: ({ row }) => (
-          <span className="font-medium">
-            {row.original.firstName} {row.original.lastName}
-          </span>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-sm">
+              {row.original.firstName?.[0]?.toUpperCase()}{row.original.lastName?.[0]?.toUpperCase()}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <Link
+                href={`/tenants/${row.original.id}`}
+                className="font-medium hover:text-primary hover:underline truncate"
+              >
+                {row.original.firstName} {row.original.lastName}
+              </Link>
+              <span className="text-xs text-muted-foreground font-mono">
+                {row.original.tenantNumber || '-'}
+              </span>
+            </div>
+          </div>
         ),
-        size: 180,
+        size: 220,
       },
       {
-        header: 'Email',
+        header: 'Contact',
         accessorKey: 'email',
         cell: ({ row }) => (
-          <span className="text-sm text-muted-foreground">{row.getValue('email')}</span>
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-1.5 text-sm">
+              <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <span className="truncate text-muted-foreground">{row.getValue('email') || '-'}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-sm">
+              <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <span className="text-muted-foreground">{row.original.phone || '-'}</span>
+            </div>
+          </div>
         ),
-        size: 200,
-      },
-      {
-        header: 'Phone',
-        accessorKey: 'phone',
-        cell: ({ row }) => (
-          <span className="text-sm text-muted-foreground">{row.getValue('phone') || '-'}</span>
-        ),
-        size: 130,
+        size: 220,
       },
       {
         header: 'Property / Unit',
         accessorKey: 'property',
         cell: ({ row }) => (
-          <div className="flex flex-col">
-            <span className="font-medium">{row.original.property?.name || '-'}</span>
-            <span className="text-sm text-muted-foreground">Unit {row.original.unit?.unitNumber || '-'}</span>
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-medium truncate">{row.original.property?.name || '-'}</span>
+              <span className="text-xs text-muted-foreground">Unit {row.original.unit?.unitNumber || '-'}</span>
+            </div>
           </div>
         ),
-        size: 180,
+        size: 200,
       },
       {
         header: 'Lease End',
         accessorKey: 'leaseEndDate',
-        cell: ({ row }) => (
-          <span className="text-sm">{formatDate(row.getValue('leaseEndDate'))}</span>
-        ),
-        size: 120,
+        cell: ({ row }) => {
+          const daysLeft = getDaysUntilExpiry(row.getValue('leaseEndDate'));
+          const status = row.original.status;
+
+          // Only show days indicator for active tenants
+          const showDaysIndicator = status === 'ACTIVE' && daysLeft !== null;
+          const isUrgent = showDaysIndicator && daysLeft <= 30;
+          const isWarning = showDaysIndicator && daysLeft > 30 && daysLeft <= 60;
+
+          return (
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-sm">{formatDate(row.getValue('leaseEndDate'))}</span>
+              </div>
+              {showDaysIndicator && (
+                <span className={cn(
+                  "text-xs",
+                  isUrgent && "text-red-600 dark:text-red-400 font-medium",
+                  isWarning && "text-amber-600 dark:text-amber-400",
+                  !isUrgent && !isWarning && "text-muted-foreground"
+                )}>
+                  {daysLeft < 0 ? `${Math.abs(daysLeft)} days overdue` : `${daysLeft} days left`}
+                </span>
+              )}
+            </div>
+          );
+        },
+        size: 140,
       },
       {
         header: 'Status',
@@ -157,32 +208,32 @@ const TenantsDatatable = ({
         cell: ({ row }) => {
           const status = row.getValue('status') as TenantStatus;
           return (
-            <Badge className={cn('rounded-sm border-none', STATUS_STYLES[status])}>
+            <Badge className={cn('rounded-full border-none font-medium', STATUS_STYLES[status])}>
               {status}
             </Badge>
           );
         },
-        size: 100,
+        size: 110,
       },
       {
         id: 'actions',
-        header: () => 'Actions',
+        header: () => <span className="sr-only">Actions</span>,
         cell: ({ row }) => (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center justify-end">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="View tenant" asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
                   <Link href={`/tenants/${row.original.id}`}>
-                    <EyeIcon className="size-4.5" />
+                    <EyeIcon className="h-4 w-4" />
+                    <span className="sr-only">View tenant</span>
                   </Link>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>View Details</p>
-              </TooltipContent>
+              <TooltipContent>View Details</TooltipContent>
             </Tooltip>
           </div>
         ),
+        size: 60,
         enableHiding: false,
       },
     ],
@@ -218,13 +269,12 @@ const TenantsDatatable = ({
 
   return (
     <div className="w-full">
-      <div className="border-b">
-        {data.length > 0 && (
-          <div className="flex flex-col gap-4 p-6">
-            <span className="text-xl font-semibold">Filter</span>
-            <div className="grid grid-cols-1 gap-6 max-md:last:col-span-full sm:grid-cols-2 md:grid-cols-3">
-              <Filter column={table.getColumn('status')!} label="Status" />
-            <div className="w-full space-y-2">
+      {/* Filters - shown conditionally */}
+      {showFilters && data.length > 0 && (
+        <div className="border-b p-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <Filter column={table.getColumn('status')!} label="Status" />
+            <div className="w-full sm:w-40 space-y-2">
               <Label>Page Size</Label>
               <Select
                 value={pagination.pageSize.toString()}
@@ -245,22 +295,25 @@ const TenantsDatatable = ({
             </div>
           </div>
         </div>
-        )}
+      )}
+
+      {/* Table */}
+      <div className="overflow-x-auto">
         <Table data-testid="table-tenants">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="h-14 border-t">
+              <TableRow key={headerGroup.id} className="h-12 bg-muted/30 hover:bg-muted/30">
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
                     style={{ width: `${header.getSize()}px` }}
-                    className="text-muted-foreground first:pl-4 last:px-4 last:text-center"
+                    className="text-xs font-medium uppercase tracking-wider text-muted-foreground first:pl-4 last:pr-4"
                   >
                     {header.isPlaceholder ? null : header.column.getCanSort() ? (
                       <div
                         className={cn(
                           header.column.getCanSort() &&
-                            'flex h-full cursor-pointer items-center justify-between gap-2 select-none'
+                            'flex h-full cursor-pointer items-center gap-1.5 select-none hover:text-foreground transition-colors'
                         )}
                         onClick={header.column.getToggleSortingHandler()}
                         onKeyDown={(e) => {
@@ -273,8 +326,8 @@ const TenantsDatatable = ({
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {{
-                          asc: <ChevronUpIcon className="shrink-0 opacity-60" size={16} aria-hidden="true" />,
-                          desc: <ChevronDownIcon className="shrink-0 opacity-60" size={16} aria-hidden="true" />,
+                          asc: <ChevronUpIcon className="shrink-0 opacity-60" size={14} aria-hidden="true" />,
+                          desc: <ChevronDownIcon className="shrink-0 opacity-60" size={14} aria-hidden="true" />,
                         }[header.column.getIsSorted() as string] ?? null}
                       </div>
                     ) : (
@@ -288,9 +341,14 @@ const TenantsDatatable = ({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="hover:bg-muted/50" data-testid="tenant-row">
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && 'selected'}
+                  className="group hover:bg-muted/50 transition-colors"
+                  data-testid="tenant-row"
+                >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="h-14 first:w-12.5 first:pl-4 last:w-20 last:px-4">
+                    <TableCell key={cell.id} className="py-3 first:pl-4 last:pr-4">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -298,10 +356,27 @@ const TenantsDatatable = ({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <Users className="size-8 text-muted-foreground/50" />
-                    <span>No tenants found.</span>
+                <TableCell colSpan={columns.length} className="h-80">
+                  <div className="flex flex-col items-center justify-center gap-4 text-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                      <Users className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="font-medium text-lg">No tenants found</h3>
+                      <p className="text-sm text-muted-foreground max-w-sm">
+                        {data.length === 0
+                          ? "Get started by adding your first tenant to the system."
+                          : "Try adjusting your search or filter criteria."}
+                      </p>
+                    </div>
+                    {data.length === 0 && (
+                      <Button asChild className="gap-2 mt-2">
+                        <Link href="/tenants/create">
+                          <UserPlus className="h-4 w-4" />
+                          Add Your First Tenant
+                        </Link>
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -310,36 +385,60 @@ const TenantsDatatable = ({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between gap-3 px-6 py-4 max-sm:flex-col md:max-lg:flex-col">
-        <p className="text-muted-foreground text-sm whitespace-nowrap" aria-live="polite">
-          Showing{' '}
-          <span>
-            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
-            {Math.min(
-              Math.max(
-                table.getState().pagination.pageIndex * table.getState().pagination.pageSize +
-                  table.getState().pagination.pageSize,
-                0
-              ),
-              table.getRowCount()
-            )}
-          </span>{' '}
-          of <span>{table.getRowCount().toString()} tenants</span>
-        </p>
+      {/* Pagination */}
+      {table.getRowCount() > 0 && (
+        <div className="flex items-center justify-between gap-4 border-t px-4 py-3 max-sm:flex-col">
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground whitespace-nowrap" aria-live="polite">
+              Showing{' '}
+              <span className="font-medium text-foreground">
+                {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+              </span>
+              {' '}-{' '}
+              <span className="font-medium text-foreground">
+                {Math.min(
+                  table.getState().pagination.pageIndex * table.getState().pagination.pageSize +
+                    table.getState().pagination.pageSize,
+                  table.getRowCount()
+                )}
+              </span>
+              {' '}of{' '}
+              <span className="font-medium text-foreground">{table.getRowCount()}</span>
+            </p>
 
-        <div>
+            {/* Page size selector - compact for bottom */}
+            {!showFilters && (
+              <Select
+                value={pagination.pageSize.toString()}
+                onValueChange={(value) => {
+                  setPagination((prev) => ({ ...prev, pageSize: Number(value), pageIndex: 0 }));
+                }}
+              >
+                <SelectTrigger className="h-8 w-[100px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 / page</SelectItem>
+                  <SelectItem value="10">10 / page</SelectItem>
+                  <SelectItem value="20">20 / page</SelectItem>
+                  <SelectItem value="50">50 / page</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <Button
-                  className="disabled:pointer-events-none disabled:opacity-50"
                   variant="ghost"
+                  size="sm"
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
-                  aria-label="Go to previous page"
+                  className="gap-1 h-8"
                 >
-                  <ChevronLeftIcon aria-hidden="true" />
-                  Previous
+                  <ChevronLeftIcon size={16} />
+                  <span className="hidden sm:inline">Previous</span>
                 </Button>
               </PaginationItem>
               {showLeftEllipsis && (
@@ -352,8 +451,9 @@ const TenantsDatatable = ({
                 return (
                   <PaginationItem key={page}>
                     <Button
+                      variant={isActive ? 'default' : 'ghost'}
                       size="icon"
-                      className={`${!isActive && 'bg-primary/10 text-primary hover:bg-primary/20 focus-visible:ring-primary/20 dark:focus-visible:ring-primary/40'}`}
+                      className="h-8 w-8"
                       onClick={() => table.setPageIndex(page - 1)}
                       aria-current={isActive ? 'page' : undefined}
                     >
@@ -369,20 +469,20 @@ const TenantsDatatable = ({
               )}
               <PaginationItem>
                 <Button
-                  className="disabled:pointer-events-none disabled:opacity-50"
                   variant="ghost"
+                  size="sm"
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
-                  aria-label="Go to next page"
+                  className="gap-1 h-8"
                 >
-                  Next
-                  <ChevronRightIcon aria-hidden="true" />
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRightIcon size={16} />
                 </Button>
               </PaginationItem>
             </PaginationContent>
           </Pagination>
         </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -405,8 +505,8 @@ function Filter({ column, label }: { column: Column<TenantItem, unknown>; label:
   }, [column.getFacetedUniqueValues()]);
 
   return (
-    <div className="w-full space-y-2">
-      <Label htmlFor={`${id}-select`}>Select {label}</Label>
+    <div className="w-full sm:w-40 space-y-2">
+      <Label htmlFor={`${id}-select`}>Filter by {label}</Label>
       <Select
         value={columnFilterValue?.toString() ?? 'all'}
         onValueChange={(value) => {
@@ -414,7 +514,7 @@ function Filter({ column, label }: { column: Column<TenantItem, unknown>; label:
         }}
       >
         <SelectTrigger id={`${id}-select`} className="w-full capitalize">
-          <SelectValue placeholder={`Select ${label}`} />
+          <SelectValue placeholder={`All ${label}`} />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All</SelectItem>

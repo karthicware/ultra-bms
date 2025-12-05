@@ -192,7 +192,9 @@ export async function getProperties(): Promise<Property[]> {
       status: 'ACTIVE',
     },
   });
-  return response.data.data?.content ?? [];
+  const properties = response.data.data?.content ?? [];
+  // Filter to only show active properties with at least one unit listed
+  return properties.filter((property) => property.active && property.totalUnitsCount >= 1);
 }
 
 /**
