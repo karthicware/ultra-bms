@@ -55,6 +55,7 @@ describe('Quotation Service', () => {
         data: { success: true, data: mockQuotation },
       });
 
+      // SCP-2025-12-04: Added required identity document fields
       const quotationData = {
         leadId: 'lead-123',
         propertyId: 'prop-123',
@@ -64,7 +65,7 @@ describe('Quotation Service', () => {
         validityDate: '2025-12-15',
         baseRent: 5000,
         serviceCharges: 500,
-        parkingSpots: 1,
+        parkingSpotId: 'parking-123', // SCP-2025-12-02: Changed from parkingSpots
         parkingFee: 200,
         securityDeposit: 5000,
         adminFee: 1000,
@@ -72,6 +73,12 @@ describe('Quotation Service', () => {
         paymentTerms: 'Payment due on 1st',
         moveinProcedures: 'Complete inspection',
         cancellationPolicy: '30 days notice',
+        // SCP-2025-12-04: Identity document fields
+        emiratesIdNumber: '784-1234-5678901-1',
+        emiratesIdExpiry: '2027-12-15',
+        passportNumber: 'AB1234567',
+        passportExpiry: '2030-12-15',
+        nationality: 'United Kingdom',
       };
 
       const result = await createQuotation(quotationData);
@@ -183,6 +190,7 @@ describe('Quotation Service', () => {
 
   describe('convertToTenant', () => {
     it('should convert lead to tenant successfully', async () => {
+      // SCP-2025-12-02: Updated to use parkingSpotId instead of parkingSpots
       const mockConversionResponse = {
         leadId: 'lead-123',
         leadNumber: 'LEAD-20251115-0001',
@@ -199,7 +207,7 @@ describe('Quotation Service', () => {
         unitId: 'unit-123',
         baseRent: 5000,
         serviceCharges: 500,
-        parkingSpots: 1,
+        parkingSpotId: 'parking-123',
         parkingFee: 200,
         securityDeposit: 5000,
         adminFee: 1000,

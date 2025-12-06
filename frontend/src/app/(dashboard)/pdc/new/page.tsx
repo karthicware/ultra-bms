@@ -142,8 +142,8 @@ export default function PDCRegistrationPage() {
     const tenant = tenants.find((t) => t.id === tenantId);
     if (tenant) {
       setSelectedTenant(tenant);
-      // Pre-populate lease if tenant has one active, or clear it
-      form.setValue('leaseId', tenant.activeLeaseId || null); // Assuming tenant.activeLeaseId exists
+      // Lease selection is manual - tenant picks from available leases
+      form.setValue('leaseId', null);
     } else {
       setSelectedTenant(null);
       form.setValue('leaseId', null);

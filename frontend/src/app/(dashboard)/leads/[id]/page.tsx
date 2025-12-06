@@ -3,7 +3,11 @@
 
 /**
  * Lead Detail Page
- * Shows complete lead information, documents, quotations, and history
+ * SCP-2025-12-06: Simplified design with single quotation workflow
+ * - Removed stats cards row (Documents, Quotation, Days in Pipeline, Activities)
+ * - Removed Documents tab (documents managed in quotation workflow)
+ * - Removed Recent Activity section (History tab serves this purpose)
+ * - Removed Identity Details (captured in quotation workflow)
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -12,16 +16,22 @@ import { format } from 'date-fns';
 import { useAuth } from '@/contexts/auth-context';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -37,36 +47,135 @@ import {
 } from '@/components/ui/alert-dialog';
 import {
   getLeadById,
-  getLeadDocuments,
-  downloadDocument,
   getLeadHistory,
   deleteLead,
+  calculateDaysInPipeline,
 } from '@/services/leads.service';
 import { getQuotationsByLeadId, convertToTenant } from '@/services/quotations.service';
-import type { Lead, LeadDocument, LeadHistory, Quotation } from '@/types';
+import type { Lead, LeadHistory, Quotation } from '@/types';
+import { cn } from '@/lib/utils';
 import {
   Mail,
   Phone,
-  MapPin,
   Building,
   Calendar,
-  FileText,
-  CreditCard,
   ArrowLeft,
   Plus,
   Trash2,
-  PencilIcon,
-  MoreVertical
+  Pencil,
+  MoreVertical,
+  Target,
+  Clock,
+  Globe,
+  Users,
+  MessageSquare,
+  Send,
+  CheckCircle2,
+  XCircle,
+  UserCheck,
+  Sparkles,
+  ChevronRight,
+  ExternalLink,
+  History,
+  Receipt,
+  ArrowUpRight,
+  User,
+  StickyNote,
+  TrendingUp,
+  Eye,
+  AlertCircle,
 } from 'lucide-react';
-import DocumentList from '@/components/leads/document-list';
 
-const LEAD_STATUS_COLORS: Record<string, string> = {
-  NEW: 'bg-blue-100 text-blue-800',
-  CONTACTED: 'bg-yellow-100 text-yellow-800',
-  QUOTATION_SENT: 'bg-purple-100 text-purple-800',
-  ACCEPTED: 'bg-green-100 text-green-800',
-  CONVERTED: 'bg-emerald-100 text-emerald-800',
-  LOST: 'bg-red-100 text-red-800',
+const LEAD_STATUS_CONFIG: Record<string, {
+  badge: string;
+  dot: string;
+  icon: React.ReactNode;
+  label: string;
+  step: number;
+}> = {
+  NEW: {
+    badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400 border-blue-200',
+    dot: 'bg-blue-500',
+    icon: <Sparkles className="h-4 w-4" />,
+    label: 'New Lead',
+    step: 1,
+  },
+  CONTACTED: {
+    badge: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-400 border-yellow-200',
+    dot: 'bg-yellow-500',
+    icon: <MessageSquare className="h-4 w-4" />,
+    label: 'Contacted',
+    step: 2,
+  },
+  QUOTATION_SENT: {
+    badge: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-400 border-purple-200',
+    dot: 'bg-purple-500',
+    icon: <Send className="h-4 w-4" />,
+    label: 'Quotation Sent',
+    step: 3,
+  },
+  ACCEPTED: {
+    badge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400 border-emerald-200',
+    dot: 'bg-emerald-500',
+    icon: <CheckCircle2 className="h-4 w-4" />,
+    label: 'Accepted',
+    step: 4,
+  },
+  CONVERTED: {
+    badge: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400 border-green-200',
+    dot: 'bg-green-500',
+    icon: <UserCheck className="h-4 w-4" />,
+    label: 'Converted',
+    step: 5,
+  },
+  LOST: {
+    badge: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-400 border-red-200',
+    dot: 'bg-red-500',
+    icon: <XCircle className="h-4 w-4" />,
+    label: 'Lost',
+    step: 0,
+  },
+};
+
+const QUOTATION_STATUS_CONFIG: Record<string, {
+  badge: string;
+  icon: React.ReactNode;
+  label: string;
+}> = {
+  DRAFT: {
+    badge: 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-400',
+    icon: <Receipt className="h-4 w-4" />,
+    label: 'Draft',
+  },
+  SENT: {
+    badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400',
+    icon: <Send className="h-4 w-4" />,
+    label: 'Sent',
+  },
+  ACCEPTED: {
+    badge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400',
+    icon: <CheckCircle2 className="h-4 w-4" />,
+    label: 'Accepted',
+  },
+  REJECTED: {
+    badge: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-400',
+    icon: <XCircle className="h-4 w-4" />,
+    label: 'Rejected',
+  },
+  EXPIRED: {
+    badge: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-400',
+    icon: <AlertCircle className="h-4 w-4" />,
+    label: 'Expired',
+  },
+};
+
+const LEAD_SOURCE_CONFIG: Record<string, { icon: React.ReactNode; label: string }> = {
+  WEBSITE: { icon: <Globe className="h-4 w-4" />, label: 'Website' },
+  REFERRAL: { icon: <Users className="h-4 w-4" />, label: 'Referral' },
+  WALK_IN: { icon: <User className="h-4 w-4" />, label: 'Walk-in' },
+  PHONE_CALL: { icon: <Phone className="h-4 w-4" />, label: 'Phone Call' },
+  SOCIAL_MEDIA: { icon: <MessageSquare className="h-4 w-4" />, label: 'Social Media' },
+  OTHER: { icon: <Receipt className="h-4 w-4" />, label: 'Other' },
 };
 
 export default function LeadDetailPage() {
@@ -77,56 +186,38 @@ export default function LeadDetailPage() {
   const leadId = params.id as string;
 
   const [lead, setLead] = useState<Lead | null>(null);
-  const [documents, setDocuments] = useState<LeadDocument[]>([]);
-  const [quotations, setQuotations] = useState<Quotation[]>([]);
+  const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [history, setHistory] = useState<LeadHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [convertingQuotationId, setConvertingQuotationId] = useState<string | null>(null);
+  const [isConverting, setIsConverting] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
   const fetchLeadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [leadData, docsData, quoteData, historyData] = await Promise.allSettled([
+      const [leadData, quoteData, historyData] = await Promise.allSettled([
         getLeadById(leadId),
-        getLeadDocuments(leadId),
         getQuotationsByLeadId(leadId),
         getLeadHistory(leadId),
       ]);
 
-      // Handle lead data
       if (leadData.status === 'fulfilled') {
         setLead(leadData.value);
       } else {
-        console.error('Failed to fetch lead:', leadData.reason);
         throw new Error('Failed to load lead details');
       }
 
-      // Handle documents (set empty array if failed)
-      if (docsData.status === 'fulfilled') {
-        setDocuments(docsData.value || []);
-      } else {
-        console.error('Failed to fetch documents:', docsData.reason);
-        setDocuments([]);
-        toast({
-          title: 'Warning',
-          description: 'Failed to load documents',
-          variant: 'destructive',
-        });
-      }
-
-      // Handle quotations (set empty array if failed)
+      // Only one quotation per lead - get the first one if exists
       if (quoteData.status === 'fulfilled') {
-        setQuotations(quoteData.value || []);
+        const quotations = quoteData.value || [];
+        setQuotation(quotations.length > 0 ? quotations[0] : null);
       } else {
-        console.error('Failed to fetch quotations:', quoteData.reason);
-        setQuotations([]);
+        setQuotation(null);
       }
 
-      // Handle history (set empty array if failed)
       if (historyData.status === 'fulfilled') {
         setHistory(historyData.value || []);
       } else {
-        console.error('Failed to fetch history:', historyData.reason);
         setHistory([]);
       }
     } catch {
@@ -141,12 +232,10 @@ export default function LeadDetailPage() {
   }, [leadId, toast]);
 
   useEffect(() => {
-    // Wait for auth to finish loading before fetching data
     if (!authLoading) {
       if (isAuthenticated) {
         fetchLeadData();
       } else {
-        // Auth loaded but user not authenticated - redirect to login
         router.push('/login');
       }
     }
@@ -170,43 +259,17 @@ export default function LeadDetailPage() {
     }
   };
 
-  const handleDownloadDocument = async (docId: string, fileName: string) => {
+  const handleConvertToTenant = async () => {
+    if (!quotation) return;
     try {
-      console.log('[PAGE] Starting download:', { docId, fileName, leadId });
-      const presignedUrl = await downloadDocument(leadId, docId);
-
-      // Open presigned URL directly - bypasses CORS issues with S3/LocalStack
-      window.open(presignedUrl, '_blank');
-
-      toast({
-        title: 'Success',
-        description: `Opening ${fileName}`,
-        variant: 'success',
-      });
-    } catch (error: any) {
-      console.error('[PAGE] Download error:', error);
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || error.message || 'Failed to download document',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleConvertToTenant = async (quotationId: string) => {
-    try {
-      setConvertingQuotationId(quotationId);
-      const response = await convertToTenant(quotationId);
+      setIsConverting(true);
+      const response = await convertToTenant(quotation.id);
       toast({
         title: 'Success',
         description: response.message || 'Lead converted to tenant successfully',
         variant: 'success',
       });
-      // Redirect to tenant onboarding page (Story 3.2 - future)
-      // For now, just refresh the lead data
       await fetchLeadData();
-      // TODO: When Story 3.2 is complete, redirect to tenant onboarding with pre-filled data
-      // router.push(`/tenants/onboard?leadId=${response.leadId}&quotationId=${response.quotationId}`);
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -214,20 +277,11 @@ export default function LeadDetailPage() {
         variant: 'destructive',
       });
     } finally {
-      setConvertingQuotationId(null);
+      setIsConverting(false);
     }
   };
 
-  if (authLoading || isLoading || !lead) {
-    return (
-      <div className="container mx-auto py-6 space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96 w-full" />
-      </div>
-    );
-  }
-
-  // Get initials for Avatar
+  // Helper functions
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -237,302 +291,558 @@ export default function LeadDetailPage() {
       .substring(0, 2);
   };
 
-  return (
-    <div className="container mx-auto py-6 space-y-8 max-w-7xl">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{lead.fullName}</h1>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              <span>{lead.leadNumber}</span>
-              <span>•</span>
-              <Badge variant="outline" className={LEAD_STATUS_COLORS[lead.status] + ' border-0'}>
-                {lead.status.replace('_', ' ')}
-              </Badge>
-            </div>
+  const formatName = (name: string) => {
+    return name
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  if (authLoading || isLoading || !lead) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
+        <div className="container mx-auto px-4 py-8 max-w-7xl space-y-8">
+          <Skeleton className="h-48 w-full rounded-2xl" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Skeleton className="h-96" />
+            <Skeleton className="h-96 lg:col-span-2" />
           </div>
         </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <Button 
-            variant="outline"
-            className="hidden md:flex"
-            onClick={() => router.push(`/leads/${leadId}/edit`)}
-          >
-            <PencilIcon className="mr-2 h-4 w-4" />
-            Edit Lead
-          </Button>
-
-          <Button 
-            onClick={() => router.push(`/quotations/create?leadId=${leadId}`)} 
-            className="flex-1 md:flex-none"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Quotation
-          </Button>
-
-          <AlertDialog>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => router.push(`/leads/${leadId}/edit`)} className="md:hidden">
-                  <PencilIcon className="mr-2 h-4 w-4" />
-                  Edit Lead
-                </DropdownMenuItem>
-                <AlertDialogTrigger asChild>
-                  <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50" onSelect={(e) => e.preventDefault()}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Lead
-                  </DropdownMenuItem>
-                </AlertDialogTrigger>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Lead</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this lead? This action cannot be undone and will remove all associated documents and history.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction className="bg-red-600 text-white hover:bg-red-700" onClick={handleDeleteLead}>
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
       </div>
+    );
+  }
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Sidebar: Customer Info */}
-        <div className="space-y-6 lg:col-span-1">
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16 border-2 border-primary/10">
-                  <AvatarFallback className="text-lg bg-primary/5 text-primary font-semibold">
+  const statusConfig = LEAD_STATUS_CONFIG[lead.status] || LEAD_STATUS_CONFIG.NEW;
+  const sourceConfig = LEAD_SOURCE_CONFIG[lead.leadSource] || LEAD_SOURCE_CONFIG.OTHER;
+  const daysInPipeline = calculateDaysInPipeline(lead.createdAt);
+  const progressPercent = lead.status === 'LOST' ? 0 : (statusConfig.step / 5) * 100;
+  const quotationStatusConfig = quotation ? QUOTATION_STATUS_CONFIG[quotation.status] || QUOTATION_STATUS_CONFIG.DRAFT : null;
+
+  return (
+    <TooltipProvider>
+      <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
+        <div className="container mx-auto px-4 py-8 max-w-7xl space-y-8">
+
+          {/* Hero Header */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border shadow-sm">
+            <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]" />
+            <div className="relative px-8 py-8">
+              {/* Breadcrumb */}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push('/leads')}
+                  className="gap-1 h-8 px-2 -ml-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Leads
+                </Button>
+                <ChevronRight className="h-4 w-4" />
+                <span className="font-medium text-foreground">{lead.leadNumber}</span>
+              </div>
+
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                {/* Left: Lead Info */}
+                <div className="flex items-start gap-4">
+                  {/* Avatar */}
+                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-2xl ring-4 ring-background shadow-lg">
                     {getInitials(lead.fullName)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle className="text-lg">{lead.fullName}</CardTitle>
-                  <CardDescription>{lead.leadNumber}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <Separator />
-            <CardContent className="pt-6 space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="truncate" title={lead.email}>{lead.email}</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span>{lead.contactNumber}</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span>{lead.homeCountry}</span>
-                </div>
-              </div>
-
-              <Separator />
-              
-              <div className="space-y-3 pt-2">
-                <h4 className="text-sm font-medium flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-primary" /> Identity Details
-                </h4>
-                <div className="grid grid-cols-1 gap-2 text-sm">
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Emirates ID</span>
-                    <span className="font-medium">{lead.emiratesId}</span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Passport Number</span>
-                    <span className="font-medium">{lead.passportNumber}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Passport Expiry</span>
-                    <span className="font-medium">{format(new Date(lead.passportExpiryDate), 'PPP')}</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Lead Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-               <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Source</span>
-                  <Badge variant="secondary">{lead.leadSource.replace('_', ' ')}</Badge>
-               </div>
-               {lead.propertyInterest && (
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Interested Property</span>
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Building className="h-4 w-4 text-muted-foreground" />
-                    {lead.propertyInterest}
-                  </div>
-                </div>
-               )}
-               {lead.notes && (
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Notes</span>
-                  <p className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
-                    {lead.notes}
-                  </p>
-                </div>
-               )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Column: Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          <Tabs defaultValue="quotations" className="w-full">
-            <TabsList className="w-full justify-start h-12 p-1 bg-muted/50">
-              <TabsTrigger value="quotations" className="flex-1 md:flex-none px-6">
-                Quotations ({quotations?.length ?? 0})
-              </TabsTrigger>
-              <TabsTrigger value="documents" className="flex-1 md:flex-none px-6">
-                Documents ({documents?.length ?? 0})
-              </TabsTrigger>
-              <TabsTrigger value="history" className="flex-1 md:flex-none px-6">
-                History ({history?.length ?? 0})
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="quotations" className="mt-6 space-y-4">
-              <div className="flex items-center justify-between">
-                 <h3 className="text-lg font-medium">Quotations</h3>
-                 {/* Optional secondary action here if needed */}
-              </div>
-              <Card>
-                <CardContent className="p-0">
-                  {(quotations?.length ?? 0) === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                      <FileText className="h-12 w-12 mb-4 opacity-20" />
-                      <p>No quotations created yet</p>
-                      <Button 
-                        variant="link" 
-                        onClick={() => router.push(`/quotations/create?leadId=${leadId}`)}
-                      >
-                        Create your first quotation
-                      </Button>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
+                        {formatName(lead.fullName)}
+                      </h1>
+                      <Badge variant="secondary" className={cn("shadow-sm", statusConfig.badge)}>
+                        <div className={cn("h-1.5 w-1.5 rounded-full mr-1.5", statusConfig.dot)} />
+                        {statusConfig.label}
+                      </Badge>
                     </div>
+
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                      <span className="font-mono">{lead.leadNumber}</span>
+                      <span className="flex items-center gap-1.5">
+                        {sourceConfig.icon}
+                        {sourceConfig.label}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+                        {daysInPipeline} days in pipeline
+                      </span>
+                    </div>
+
+                    {/* Pipeline Progress */}
+                    {lead.status !== 'LOST' && lead.status !== 'CONVERTED' && (
+                      <div className="pt-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">Pipeline Progress</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Progress value={progressPercent} className="h-2 w-48" />
+                          <span className="text-xs font-medium">{Math.round(progressPercent)}%</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right: Actions */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push(`/leads/${leadId}/edit`)}
+                    className="gap-2"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit Lead
+                  </Button>
+
+                  {/* Conditional: Create Quotation or View Quotation */}
+                  {!quotation ? (
+                    <Button
+                      onClick={() => router.push(`/quotations/create?leadId=${leadId}`)}
+                      className="gap-2 shadow-lg shadow-primary/20"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Create Quotation
+                    </Button>
                   ) : (
-                    <div className="divide-y">
-                      {quotations?.map((quote) => (
-                        <div
-                          key={quote.id}
-                          className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer gap-4"
-                          onClick={() => router.push(`/quotations/${quote.id}`)}
+                    <Button
+                      onClick={() => router.push(`/quotations/${quotation.id}`)}
+                      className="gap-2"
+                      variant="secondary"
+                    >
+                      <Eye className="h-4 w-4" />
+                      View Quotation
+                    </Button>
+                  )}
+
+                  <AlertDialog>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-10 w-10">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => router.push(`/leads/${leadId}/edit`)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit Lead
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <AlertDialogTrigger asChild>
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600"
+                            onSelect={(e) => e.preventDefault()}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Lead
+                          </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Lead</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this lead? This action cannot be undone and will remove all associated documents and history.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-red-600 text-white hover:bg-red-700"
+                          onClick={handleDeleteLead}
                         >
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-primary">{quote.quotationNumber}</span>
-                              <Badge variant={quote.status === 'ACCEPTED' ? 'default' : 'secondary'}>
-                                {quote.status}
-                              </Badge>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Sidebar */}
+            <div className="space-y-6">
+              {/* Contact Information */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <User className="h-4 w-4 text-primary" />
+                    Contact Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                      <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground">Email</p>
+                        <p className="text-sm font-medium truncate">{lead.email}</p>
+                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => window.open(`mailto:${lead.email}`)}
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Send Email</TooltipContent>
+                      </Tooltip>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                      <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground">Phone</p>
+                        <p className="text-sm font-medium">{lead.contactNumber}</p>
+                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => window.open(`tel:${lead.contactNumber}`)}
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Call</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Lead Information */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Target className="h-4 w-4 text-primary" />
+                    Lead Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    {sourceConfig.icon}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground">Lead Source</p>
+                      <p className="text-sm font-medium">{sourceConfig.label}</p>
+                    </div>
+                  </div>
+
+                  {lead.propertyInterest && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <Building className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground">Property Interest</p>
+                        <p className="text-sm font-medium">{lead.propertyInterest}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground">Created</p>
+                      <p className="text-sm font-medium">
+                        {format(new Date(lead.createdAt), 'dd MMM yyyy, HH:mm')}
+                      </p>
+                    </div>
+                  </div>
+
+                  {lead.notes && (
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <StickyNote className="h-4 w-4 text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">Notes</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {lead.notes}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right: Main Content Tabs */}
+            <div className="lg:col-span-2">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="w-full justify-start h-12 p-1 bg-muted/50 rounded-lg mb-6">
+                  <TabsTrigger value="overview" className="flex-1 sm:flex-none gap-2 px-4">
+                    <Target className="h-4 w-4" />
+                    Overview
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="flex-1 sm:flex-none gap-2 px-4">
+                    <History className="h-4 w-4" />
+                    History
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Overview Tab */}
+                <TabsContent value="overview" className="space-y-6">
+                  {/* Pipeline Status */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Pipeline Status</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between gap-2">
+                        {Object.entries(LEAD_STATUS_CONFIG)
+                          .filter(([key]) => key !== 'LOST')
+                          .map(([key, config], index) => {
+                            const isActive = lead.status === key;
+                            const isPast = config.step < statusConfig.step;
+                            const isFuture = config.step > statusConfig.step;
+
+                            return (
+                              <div key={key} className="flex-1 relative">
+                                <div className="flex flex-col items-center">
+                                  <div
+                                    className={cn(
+                                      "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all",
+                                      isActive && "bg-primary border-primary text-primary-foreground",
+                                      isPast && "bg-primary/20 border-primary/40 text-primary",
+                                      isFuture && "bg-muted border-muted-foreground/20 text-muted-foreground"
+                                    )}
+                                  >
+                                    {config.icon}
+                                  </div>
+                                  <span
+                                    className={cn(
+                                      "text-xs mt-2 text-center",
+                                      isActive && "font-semibold text-foreground",
+                                      (isPast || isFuture) && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {config.label}
+                                  </span>
+                                </div>
+                                {index < 4 && (
+                                  <div
+                                    className={cn(
+                                      "absolute top-5 left-[60%] w-[80%] h-0.5",
+                                      isPast ? "bg-primary/40" : "bg-muted"
+                                    )}
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Quotation Card - Single quotation inline display */}
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Receipt className="h-4 w-4 text-primary" />
+                        Quotation
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {!quotation ? (
+                        <div className="text-center py-8">
+                          <div className="p-4 rounded-full bg-muted inline-flex mb-4">
+                            <Receipt className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                          <h3 className="text-lg font-semibold mb-2">No quotation yet</h3>
+                          <p className="text-muted-foreground max-w-sm mx-auto mb-6">
+                            Create a quotation to send pricing details and collect identity documents from this lead.
+                          </p>
+                          <Button
+                            onClick={() => router.push(`/quotations/create?leadId=${leadId}`)}
+                            className="gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Create Quotation
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {/* Quotation Summary */}
+                          <div
+                            className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                            onClick={() => router.push(`/quotations/${quotation.id}`)}
+                          >
+                            <div className="p-3 rounded-lg bg-primary/10">
+                              <Receipt className="h-5 w-5 text-primary" />
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Building className="h-3 w-3" />
-                              <span>{quote.propertyName}</span>
-                              <span>•</span>
-                              <span>AED {quote.totalFirstPayment.toLocaleString()}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold">{quotation.quotationNumber}</h4>
+                                <Badge className={cn(quotationStatusConfig?.badge)}>
+                                  {quotationStatusConfig?.label}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Building className="h-3.5 w-3.5" />
+                                  {quotation.propertyName}
+                                </span>
+                                {quotation.unitNumber && (
+                                  <span>Unit {quotation.unitNumber}</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-bold">
+                                AED {quotation.totalFirstPayment?.toLocaleString() || '0'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Total First Payment</p>
+                            </div>
+                            <Button variant="ghost" size="icon" className="shrink-0">
+                              <ArrowUpRight className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          {/* Quotation Details */}
+                          <div className="grid grid-cols-2 gap-4 pt-2">
+                            <div className="p-3 rounded-lg bg-muted/50">
+                              <p className="text-xs text-muted-foreground">Issue Date</p>
+                              <p className="text-sm font-medium">
+                                {quotation.issueDate
+                                  ? format(new Date(quotation.issueDate), 'dd MMM yyyy')
+                                  : '-'}
+                              </p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-muted/50">
+                              <p className="text-xs text-muted-foreground">Valid Until</p>
+                              <p className="text-sm font-medium">
+                                {quotation.validityDate
+                                  ? format(new Date(quotation.validityDate), 'dd MMM yyyy')
+                                  : '-'}
+                              </p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-muted/50">
+                              <p className="text-xs text-muted-foreground">Base Rent</p>
+                              <p className="text-sm font-medium">
+                                AED {quotation.baseRent?.toLocaleString() || '0'}
+                              </p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-muted/50">
+                              <p className="text-xs text-muted-foreground">Security Deposit</p>
+                              <p className="text-sm font-medium">
+                                AED {quotation.securityDeposit?.toLocaleString() || '0'}
+                              </p>
                             </div>
                           </div>
-                          
-                          <div className="flex items-center gap-2 w-full md:w-auto">
-                             {quote.status === 'ACCEPTED' && (
+
+                          {/* Actions based on quotation status */}
+                          <div className="flex items-center gap-3 pt-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => router.push(`/quotations/${quotation.id}`)}
+                              className="gap-2 flex-1"
+                            >
+                              <Eye className="h-4 w-4" />
+                              View Details
+                            </Button>
+                            {quotation.status === 'ACCEPTED' && (
                               <Button
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleConvertToTenant(quote.id);
-                                }}
-                                disabled={convertingQuotationId === quote.id}
-                                className="w-full md:w-auto"
+                                onClick={handleConvertToTenant}
+                                disabled={isConverting}
+                                className="gap-2 flex-1"
                               >
-                                {convertingQuotationId === quote.id ? 'Converting...' : 'Convert to Tenant'}
+                                <UserCheck className="h-4 w-4" />
+                                {isConverting ? 'Converting...' : 'Convert to Tenant'}
                               </Button>
                             )}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-            <TabsContent value="documents" className="mt-6 space-y-4">
-              <div className="flex items-center justify-between">
-                 <h3 className="text-lg font-medium">Documents</h3>
-              </div>
-                  <DocumentList
-                    leadId={leadId}
-                    documents={documents || []}
-                    onDownload={handleDownloadDocument}
-                    data-testid="list-documents"
-                  />
-            </TabsContent>
+                {/* History Tab */}
+                <TabsContent value="history" className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Activity Timeline</h3>
+                  </div>
 
-            <TabsContent value="history" className="mt-6 space-y-4">
-              <div className="flex items-center justify-between">
-                 <h3 className="text-lg font-medium">Timeline</h3>
-              </div>
-              <Card>
-                <CardContent className="p-6">
-                  {(history?.length ?? 0) === 0 ? (
-                    <p className="text-center py-8 text-muted-foreground">No history available</p>
+                  {history.length === 0 ? (
+                    <Card className="border-dashed border-2">
+                      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                        <div className="p-4 rounded-full bg-muted mb-4">
+                          <History className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">No activity yet</h3>
+                        <p className="text-muted-foreground max-w-sm">
+                          Activity will appear here as you interact with this lead.
+                        </p>
+                      </CardContent>
+                    </Card>
                   ) : (
-                    <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-muted before:to-transparent" data-testid="timeline-lead-history">
-                      {history?.map((item) => (
-                        <div key={item.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                          {/* Icon/Dot */}
-                          <div className="flex items-center justify-center w-10 h-10 rounded-full border bg-background shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                             <Calendar className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                          
-                          {/* Content Card */}
-                          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-card p-4 rounded border shadow-sm">
-                            <div className="flex items-center justify-between space-x-2 mb-1">
-                              <div className="font-bold text-sm text-primary">{item.eventType.replace('_', ' ')}</div>
-                              <time className="font-mono text-xs text-muted-foreground">{format(new Date(item.createdAt), 'MMM d, yyyy p')}</time>
-                            </div>
-                             {item.eventData && Object.keys(item.eventData).length > 0 && (
-                              <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded mt-2 overflow-x-auto">
-                                <pre className="whitespace-pre-wrap font-mono">
-                                  {JSON.stringify(item.eventData, null, 2).replace(/[{}"\[\]]/g, '')}
-                                </pre>
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="relative">
+                          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-muted" />
+                          <div className="space-y-6">
+                            {history.map((item, index) => (
+                              <div key={item.id} className="relative pl-10">
+                                <div
+                                  className={cn(
+                                    "absolute left-0 w-8 h-8 rounded-full flex items-center justify-center border-2 bg-background",
+                                    index === 0 ? "border-primary" : "border-muted"
+                                  )}
+                                >
+                                  <Calendar
+                                    className={cn(
+                                      "h-4 w-4",
+                                      index === 0 ? "text-primary" : "text-muted-foreground"
+                                    )}
+                                  />
+                                </div>
+                                <div className="p-4 rounded-lg border bg-card">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="font-semibold text-sm">
+                                      {item.eventType.replace(/_/g, ' ')}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {format(new Date(item.createdAt), 'dd MMM yyyy, HH:mm')}
+                                    </span>
+                                  </div>
+                                  {item.eventData && Object.keys(item.eventData).length > 0 && (
+                                    <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded mt-2 font-mono">
+                                      {Object.entries(item.eventData).map(([key, value]) => (
+                                        <div key={key}>
+                                          <span className="text-muted-foreground">{key}: </span>
+                                          <span>{String(value)}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            )}
+                            ))}
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </CardContent>
+                    </Card>
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

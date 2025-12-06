@@ -1,0 +1,512 @@
+'use client';
+
+/**
+ * Cheque Breakdown Section Component
+ * SCP-2025-12-06: Payment breakdown with auto-split across cheques
+ *
+ * Features:
+ * - Yearly rent amount input
+ * - Number of cheques selection (1-12)
+ * - First month payment method (Cash/Cheque)
+ * - Editable first month total payment (includes one-time fees)
+ * - Auto-adjusted remaining cheques when first payment is overridden
+ */
+
+import { useEffect, useState, useMemo } from 'react';
+import {
+  Banknote,
+  CreditCard,
+  Calculator,
+  FileSpreadsheet,
+  Edit3,
+  RotateCcw,
+  Info,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { CurrencyInput } from '@/components/ui/currency-input';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { FirstMonthPaymentMethod, type ChequeBreakdownItem } from '@/types/quotations';
+import { addMonths } from 'date-fns';
+
+interface ChequeBreakdownSectionProps {
+  yearlyRentAmount: number;
+  numberOfCheques: number;
+  firstMonthPaymentMethod: FirstMonthPaymentMethod;
+  leaseStartDate: Date;
+  chequeBreakdown: ChequeBreakdownItem[];
+  // One-time fees
+  securityDeposit: number;
+  adminFee: number;
+  serviceCharges: number;
+  parkingFee: number;
+  // Callbacks
+  onYearlyRentAmountChange: (value: number) => void;
+  onNumberOfChequesChange: (value: number) => void;
+  onFirstMonthPaymentMethodChange: (value: FirstMonthPaymentMethod) => void;
+  onChequeBreakdownChange: (breakdown: ChequeBreakdownItem[]) => void;
+  onFirstMonthTotalChange?: (value: number) => void;
+  className?: string;
+}
+
+const formatCurrencyLocal = (amount: number) => {
+  return new Intl.NumberFormat('en-AE', {
+    style: 'currency',
+    currency: 'AED',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0, // No decimals - whole numbers only
+  }).format(amount);
+};
+
+export function ChequeBreakdownSection({
+  yearlyRentAmount,
+  numberOfCheques,
+  firstMonthPaymentMethod,
+  leaseStartDate,
+  chequeBreakdown,
+  securityDeposit,
+  adminFee,
+  serviceCharges,
+  parkingFee,
+  onYearlyRentAmountChange,
+  onNumberOfChequesChange,
+  onFirstMonthPaymentMethodChange,
+  onChequeBreakdownChange,
+  onFirstMonthTotalChange,
+  className,
+}: ChequeBreakdownSectionProps) {
+  // Track if first month payment has been manually overridden
+  const [isFirstMonthOverridden, setIsFirstMonthOverridden] = useState(false);
+  const [customFirstMonthTotal, setCustomFirstMonthTotal] = useState(0);
+
+  // Calculate one-time fees total
+  const oneTimeFees = useMemo(() => {
+    return securityDeposit + adminFee + serviceCharges + parkingFee;
+  }, [securityDeposit, adminFee, serviceCharges, parkingFee]);
+
+  // numberOfCheques represents number of PAYMENTS (rent is split across these)
+  // The first payment always includes fees + first rent portion
+  //
+  // Example with numberOfPayments = 6 and yearly rent = 12000:
+  // - Each rent payment = 12000 / 6 = 2000
+  // - First payment = 2000 (rent) + fees
+  // - Payments #2-6 = 2000 each (rent only)
+  // - Total = 6 payments
+
+  // Calculate each rent payment amount (yearly / number of payments)
+  const defaultRentPerPayment = useMemo(() => {
+    if (yearlyRentAmount <= 0 || numberOfCheques <= 0) return 0;
+    return yearlyRentAmount / numberOfCheques;
+  }, [yearlyRentAmount, numberOfCheques]);
+
+  // Calculate default first month total (one-time fees + first rent payment)
+  const defaultFirstMonthTotal = useMemo(() => {
+    return oneTimeFees + defaultRentPerPayment;
+  }, [oneTimeFees, defaultRentPerPayment]);
+
+  // Current first month total (custom or default)
+  const currentFirstMonthTotal = isFirstMonthOverridden ? customFirstMonthTotal : defaultFirstMonthTotal;
+
+  // Calculate the first payment rent portion from the total
+  const firstRentPortion = useMemo(() => {
+    return Math.max(0, currentFirstMonthTotal - oneTimeFees);
+  }, [currentFirstMonthTotal, oneTimeFees]);
+
+  // Calculate remaining amount to distribute across other cheques (cheques #2 to #numberOfCheques)
+  const remainingRentAmount = useMemo(() => {
+    return Math.max(0, yearlyRentAmount - firstRentPortion);
+  }, [yearlyRentAmount, firstRentPortion]);
+
+  // Number of remaining cheques after first payment
+  const remainingChequeCount = numberOfCheques - 1;
+
+  // Calculate cheque breakdown with adjusted amounts (whole numbers only)
+  useEffect(() => {
+    if (yearlyRentAmount > 0 && numberOfCheques > 0) {
+      const breakdown: ChequeBreakdownItem[] = [];
+
+      // First payment rent portion (rounded to whole number)
+      const firstRentPortionRounded = Math.round(firstRentPortion);
+
+      // First payment (includes fees + first rent portion)
+      // For CHEQUE: This is cheque #1 with fees
+      // For CASH: This is cash payment with fees (shown as payment #1)
+      breakdown.push({
+        chequeNumber: 1,
+        amount: firstRentPortionRounded, // Just the rent portion (whole number), fees shown separately
+        dueDate: leaseStartDate.toISOString().split('T')[0],
+      });
+
+      // Remaining payments (rent only cheques)
+      if (remainingChequeCount > 0) {
+        // Calculate remaining rent after first payment (using rounded first portion)
+        const actualRemainingRent = yearlyRentAmount - firstRentPortionRounded;
+
+        // Use floor for base amount to ensure we don't exceed total
+        const baseAmount = Math.floor(actualRemainingRent / remainingChequeCount);
+
+        // Calculate how many payments need an extra 1 to make up the difference
+        const remainder = actualRemainingRent - (baseAmount * remainingChequeCount);
+
+        for (let i = 0; i < remainingChequeCount; i++) {
+          const dueDate = addMonths(leaseStartDate, i + 1);
+          // Add +1 to the first 'remainder' payments to distribute the difference evenly
+          const amount = i < remainder ? baseAmount + 1 : baseAmount;
+
+          breakdown.push({
+            chequeNumber: i + 2, // Start from #2
+            amount: amount,
+            dueDate: dueDate.toISOString().split('T')[0],
+          });
+        }
+      }
+
+      onChequeBreakdownChange(breakdown);
+    }
+  }, [yearlyRentAmount, numberOfCheques, leaseStartDate, firstRentPortion, remainingRentAmount, remainingChequeCount, onChequeBreakdownChange]);
+
+  // Reset custom first month when inputs change (unless manually set)
+  useEffect(() => {
+    if (!isFirstMonthOverridden) {
+      setCustomFirstMonthTotal(defaultFirstMonthTotal);
+    }
+  }, [defaultFirstMonthTotal, isFirstMonthOverridden]);
+
+  // Notify parent of first month total changes
+  useEffect(() => {
+    onFirstMonthTotalChange?.(currentFirstMonthTotal);
+  }, [currentFirstMonthTotal, onFirstMonthTotalChange]);
+
+  const handleFirstMonthTotalChange = (value: number) => {
+    // Enforce minimum: first month total cannot be less than default (fees + first rent)
+    // This prevents loss to the business
+    const minValue = Math.round(defaultFirstMonthTotal);
+    const adjustedValue = Math.max(value, minValue);
+    setCustomFirstMonthTotal(adjustedValue);
+    setIsFirstMonthOverridden(adjustedValue !== minValue);
+  };
+
+  const handleResetFirstMonth = () => {
+    setIsFirstMonthOverridden(false);
+    setCustomFirstMonthTotal(defaultFirstMonthTotal);
+  };
+
+  // Number of payments options (1-12)
+  const paymentOptions = Array.from({ length: 12 }, (_, i) => i + 1);
+
+  // Calculate the difference from default
+  const adjustmentAmount = currentFirstMonthTotal - defaultFirstMonthTotal;
+
+  return (
+    <div className={cn('space-y-6', className)}>
+      {/* Section Header */}
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+          <FileSpreadsheet className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-lg">Payment Breakdown</h3>
+          <p className="text-sm text-muted-foreground">
+            Configure yearly rent and cheque schedule
+          </p>
+        </div>
+      </div>
+
+      {/* Main Card */}
+      <div className="rounded-2xl border border-muted bg-muted/20 p-6">
+        {/* Yearly Rent Amount */}
+        <div className="mb-6">
+          <Label className="text-muted-foreground mb-2 block">
+            Yearly Rent Amount
+          </Label>
+          <CurrencyInput
+            min={0}
+            value={yearlyRentAmount}
+            onChange={onYearlyRentAmountChange}
+            className="h-12 rounded-xl border-2 text-lg"
+            data-testid="input-yearly-rent"
+          />
+        </div>
+
+        {/* Number of Payments & First Month Payment Method */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="space-y-2">
+            <Label className="text-muted-foreground">Number of Payments</Label>
+            <Select
+              value={numberOfCheques.toString()}
+              onValueChange={(v) => onNumberOfChequesChange(parseInt(v))}
+            >
+              <SelectTrigger className="h-12 rounded-xl border-2" data-testid="select-payments">
+                <SelectValue placeholder="Select payments" />
+              </SelectTrigger>
+              <SelectContent>
+                {paymentOptions.map((num) => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num} {num === 1 ? 'Payment' : 'Payments'}
+                    {num === 12 && ' (Monthly)'}
+                    {num === 4 && ' (Quarterly)'}
+                    {num === 2 && ' (Semi-annual)'}
+                    {num === 1 && ' (Annual)'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-muted-foreground">First Payment Mode</Label>
+            <RadioGroup
+              value={firstMonthPaymentMethod}
+              onValueChange={(v) => onFirstMonthPaymentMethodChange(v as FirstMonthPaymentMethod)}
+              className="flex gap-4"
+            >
+              <label
+                htmlFor="payment-cash"
+                className={cn(
+                  'flex-1 flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all',
+                  firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH
+                    ? 'border-primary bg-primary/5'
+                    : 'border-muted hover:border-muted-foreground/30'
+                )}
+              >
+                <RadioGroupItem value={FirstMonthPaymentMethod.CASH} id="payment-cash" />
+                <Banknote className="h-5 w-5 text-green-600" />
+                <span className="font-medium">Cash</span>
+              </label>
+              <label
+                htmlFor="payment-cheque"
+                className={cn(
+                  'flex-1 flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all',
+                  firstMonthPaymentMethod === FirstMonthPaymentMethod.CHEQUE
+                    ? 'border-primary bg-primary/5'
+                    : 'border-muted hover:border-muted-foreground/30'
+                )}
+              >
+                <RadioGroupItem value={FirstMonthPaymentMethod.CHEQUE} id="payment-cheque" />
+                <CreditCard className="h-5 w-5 text-blue-600" />
+                <span className="font-medium">Cheque</span>
+              </label>
+            </RadioGroup>
+          </div>
+        </div>
+
+        <Separator className="my-6" />
+
+        {/* First Month Total Payment - Editable (Always visible, required field) */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Label className="text-foreground font-medium">First Month Total Payment *</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-sm">
+                      Includes one-time fees (Security Deposit, Admin Fee, Service Charges, Parking)
+                      plus first rent payment. Adjust to redistribute across remaining payments.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              {isFirstMonthOverridden && (
+                <Badge variant="secondary" className="text-xs gap-1">
+                  <Edit3 className="h-3 w-3" />
+                  Custom
+                </Badge>
+              )}
+            </div>
+            {isFirstMonthOverridden && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleResetFirstMonth}
+                className="text-xs gap-1"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Reset
+              </Button>
+            )}
+          </div>
+
+          <CurrencyInput
+            min={0}
+            value={currentFirstMonthTotal}
+            onChange={handleFirstMonthTotalChange}
+            className={cn(
+              "h-12 rounded-xl border-2 text-lg",
+              isFirstMonthOverridden && "border-amber-500 bg-amber-50/50"
+            )}
+            data-testid="input-first-month-total"
+          />
+
+          {/* Breakdown of first month */}
+          <div className="mt-3 p-3 rounded-lg bg-muted/30 text-sm space-y-1">
+            <div className="flex justify-between text-muted-foreground">
+              <span>Security Deposit</span>
+              <span>{formatCurrencyLocal(securityDeposit)}</span>
+            </div>
+            <div className="flex justify-between text-muted-foreground">
+              <span>Admin Fee</span>
+              <span>{formatCurrencyLocal(adminFee)}</span>
+            </div>
+            <div className="flex justify-between text-muted-foreground">
+              <span>Service Charges</span>
+              <span>{formatCurrencyLocal(serviceCharges)}</span>
+            </div>
+            {parkingFee > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Parking Fee</span>
+                <span>{formatCurrencyLocal(parkingFee)}</span>
+              </div>
+            )}
+            <Separator className="my-2" />
+            <div className="flex justify-between font-medium">
+              <span>One-time Fees Subtotal</span>
+              <span>{formatCurrencyLocal(oneTimeFees)}</span>
+            </div>
+            <div className="flex justify-between text-primary font-medium">
+              <span>First Rent Payment</span>
+              <span>{formatCurrencyLocal(firstRentPortion)}</span>
+            </div>
+            {adjustmentAmount > 0 && (
+              <div className="flex justify-between text-xs pt-1 text-amber-600">
+                <span>Extra collected (reduces other payments)</span>
+                <span>+{formatCurrencyLocal(adjustmentAmount)}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Cheque Schedule Table */}
+        {yearlyRentAmount > 0 && numberOfCheques > 0 && chequeBreakdown.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Payment Schedule</span>
+                <Badge variant="secondary" className="text-xs">
+                  {chequeBreakdown.length} Payments
+                </Badge>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                <Calculator className="h-3 w-3 mr-1" />
+                {isFirstMonthOverridden ? 'Adjusted' : 'Auto-Split'}
+              </Badge>
+            </div>
+
+            <div className="rounded-xl border bg-card overflow-hidden">
+              {/* Table Header */}
+              <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                <div>#</div>
+                <div>Payment Mode</div>
+                <div className="text-right">Amount</div>
+              </div>
+
+              {/* Table Body */}
+              <div>
+                {chequeBreakdown.map((item, index) => {
+                  // First payment shows rent + fees, others show just rent
+                  const displayAmount = index === 0 ? item.amount + oneTimeFees : item.amount;
+
+                  return (
+                    <div
+                      key={item.chequeNumber}
+                      className={cn(
+                        'grid grid-cols-3 gap-4 p-3 hover:bg-muted/30 transition-colors',
+                        index !== chequeBreakdown.length - 1 && 'border-b border-muted/50',
+                        index === 0 && isFirstMonthOverridden && 'bg-amber-50/30'
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{item.chequeNumber}</span>
+                        {index === 0 && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                            + Fees
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {index === 0 && firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
+                          <>
+                            <Banknote className="h-4 w-4 text-green-600" />
+                            <span className="text-sm text-green-600 font-medium">Cash</span>
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm text-blue-600 font-medium">Cheque</span>
+                          </>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-medium tabular-nums">
+                          {formatCurrencyLocal(displayAmount)}
+                        </span>
+                        {index === 0 && (
+                          <div className="text-[10px] text-muted-foreground">
+                            ({formatCurrencyLocal(item.amount)} + fees)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Table Footer - Totals */}
+              <div className="bg-primary/5 border-t">
+                <div className="grid grid-cols-3 gap-4 p-3 font-medium">
+                  <div className="col-span-2 text-sm">Total Rent (Yearly)</div>
+                  <div className="text-right text-sm tabular-nums text-primary">
+                    {formatCurrencyLocal(yearlyRentAmount)}
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 px-3 pb-3 text-muted-foreground">
+                  <div className="col-span-2 text-xs">+ One-time Fees</div>
+                  <div className="text-right text-xs tabular-nums">
+                    {formatCurrencyLocal(oneTimeFees)}
+                  </div>
+                </div>
+                <Separator />
+                <div className="grid grid-cols-3 gap-4 p-3 font-semibold">
+                  <div className="col-span-2 text-sm">Grand Total</div>
+                  <div className="text-right text-sm tabular-nums text-primary">
+                    {formatCurrencyLocal(yearlyRentAmount + oneTimeFees)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {(yearlyRentAmount <= 0 || numberOfCheques <= 0) && (
+          <div className="text-center py-8 text-muted-foreground">
+            <Calculator className="h-10 w-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm">Enter yearly rent amount to see cheque breakdown</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default ChequeBreakdownSection;

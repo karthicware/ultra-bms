@@ -2,31 +2,29 @@
 'use client';
 
 /**
- * Create Quotation Page - Redesigned
- * A refined, step-by-step quotation creation experience
+ * Edit Quotation Page
+ * SCP-2025-12-06: Edit existing quotation with same styling as create page
  */
 
-import { Suspense, useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect, useCallback, use } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import {
   CalendarIcon,
   Car,
   Building2,
   FileText,
-  CreditCard,
   ChevronRight,
   ChevronLeft,
   Check,
-  Upload,
   Sparkles,
   ArrowRight,
   Receipt,
   Shield,
   User,
-  MapPin
+  MapPin,
+  AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -55,40 +53,31 @@ import {
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { createQuotation, uploadQuotationDocument } from '@/services/quotations.service';
-import { getLeadById } from '@/services/leads.service';
+import { getQuotationById, updateQuotation } from '@/services/quotations.service';
 import { getAvailableParkingSpots } from '@/services/parking.service';
 import { getProperties } from '@/services/properties.service';
 import { getAvailableUnits } from '@/services/units.service';
 import { PropertyStatus, type Property } from '@/types/properties';
 import type { Unit } from '@/types/units';
 import {
-  createQuotationSchema,
   type CreateQuotationFormData,
   calculateTotalFirstPayment,
   DEFAULT_QUOTATION_TERMS,
-  getDefaultValidityDate,
-  calculateChequeBreakdown,
 } from '@/lib/validations/quotations';
 import type { ParkingSpot } from '@/types/parking';
-import { FirstMonthPaymentMethod, type ChequeBreakdownItem } from '@/types/quotations';
+import { FirstMonthPaymentMethod, type ChequeBreakdownItem, QuotationStatus, type Quotation } from '@/types/quotations';
 import { ChequeBreakdownSection } from '@/components/quotations/ChequeBreakdownSection';
-import { FileUploadProgress, type FileUploadStatus } from '@/components/ui/file-upload-progress';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Banknote } from 'lucide-react';
+import { Banknote, CreditCard } from 'lucide-react';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', minimumFractionDigits: 0 }).format(amount);
 };
 
-// Step configuration
+// Step configuration (3 steps for edit - no identity step)
 const STEPS = [
   { id: 1, title: 'Property', description: 'Select unit', icon: Building2 },
-  { id: 2, title: 'Identity', description: 'Documents', icon: User },
-  { id: 3, title: 'Financials', description: 'Pricing', icon: Receipt },
-  { id: 4, title: 'Terms', description: 'Conditions', icon: FileText },
+  { id: 2, title: 'Financials', description: 'Pricing', icon: Receipt },
+  { id: 3, title: 'Terms', description: 'Conditions', icon: FileText },
 ];
 
 // Progress Step Component
@@ -170,27 +159,20 @@ function QuotationPreview({
   numberOfCheques: number;
   firstMonthPaymentMethod: FirstMonthPaymentMethod;
 }) {
-  // Calculate first month rent payment (yearly / number of cheques) - rounded to whole number
   const firstMonthRent = yearlyRentAmount > 0 && numberOfCheques > 0
     ? Math.round(yearlyRentAmount / numberOfCheques)
     : 0;
 
-  // Calculate one-time fees total
   const oneTimeFees = (values[1] || 0) + (values[2] || 0) + (values[3] || 0) + (values[4] || 0);
-
-  // Calculate default first month total (fees + first rent)
   const defaultFirstMonthTotal = oneTimeFees + firstMonthRent;
-
-  // Calculate adjustment amount (extra or less collected)
   const adjustmentAmount = totalFirstPayment - defaultFirstMonthTotal;
+
   return (
     <div className="relative overflow-hidden rounded-3xl border border-primary/10 bg-gradient-to-br from-card via-card to-primary/5 p-6 shadow-xl">
-      {/* Decorative elements */}
       <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl" />
       <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
 
       <div className="relative">
-        {/* Header */}
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2">
@@ -202,16 +184,15 @@ function QuotationPreview({
               </span>
             </div>
             <h3 className="mt-3 text-lg font-semibold">
-              {leadName || 'New Quotation'}
+              {leadName || 'Quotation'}
             </h3>
           </div>
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">Draft</p>
+            <p className="text-xs text-muted-foreground">Editing</p>
             <p className="text-sm font-medium">{format(new Date(), 'dd MMM yyyy')}</p>
           </div>
         </div>
 
-        {/* Property Info */}
         {(selectedProperty || selectedUnit) && (
           <div className="mt-6 rounded-2xl bg-muted/50 p-4">
             <div className="flex items-start gap-3">
@@ -228,7 +209,6 @@ function QuotationPreview({
           </div>
         )}
 
-        {/* Annual Rent Summary */}
         {yearlyRentAmount > 0 && (
           <div className="mt-6 rounded-2xl bg-primary/5 border border-primary/10 p-4">
             <div className="flex items-center justify-between mb-2">
@@ -244,9 +224,7 @@ function QuotationPreview({
           </div>
         )}
 
-        {/* Financial Breakdown */}
         <div className="mt-6 space-y-3">
-          {/* First Payment with payment method indicator */}
           {firstMonthRent > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground flex items-center gap-2">
@@ -285,7 +263,6 @@ function QuotationPreview({
               <span className="font-medium tabular-nums">{formatCurrency(values[4])}</span>
             </div>
           )}
-          {/* Show adjustment if first month total has been customized (extra collected only) */}
           {adjustmentAmount > 0 && (
             <div className="flex justify-between text-sm pt-2 border-t border-dashed border-muted-foreground/30 mt-2 text-amber-600">
               <span>Extra collected</span>
@@ -296,7 +273,6 @@ function QuotationPreview({
 
         <Separator className="my-5" />
 
-        {/* Total */}
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -307,7 +283,7 @@ function QuotationPreview({
             </p>
           </div>
           <div className="text-right">
-            <p className="text-3xl font-bold tracking-tight text-primary" data-testid="display-total-first-payment">
+            <p className="text-3xl font-bold tracking-tight text-primary">
               {formatCurrency(totalFirstPayment)}
             </p>
           </div>
@@ -317,16 +293,18 @@ function QuotationPreview({
   );
 }
 
-function CreateQuotationForm() {
+interface EditQuotationPageProps {
+  params: Promise<{ id: string }>;
+}
+
+function EditQuotationForm({ quotationId }: { quotationId: string }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
 
-  // Step state
   const [currentStep, setCurrentStep] = useState(1);
-
-  // Form state
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [leadName, setLeadName] = useState('');
   const [properties, setProperties] = useState<Property[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
@@ -335,20 +313,7 @@ function CreateQuotationForm() {
   const [availableParkingSpots, setAvailableParkingSpots] = useState<ParkingSpot[]>([]);
   const [loadingParkingSpots, setLoadingParkingSpots] = useState(false);
 
-  // Identity document uploads
-  const [emiratesIdFront, setEmiratesIdFront] = useState<File | null>(null);
-  const [emiratesIdBack, setEmiratesIdBack] = useState<File | null>(null);
-  const [passportFront, setPassportFront] = useState<File | null>(null);
-  const [passportBack, setPassportBack] = useState<File | null>(null);
-  const [emiratesIdNumber, setEmiratesIdNumber] = useState('');
-  const [emiratesIdExpiry, setEmiratesIdExpiry] = useState<Date | null>(null);
-  const [passportNumber, setPassportNumber] = useState('');
-  const [passportExpiry, setPassportExpiry] = useState<Date | null>(null);
-  const [nationality, setNationality] = useState('');
-  const [documentErrors, setDocumentErrors] = useState<string[]>([]);
-
-  // SCP-2025-12-06: Cheque breakdown state
-  // Default: 5 cheques and Cash as first payment method
+  // Cheque breakdown state
   const [yearlyRentAmount, setYearlyRentAmount] = useState<number>(0);
   const [numberOfCheques, setNumberOfCheques] = useState<number>(5);
   const [firstMonthPaymentMethod, setFirstMonthPaymentMethod] = useState<FirstMonthPaymentMethod>(
@@ -358,22 +323,18 @@ function CreateQuotationForm() {
   const [leaseStartDate, setLeaseStartDate] = useState<Date>(new Date());
   const [firstMonthTotal, setFirstMonthTotal] = useState<number | undefined>(undefined);
 
-  // Popover open states for date pickers
+  // Popover open states
   const [issueDateOpen, setIssueDateOpen] = useState(false);
   const [validityDateOpen, setValidityDateOpen] = useState(false);
-  const [emiratesIdExpiryOpen, setEmiratesIdExpiryOpen] = useState(false);
-  const [passportExpiryOpen, setPassportExpiryOpen] = useState(false);
-
-  const leadId = searchParams.get('leadId') || '';
 
   const form = useForm<CreateQuotationFormData>({
-    resolver: zodResolver(createQuotationSchema),
+    // Skip resolver validation - we do manual validation in validateStep
     mode: 'onBlur',
     reValidateMode: 'onChange',
     defaultValues: {
-      leadId: leadId,
+      leadId: '',
       issueDate: new Date(),
-      validityDate: getDefaultValidityDate(new Date()),
+      validityDate: new Date(),
       propertyId: '',
       unitId: '',
       baseRent: 0,
@@ -390,16 +351,102 @@ function CreateQuotationForm() {
     },
   });
 
-  // Fetch properties on mount - only ACTIVE properties with at least 1 AVAILABLE unit
+  // Load quotation data
+  useEffect(() => {
+    if (quotationId) {
+      setLoading(true);
+      getQuotationById(quotationId)
+        .then((data) => {
+          if (data.status !== QuotationStatus.DRAFT) {
+            toast({
+              title: 'Cannot Edit',
+              description: 'Only draft quotations can be edited',
+              variant: 'destructive',
+            });
+            router.push(`/quotations/${quotationId}`);
+            return;
+          }
+
+          setQuotation(data);
+          setLeadName(data.leadName || '');
+
+          // Check if quotation is editable (only DRAFT status)
+          if (data.status !== 'DRAFT') {
+            toast({
+              title: 'Warning',
+              description: `This quotation is in ${data.status} status and cannot be edited. Only DRAFT quotations can be modified.`,
+              variant: 'destructive',
+            });
+            router.push(`/quotations/${quotationId}`);
+            return;
+          }
+
+          // Parse cheque breakdown if string
+          if (data.chequeBreakdown && typeof data.chequeBreakdown === 'string') {
+            try {
+              data.chequeBreakdown = JSON.parse(data.chequeBreakdown);
+            } catch {
+              data.chequeBreakdown = [];
+            }
+          }
+
+          // Set cheque breakdown state
+          setYearlyRentAmount(data.yearlyRentAmount || 0);
+          setNumberOfCheques(data.numberOfCheques || 5);
+          setFirstMonthPaymentMethod(data.firstMonthPaymentMethod || FirstMonthPaymentMethod.CASH);
+          setChequeBreakdown(data.chequeBreakdown || []);
+          setFirstMonthTotal(data.firstMonthTotal);
+
+          // Helper to safely parse date strings from backend (YYYY-MM-DD format)
+          const parseBackendDate = (dateStr: string | undefined | null): Date => {
+            if (!dateStr) return new Date();
+            // For YYYY-MM-DD format, append time to avoid timezone issues
+            const parsed = new Date(dateStr + 'T00:00:00');
+            return isNaN(parsed.getTime()) ? new Date() : parsed;
+          };
+
+          // Set form values
+          form.reset({
+            leadId: data.leadId,
+            issueDate: parseBackendDate(data.issueDate),
+            validityDate: parseBackendDate(data.validityDate),
+            propertyId: data.propertyId,
+            unitId: data.unitId,
+            baseRent: data.baseRent || 0,
+            serviceCharges: data.serviceCharges || 0,
+            parkingSpotId: data.parkingSpotId || null,
+            parkingFee: data.parkingFee || 0,
+            securityDeposit: data.securityDeposit || 0,
+            adminFee: data.adminFee || 0,
+            documentRequirements: Array.isArray(data.documentRequirements)
+              ? data.documentRequirements
+              : data.documentRequirements?.split(', ') || ['Emirates ID', 'Passport', 'Visa'],
+            paymentTerms: data.paymentTerms || DEFAULT_QUOTATION_TERMS.paymentTerms,
+            moveinProcedures: data.moveinProcedures || DEFAULT_QUOTATION_TERMS.moveinProcedures,
+            cancellationPolicy: data.cancellationPolicy || DEFAULT_QUOTATION_TERMS.cancellationPolicy,
+            specialTerms: data.specialTerms || '',
+          });
+        })
+        .catch(() => {
+          toast({
+            title: 'Error',
+            description: 'Failed to load quotation details',
+            variant: 'destructive',
+          });
+          router.push('/leads');
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [quotationId, form, toast, router]);
+
+  // Fetch properties
   useEffect(() => {
     setLoadingProperties(true);
     getProperties({ size: 100, status: PropertyStatus.ACTIVE })
       .then((response) => {
-        // Filter to only include properties with at least 1 AVAILABLE unit
-        const propertiesWithAvailableUnits = response.content.filter(
-          (property) => (property.availableUnits ?? 0) > 0
-        );
-        setProperties(propertiesWithAvailableUnits);
+        setProperties(response.content);
       })
       .catch(() => {
         toast({
@@ -413,28 +460,23 @@ function CreateQuotationForm() {
       });
   }, [toast]);
 
-  // Fetch lead name
-  useEffect(() => {
-    if (leadId) {
-      getLeadById(leadId).then((lead) => setLeadName(lead.fullName));
-    }
-  }, [leadId]);
-
-  // Watch propertyId to fetch available parking spots
   const watchedPropertyId = form.watch('propertyId');
   const watchedUnitId = form.watch('unitId');
   const watchedParkingSpotId = form.watch('parkingSpotId');
 
-  // Get selected property and unit for preview
   const selectedProperty = properties.find(p => p.id === watchedPropertyId) || null;
   const selectedUnit = availableUnits.find(u => u.id === watchedUnitId) || null;
 
-  // Fetch available units when property changes
+  // Fetch units when property changes
   useEffect(() => {
     if (watchedPropertyId) {
       setLoadingUnits(true);
       getAvailableUnits(watchedPropertyId)
         .then((units) => {
+          // Include current unit even if not available
+          if (quotation?.unitId && !units.find(u => u.id === quotation.unitId)) {
+            // Add a placeholder for the current unit
+          }
           setAvailableUnits(units);
         })
         .catch(() => {
@@ -443,14 +485,12 @@ function CreateQuotationForm() {
         .finally(() => {
           setLoadingUnits(false);
         });
-      // Reset unit selection when property changes
-      form.setValue('unitId', '');
     } else {
       setAvailableUnits([]);
     }
-  }, [watchedPropertyId, form]);
+  }, [watchedPropertyId, quotation?.unitId]);
 
-  // Fetch available parking spots when property changes
+  // Fetch parking spots when property changes
   useEffect(() => {
     if (watchedPropertyId) {
       setLoadingParkingSpots(true);
@@ -464,15 +504,11 @@ function CreateQuotationForm() {
         .finally(() => {
           setLoadingParkingSpots(false);
         });
-      // Reset parking selection when property changes
-      form.setValue('parkingSpotId', null);
-      form.setValue('parkingFee', 0);
     } else {
       setAvailableParkingSpots([]);
     }
-  }, [watchedPropertyId, form]);
+  }, [watchedPropertyId]);
 
-  // Handle parking spot selection - auto-populate fee
   const handleParkingSpotChange = (spotId: string | null) => {
     form.setValue('parkingSpotId', spotId);
     if (spotId && spotId !== 'none') {
@@ -486,7 +522,6 @@ function CreateQuotationForm() {
     }
   };
 
-  // Watch form values for real-time calculation
   const rawWatchedValues = form.watch([
     'baseRent',
     'serviceCharges',
@@ -495,7 +530,6 @@ function CreateQuotationForm() {
     'adminFee',
   ]);
 
-  // Convert to number array with defaults for undefined values
   const watchedValues: number[] = [
     rawWatchedValues[0] || 0,
     rawWatchedValues[1] || 0,
@@ -504,7 +538,6 @@ function CreateQuotationForm() {
     rawWatchedValues[4] || 0,
   ];
 
-  // Use custom firstMonthTotal if set, otherwise calculate default
   const totalFirstPayment = firstMonthTotal !== undefined && firstMonthTotal > 0
     ? firstMonthTotal
     : calculateTotalFirstPayment({
@@ -516,43 +549,6 @@ function CreateQuotationForm() {
         numberOfCheques,
       });
 
-  // Validate document uploads before form submission
-  const validateDocuments = (): boolean => {
-    const errors: string[] = [];
-
-    if (!emiratesIdFront) {
-      errors.push('Emirates ID front side is required');
-    }
-    if (!emiratesIdBack) {
-      errors.push('Emirates ID back side is required');
-    }
-    if (!emiratesIdNumber.trim()) {
-      errors.push('Emirates ID number is required');
-    }
-    if (!emiratesIdExpiry) {
-      errors.push('Emirates ID expiry date is required');
-    }
-    if (!passportFront) {
-      errors.push('Passport front side is required');
-    }
-    if (!passportBack) {
-      errors.push('Passport back side is required');
-    }
-    if (!passportNumber.trim()) {
-      errors.push('Passport number is required');
-    }
-    if (!passportExpiry) {
-      errors.push('Passport expiry date is required');
-    }
-    if (!nationality.trim()) {
-      errors.push('Nationality is required');
-    }
-
-    setDocumentErrors(errors);
-    return errors.length === 0;
-  };
-
-  // Step validation
   const validateStep = useCallback((step: number): boolean => {
     switch (step) {
       case 1: // Property
@@ -567,31 +563,7 @@ function CreateQuotationForm() {
           return false;
         }
         return true;
-      case 2: // Identity
-        const isValid = validateDocuments();
-        if (!isValid) {
-          // Show toast with first error
-          const errors: string[] = [];
-          if (!emiratesIdFront) errors.push('Emirates ID front side is required');
-          else if (!emiratesIdBack) errors.push('Emirates ID back side is required');
-          else if (!emiratesIdNumber.trim()) errors.push('Emirates ID number is required');
-          else if (!emiratesIdExpiry) errors.push('Emirates ID expiry date is required');
-          else if (!passportFront) errors.push('Passport front side is required');
-          else if (!passportBack) errors.push('Passport back side is required');
-          else if (!passportNumber.trim()) errors.push('Passport number is required');
-          else if (!passportExpiry) errors.push('Passport expiry date is required');
-          else if (!nationality.trim()) errors.push('Nationality is required');
-
-          if (errors.length > 0) {
-            toast({
-              title: 'Identity Documents Required',
-              description: errors[0],
-              variant: 'destructive',
-            });
-          }
-        }
-        return isValid;
-      case 3: // Financials
+      case 2: // Financials
         const securityDeposit = form.getValues('securityDeposit');
         if (!securityDeposit || securityDeposit <= 0) {
           toast({
@@ -601,7 +573,6 @@ function CreateQuotationForm() {
           });
           return false;
         }
-        // Validate yearly rent amount is entered
         if (yearlyRentAmount <= 0) {
           toast({
             title: 'Required Fields',
@@ -611,20 +582,11 @@ function CreateQuotationForm() {
           return false;
         }
         return true;
-      case 4: // Terms - validate all required form fields
+      case 3: // Terms
         const paymentTerms = form.getValues('paymentTerms');
         const moveinProcedures = form.getValues('moveinProcedures');
         const cancellationPolicy = form.getValues('cancellationPolicy');
-        const documentRequirements = form.getValues('documentRequirements');
 
-        if (!documentRequirements || documentRequirements.length === 0) {
-          toast({
-            title: 'Required Fields',
-            description: 'Please select at least one document requirement',
-            variant: 'destructive',
-          });
-          return false;
-        }
         if (!paymentTerms || paymentTerms.length < 10) {
           toast({
             title: 'Required Fields',
@@ -653,7 +615,7 @@ function CreateQuotationForm() {
       default:
         return true;
     }
-  }, [form, toast, validateDocuments, emiratesIdFront, emiratesIdBack, emiratesIdNumber, emiratesIdExpiry, passportFront, passportBack, passportNumber, passportExpiry, nationality, yearlyRentAmount]);
+  }, [form, toast, yearlyRentAmount]);
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
@@ -665,75 +627,89 @@ function CreateQuotationForm() {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const onSubmit = async (data: CreateQuotationFormData) => {
-    // Validate document uploads first
-    if (!validateDocuments()) {
-      toast({
-        title: 'Document Validation Error',
-        description: 'Please upload all required identity documents',
-        variant: 'destructive',
-      });
-      return;
+  // Helper to safely convert date to ISO string for backend (YYYY-MM-DD format for LocalDate)
+  const formatDateForBackend = (date: Date | string | undefined | null): string => {
+    if (!date) {
+      return new Date().toISOString().split('T')[0]; // Return today if no date
     }
+    if (date instanceof Date) {
+      // Check if valid date
+      if (isNaN(date.getTime())) {
+        return new Date().toISOString().split('T')[0];
+      }
+      return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    }
+    if (typeof date === 'string') {
+      // If already in YYYY-MM-DD format, return as is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return date;
+      }
+      // Try to parse and format
+      const parsed = new Date(date);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toISOString().split('T')[0];
+      }
+    }
+    return new Date().toISOString().split('T')[0]; // Fallback to today
+  };
 
+  const onSubmit = async (data: CreateQuotationFormData) => {
     try {
       setIsSubmitting(true);
 
-      // Upload documents to S3 first
-      toast({
-        title: 'Uploading documents...',
-        description: 'Please wait while we upload your identity documents',
-      });
+      // Safely convert dates to YYYY-MM-DD format for LocalDate on backend
+      const issueDateValue = formatDateForBackend(data.issueDate);
+      const validityDateValue = formatDateForBackend(data.validityDate);
 
-      // Upload all four documents in parallel
-      const [emiratesIdFrontPath, emiratesIdBackPath, passportFrontPath, passportBackPath] = await Promise.all([
-        uploadQuotationDocument(emiratesIdFront!, 'emirates_id_front'),
-        uploadQuotationDocument(emiratesIdBack!, 'emirates_id_back'),
-        uploadQuotationDocument(passportFront!, 'passport_front'),
-        uploadQuotationDocument(passportBack!, 'passport_back'),
-      ]);
-
-      // Build payload with document paths from S3
+      // Note: UpdateQuotationRequest does not have issueDate - it's set on creation
+      // Only include fields that are in UpdateQuotationRequest DTO
+      // Send null instead of 0/empty for fields to support partial updates
+      // Backend validates @DecimalMin only when value is non-null
       const payload = {
-        ...data,
-        issueDate: data.issueDate.toISOString(),
-        validityDate: data.validityDate.toISOString(),
-        // Convert documentRequirements array to comma-separated string (backend expects String)
+        validityDate: validityDateValue,
+        propertyId: data.propertyId || null,
+        unitId: data.unitId || null,
+        baseRent: data.baseRent && data.baseRent > 0 ? data.baseRent : null,
+        serviceCharges: data.serviceCharges && data.serviceCharges > 0 ? data.serviceCharges : null,
+        parkingSpotId: data.parkingSpotId || null,
+        parkingFee: data.parkingFee && data.parkingFee > 0 ? data.parkingFee : null,
+        securityDeposit: data.securityDeposit && data.securityDeposit > 0 ? data.securityDeposit : null,
+        adminFee: data.adminFee && data.adminFee > 0 ? data.adminFee : null,
         documentRequirements: Array.isArray(data.documentRequirements)
           ? data.documentRequirements.join(', ')
           : data.documentRequirements,
-        // Document metadata
-        emiratesIdNumber,
-        emiratesIdExpiry: emiratesIdExpiry!.toISOString(),
-        passportNumber,
-        passportExpiry: passportExpiry!.toISOString(),
-        nationality,
-        // Document file paths from S3 upload
-        emiratesIdFrontPath,
-        emiratesIdBackPath,
-        passportFrontPath,
-        passportBackPath,
-        // SCP-2025-12-06: Cheque breakdown data
-        yearlyRentAmount: yearlyRentAmount > 0 ? yearlyRentAmount : undefined,
-        numberOfCheques: numberOfCheques > 0 ? numberOfCheques : undefined,
-        firstMonthPaymentMethod: yearlyRentAmount > 0 ? firstMonthPaymentMethod : undefined,
-        firstMonthTotal: firstMonthTotal, // Custom first month total (includes one-time fees + first rent)
-        chequeBreakdown: chequeBreakdown.length > 0 ? chequeBreakdown : undefined,
+        paymentTerms: data.paymentTerms,
+        moveinProcedures: data.moveinProcedures,
+        cancellationPolicy: data.cancellationPolicy,
+        specialTerms: data.specialTerms,
+        // Only send cheque fields if yearlyRentAmount is set
+        yearlyRentAmount: yearlyRentAmount > 0 ? yearlyRentAmount : null,
+        numberOfCheques: numberOfCheques > 0 ? numberOfCheques : null,
+        firstMonthPaymentMethod: yearlyRentAmount > 0 ? firstMonthPaymentMethod : null,
+        firstMonthTotal: firstMonthTotal > 0 ? firstMonthTotal : null,
+        // Backend expects chequeBreakdown as a JSON string, not an array
+        chequeBreakdown: chequeBreakdown.length > 0 ? JSON.stringify(chequeBreakdown) : null,
       };
 
-      const quotation = await createQuotation(payload);
+      console.log('Update quotation payload:', JSON.stringify(payload, null, 2));
+      await updateQuotation(quotationId, payload);
 
       toast({
         title: 'Success',
-        description: `Quotation ${quotation.quotationNumber} created successfully`,
+        description: 'Quotation updated successfully',
         variant: 'success',
       });
 
-      router.push(`/quotations/${quotation.id}`);
+      router.push(`/quotations/${quotationId}`);
     } catch (error: any) {
+      console.error('Update quotation error:', error);
+      const errorMessage = error.response?.data?.error?.message
+        || error.response?.data?.message
+        || error.message
+        || 'Failed to update quotation';
       toast({
         title: 'Error',
-        description: error.response?.data?.error?.message || 'Failed to create quotation',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -741,10 +717,8 @@ function CreateQuotationForm() {
     }
   };
 
-  // Step content renderers
   const renderPropertyStep = () => (
     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-      {/* Dates Row */}
       <div>
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <CalendarIcon className="h-5 w-5 text-primary" />
@@ -828,7 +802,6 @@ function CreateQuotationForm() {
         </div>
       </div>
 
-      {/* Property & Unit Selection */}
       <div>
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Building2 className="h-5 w-5 text-primary" />
@@ -841,7 +814,7 @@ function CreateQuotationForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground">Property *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loadingProperties}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={loadingProperties}>
                   <FormControl>
                     <SelectTrigger className="h-12 rounded-xl border-2 hover:border-primary/50 transition-colors">
                       <SelectValue placeholder={loadingProperties ? "Loading..." : "Choose a property"} />
@@ -853,9 +826,6 @@ function CreateQuotationForm() {
                         <div className="flex items-center gap-2">
                           <Building2 className="h-4 w-4 text-muted-foreground" />
                           <span>{property.name}</span>
-                          <span className="text-xs text-muted-foreground ml-auto">
-                            ({property.availableUnits ?? 0} available)
-                          </span>
                         </div>
                       </SelectItem>
                     ))}
@@ -875,10 +845,8 @@ function CreateQuotationForm() {
                 <Select
                   onValueChange={(value) => {
                     field.onChange(value);
-                    // Auto-populate yearly rent from selected unit (unit price is YEARLY)
                     const unit = availableUnits.find(u => u.id === value);
                     if (unit) {
-                      // Set yearly rent amount for cheque breakdown
                       setYearlyRentAmount(unit.monthlyRent);
                     }
                   }}
@@ -886,7 +854,7 @@ function CreateQuotationForm() {
                   disabled={!watchedPropertyId || loadingUnits}
                 >
                   <FormControl>
-                    <SelectTrigger className="h-12 rounded-xl border-2 hover:border-primary/50 transition-colors" data-testid="select-unit">
+                    <SelectTrigger className="h-12 rounded-xl border-2 hover:border-primary/50 transition-colors">
                       <SelectValue placeholder={loadingUnits ? "Loading..." : "Choose a unit"} />
                     </SelectTrigger>
                   </FormControl>
@@ -913,195 +881,8 @@ function CreateQuotationForm() {
     </div>
   );
 
-  const renderIdentityStep = () => (
-    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-      {documentErrors.length > 0 && (
-        <Alert variant="destructive" className="rounded-xl">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            <ul className="list-disc list-inside space-y-1">
-              {documentErrors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Emirates ID Section */}
-      <div className="rounded-2xl border border-muted bg-muted/20 p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-            <CreditCard className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold">Emirates ID</h3>
-            <p className="text-sm text-muted-foreground">Upload front and back sides</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <FileUploadProgress
-            onFileSelect={(file) => setEmiratesIdFront(file)}
-            selectedFile={emiratesIdFront}
-            accept={{ 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] }}
-            maxSize={5 * 1024 * 1024}
-            label="Front Side"
-            required
-            testId="upload-emirates-id-front"
-            uploadStatus={emiratesIdFront ? 'success' : 'idle'}
-          />
-          <FileUploadProgress
-            onFileSelect={(file) => setEmiratesIdBack(file)}
-            selectedFile={emiratesIdBack}
-            accept={{ 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] }}
-            maxSize={5 * 1024 * 1024}
-            label="Back Side"
-            required
-            testId="upload-emirates-id-back"
-            uploadStatus={emiratesIdBack ? 'success' : 'idle'}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="emiratesIdNumber" className="text-muted-foreground">ID Number *</Label>
-            <Input
-              id="emiratesIdNumber"
-              placeholder="784-XXXX-XXXXXXX-X"
-              value={emiratesIdNumber}
-              onChange={(e) => setEmiratesIdNumber(e.target.value)}
-              className="h-12 rounded-xl border-2"
-              data-testid="input-emirates-id"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-muted-foreground">Expiry Date *</Label>
-            <Popover open={emiratesIdExpiryOpen} onOpenChange={setEmiratesIdExpiryOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    'w-full h-12 justify-start text-left font-normal rounded-xl border-2',
-                    !emiratesIdExpiry && 'text-muted-foreground'
-                  )}
-                >
-                  <CalendarIcon className="mr-3 h-4 w-4 text-muted-foreground" />
-                  {emiratesIdExpiry ? format(emiratesIdExpiry, 'PPP') : <span>Select date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={emiratesIdExpiry || undefined}
-                  onSelect={(date) => {
-                    setEmiratesIdExpiry(date || null);
-                    setEmiratesIdExpiryOpen(false);
-                  }}
-                  disabled={(date) => date < new Date()}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-      </div>
-
-      {/* Passport Section */}
-      <div className="rounded-2xl border border-muted bg-muted/20 p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-            <Shield className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold">Passport</h3>
-            <p className="text-sm text-muted-foreground">Upload front and back sides</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <FileUploadProgress
-            onFileSelect={(file) => setPassportFront(file)}
-            selectedFile={passportFront}
-            accept={{ 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] }}
-            maxSize={5 * 1024 * 1024}
-            label="Front Side"
-            required
-            testId="upload-passport-front"
-            uploadStatus={passportFront ? 'success' : 'idle'}
-          />
-          <FileUploadProgress
-            onFileSelect={(file) => setPassportBack(file)}
-            selectedFile={passportBack}
-            accept={{ 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] }}
-            maxSize={5 * 1024 * 1024}
-            label="Back Side"
-            required
-            testId="upload-passport-back"
-            uploadStatus={passportBack ? 'success' : 'idle'}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="passportNumber" className="text-muted-foreground">Passport Number *</Label>
-            <Input
-              id="passportNumber"
-              placeholder="Enter passport number"
-              value={passportNumber}
-              onChange={(e) => setPassportNumber(e.target.value)}
-              className="h-12 rounded-xl border-2"
-              data-testid="input-passport-number"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-muted-foreground">Expiry Date *</Label>
-            <Popover open={passportExpiryOpen} onOpenChange={setPassportExpiryOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    'w-full h-12 justify-start text-left font-normal rounded-xl border-2',
-                    !passportExpiry && 'text-muted-foreground'
-                  )}
-                >
-                  <CalendarIcon className="mr-3 h-4 w-4 text-muted-foreground" />
-                  {passportExpiry ? format(passportExpiry, 'PPP') : <span>Select date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={passportExpiry || undefined}
-                  onSelect={(date) => {
-                    setPassportExpiry(date || null);
-                    setPassportExpiryOpen(false);
-                  }}
-                  disabled={(date) => date < new Date()}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-      </div>
-
-      {/* Nationality */}
-      <div className="space-y-2">
-        <Label htmlFor="nationality" className="text-muted-foreground">Nationality *</Label>
-        <Input
-          id="nationality"
-          placeholder="e.g., United Arab Emirates"
-          value={nationality}
-          onChange={(e) => setNationality(e.target.value)}
-          className="h-12 rounded-xl border-2"
-          data-testid="input-nationality"
-        />
-      </div>
-    </div>
-  );
-
   const renderFinancialsStep = () => (
     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-      {/* Fees & Deposits */}
       <div>
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Shield className="h-5 w-5 text-primary" />
@@ -1122,7 +903,6 @@ function CreateQuotationForm() {
                     onBlur={field.onBlur}
                     name={field.name}
                     className="h-12 rounded-xl border-2"
-                    data-testid="input-quotation-deposit"
                   />
                 </FormControl>
                 <FormMessage />
@@ -1174,7 +954,6 @@ function CreateQuotationForm() {
         </div>
       </div>
 
-      {/* Parking */}
       <div>
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Car className="h-5 w-5 text-primary" />
@@ -1193,7 +972,7 @@ function CreateQuotationForm() {
                   disabled={!watchedPropertyId || loadingParkingSpots}
                 >
                   <FormControl>
-                    <SelectTrigger className="h-12 rounded-xl border-2" data-testid="select-parking-spot">
+                    <SelectTrigger className="h-12 rounded-xl border-2">
                       <SelectValue placeholder={loadingParkingSpots ? 'Loading...' : 'Select spot'} />
                     </SelectTrigger>
                   </FormControl>
@@ -1226,7 +1005,6 @@ function CreateQuotationForm() {
                       onBlur={field.onBlur}
                       name={field.name}
                       className="h-12 rounded-xl border-2"
-                      data-testid="input-parking-fee"
                     />
                   </FormControl>
                   <FormMessage />
@@ -1237,7 +1015,6 @@ function CreateQuotationForm() {
         </div>
       </div>
 
-      {/* SCP-2025-12-06: Cheque Breakdown Section */}
       <ChequeBreakdownSection
         yearlyRentAmount={yearlyRentAmount}
         numberOfCheques={numberOfCheques}
@@ -1341,20 +1118,65 @@ function CreateQuotationForm() {
       case 1:
         return renderPropertyStep();
       case 2:
-        return renderIdentityStep();
-      case 3:
         return renderFinancialsStep();
-      case 4:
+      case 3:
         return renderTermsStep();
       default:
         return null;
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+        <div className="container max-w-7xl mx-auto px-4 py-8 lg:py-12">
+          <div className="mb-10">
+            <div className="h-10 w-48 bg-muted animate-pulse rounded-lg mb-4" />
+            <div className="h-6 w-72 bg-muted animate-pulse rounded-lg" />
+          </div>
+          <div className="flex justify-center mb-10">
+            <div className="flex items-center gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <div className="h-12 w-12 bg-muted animate-pulse rounded-2xl" />
+                  {i < 3 && <div className="h-1 w-20 bg-muted animate-pulse rounded-full" />}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <div className="lg:col-span-3">
+              <div className="h-96 bg-muted animate-pulse rounded-3xl" />
+            </div>
+            <div className="lg:col-span-2">
+              <div className="h-80 bg-muted animate-pulse rounded-3xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!quotation) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted mx-auto mb-6">
+            <AlertTriangle className="h-10 w-10 text-muted-foreground" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Quotation Not Found</h2>
+          <p className="text-muted-foreground mb-6">The quotation doesn&apos;t exist or has been deleted.</p>
+          <Button onClick={() => router.push('/leads')} className="rounded-xl">
+            Back to Leads
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <div className="container max-w-7xl mx-auto px-4 py-8 lg:py-12">
-        {/* Header */}
         <div className="mb-10">
           <Button
             variant="ghost"
@@ -1367,20 +1189,15 @@ function CreateQuotationForm() {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
-                Create Quotation
+                Edit Quotation
               </h1>
               <p className="mt-2 text-lg text-muted-foreground">
-                {leadName ? (
-                  <>Preparing quotation for <span className="text-foreground font-medium">{leadName}</span></>
-                ) : (
-                  'Build a new quotation step by step'
-                )}
+                {quotation.quotationNumber} for <span className="text-foreground font-medium">{leadName}</span>
               </p>
             </div>
           </div>
         </div>
 
-        {/* Progress Steps */}
         <div className="mb-10 flex justify-center">
           <div className="flex items-center">
             {STEPS.map((step, index) => (
@@ -1394,22 +1211,8 @@ function CreateQuotationForm() {
           </div>
         </div>
 
-        {/* Main Content */}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
-            console.log('Form validation errors:', errors);
-            // Show first validation error to user
-            const firstError = Object.entries(errors)[0];
-            if (firstError) {
-              const [field, error] = firstError;
-              toast({
-                title: 'Validation Error',
-                description: `${field}: ${(error as any)?.message || 'Invalid value'}`,
-                variant: 'destructive',
-              });
-            }
-          })} className="grid grid-cols-1 lg:grid-cols-5 gap-8" data-testid="form-quotation-create">
-            {/* Left Column - Form Content */}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             <div className="lg:col-span-3">
               <div className="rounded-3xl border bg-card p-6 lg:p-8 shadow-sm">
                 <div className="mb-6">
@@ -1417,16 +1220,14 @@ function CreateQuotationForm() {
                     {STEPS[currentStep - 1].title}
                   </h2>
                   <p className="text-muted-foreground">
-                    {currentStep === 1 && 'Select the property and unit for this quotation'}
-                    {currentStep === 2 && 'Upload required identity documents'}
-                    {currentStep === 3 && 'Set the pricing and fees'}
-                    {currentStep === 4 && 'Review and customize terms'}
+                    {currentStep === 1 && 'Update property and unit selection'}
+                    {currentStep === 2 && 'Adjust pricing and fees'}
+                    {currentStep === 3 && 'Review and update terms'}
                   </p>
                 </div>
 
                 {renderStepContent()}
 
-                {/* Navigation */}
                 <div className="mt-8 pt-6 border-t flex items-center justify-between">
                   <Button
                     type="button"
@@ -1450,16 +1251,22 @@ function CreateQuotationForm() {
                     </Button>
                   ) : (
                     <Button
-                      type="submit"
+                      type="button"
                       disabled={isSubmitting}
+                      onClick={() => {
+                        if (validateStep(currentStep)) {
+                          // Call onSubmit directly with form values
+                          const formValues = form.getValues();
+                          onSubmit(formValues);
+                        }
+                      }}
                       className="rounded-xl bg-primary hover:bg-primary/90"
-                      data-testid="btn-send-quotation"
                     >
                       {isSubmitting ? (
-                        <>Creating...</>
+                        <>Saving...</>
                       ) : (
                         <>
-                          Create Quotation
+                          Save Changes
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </>
                       )}
@@ -1469,7 +1276,6 @@ function CreateQuotationForm() {
               </div>
             </div>
 
-            {/* Right Column - Live Preview */}
             <div className="lg:col-span-2">
               <div className="sticky top-8 space-y-6">
                 <QuotationPreview
@@ -1483,24 +1289,23 @@ function CreateQuotationForm() {
                   firstMonthPaymentMethod={firstMonthPaymentMethod}
                 />
 
-                {/* Helper Tips */}
                 <div className="rounded-2xl border bg-card/50 p-5">
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    Quick Tips
+                    Editing Tips
                   </h4>
                   <ul className="space-y-2 text-sm text-muted-foreground">
                     <li className="flex items-start gap-2">
                       <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                      <span>Quotation validity defaults to 7 days from issue date</span>
+                      <span>Identity documents cannot be changed after creation</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                      <span>Security deposit is refundable upon lease end</span>
+                      <span>Only draft quotations can be edited</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                      <span>All documents must be valid for at least 6 months</span>
+                      <span>Cheque breakdown will be recalculated if rent changes</span>
                     </li>
                   </ul>
                 </div>
@@ -1513,7 +1318,9 @@ function CreateQuotationForm() {
   );
 }
 
-export default function CreateQuotationPage() {
+export default function EditQuotationPage({ params }: EditQuotationPageProps) {
+  const { id } = use(params);
+
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -1522,28 +1329,10 @@ export default function CreateQuotationPage() {
             <div className="h-10 w-48 bg-muted animate-pulse rounded-lg mb-4" />
             <div className="h-6 w-72 bg-muted animate-pulse rounded-lg" />
           </div>
-          <div className="flex justify-center mb-10">
-            <div className="flex items-center gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-muted animate-pulse rounded-2xl" />
-                  {i < 4 && <div className="h-1 w-20 bg-muted animate-pulse rounded-full" />}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            <div className="lg:col-span-3">
-              <div className="h-96 bg-muted animate-pulse rounded-3xl" />
-            </div>
-            <div className="lg:col-span-2">
-              <div className="h-80 bg-muted animate-pulse rounded-3xl" />
-            </div>
-          </div>
         </div>
       </div>
     }>
-      <CreateQuotationForm />
+      <EditQuotationForm quotationId={id} />
     </Suspense>
   );
 }

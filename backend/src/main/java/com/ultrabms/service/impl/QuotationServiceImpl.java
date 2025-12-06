@@ -17,6 +17,8 @@ import com.ultrabms.exception.ResourceNotFoundException;
 import com.ultrabms.exception.ValidationException;
 import com.ultrabms.repository.LeadHistoryRepository;
 import com.ultrabms.repository.LeadRepository;
+import com.ultrabms.repository.ParkingSpotRepository;
+import com.ultrabms.repository.PropertyRepository;
 import com.ultrabms.repository.QuotationRepository;
 import com.ultrabms.repository.UnitRepository;
 import com.ultrabms.service.QuotationPdfService;
@@ -29,6 +31,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.ultrabms.dto.quotations.ChequeBreakdownItem;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -51,6 +60,17 @@ public class QuotationServiceImpl implements QuotationService {
     private final QuotationPdfService quotationPdfService;
     private final IEmailService emailService;
     private final UnitRepository unitRepository;
+    private final PropertyRepository propertyRepository;
+    private final ParkingSpotRepository parkingSpotRepository;
+
+    // SCP-2025-12-06: ObjectMapper for cheque breakdown JSON serialization
+    private static final ObjectMapper OBJECT_MAPPER = createObjectMapper();
+
+    private static ObjectMapper createObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        return mapper;
+    }
 
     @Override
     @Transactional
@@ -66,9 +86,21 @@ public class QuotationServiceImpl implements QuotationService {
             throw new ValidationException("Validity date must be after issue date");
         }
 
+        // SCP-2025-12-06: Calculate baseRent from yearlyRentAmount / numberOfCheques if not provided
+        BigDecimal calculatedBaseRent = request.getBaseRent();
+        if (calculatedBaseRent == null && request.getYearlyRentAmount() != null) {
+            int cheques = request.getNumberOfCheques() != null ? request.getNumberOfCheques() : 12;
+            calculatedBaseRent = request.getYearlyRentAmount()
+                    .divide(BigDecimal.valueOf(cheques), 2, RoundingMode.HALF_UP);
+        }
+        if (calculatedBaseRent == null) {
+            calculatedBaseRent = BigDecimal.ZERO;
+        }
+
         // Create quotation entity
         // SCP-2025-12-02: Changed from parkingSpots count to parkingSpotId (single spot from inventory)
         // SCP-2025-12-04: Added identity document fields (moved from Lead)
+        // SCP-2025-12-06: Added cheque breakdown fields
         Quotation quotation = Quotation.builder()
                 .quotationNumber(quotationNumberGenerator.generate())
                 .leadId(request.getLeadId())
@@ -77,7 +109,7 @@ public class QuotationServiceImpl implements QuotationService {
                 .stayType(request.getStayType()) // Optional now
                 .issueDate(request.getIssueDate())
                 .validityDate(request.getValidityDate())
-                .baseRent(request.getBaseRent())
+                .baseRent(calculatedBaseRent)
                 .serviceCharges(request.getServiceCharges())
                 .parkingSpotId(request.getParkingSpotId())
                 .parkingSpots(request.getParkingSpotId() != null ? 1 : 0)
@@ -85,6 +117,14 @@ public class QuotationServiceImpl implements QuotationService {
                 .securityDeposit(request.getSecurityDeposit())
                 .adminFee(request.getAdminFee())
                 .documentRequirements(request.getDocumentRequirements())
+                // SCP-2025-12-06: Cheque breakdown fields
+                .yearlyRentAmount(request.getYearlyRentAmount())
+                .numberOfCheques(request.getNumberOfCheques() != null ? request.getNumberOfCheques() : 12)
+                .firstMonthPaymentMethod(request.getFirstMonthPaymentMethod() != null
+                        ? request.getFirstMonthPaymentMethod()
+                        : Quotation.FirstMonthPaymentMethod.CHEQUE)
+                .firstMonthTotal(request.getFirstMonthTotal())
+                .chequeBreakdown(serializeChequeBreakdown(request.getChequeBreakdown()))
                 // Identity document fields
                 .emiratesIdNumber(request.getEmiratesIdNumber())
                 .emiratesIdExpiry(request.getEmiratesIdExpiry())
@@ -93,7 +133,8 @@ public class QuotationServiceImpl implements QuotationService {
                 .nationality(request.getNationality())
                 .emiratesIdFrontPath(request.getEmiratesIdFrontPath())
                 .emiratesIdBackPath(request.getEmiratesIdBackPath())
-                .passportPath(request.getPassportPath())
+                .passportFrontPath(request.getPassportFrontPath())
+                .passportBackPath(request.getPassportBackPath())
                 .paymentTerms(request.getPaymentTerms())
                 .moveinProcedures(request.getMoveinProcedures())
                 .cancellationPolicy(request.getCancellationPolicy())
@@ -123,7 +164,61 @@ public class QuotationServiceImpl implements QuotationService {
     public QuotationResponse getQuotationById(UUID id) {
         log.info("Fetching quotation by ID: {}", id);
         Quotation quotation = findQuotationById(id);
-        return QuotationResponse.fromEntity(quotation);
+
+        // Fetch related entity details for display
+        String leadName = null;
+        String leadEmail = null;
+        String leadContactNumber = null;
+        String propertyName = null;
+        String unitNumber = null;
+        String parkingSpotNumber = null;
+
+        // Fetch lead details
+        if (quotation.getLeadId() != null) {
+            leadRepository.findById(quotation.getLeadId()).ifPresent(lead -> {
+                // Use local variable trick for lambdas - we'll use the builder instead
+            });
+            var lead = leadRepository.findById(quotation.getLeadId()).orElse(null);
+            if (lead != null) {
+                leadName = lead.getFullName();
+                leadEmail = lead.getEmail();
+                leadContactNumber = lead.getContactNumber();
+            }
+        }
+
+        // Fetch property details
+        if (quotation.getPropertyId() != null) {
+            var property = propertyRepository.findById(quotation.getPropertyId()).orElse(null);
+            if (property != null) {
+                propertyName = property.getName();
+            }
+        }
+
+        // Fetch unit details
+        if (quotation.getUnitId() != null) {
+            var unit = unitRepository.findById(quotation.getUnitId()).orElse(null);
+            if (unit != null) {
+                unitNumber = unit.getUnitNumber();
+            }
+        }
+
+        // Fetch parking spot details
+        if (quotation.getParkingSpotId() != null) {
+            var parkingSpot = parkingSpotRepository.findById(quotation.getParkingSpotId()).orElse(null);
+            if (parkingSpot != null) {
+                parkingSpotNumber = parkingSpot.getSpotNumber();
+            }
+        }
+
+        return QuotationResponse.fromEntity(
+                quotation,
+                leadName,
+                leadEmail,
+                leadContactNumber,
+                propertyName,
+                unitNumber,
+                parkingSpotNumber
+        );
     }
 
     @Override
@@ -156,6 +251,29 @@ public class QuotationServiceImpl implements QuotationService {
         }
         if (request.getServiceCharges() != null) {
             quotation.setServiceCharges(request.getServiceCharges());
+        }
+        // SCP-2025-12-06: Handle cheque breakdown fields
+        if (request.getYearlyRentAmount() != null) {
+            quotation.setYearlyRentAmount(request.getYearlyRentAmount());
+        }
+        if (request.getNumberOfCheques() != null) {
+            quotation.setNumberOfCheques(request.getNumberOfCheques());
+        }
+        if (request.getFirstMonthPaymentMethod() != null) {
+            quotation.setFirstMonthPaymentMethod(request.getFirstMonthPaymentMethod());
+        }
+        if (request.getChequeBreakdown() != null) {
+            quotation.setChequeBreakdown(request.getChequeBreakdown());
+        }
+        if (request.getFirstMonthTotal() != null) {
+            quotation.setFirstMonthTotal(request.getFirstMonthTotal());
+        }
+        // SCP-2025-12-06: Auto-calculate baseRent from yearlyRentAmount/numberOfCheques if yearlyRentAmount updated
+        if (request.getYearlyRentAmount() != null && request.getBaseRent() == null) {
+            int cheques = quotation.getNumberOfCheques() != null ? quotation.getNumberOfCheques() : 12;
+            BigDecimal calculatedBaseRent = request.getYearlyRentAmount()
+                    .divide(BigDecimal.valueOf(cheques), 2, RoundingMode.HALF_UP);
+            quotation.setBaseRent(calculatedBaseRent);
         }
         // SCP-2025-12-02: Handle parkingSpotId instead of parkingSpots count
         if (request.getParkingSpotId() != null) {
@@ -208,8 +326,11 @@ public class QuotationServiceImpl implements QuotationService {
         if (request.getEmiratesIdBackPath() != null) {
             quotation.setEmiratesIdBackPath(request.getEmiratesIdBackPath());
         }
-        if (request.getPassportPath() != null) {
-            quotation.setPassportPath(request.getPassportPath());
+        if (request.getPassportFrontPath() != null) {
+            quotation.setPassportFrontPath(request.getPassportFrontPath());
+        }
+        if (request.getPassportBackPath() != null) {
+            quotation.setPassportBackPath(request.getPassportBackPath());
         }
 
         quotation = quotationRepository.save(quotation);
@@ -407,31 +528,57 @@ public class QuotationServiceImpl implements QuotationService {
         // Build conversion response with pre-populated data for tenant onboarding
         // SCP-2025-12-02: Changed from parkingSpots to parkingSpotId
         // SCP-2025-12-04: Identity documents now come from quotation instead of lead
+        // SCP-2025-12-06: Extended to include ALL fields for tenant auto-population
+        // Parse fullName into first/last name for tenant form
+        String[] nameParts = lead.getFullName() != null ? lead.getFullName().split(" ", 2) : new String[]{"", ""};
+        String firstName = nameParts.length > 0 ? nameParts[0] : "";
+        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+
         LeadConversionResponse response = LeadConversionResponse.builder()
-                // Lead information
+                // ===== Lead Personal Information =====
                 .leadId(lead.getId())
                 .leadNumber(lead.getLeadNumber())
                 .fullName(lead.getFullName())
-                // Identity docs now from quotation
-                .emiratesId(quotation.getEmiratesIdNumber())
-                .passportNumber(quotation.getPassportNumber())
-                .passportExpiryDate(quotation.getPassportExpiry())
-                .homeCountry(quotation.getNationality())
+                .firstName(firstName)
+                .lastName(lastName)
                 .email(lead.getEmail())
                 .contactNumber(lead.getContactNumber())
-                // Quotation information
+                .alternateContact(null) // Lead doesn't have this field
+                .homeCountry(quotation.getNationality())
+                // ===== Identity Documents (from Quotation) =====
+                .emiratesId(quotation.getEmiratesIdNumber())
+                .emiratesIdExpiry(quotation.getEmiratesIdExpiry())
+                .passportNumber(quotation.getPassportNumber())
+                .passportExpiryDate(quotation.getPassportExpiry())
+                .nationality(quotation.getNationality())
+                .emiratesIdFrontPath(quotation.getEmiratesIdFrontPath())
+                .emiratesIdBackPath(quotation.getEmiratesIdBackPath())
+                .passportFrontPath(quotation.getPassportFrontPath())
+                .passportBackPath(quotation.getPassportBackPath())
+                // ===== Quotation Basic Info =====
                 .quotationId(quotation.getId())
                 .quotationNumber(quotation.getQuotationNumber())
                 .propertyId(quotation.getPropertyId())
                 .unitId(quotation.getUnitId())
+                // ===== Financial Information =====
                 .baseRent(quotation.getBaseRent())
                 .serviceCharges(quotation.getServiceCharges())
-                .parkingSpotId(quotation.getParkingSpotId())
-                .parkingFee(quotation.getParkingFee())
                 .securityDeposit(quotation.getSecurityDeposit())
                 .adminFee(quotation.getAdminFee())
                 .totalFirstPayment(quotation.getTotalFirstPayment())
-                // Conversion metadata
+                .parkingSpotId(quotation.getParkingSpotId())
+                .parkingFee(quotation.getParkingFee())
+                // ===== Cheque Breakdown =====
+                .yearlyRentAmount(quotation.getYearlyRentAmount())
+                .numberOfCheques(quotation.getNumberOfCheques())
+                .firstMonthPaymentMethod(quotation.getFirstMonthPaymentMethod())
+                .chequeBreakdown(quotation.getChequeBreakdown())
+                // ===== Terms & Conditions =====
+                .paymentTerms(quotation.getPaymentTerms())
+                .moveinProcedures(quotation.getMoveinProcedures())
+                .cancellationPolicy(quotation.getCancellationPolicy())
+                .specialTerms(quotation.getSpecialTerms())
+                // ===== Conversion Metadata =====
                 .message(String.format("Lead %s successfully converted to tenant. Unit %s is now reserved for tenant onboarding.",
                         lead.getLeadNumber(), quotation.getUnitId()))
                 .build();
@@ -495,5 +642,20 @@ public class QuotationServiceImpl implements QuotationService {
                 .createdBy(createdBy)
                 .build();
         leadHistoryRepository.save(history);
+    }
+
+    /**
+     * SCP-2025-12-06: Serialize cheque breakdown list to JSON string
+     */
+    private String serializeChequeBreakdown(List<ChequeBreakdownItem> chequeBreakdown) {
+        if (chequeBreakdown == null || chequeBreakdown.isEmpty()) {
+            return null;
+        }
+        try {
+            return OBJECT_MAPPER.writeValueAsString(chequeBreakdown);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize cheque breakdown: {}", e.getMessage());
+            throw new ValidationException("Failed to serialize cheque breakdown");
+        }
     }
 }

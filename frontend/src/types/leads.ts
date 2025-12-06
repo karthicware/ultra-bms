@@ -47,14 +47,14 @@ export enum LeadEventType {
 // Core Entity Types
 // ===========================
 
+/**
+ * Lead entity
+ * SCP-2025-12-06: Identity documents (Emirates ID, passport) are now collected during quotation workflow
+ */
 export interface Lead {
   id: string;
   leadNumber: string;
   fullName: string;
-  emiratesId: string;
-  passportNumber: string;
-  passportExpiryDate: string; // ISO date string
-  homeCountry: string;
   email: string;
   contactNumber: string;
   leadSource: LeadSource;
@@ -99,12 +99,11 @@ export interface CreateLeadRequest {
   propertyInterest?: string;
 }
 
+/**
+ * SCP-2025-12-06: Identity documents (Emirates ID, passport) are now collected during quotation workflow
+ */
 export interface UpdateLeadRequest {
   fullName?: string;
-  emiratesId?: string;
-  passportNumber?: string;
-  passportExpiryDate?: string;
-  homeCountry?: string;
   email?: string;
   contactNumber?: string;
   leadSource?: LeadSource;
@@ -181,12 +180,11 @@ export interface LeadHistoryResponse {
 // Form Data Types
 // ===========================
 
+/**
+ * SCP-2025-12-06: Identity documents (Emirates ID, passport) are now collected during quotation workflow
+ */
 export interface LeadFormData {
   fullName: string;
-  emiratesId: string;
-  passportNumber: string;
-  passportExpiryDate: Date | string;
-  homeCountry: string;
   email: string;
   contactNumber: string;
   leadSource: LeadSource;

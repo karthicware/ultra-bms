@@ -4,7 +4,26 @@
  */
 
 import { z } from 'zod';
-import { QuotationStatus } from '@/types/quotations';
+import { addMonths } from 'date-fns';
+import { QuotationStatus, FirstMonthPaymentMethod, type ChequeBreakdownItem } from '@/types/quotations';
+
+// ===========================
+// Cheque Breakdown Schemas (SCP-2025-12-06)
+// ===========================
+
+/**
+ * Single cheque breakdown item validation
+ */
+export const chequeBreakdownItemSchema = z.object({
+  chequeNumber: z.number().int().positive('Cheque number must be positive'),
+  amount: z.number().positive('Cheque amount must be greater than 0'),
+  dueDate: z.string().min(1, 'Due date is required'),
+});
+
+/**
+ * First month payment method enum validation
+ */
+const firstMonthPaymentMethodSchema = z.nativeEnum(FirstMonthPaymentMethod);
 
 // ===========================
 // Common Validation Rules
@@ -50,7 +69,7 @@ export const createQuotationSchema = z
     validityDate: futureDateSchema('Validity date'),
     propertyId: z.string().min(1, 'Please select a property'),
     unitId: z.string().min(1, 'Please select a unit'),
-    baseRent: positiveNumberSchema('Base rent'),
+    baseRent: nonNegativeNumberSchema('Base rent').optional(), // Now calculated from yearly rent / cheques
     serviceCharges: nonNegativeNumberSchema('Service charges'),
     parkingSpotId: z.string().uuid().optional().nullable(),
     parkingFee: nonNegativeNumberSchema('Parking fee').optional(),
@@ -75,12 +94,50 @@ export const createQuotationSchema = z
       .string()
       .max(5000, 'Special terms must be less than 5000 characters')
       .optional(),
+    // SCP-2025-12-06: Cheque breakdown fields
+    yearlyRentAmount: positiveNumberSchema('Yearly rent amount').optional(),
+    numberOfCheques: z
+      .number()
+      .int('Number of cheques must be a whole number')
+      .min(1, 'Minimum 1 cheque required')
+      .max(12, 'Maximum 12 cheques allowed')
+      .optional(),
+    firstMonthPaymentMethod: firstMonthPaymentMethodSchema.optional(),
+    chequeBreakdown: z.array(chequeBreakdownItemSchema).optional(),
+    // SCP-2025-12-04: Identity document fields
+    // These are optional in schema as they are validated separately in step validation
+    // and added to payload before submission
+    emiratesIdNumber: z.string().optional(),
+    emiratesIdExpiry: z.string().optional(),
+    passportNumber: z.string().optional(),
+    passportExpiry: z.string().optional(),
+    nationality: z.string().optional(),
+    emiratesIdFrontPath: z.string().optional(),
+    emiratesIdBackPath: z.string().optional(),
+    passportFrontPath: z.string().optional(),
+    passportBackPath: z.string().optional(),
+    passportPath: z.string().optional(),
   })
   .refine(
     (data) => data.validityDate > data.issueDate,
     {
       message: 'Validity date must be after issue date',
       path: ['validityDate'],
+    }
+  )
+  .refine(
+    (data) => {
+      // If yearly amount and number of cheques provided, validate cheque breakdown
+      if (data.yearlyRentAmount && data.numberOfCheques && data.chequeBreakdown) {
+        const totalChequeAmount = data.chequeBreakdown.reduce((sum, item) => sum + item.amount, 0);
+        // Allow small rounding differences (within 1 AED)
+        return Math.abs(totalChequeAmount - data.yearlyRentAmount) < 1;
+      }
+      return true;
+    },
+    {
+      message: 'Cheque amounts must equal yearly rent amount',
+      path: ['chequeBreakdown'],
     }
   );
 
@@ -107,6 +164,20 @@ export const updateQuotationSchema = z
     moveinProcedures: z.string().min(10).max(5000).optional(),
     cancellationPolicy: z.string().min(10).max(5000).optional(),
     specialTerms: z.string().max(5000).optional(),
+    // SCP-2025-12-06: Cheque breakdown fields
+    yearlyRentAmount: positiveNumberSchema('Yearly rent amount').optional(),
+    numberOfCheques: z.number().int().min(1).max(12).optional(),
+    firstMonthPaymentMethod: firstMonthPaymentMethodSchema.optional(),
+    chequeBreakdown: z.array(chequeBreakdownItemSchema).optional(),
+    // SCP-2025-12-04: Identity document fields
+    emiratesIdNumber: z.string().optional(),
+    emiratesIdExpiry: z.string().optional(),
+    passportNumber: z.string().optional(),
+    passportExpiry: z.string().optional(),
+    nationality: z.string().optional(),
+    emiratesIdFrontPath: z.string().optional(),
+    emiratesIdBackPath: z.string().optional(),
+    passportPath: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -156,19 +227,28 @@ export type QuotationSearchFormData = z.infer<typeof quotationSearchSchema>;
 
 /**
  * Calculate total first payment
+ * Now calculates first month rent from yearly amount and number of cheques
  * parkingFee is now the total parking fee (single spot), not per-spot fee
  */
 export function calculateTotalFirstPayment(data: {
-  baseRent: number;
+  baseRent?: number; // Optional - for backwards compatibility
   serviceCharges: number;
   parkingFee?: number;
   securityDeposit: number;
   adminFee: number;
+  yearlyRentAmount?: number;
+  numberOfCheques?: number;
 }): number {
-  return (
+  // Calculate first payment from yearly rent / number of cheques if available
+  // Round to whole number - no decimals
+  const firstPayment = data.yearlyRentAmount && data.numberOfCheques && data.numberOfCheques > 0
+    ? Math.round(data.yearlyRentAmount / data.numberOfCheques)
+    : Math.round(data.baseRent || 0);
+
+  return Math.round(
     data.securityDeposit +
     data.adminFee +
-    data.baseRent +
+    firstPayment +
     data.serviceCharges +
     (data.parkingFee || 0)
   );
@@ -291,3 +371,76 @@ export const DEFAULT_QUOTATION_TERMS = {
 4. Early termination fees may apply as per UAE tenancy laws.
 5. The security deposit will be refunded after property inspection and settlement of all outstanding bills, less any damages.`,
 };
+
+// ===========================
+// Cheque Breakdown Helpers (SCP-2025-12-06)
+// ===========================
+
+/**
+ * Calculate cheque breakdown based on yearly amount and number of cheques
+ * Auto-splits the yearly rent amount evenly across all cheques
+ *
+ * @param yearlyAmount - Total yearly rent amount
+ * @param numberOfCheques - Number of cheques to split payment into (1-12)
+ * @param leaseStartDate - Date of first cheque (lease start)
+ * @returns Array of cheque breakdown items with amounts and due dates
+ */
+export function calculateChequeBreakdown(
+  yearlyAmount: number,
+  numberOfCheques: number,
+  leaseStartDate: Date
+): ChequeBreakdownItem[] {
+  if (numberOfCheques < 1 || numberOfCheques > 12) {
+    throw new Error('Number of cheques must be between 1 and 12');
+  }
+
+  // Use floor for base amount to ensure we don't exceed total
+  const baseAmount = Math.floor(yearlyAmount / numberOfCheques);
+  const remainder = yearlyAmount - (baseAmount * numberOfCheques);
+  const breakdown: ChequeBreakdownItem[] = [];
+
+  for (let i = 0; i < numberOfCheques; i++) {
+    const dueDate = addMonths(leaseStartDate, i);
+    // Distribute the remainder across the first 'remainder' cheques (+1 each)
+    const amount = i < remainder ? baseAmount + 1 : baseAmount;
+
+    breakdown.push({
+      chequeNumber: i + 1,
+      amount: amount, // Already a whole number
+      dueDate: dueDate.toISOString().split('T')[0], // YYYY-MM-DD format
+    });
+  }
+
+  return breakdown;
+}
+
+/**
+ * Get default number of cheques based on common UAE rental practices
+ */
+export function getDefaultNumberOfCheques(): number {
+  return 12; // Monthly payments is standard
+}
+
+/**
+ * Validate cheque breakdown totals
+ */
+export function validateChequeBreakdownTotal(
+  breakdown: ChequeBreakdownItem[],
+  expectedTotal: number
+): boolean {
+  const actualTotal = breakdown.reduce((sum, item) => sum + item.amount, 0);
+  // Allow for small rounding differences (within 1 AED)
+  return Math.abs(actualTotal - expectedTotal) < 1;
+}
+
+/**
+ * Format cheque due date for display
+ */
+export function formatChequeDueDate(dueDate: string): string {
+  const date = new Date(dueDate);
+  return new Intl.DateTimeFormat('en-AE', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+}

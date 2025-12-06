@@ -16,12 +16,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
  * Lead entity representing potential tenant leads
+ * SCP-2025-12-06: Identity documents (Emirates ID, passport) are now collected during quotation workflow
  */
 @Entity
 @Table(name = "leads")
@@ -42,18 +42,6 @@ public class Lead {
 
     @Column(name = "full_name", nullable = false, length = 200)
     private String fullName;
-
-    @Column(name = "emirates_id", nullable = false, length = 50)
-    private String emiratesId;
-
-    @Column(name = "passport_number", nullable = false, length = 50)
-    private String passportNumber;
-
-    @Column(name = "passport_expiry_date", nullable = false)
-    private LocalDate passportExpiryDate;
-
-    @Column(name = "home_country", nullable = false, length = 100)
-    private String homeCountry;
 
     @Column(name = "email", nullable = false, length = 255)
     private String email;

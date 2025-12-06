@@ -41,7 +41,6 @@ import type { Property } from '@/types/properties';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
-  Plus,
   Search,
   Users,
   UserCheck,
@@ -64,6 +63,7 @@ import {
   ChevronRight,
   X,
   Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 
 type ViewMode = 'grid' | 'list';
@@ -181,10 +181,7 @@ export default function TenantsPage() {
     return result;
   }, [tenants, statusFilter, searchTerm]);
 
-  // Handlers
-  const handleCreateTenant = () => {
-    router.push('/tenants/create');
-  };
+  // Note: Tenant creation removed - use Lead conversion instead
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -309,16 +306,7 @@ export default function TenantsPage() {
                       ))}
                     </SelectContent>
                   </Select>
-
-                  <Button
-                    onClick={handleCreateTenant}
-                    size="lg"
-                    className="gap-2 shadow-lg shadow-primary/20"
-                    data-testid="btn-create-tenant"
-                  >
-                    <Plus className="h-5 w-5" />
-                    Add Tenant
-                  </Button>
+                  {/* Note: Tenant creation is done via Lead conversion only */}
                 </div>
               </div>
             </div>
@@ -611,12 +599,12 @@ export default function TenantsPage() {
                     <p className="text-muted-foreground max-w-sm mb-6">
                       {searchTerm || statusFilter !== 'all'
                         ? "Try adjusting your search or filters to find what you're looking for."
-                        : `Get started by adding tenants to ${selectedProperty?.name}.`}
+                        : `Convert leads to tenants from the Leads page.`}
                     </p>
                     {!searchTerm && statusFilter === 'all' && (
-                      <Button onClick={handleCreateTenant} className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Add First Tenant
+                      <Button onClick={() => router.push('/leads')} className="gap-2">
+                        Go to Leads
+                        <ArrowRight className="h-4 w-4" />
                       </Button>
                     )}
                   </CardContent>

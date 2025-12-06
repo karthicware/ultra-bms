@@ -8,6 +8,8 @@ import com.ultrabms.dto.quotations.QuotationResponse;
 import com.ultrabms.dto.quotations.QuotationStatusUpdateRequest;
 import com.ultrabms.dto.quotations.UpdateQuotationRequest;
 import com.ultrabms.entity.Quotation;
+import com.ultrabms.entity.User;
+import com.ultrabms.repository.UserRepository;
 import com.ultrabms.service.QuotationService;
 import com.ultrabms.service.S3Service;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,6 +56,7 @@ public class QuotationController {
 
     private final QuotationService quotationService;
     private final S3Service s3Service;
+    private final UserRepository userRepository;
 
     @PostMapping
     @Operation(summary = "Create a new quotation")
@@ -158,7 +161,7 @@ public class QuotationController {
      * Upload identity documents for quotation
      * SCP-2025-12-04: Document upload endpoint for quotation identity documents
      *
-     * @param documentType Type of document: emirates_id_front, emirates_id_back, or passport
+     * @param documentType Type of document: emirates_id_front, emirates_id_back, passport_front, or passport_back
      * @param file The file to upload (JPG, PNG, or PDF, max 5MB)
      * @return S3 file path
      */
@@ -171,7 +174,7 @@ public class QuotationController {
         // Validate document type
         if (!isValidDocumentType(documentType)) {
             return ResponseEntity.badRequest().body(
-                    ApiResponse.error("Invalid document type. Must be: emirates_id_front, emirates_id_back, or passport")
+                    ApiResponse.error("Invalid document type. Must be: emirates_id_front, emirates_id_back, passport_front, or passport_back")
             );
         }
 
@@ -211,7 +214,8 @@ public class QuotationController {
         return documentType != null && (
                 documentType.equals("emirates_id_front") ||
                 documentType.equals("emirates_id_back") ||
-                documentType.equals("passport")
+                documentType.equals("passport_front") ||
+                documentType.equals("passport_back")
         );
     }
 
@@ -226,7 +230,9 @@ public class QuotationController {
      * Helper method to extract user ID from UserDetails
      */
     private UUID getUserId(UserDetails userDetails) {
-        // Assuming UserDetails username is the UUID
-        return UUID.fromString(userDetails.getUsername());
+        String email = userDetails.getUsername();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+        return user.getId();
     }
 }

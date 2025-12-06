@@ -492,10 +492,10 @@ export async function getDashboardMetrics(): Promise<QuotationDashboard> {
  * Upload identity document for quotation
  *
  * Uploads a document file to S3 and returns the file path.
- * Supported document types: emirates_id_front, emirates_id_back, passport
+ * Supported document types: emirates_id_front, emirates_id_back, passport_front, passport_back
  *
  * @param file - The file to upload (JPG, PNG, or PDF, max 5MB)
- * @param documentType - Type of document: 'emirates_id_front' | 'emirates_id_back' | 'passport'
+ * @param documentType - Type of document: 'emirates_id_front' | 'emirates_id_back' | 'passport_front' | 'passport_back'
  * @returns Promise that resolves to the S3 file path
  *
  * @throws {ValidationException} When file type or size is invalid (400)
@@ -509,7 +509,7 @@ export async function getDashboardMetrics(): Promise<QuotationDashboard> {
  */
 export async function uploadQuotationDocument(
   file: File,
-  documentType: 'emirates_id_front' | 'emirates_id_back' | 'passport'
+  documentType: 'emirates_id_front' | 'emirates_id_back' | 'passport_front' | 'passport_back'
 ): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);

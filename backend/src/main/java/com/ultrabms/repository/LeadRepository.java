@@ -13,6 +13,7 @@ import java.util.UUID;
 
 /**
  * Repository interface for Lead entity
+ * SCP-2025-12-06: Identity documents (Emirates ID, passport) are now collected during quotation workflow
  */
 @Repository
 public interface LeadRepository extends JpaRepository<Lead, UUID> {
@@ -21,16 +22,6 @@ public interface LeadRepository extends JpaRepository<Lead, UUID> {
          * Find lead by lead number
          */
         Optional<Lead> findByLeadNumber(String leadNumber);
-
-        /**
-         * Check if lead exists by Emirates ID
-         */
-        boolean existsByEmiratesId(String emiratesId);
-
-        /**
-         * Check if lead exists by passport number
-         */
-        boolean existsByPassportNumber(String passportNumber);
 
         /**
          * Search leads with filters

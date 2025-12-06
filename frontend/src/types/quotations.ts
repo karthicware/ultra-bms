@@ -24,6 +24,28 @@ export enum StayType {
   VILLA = 'VILLA'
 }
 
+export enum FirstMonthPaymentMethod {
+  CASH = 'CASH',
+  CHEQUE = 'CHEQUE'
+}
+
+// ===========================
+// Cheque Breakdown Types (SCP-2025-12-06)
+// ===========================
+
+export interface ChequeBreakdownItem {
+  chequeNumber: number;
+  amount: number;
+  dueDate: string; // ISO date string
+}
+
+export interface ChequeBreakdown {
+  numberOfCheques: number;
+  firstMonthPaymentMethod: FirstMonthPaymentMethod;
+  yearlyRentAmount: number;
+  items: ChequeBreakdownItem[];
+}
+
 // ===========================
 // Core Entity Types
 // ===========================
@@ -33,6 +55,8 @@ export interface Quotation {
   quotationNumber: string;
   leadId: string;
   leadName?: string; // For display purposes
+  leadEmail?: string; // For display purposes
+  leadContactNumber?: string; // For display purposes
   propertyId: string;
   propertyName?: string; // For display purposes
   unitId: string;
@@ -50,6 +74,13 @@ export interface Quotation {
   securityDeposit: number;
   adminFee: number; // One-time
   totalFirstPayment: number; // Calculated
+
+  // SCP-2025-12-06: Cheque breakdown fields
+  yearlyRentAmount?: number;
+  numberOfCheques?: number;
+  firstMonthPaymentMethod?: FirstMonthPaymentMethod;
+  firstMonthTotal?: number; // Custom first month total (includes one-time fees + first rent)
+  chequeBreakdown?: ChequeBreakdownItem[];
 
   // Document requirements
   documentRequirements: string[]; // Array of required document types
@@ -97,6 +128,12 @@ export interface CreateQuotationRequest {
   parkingFee?: number; // Optional parking fee (editable)
   securityDeposit: number;
   adminFee: number;
+  // SCP-2025-12-06: Cheque breakdown fields
+  yearlyRentAmount?: number;
+  numberOfCheques?: number;
+  firstMonthPaymentMethod?: FirstMonthPaymentMethod;
+  firstMonthTotal?: number; // Custom first month total (includes one-time fees + first rent)
+  chequeBreakdown?: ChequeBreakdownItem[];
   documentRequirements: string[];
   // SCP-2025-12-04: Identity document fields (moved from Lead)
   emiratesIdNumber: string;
@@ -125,6 +162,12 @@ export interface UpdateQuotationRequest {
   parkingFee?: number;
   securityDeposit?: number;
   adminFee?: number;
+  // SCP-2025-12-06: Cheque breakdown fields
+  yearlyRentAmount?: number;
+  numberOfCheques?: number;
+  firstMonthPaymentMethod?: FirstMonthPaymentMethod;
+  firstMonthTotal?: number; // Custom first month total (includes one-time fees + first rent)
+  chequeBreakdown?: ChequeBreakdownItem[];
   documentRequirements?: string[];
   // SCP-2025-12-04: Identity document fields (moved from Lead)
   emiratesIdNumber?: string;
@@ -322,10 +365,14 @@ export interface LeadConversionResponse {
   leadId: string;
   leadNumber: string;
   fullName: string;
+  firstName?: string;
+  lastName?: string;
   emiratesId: string;
+  emiratesIdExpiry?: string;
   passportNumber: string;
   passportExpiryDate: string;
   homeCountry: string;
+  nationality?: string;
   email: string;
   contactNumber: string;
 
@@ -333,14 +380,33 @@ export interface LeadConversionResponse {
   quotationId: string;
   quotationNumber: string;
   propertyId: string;
+  propertyName?: string;
   unitId: string;
+  unitNumber?: string;
   baseRent: number;
   serviceCharges: number;
   parkingSpotId?: string | null;
+  parkingSpotNumber?: string;
   parkingFee?: number;
   securityDeposit: number;
   adminFee: number;
   totalFirstPayment: number;
+
+  // SCP-2025-12-06: Cheque breakdown for auto-population
+  yearlyRentAmount?: number;
+  numberOfCheques?: number;
+  firstMonthPaymentMethod?: FirstMonthPaymentMethod;
+  chequeBreakdown?: ChequeBreakdownItem[];
+
+  // Document paths for auto-population
+  emiratesIdFrontPath?: string;
+  emiratesIdBackPath?: string;
+  passportFrontPath?: string;
+  passportBackPath?: string;
+
+  // Lease dates (if set in quotation)
+  leaseStartDate?: string;
+  leaseEndDate?: string;
 
   // Conversion metadata
   message: string;

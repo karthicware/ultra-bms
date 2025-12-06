@@ -23,9 +23,12 @@ import java.util.UUID;
 
 /**
  * Quotation entity representing rental quotations for leads
+ * SCP-2025-12-06: Added cheque breakdown fields and unique constraint for lead_id
  */
 @Entity
-@Table(name = "quotations")
+@Table(name = "quotations", uniqueConstraints = {
+    @jakarta.persistence.UniqueConstraint(name = "uk_quotation_lead_id", columnNames = "lead_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -92,6 +95,28 @@ public class Quotation {
     @Column(name = "total_first_payment", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalFirstPayment;
 
+    // SCP-2025-12-06: Cheque breakdown fields
+    @Column(name = "yearly_rent_amount", precision = 12, scale = 2)
+    private BigDecimal yearlyRentAmount;
+
+    @Column(name = "number_of_cheques")
+    @Builder.Default
+    private Integer numberOfCheques = 12;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "first_month_payment_method", length = 20)
+    @Builder.Default
+    private FirstMonthPaymentMethod firstMonthPaymentMethod = FirstMonthPaymentMethod.CHEQUE;
+
+    // SCP-2025-12-06: Custom first month total payment (includes one-time fees + first rent)
+    @Column(name = "first_month_total", precision = 12, scale = 2)
+    private BigDecimal firstMonthTotal;
+
+    // Cheque breakdown stored as JSON array
+    // Format: [{"chequeNumber": 1, "amount": 5000.00, "dueDate": "2025-02-01"}, ...]
+    @Column(name = "cheque_breakdown", columnDefinition = "TEXT")
+    private String chequeBreakdown;
+
     // Document requirements (stored as JSON array)
     @Column(name = "document_requirements", columnDefinition = "TEXT")
     private String documentRequirements;
@@ -132,8 +157,11 @@ public class Quotation {
     @Column(name = "emirates_id_back_path", length = 500)
     private String emiratesIdBackPath;
 
-    @Column(name = "passport_path", length = 500)
-    private String passportPath;
+    @Column(name = "passport_front_path", length = 500)
+    private String passportFrontPath;
+
+    @Column(name = "passport_back_path", length = 500)
+    private String passportBackPath;
 
     // Status and timestamps
     @Enumerated(EnumType.STRING)
@@ -202,5 +230,11 @@ public class Quotation {
         TWO_BHK,
         THREE_BHK,
         VILLA
+    }
+
+    // SCP-2025-12-06: First month payment method
+    public enum FirstMonthPaymentMethod {
+        CASH,
+        CHEQUE
     }
 }

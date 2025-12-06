@@ -6,12 +6,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
  * DTO for Lead response
+ * SCP-2025-12-06: Identity documents (Emirates ID, passport) are now collected during quotation workflow
  */
 @Data
 @Builder
@@ -22,10 +22,6 @@ public class LeadResponse {
     private UUID id;
     private String leadNumber;
     private String fullName;
-    private String emiratesId;
-    private String passportNumber;
-    private LocalDate passportExpiryDate;
-    private String homeCountry;
     private String email;
     private String contactNumber;
     private Lead.LeadSource leadSource;
@@ -44,10 +40,6 @@ public class LeadResponse {
                 .id(lead.getId())
                 .leadNumber(lead.getLeadNumber())
                 .fullName(lead.getFullName())
-                .emiratesId(lead.getEmiratesId())
-                .passportNumber(lead.getPassportNumber())
-                .passportExpiryDate(lead.getPassportExpiryDate())
-                .homeCountry(lead.getHomeCountry())
                 .email(lead.getEmail())
                 .contactNumber(lead.getContactNumber())
                 .leadSource(lead.getLeadSource())

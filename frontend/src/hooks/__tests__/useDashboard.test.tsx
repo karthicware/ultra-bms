@@ -35,53 +35,66 @@ const createWrapper = () => {
   );
 };
 
-// Mock data
+// Mock data matching actual KpiCards type from dashboard.ts
 const mockKpiCards = {
   netProfitLoss: {
     value: 150000,
+    previousValue: 133333,
+    changePercentage: 12.5,
     trend: 'UP' as const,
-    percentageChange: 12.5,
+    formattedValue: 'AED 150,000',
+    unit: 'AED',
   },
   occupancyRate: {
     value: 92.5,
-    occupiedUnits: 92,
-    totalUnits: 100,
-    trend: 'STABLE' as const,
+    previousValue: 90,
+    changePercentage: 2.78,
+    trend: 'UP' as const,
+    formattedValue: '92.5%',
+    unit: '%',
   },
   overdueMaintenance: {
     value: 8,
-    openWorkOrders: 24,
+    previousValue: 12,
+    changePercentage: -33.3,
     trend: 'DOWN' as const,
+    formattedValue: '8',
+    unit: 'work orders',
   },
-  receivables: {
-    value: 35000,
-    agingBreakdown: {
-      current: 15000,
-      days30: 10000,
-      days60: 5000,
-      over90Days: 5000,
-    },
+  outstandingReceivables: {
+    totalAmount: 35000,
+    changePercentage: 5.0,
     trend: 'UP' as const,
+    aging: {
+      current: 15000,
+      thirtyPlus: 10000,
+      sixtyPlus: 5000,
+      ninetyPlus: 5000,
+    },
   },
 };
 
+// Mock data matching actual MaintenanceQueueItem type from dashboard.ts
 const mockMaintenanceQueue = [
   {
-    workOrderId: '123e4567-e89b-12d3-a456-426614174000',
-    title: 'HVAC Repair',
+    id: '123e4567-e89b-12d3-a456-426614174000',
+    workOrderNumber: 'WO-2025-0001',
     propertyName: 'Property A',
     unitNumber: '101',
+    title: 'HVAC Repair',
+    description: 'HVAC unit not cooling properly',
     priority: 'HIGH',
     status: 'OPEN',
-    dueDate: '2025-01-15',
-    daysUntilDue: 2,
+    scheduledDate: '2025-01-15',
+    daysOverdue: 0,
     isOverdue: false,
   },
 ];
 
+// Mock data matching actual PmJobChartData type from dashboard.ts
 const mockPmJobsChart = [
-  { category: 'HVAC', scheduledCount: 5, overdueCount: 2 },
-  { category: 'PLUMBING', scheduledCount: 3, overdueCount: 1 },
+  { category: 'HVAC', scheduledCount: 5, overdueCount: 2, totalCount: 7 },
+  { category: 'PLUMBING', scheduledCount: 3, overdueCount: 1, totalCount: 4 },
 ];
 
 const mockLeaseExpirations = [
@@ -211,8 +224,8 @@ describe('useDashboard hooks', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(result.current.data?.occupancyRate).toBeDefined();
-      expect(result.current.data?.occupancyRate.occupiedUnits).toBe(92);
-      expect(result.current.data?.occupancyRate.totalUnits).toBe(100);
+      expect(result.current.data?.occupancyRate.value).toBe(92.5);
+      expect(result.current.data?.occupancyRate.formattedValue).toBe('92.5%');
     });
 
     it('should include overdue maintenance KPI - AC-3', async () => {
@@ -235,9 +248,9 @@ describe('useDashboard hooks', () => {
       });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      expect(result.current.data?.receivables).toBeDefined();
-      expect(result.current.data?.receivables.agingBreakdown).toBeDefined();
-      expect(result.current.data?.receivables.agingBreakdown.current).toBe(15000);
+      expect(result.current.data?.outstandingReceivables).toBeDefined();
+      expect(result.current.data?.outstandingReceivables.aging).toBeDefined();
+      expect(result.current.data?.outstandingReceivables.aging.current).toBe(15000);
     });
   });
 
@@ -258,7 +271,7 @@ describe('useDashboard hooks', () => {
       expect(result.current.data?.[0].priority).toBe('HIGH');
     });
 
-    it('should return work orders with due dates', async () => {
+    it('should return work orders with scheduled dates and overdue info', async () => {
       (dashboardService.getMaintenanceQueue as jest.Mock).mockResolvedValue(mockMaintenanceQueue);
 
       const { result } = renderHook(() => useMaintenanceQueue({}), {
@@ -266,8 +279,8 @@ describe('useDashboard hooks', () => {
       });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      expect(result.current.data?.[0].dueDate).toBeDefined();
-      expect(result.current.data?.[0].daysUntilDue).toBeDefined();
+      expect(result.current.data?.[0].scheduledDate).toBeDefined();
+      expect(result.current.data?.[0].daysOverdue).toBeDefined();
     });
   });
 

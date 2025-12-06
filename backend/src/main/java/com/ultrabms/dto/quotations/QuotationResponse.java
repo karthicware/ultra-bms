@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -23,8 +24,14 @@ public class QuotationResponse {
     private UUID id;
     private String quotationNumber;
     private UUID leadId;
+    private String leadName; // For display purposes
+    private String leadEmail; // For display purposes
+    private String leadContactNumber; // For display purposes
     private UUID propertyId;
+    private String propertyName; // For display purposes
     private UUID unitId;
+    private String unitNumber; // For display purposes
+    private String parkingSpotNumber; // For display purposes
     private Quotation.StayType stayType;
     private LocalDate issueDate;
     private LocalDate validityDate;
@@ -37,6 +44,12 @@ public class QuotationResponse {
     private BigDecimal adminFee;
     private BigDecimal totalFirstPayment;
     private String documentRequirements;
+    // SCP-2025-12-06: Cheque breakdown fields
+    private BigDecimal yearlyRentAmount;
+    private Integer numberOfCheques;
+    private Quotation.FirstMonthPaymentMethod firstMonthPaymentMethod;
+    private BigDecimal firstMonthTotal; // Custom first month total (includes one-time fees + first rent)
+    private String chequeBreakdown; // JSON string of cheque breakdown items
     private String paymentTerms;
     private String moveinProcedures;
     private String cancellationPolicy;
@@ -49,7 +62,8 @@ public class QuotationResponse {
     private String nationality;
     private String emiratesIdFrontPath;
     private String emiratesIdBackPath;
-    private String passportPath;
+    private String passportFrontPath;
+    private String passportBackPath;
     private Quotation.QuotationStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -60,15 +74,35 @@ public class QuotationResponse {
     private UUID createdBy;
 
     /**
-     * Convert Quotation entity to QuotationResponse DTO
+     * Convert Quotation entity to QuotationResponse DTO (without related entity details)
      */
     public static QuotationResponse fromEntity(Quotation quotation) {
+        return fromEntity(quotation, null, null, null, null, null, null);
+    }
+
+    /**
+     * Convert Quotation entity to QuotationResponse DTO with related entity details
+     */
+    public static QuotationResponse fromEntity(
+            Quotation quotation,
+            String leadName,
+            String leadEmail,
+            String leadContactNumber,
+            String propertyName,
+            String unitNumber,
+            String parkingSpotNumber) {
         return QuotationResponse.builder()
                 .id(quotation.getId())
                 .quotationNumber(quotation.getQuotationNumber())
                 .leadId(quotation.getLeadId())
+                .leadName(leadName)
+                .leadEmail(leadEmail)
+                .leadContactNumber(leadContactNumber)
                 .propertyId(quotation.getPropertyId())
+                .propertyName(propertyName)
                 .unitId(quotation.getUnitId())
+                .unitNumber(unitNumber)
+                .parkingSpotNumber(parkingSpotNumber)
                 .stayType(quotation.getStayType())
                 .issueDate(quotation.getIssueDate())
                 .validityDate(quotation.getValidityDate())
@@ -80,6 +114,12 @@ public class QuotationResponse {
                 .adminFee(quotation.getAdminFee())
                 .totalFirstPayment(quotation.getTotalFirstPayment())
                 .documentRequirements(quotation.getDocumentRequirements())
+                // SCP-2025-12-06: Cheque breakdown fields
+                .yearlyRentAmount(quotation.getYearlyRentAmount())
+                .numberOfCheques(quotation.getNumberOfCheques())
+                .firstMonthPaymentMethod(quotation.getFirstMonthPaymentMethod())
+                .firstMonthTotal(quotation.getFirstMonthTotal())
+                .chequeBreakdown(quotation.getChequeBreakdown())
                 .paymentTerms(quotation.getPaymentTerms())
                 .moveinProcedures(quotation.getMoveinProcedures())
                 .cancellationPolicy(quotation.getCancellationPolicy())
@@ -92,7 +132,8 @@ public class QuotationResponse {
                 .nationality(quotation.getNationality())
                 .emiratesIdFrontPath(quotation.getEmiratesIdFrontPath())
                 .emiratesIdBackPath(quotation.getEmiratesIdBackPath())
-                .passportPath(quotation.getPassportPath())
+                .passportFrontPath(quotation.getPassportFrontPath())
+                .passportBackPath(quotation.getPassportBackPath())
                 .status(quotation.getStatus())
                 .createdAt(quotation.getCreatedAt())
                 .updatedAt(quotation.getUpdatedAt())

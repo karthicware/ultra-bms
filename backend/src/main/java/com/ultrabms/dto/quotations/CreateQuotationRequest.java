@@ -4,6 +4,7 @@ import com.ultrabms.entity.Quotation;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -44,8 +46,8 @@ public class CreateQuotationRequest {
     @Future(message = "Validity date must be in the future")
     private LocalDate validityDate;
 
-    @NotNull(message = "Base rent is required")
-    @DecimalMin(value = "0.01", message = "Base rent must be greater than 0")
+    // SCP-2025-12-06: Made optional - now calculated from yearlyRentAmount / numberOfCheques
+    @DecimalMin(value = "0.00", message = "Base rent must be non-negative")
     @Digits(integer = 10, fraction = 2, message = "Base rent must have at most 10 integer digits and 2 decimal places")
     private BigDecimal baseRent;
 
@@ -75,6 +77,26 @@ public class CreateQuotationRequest {
 
     private String documentRequirements;
 
+    // SCP-2025-12-06: Cheque breakdown fields
+    @DecimalMin(value = "0.00", message = "Yearly rent amount must be non-negative")
+    @Digits(integer = 12, fraction = 2, message = "Yearly rent amount must have at most 12 integer digits and 2 decimal places")
+    private BigDecimal yearlyRentAmount;
+
+    @Min(value = 1, message = "Minimum 1 cheque required")
+    @Max(value = 12, message = "Maximum 12 cheques allowed")
+    private Integer numberOfCheques;
+
+    private Quotation.FirstMonthPaymentMethod firstMonthPaymentMethod;
+
+    // SCP-2025-12-06: Custom first month total payment (includes one-time fees + first rent)
+    // If provided and different from calculated, adjusts remaining cheque amounts
+    @DecimalMin(value = "0.00", message = "First month total must be non-negative")
+    @Digits(integer = 12, fraction = 2, message = "First month total must have at most 12 integer digits and 2 decimal places")
+    private BigDecimal firstMonthTotal;
+
+    // Cheque breakdown as list of items
+    private List<ChequeBreakdownItem> chequeBreakdown;
+
     // SCP-2025-12-04: Identity document fields (moved from Lead)
     @NotBlank(message = "Emirates ID number is required")
     private String emiratesIdNumber;
@@ -94,7 +116,8 @@ public class CreateQuotationRequest {
     // Document file paths (will be set after S3 upload)
     private String emiratesIdFrontPath;
     private String emiratesIdBackPath;
-    private String passportPath;
+    private String passportFrontPath;
+    private String passportBackPath;
 
     @NotBlank(message = "Payment terms is required")
     private String paymentTerms;

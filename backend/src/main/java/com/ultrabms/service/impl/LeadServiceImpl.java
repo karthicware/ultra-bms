@@ -50,24 +50,11 @@ public class LeadServiceImpl implements LeadService {
     public LeadResponse createLead(CreateLeadRequest request, UUID createdBy) {
         log.info("Creating new lead for: {}", request.getFullName());
 
-        // Validate unique Emirates ID
-        if (leadRepository.existsByEmiratesId(request.getEmiratesId())) {
-            throw new ValidationException("Lead with this Emirates ID already exists");
-        }
-
-        // Validate unique passport number
-        if (leadRepository.existsByPassportNumber(request.getPassportNumber())) {
-            throw new ValidationException("Lead with this passport number already exists");
-        }
-
         // Create lead entity
+        // SCP-2025-12-06: Identity documents (Emirates ID, passport) are now collected during quotation workflow
         Lead lead = Lead.builder()
                 .leadNumber(leadNumberGenerator.generate())
                 .fullName(request.getFullName())
-                .emiratesId(request.getEmiratesId())
-                .passportNumber(request.getPassportNumber())
-                .passportExpiryDate(request.getPassportExpiryDate())
-                .homeCountry(request.getHomeCountry())
                 .email(request.getEmail())
                 .contactNumber(request.getContactNumber())
                 .leadSource(request.getLeadSource())
@@ -110,30 +97,9 @@ public class LeadServiceImpl implements LeadService {
         Lead lead = findLeadById(id);
 
         // Update fields if provided
+        // SCP-2025-12-06: Identity documents (Emirates ID, passport) are now collected during quotation workflow
         if (request.getFullName() != null) {
             lead.setFullName(request.getFullName());
-        }
-        if (request.getEmiratesId() != null) {
-            // Check uniqueness if changed
-            if (!request.getEmiratesId().equals(lead.getEmiratesId()) &&
-                    leadRepository.existsByEmiratesId(request.getEmiratesId())) {
-                throw new ValidationException("Lead with this Emirates ID already exists");
-            }
-            lead.setEmiratesId(request.getEmiratesId());
-        }
-        if (request.getPassportNumber() != null) {
-            // Check uniqueness if changed
-            if (!request.getPassportNumber().equals(lead.getPassportNumber()) &&
-                    leadRepository.existsByPassportNumber(request.getPassportNumber())) {
-                throw new ValidationException("Lead with this passport number already exists");
-            }
-            lead.setPassportNumber(request.getPassportNumber());
-        }
-        if (request.getPassportExpiryDate() != null) {
-            lead.setPassportExpiryDate(request.getPassportExpiryDate());
-        }
-        if (request.getHomeCountry() != null) {
-            lead.setHomeCountry(request.getHomeCountry());
         }
         if (request.getEmail() != null) {
             lead.setEmail(request.getEmail());
