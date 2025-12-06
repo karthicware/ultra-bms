@@ -34,7 +34,6 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -207,11 +206,11 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
     return (
       <div className="min-h-screen bg-background">
         <div className="container max-w-6xl mx-auto px-4 py-6">
-          <div className="animate-pulse space-y-4">
+          <div className="animate-pulse space-y-3">
             <div className="h-8 w-32 bg-muted rounded" />
             <div className="h-12 w-64 bg-muted rounded" />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2 space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <div className="lg:col-span-2 space-y-3">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="h-40 bg-muted rounded-xl" />
                 ))}
@@ -273,9 +272,9 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
         </Button>
 
         {/* Header - Highlighted */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
           <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-4 border border-primary/20">
-            <div className="flex items-center gap-3 mb-1">
+            <div className="flex items-center gap-2 mb-1">
               <h1 className="text-2xl font-bold tracking-tight text-primary">{quotation.quotationNumber}</h1>
               <Badge variant={statusConfig.variant} className={cn("gap-1 px-2 py-0.5 text-xs", statusConfig.bg, statusConfig.color)}>
                 <StatusIcon className="h-3 w-3" />
@@ -317,19 +316,19 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
         )}
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* Left Column - Details */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-3">
             {/* Customer Information */}
-            <Card className="border shadow-sm">
-              <CardHeader className="py-3 px-4 border-b bg-muted/30">
+            <Card className="shadow-sm">
+              <CardHeader className="py-2 px-3 bg-muted/30">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium">
                   <User className="h-4 w-4 text-muted-foreground" />
                   Customer Information
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
-                <div className="grid grid-cols-2 gap-4">
+              <CardContent className="p-2">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <p className="text-xs text-muted-foreground mb-0.5">Full Name</p>
                     <p className="text-sm font-medium">{quotation.leadName || '—'}</p>
@@ -351,15 +350,15 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
             </Card>
 
             {/* Property Details */}
-            <Card className="border shadow-sm">
-              <CardHeader className="py-3 px-4 border-b bg-muted/30">
+            <Card className="shadow-sm">
+              <CardHeader className="py-2 px-3 bg-muted/30">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                   Property Details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
-                <div className="grid grid-cols-2 gap-4">
+              <CardContent className="p-2">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <p className="text-xs text-muted-foreground mb-0.5">Property</p>
                     <p className="text-sm font-medium">{quotation.propertyName || '—'}</p>
@@ -380,15 +379,15 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
 
             {/* Identity Documents - No download links */}
             {(quotation.emiratesIdNumber || quotation.passportNumber) && (
-              <Card className="border shadow-sm">
-                <CardHeader className="py-3 px-4 border-b bg-muted/30">
+              <Card className="shadow-sm">
+                <CardHeader className="py-2 px-3 bg-muted/30">
                   <CardTitle className="flex items-center gap-2 text-sm font-medium">
                     <CreditCard className="h-4 w-4 text-muted-foreground" />
                     Identity Documents
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <CardContent className="p-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {quotation.emiratesIdNumber && (
                       <div>
                         <p className="text-xs text-muted-foreground mb-0.5">Emirates ID</p>
@@ -418,14 +417,14 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
 
             {/* Payment Schedule */}
             {quotation.chequeBreakdown && quotation.chequeBreakdown.length > 0 && (
-              <Card className="border shadow-sm">
-                <CardHeader className="py-3 px-4 border-b bg-muted/30">
+              <Card className="shadow-sm">
+                <CardHeader className="py-2 px-3 bg-muted/30">
                   <CardTitle className="flex items-center gap-2 text-sm font-medium">
                     <Receipt className="h-4 w-4 text-muted-foreground" />
                     Payment Schedule
                     {quotation.numberOfCheques && (
                       <Badge variant="secondary" className="ml-2 text-xs">
-                        {quotation.numberOfCheques} Cheques
+                        {quotation.numberOfCheques} {quotation.numberOfCheques === 1 ? 'Payment' : 'Payments'}
                       </Badge>
                     )}
                   </CardTitle>
@@ -436,7 +435,7 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
                       <thead className="bg-muted/50">
                         <tr>
                           <th className="text-left px-4 py-2 font-medium text-muted-foreground text-xs">#</th>
-                          <th className="text-left px-4 py-2 font-medium text-muted-foreground text-xs">Due Date</th>
+                          <th className="text-left px-4 py-2 font-medium text-muted-foreground text-xs">Payment Mode</th>
                           <th className="text-right px-4 py-2 font-medium text-muted-foreground text-xs">Amount</th>
                         </tr>
                       </thead>
@@ -445,15 +444,23 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
                           <tr key={item.chequeNumber} className={cn(index !== quotation.chequeBreakdown!.length - 1 && 'border-b')}>
                             <td className="px-4 py-2">
                               <span className="font-medium">{item.chequeNumber}</span>
-                              {index === 0 && quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH && (
-                                <Badge variant="secondary" className="ml-2 text-xs bg-green-100 text-green-700">
-                                  <Banknote className="h-3 w-3 mr-1" />
+                            </td>
+                            <td className="px-4 py-2">
+                              {index === 0 && quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
+                                <span className="flex items-center gap-1.5 text-green-700">
+                                  <Banknote className="h-3.5 w-3.5" />
                                   Cash
-                                </Badge>
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1.5 text-blue-600">
+                                  <CreditCard className="h-3.5 w-3.5" />
+                                  Cheque
+                                </span>
                               )}
                             </td>
-                            <td className="px-4 py-2 text-muted-foreground">{formatChequeDueDate(item.dueDate)}</td>
-                            <td className="px-4 py-2 text-right font-medium tabular-nums">{formatCurrency(item.amount)}</td>
+                            <td className="px-4 py-2 text-right font-medium tabular-nums">
+                              {index === 0 ? formatCurrency(totalFirstPaymentDisplay) : formatCurrency(item.amount)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -465,14 +472,14 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
 
             {/* Terms & Conditions */}
             {(quotation.paymentTerms || quotation.moveinProcedures || quotation.cancellationPolicy || quotation.specialTerms) && (
-              <Card className="border shadow-sm">
-                <CardHeader className="py-3 px-4 border-b bg-muted/30">
+              <Card className="shadow-sm">
+                <CardHeader className="py-2 px-3 bg-muted/30">
                   <CardTitle className="flex items-center gap-2 text-sm font-medium">
                     <FileText className="h-4 w-4 text-muted-foreground" />
                     Terms & Conditions
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 space-y-4">
+                <CardContent className="p-2 space-y-2">
                   {quotation.paymentTerms && (
                     <div>
                       <p className="text-xs font-medium text-muted-foreground mb-1">Payment Terms</p>
@@ -504,7 +511,7 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
 
           {/* Right Column - Financial Summary */}
           <div className="lg:col-span-1">
-            <div className="sticky top-6 space-y-4">
+            <div className="sticky top-6 space-y-3">
               {/* Financial Summary Card */}
               <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-br from-card via-card to-primary/5 p-5 shadow-lg">
                 {/* Decorative elements */}
@@ -548,64 +555,47 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>Payment Schedule</span>
-                        <span>{numberOfCheques} {numberOfCheques === 1 ? 'Cheque' : 'Cheques'}</span>
+                        <span>
+                          {quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH
+                            ? `${numberOfCheques - 1} ${numberOfCheques - 1 === 1 ? 'Cheque' : 'Cheques'}`
+                            : `${numberOfCheques} ${numberOfCheques === 1 ? 'Cheque' : 'Cheques'}`}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                        <span>First Payment Mode</span>
+                        <span className="flex items-center gap-1">
+                          {quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
+                            <>
+                              <Banknote className="h-3 w-3 text-green-600" />
+                              Cash
+                            </>
+                          ) : (
+                            <>
+                              <CreditCard className="h-3 w-3 text-blue-600" />
+                              Cheque
+                            </>
+                          )}
+                        </span>
                       </div>
                     </div>
                   )}
 
-                  {/* Breakdown */}
-                  <div className="space-y-2 text-sm">
-                    {firstMonthRent > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground flex items-center gap-1.5">
-                          {quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
-                            <Banknote className="h-3.5 w-3.5 text-green-600" />
-                          ) : (
-                            <CreditCard className="h-3.5 w-3.5 text-blue-600" />
-                          )}
+                  {/* First Payment Total */}
+                  <div className="flex items-center justify-between py-3 border-t border-primary/10">
+                    <div className="flex items-center gap-2">
+                      {quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
+                        <Banknote className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <CreditCard className="h-4 w-4 text-blue-600" />
+                      )}
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                           First Payment
-                          <span className="text-xs text-muted-foreground/70">
-                            ({quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? 'Cash' : 'Cheque'})
-                          </span>
-                        </span>
-                        <span className="font-medium tabular-nums">{formatCurrency(firstMonthRent)}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? 'Cash' : 'Cheque'} • Includes all fees & deposit
+                        </p>
                       </div>
-                    )}
-                    {(quotation.serviceCharges ?? 0) > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Service Charges</span>
-                        <span className="font-medium tabular-nums">{formatCurrency(quotation.serviceCharges)}</span>
-                      </div>
-                    )}
-                    {(quotation.parkingFee ?? 0) > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Parking Fee</span>
-                        <span className="font-medium tabular-nums">{formatCurrency(quotation.parkingFee)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Security Deposit</span>
-                      <span className="font-medium tabular-nums">{formatCurrency(quotation.securityDeposit)}</span>
-                    </div>
-                    {(quotation.adminFee ?? 0) > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Admin Fee</span>
-                        <span className="font-medium tabular-nums">{formatCurrency(quotation.adminFee)}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <Separator className="my-4" />
-
-                  {/* Total */}
-                  <div className="flex items-end justify-between">
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        Total First Payment
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        Includes all fees & deposit
-                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold tracking-tight text-primary">

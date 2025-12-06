@@ -77,7 +77,7 @@ public class Lead {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (status == null) {
-            status = LeadStatus.NEW;
+            status = LeadStatus.NEW_LEAD;
         }
     }
 
@@ -86,11 +86,15 @@ public class Lead {
         updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * Lead pipeline statuses
+     * SCP-2025-12-06: Simplified from 6 statuses to 4 statuses
+     * OLD: NEW → CONTACTED → QUOTATION_SENT → ACCEPTED → CONVERTED → LOST
+     * NEW: NEW_LEAD → QUOTATION_SENT → CONVERTED → LOST
+     */
     public enum LeadStatus {
-        NEW,
-        CONTACTED,
+        NEW_LEAD,
         QUOTATION_SENT,
-        ACCEPTED,
         CONVERTED,
         LOST
     }

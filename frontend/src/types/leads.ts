@@ -7,11 +7,15 @@
 // Enums
 // ===========================
 
+/**
+ * Lead pipeline statuses
+ * SCP-2025-12-06: Simplified from 6 statuses to 4 statuses
+ * OLD: NEW → CONTACTED → QUOTATION_SENT → ACCEPTED → CONVERTED → LOST
+ * NEW: NEW_LEAD → QUOTATION_SENT → CONVERTED → LOST
+ */
 export enum LeadStatus {
-  NEW = 'NEW',
-  CONTACTED = 'CONTACTED',
+  NEW_LEAD = 'NEW_LEAD',
   QUOTATION_SENT = 'QUOTATION_SENT',
-  ACCEPTED = 'ACCEPTED',
   CONVERTED = 'CONVERTED',
   LOST = 'LOST'
 }

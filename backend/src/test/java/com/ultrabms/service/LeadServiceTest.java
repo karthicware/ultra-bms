@@ -81,7 +81,7 @@ class LeadServiceTest {
                 .email("ahmed@example.com")
                 .contactNumber("+971501234567")
                 .leadSource(Lead.LeadSource.WEBSITE)
-                .status(Lead.LeadStatus.NEW)
+                .status(Lead.LeadStatus.NEW_LEAD)
                 .createdBy(testUserId)
                 .build();
 
@@ -114,7 +114,7 @@ class LeadServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.getLeadNumber()).isEqualTo("LEAD-20251115-0001");
         assertThat(response.getFullName()).isEqualTo("Ahmed Hassan");
-        assertThat(response.getStatus()).isEqualTo(Lead.LeadStatus.NEW);
+        assertThat(response.getStatus()).isEqualTo(Lead.LeadStatus.NEW_LEAD);
 
         verify(leadRepository).existsByEmiratesId("784-1234-1234567-1");
         verify(leadRepository).existsByPassportNumber("AB1234567");
@@ -215,7 +215,7 @@ class LeadServiceTest {
 
         // Act
         Page<LeadResponse> result = leadService.searchLeads(
-                Lead.LeadStatus.NEW,
+                Lead.LeadStatus.NEW_LEAD,
                 Lead.LeadSource.WEBSITE,
                 "Ahmed",
                 pageable
@@ -237,7 +237,7 @@ class LeadServiceTest {
         // Act
         LeadResponse response = leadService.updateLeadStatus(
                 testLeadId,
-                Lead.LeadStatus.CONTACTED,
+                Lead.LeadStatus.QUOTATION_SENT,
                 testUserId
         );
 

@@ -153,36 +153,36 @@ export const QuotationPrintView = forwardRef<HTMLDivElement, QuotationPrintViewP
                   {formatCurrency(quotation.baseRent)}
                 </td>
               </tr>
-              {quotation.serviceCharges > 0 && (
+              {(quotation.serviceCharges ?? 0) > 0 ? (
                 <tr className="border-b border-gray-100">
                   <td className="py-3 text-gray-600">Service Charges</td>
                   <td className="py-3 text-right font-medium tabular-nums">
                     {formatCurrency(quotation.serviceCharges)}
                   </td>
                 </tr>
-              )}
-              {quotation.parkingFee && quotation.parkingFee > 0 && (
+              ) : null}
+              {(quotation.parkingFee ?? 0) > 0 ? (
                 <tr className="border-b border-gray-100">
                   <td className="py-3 text-gray-600">Parking Fee</td>
                   <td className="py-3 text-right font-medium tabular-nums">
                     {formatCurrency(quotation.parkingFee)}
                   </td>
                 </tr>
-              )}
+              ) : null}
               <tr className="border-b border-gray-200">
                 <td className="py-3 text-gray-600">Security Deposit</td>
                 <td className="py-3 text-right font-medium tabular-nums">
                   {formatCurrency(quotation.securityDeposit)}
                 </td>
               </tr>
-              {quotation.adminFee > 0 && (
+              {(quotation.adminFee ?? 0) > 0 ? (
                 <tr className="border-b border-gray-200">
                   <td className="py-3 text-gray-600">Admin Fee</td>
                   <td className="py-3 text-right font-medium tabular-nums">
                     {formatCurrency(quotation.adminFee)}
                   </td>
                 </tr>
-              )}
+              ) : null}
               <tr className="bg-gray-900 text-white print:bg-gray-800">
                 <td className="py-4 px-4 font-semibold">Total First Payment</td>
                 <td className="py-4 px-4 text-right font-bold text-lg tabular-nums">

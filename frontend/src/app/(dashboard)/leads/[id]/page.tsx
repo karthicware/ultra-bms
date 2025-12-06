@@ -93,40 +93,27 @@ const LEAD_STATUS_CONFIG: Record<string, {
   label: string;
   step: number;
 }> = {
-  NEW: {
+  // SCP-2025-12-06: Simplified pipeline - 4 statuses
+  NEW_LEAD: {
     badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400 border-blue-200',
     dot: 'bg-blue-500',
     icon: <Sparkles className="h-4 w-4" />,
     label: 'New Lead',
     step: 1,
   },
-  CONTACTED: {
-    badge: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-400 border-yellow-200',
-    dot: 'bg-yellow-500',
-    icon: <MessageSquare className="h-4 w-4" />,
-    label: 'Contacted',
-    step: 2,
-  },
   QUOTATION_SENT: {
     badge: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-400 border-purple-200',
     dot: 'bg-purple-500',
     icon: <Send className="h-4 w-4" />,
     label: 'Quotation Sent',
-    step: 3,
-  },
-  ACCEPTED: {
-    badge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400 border-emerald-200',
-    dot: 'bg-emerald-500',
-    icon: <CheckCircle2 className="h-4 w-4" />,
-    label: 'Accepted',
-    step: 4,
+    step: 2,
   },
   CONVERTED: {
     badge: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400 border-green-200',
     dot: 'bg-green-500',
     icon: <UserCheck className="h-4 w-4" />,
     label: 'Converted',
-    step: 5,
+    step: 3,
   },
   LOST: {
     badge: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-400 border-red-200',
@@ -313,10 +300,11 @@ export default function LeadDetailPage() {
     );
   }
 
-  const statusConfig = LEAD_STATUS_CONFIG[lead.status] || LEAD_STATUS_CONFIG.NEW;
+  const statusConfig = LEAD_STATUS_CONFIG[lead.status] || LEAD_STATUS_CONFIG.NEW_LEAD;
   const sourceConfig = LEAD_SOURCE_CONFIG[lead.leadSource] || LEAD_SOURCE_CONFIG.OTHER;
   const daysInPipeline = calculateDaysInPipeline(lead.createdAt);
-  const progressPercent = lead.status === 'LOST' ? 0 : (statusConfig.step / 5) * 100;
+  // SCP-2025-12-06: Simplified to 3 steps (NEW_LEAD=1, QUOTATION_SENT=2, CONVERTED=3)
+  const progressPercent = lead.status === 'LOST' ? 0 : (statusConfig.step / 3) * 100;
   const quotationStatusConfig = quotation ? QUOTATION_STATUS_CONFIG[quotation.status] || QUOTATION_STATUS_CONFIG.DRAFT : null;
 
   return (
@@ -705,7 +693,7 @@ export default function LeadDetailPage() {
                               <p className="text-lg font-bold">
                                 AED {quotation.totalFirstPayment?.toLocaleString() || '0'}
                               </p>
-                              <p className="text-xs text-muted-foreground">Total First Payment</p>
+                              <p className="text-xs text-muted-foreground">Total Payment</p>
                             </div>
                             <Button variant="ghost" size="icon" className="shrink-0">
                               <ArrowUpRight className="h-4 w-4" />

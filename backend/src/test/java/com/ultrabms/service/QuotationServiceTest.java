@@ -92,7 +92,7 @@ class QuotationServiceTest {
                 .email("ahmed@example.com")
                 .contactNumber("+971501234567")
                 .leadSource(Lead.LeadSource.WEBSITE)
-                .status(Lead.LeadStatus.CONTACTED)
+                .status(Lead.LeadStatus.NEW_LEAD)
                 .createdBy(testUserId)
                 .build();
 
@@ -213,7 +213,7 @@ class QuotationServiceTest {
     void testConvertLeadToTenant_Success() {
         // Arrange
         testQuotation.setStatus(Quotation.QuotationStatus.ACCEPTED);
-        testLead.setStatus(Lead.LeadStatus.ACCEPTED);
+        testLead.setStatus(Lead.LeadStatus.QUOTATION_SENT);
 
         when(quotationRepository.findById(testQuotationId)).thenReturn(Optional.of(testQuotation));
         when(leadRepository.findById(testLeadId)).thenReturn(Optional.of(testLead));

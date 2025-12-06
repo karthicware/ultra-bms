@@ -1428,16 +1428,26 @@ function CreateQuotationForm() {
 
                 {/* Navigation */}
                 <div className="mt-8 pt-6 border-t flex items-center justify-between">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handlePrevious}
-                    disabled={currentStep === 1}
-                    className="rounded-xl"
-                  >
-                    <ChevronLeft className="h-4 w-4 mr-2" />
-                    Previous
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => router.back()}
+                      className="rounded-xl"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handlePrevious}
+                      disabled={currentStep === 1}
+                      className="rounded-xl"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-2" />
+                      Previous
+                    </Button>
+                  </div>
 
                   {currentStep < STEPS.length ? (
                     <Button

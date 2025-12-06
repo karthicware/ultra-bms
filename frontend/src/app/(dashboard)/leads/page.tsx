@@ -86,26 +86,21 @@ import {
 
 type ViewMode = 'grid' | 'list';
 
+/**
+ * Lead status styles
+ * SCP-2025-12-06: Simplified from 6 statuses to 4 statuses
+ * NEW_LEAD → QUOTATION_SENT → CONVERTED → LOST
+ */
 const LEAD_STATUS_STYLES: Record<LeadStatus, { badge: string; dot: string; icon: React.ReactNode }> = {
-  NEW: {
+  NEW_LEAD: {
     badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400 border-blue-200',
     dot: 'bg-blue-500',
     icon: <Sparkles className="h-3.5 w-3.5" />,
-  },
-  CONTACTED: {
-    badge: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-400 border-yellow-200',
-    dot: 'bg-yellow-500',
-    icon: <MessageSquare className="h-3.5 w-3.5" />,
   },
   QUOTATION_SENT: {
     badge: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-400 border-purple-200',
     dot: 'bg-purple-500',
     icon: <Send className="h-3.5 w-3.5" />,
-  },
-  ACCEPTED: {
-    badge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400 border-emerald-200',
-    dot: 'bg-emerald-500',
-    icon: <CheckCircle2 className="h-3.5 w-3.5" />,
   },
   CONVERTED: {
     badge: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400 border-green-200',
@@ -237,15 +232,14 @@ export default function LeadsPage() {
   // Calculate stats
   const stats = useMemo(() => {
     const total = leads.length;
-    const newLeads = leads.filter(l => l.status === 'NEW').length;
-    const contacted = leads.filter(l => l.status === 'CONTACTED').length;
+    // SCP-2025-12-06: Simplified pipeline - 4 statuses
+    const newLeads = leads.filter(l => l.status === 'NEW_LEAD').length;
     const quotationSent = leads.filter(l => l.status === 'QUOTATION_SENT').length;
-    const accepted = leads.filter(l => l.status === 'ACCEPTED').length;
     const converted = leads.filter(l => l.status === 'CONVERTED').length;
     const lost = leads.filter(l => l.status === 'LOST').length;
 
     const conversionRate = total > 0 ? (converted / total) * 100 : 0;
-    const inPipeline = newLeads + contacted + quotationSent + accepted;
+    const inPipeline = newLeads + quotationSent;
 
     // Average days in pipeline for active leads
     const activeLeads = leads.filter(l => !['CONVERTED', 'LOST'].includes(l.status));
@@ -256,9 +250,7 @@ export default function LeadsPage() {
     return {
       total,
       newLeads,
-      contacted,
       quotationSent,
-      accepted,
       converted,
       lost,
       conversionRate,
@@ -471,27 +463,20 @@ export default function LeadsPage() {
                       <Filter className="h-3.5 w-3.5" />
                       All
                     </TabsTrigger>
-                    <TabsTrigger value="NEW" className="gap-1.5 px-2 text-xs lg:text-sm">
+                    {/* SCP-2025-12-06: Simplified pipeline - 4 statuses */}
+                    <TabsTrigger value="NEW_LEAD" className="gap-1.5 px-2 text-xs lg:text-sm">
                       <Sparkles className="h-3.5 w-3.5" />
                       New
-                    </TabsTrigger>
-                    <TabsTrigger value="CONTACTED" className="gap-1.5 px-2 text-xs lg:text-sm">
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      Contacted
                     </TabsTrigger>
                     <TabsTrigger value="QUOTATION_SENT" className="gap-1.5 px-2 text-xs lg:text-sm">
                       <Send className="h-3.5 w-3.5" />
                       Quoted
                     </TabsTrigger>
-                    <TabsTrigger value="ACCEPTED" className="gap-1.5 px-2 text-xs lg:text-sm hidden lg:flex">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      Accepted
-                    </TabsTrigger>
-                    <TabsTrigger value="CONVERTED" className="gap-1.5 px-2 text-xs lg:text-sm hidden lg:flex">
+                    <TabsTrigger value="CONVERTED" className="gap-1.5 px-2 text-xs lg:text-sm">
                       <UserCheck className="h-3.5 w-3.5" />
                       Converted
                     </TabsTrigger>
-                    <TabsTrigger value="LOST" className="gap-1.5 px-2 text-xs lg:text-sm hidden lg:flex">
+                    <TabsTrigger value="LOST" className="gap-1.5 px-2 text-xs lg:text-sm">
                       <XCircle className="h-3.5 w-3.5" />
                       Lost
                     </TabsTrigger>

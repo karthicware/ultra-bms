@@ -378,7 +378,8 @@ public class QuotationServiceImpl implements QuotationService {
                 break;
             case ACCEPTED:
                 quotation.setAcceptedAt(LocalDateTime.now());
-                updateLeadStatus(quotation.getLeadId(), Lead.LeadStatus.ACCEPTED, updatedBy);
+                // SCP-2025-12-06: ACCEPTED removed from pipeline - quotation acceptance keeps lead in QUOTATION_SENT status
+                // Lead will move to CONVERTED only when converted to a tenant
                 // Send notification to admin
                 Lead lead = leadRepository.findById(quotation.getLeadId())
                         .orElseThrow(() -> new ResourceNotFoundException("Lead not found"));
@@ -440,7 +441,7 @@ public class QuotationServiceImpl implements QuotationService {
     public QuotationDashboardResponse getDashboardStatistics() {
         log.info("Fetching dashboard statistics");
 
-        long newLeads = leadRepository.countByStatus(Lead.LeadStatus.NEW);
+        long newLeads = leadRepository.countByStatus(Lead.LeadStatus.NEW_LEAD);
         long activeQuotes = quotationRepository.countByStatus(Quotation.QuotationStatus.SENT);
 
         // Quotes expiring in next 7 days

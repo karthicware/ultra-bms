@@ -6,7 +6,7 @@
  * SCP-2025-12-06: Edit existing quotation with same styling as create page
  */
 
-import { Suspense, useState, useEffect, useCallback, use } from 'react';
+import { Suspense, useState, useEffect, useCallback, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
@@ -351,8 +351,16 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
     },
   });
 
-  // Load quotation data
+  // Ref to track if initial data has been loaded - prevents form.reset from being called multiple times
+  const initialDataLoaded = useRef(false);
+
+  // Load quotation data - only run once on mount
   useEffect(() => {
+    // Skip if already loaded
+    if (initialDataLoaded.current) {
+      return;
+    }
+
     if (quotationId) {
       setLoading(true);
       getQuotationById(quotationId)
@@ -426,6 +434,9 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
             cancellationPolicy: data.cancellationPolicy || DEFAULT_QUOTATION_TERMS.cancellationPolicy,
             specialTerms: data.specialTerms || '',
           });
+
+          // Mark as loaded to prevent re-fetching
+          initialDataLoaded.current = true;
         })
         .catch(() => {
           toast({
@@ -439,9 +450,10 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
           setLoading(false);
         });
     }
-  }, [quotationId, form, toast, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quotationId]);
 
-  // Fetch properties
+  // Fetch properties - run only once on mount
   useEffect(() => {
     setLoadingProperties(true);
     getProperties({ size: 100, status: PropertyStatus.ACTIVE })
@@ -449,16 +461,13 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
         setProperties(response.content);
       })
       .catch(() => {
-        toast({
-          title: 'Error',
-          description: 'Failed to load properties',
-          variant: 'destructive',
-        });
+        console.error('Failed to load properties');
       })
       .finally(() => {
         setLoadingProperties(false);
       });
-  }, [toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const watchedPropertyId = form.watch('propertyId');
   const watchedUnitId = form.watch('unitId');
@@ -467,15 +476,35 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
   const selectedProperty = properties.find(p => p.id === watchedPropertyId) || null;
   const selectedUnit = availableUnits.find(u => u.id === watchedUnitId) || null;
 
+  // Track the last fetched property to avoid unnecessary refetches
+  const lastFetchedPropertyId = useRef<string | null>(null);
+
   // Fetch units when property changes
   useEffect(() => {
+    // Skip if same property was already fetched
+    if (watchedPropertyId && watchedPropertyId === lastFetchedPropertyId.current) {
+      return;
+    }
+
     if (watchedPropertyId) {
+      lastFetchedPropertyId.current = watchedPropertyId;
       setLoadingUnits(true);
       getAvailableUnits(watchedPropertyId)
         .then((units) => {
-          // Include current unit even if not available
-          if (quotation?.unitId && !units.find(u => u.id === quotation.unitId)) {
-            // Add a placeholder for the current unit
+          // Include current unit even if not available (reserved by this quotation)
+          if (quotation?.unitId && quotation?.propertyId === watchedPropertyId) {
+            const currentUnitExists = units.find(u => u.id === quotation.unitId);
+            if (!currentUnitExists && quotation.unitNumber) {
+              // Add the current unit as a placeholder
+              units.unshift({
+                id: quotation.unitId,
+                unitNumber: quotation.unitNumber,
+                bedroomCount: 0, // Will show as current selection
+                monthlyRent: quotation.yearlyRentAmount || 0,
+                propertyId: watchedPropertyId,
+                status: 'RESERVED',
+              } as Unit);
+            }
           }
           setAvailableUnits(units);
         })
@@ -487,8 +516,11 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
         });
     } else {
       setAvailableUnits([]);
+      lastFetchedPropertyId.current = null;
     }
-  }, [watchedPropertyId, quotation?.unitId]);
+  // Only depend on watchedPropertyId - quotation fields are only used for initial load
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedPropertyId]);
 
   // Fetch parking spots when property changes
   useEffect(() => {
@@ -686,12 +718,13 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
         yearlyRentAmount: yearlyRentAmount > 0 ? yearlyRentAmount : null,
         numberOfCheques: numberOfCheques > 0 ? numberOfCheques : null,
         firstMonthPaymentMethod: yearlyRentAmount > 0 ? firstMonthPaymentMethod : null,
-        firstMonthTotal: firstMonthTotal > 0 ? firstMonthTotal : null,
+        firstMonthTotal: (firstMonthTotal ?? 0) > 0 ? firstMonthTotal : null,
         // Backend expects chequeBreakdown as a JSON string, not an array
         chequeBreakdown: chequeBreakdown.length > 0 ? JSON.stringify(chequeBreakdown) : null,
       };
 
       console.log('Update quotation payload:', JSON.stringify(payload, null, 2));
+      console.log('validityDate in form data:', data.validityDate, '-> formatted:', validityDateValue);
       await updateQuotation(quotationId, payload);
 
       toast({
@@ -751,7 +784,14 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
                       mode="single"
                       selected={field.value}
                       onSelect={(date) => {
-                        field.onChange(date);
+                        if (date) {
+                          // Use setValue with options to ensure form state is updated properly
+                          form.setValue('issueDate', date, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                            shouldValidate: false
+                          });
+                        }
                         setIssueDateOpen(false);
                       }}
                     />
@@ -788,7 +828,14 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
                       mode="single"
                       selected={field.value}
                       onSelect={(date) => {
-                        field.onChange(date);
+                        if (date) {
+                          // Use setValue with options to ensure form state is updated properly
+                          form.setValue('validityDate', date, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                            shouldValidate: false
+                          });
+                        }
                         setValidityDateOpen(false);
                       }}
                       disabled={(date) => date < form.getValues('issueDate')}
@@ -1113,18 +1160,21 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
     </div>
   );
 
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return renderPropertyStep();
-      case 2:
-        return renderFinancialsStep();
-      case 3:
-        return renderTermsStep();
-      default:
-        return null;
-    }
-  };
+  // Render all steps but only show the current one - this keeps form fields mounted
+  // and prevents React from unmounting/remounting form fields when switching steps
+  const renderAllSteps = () => (
+    <>
+      <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
+        {renderPropertyStep()}
+      </div>
+      <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
+        {renderFinancialsStep()}
+      </div>
+      <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
+        {renderTermsStep()}
+      </div>
+    </>
+  );
 
   if (loading) {
     return (
@@ -1226,7 +1276,7 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
                   </p>
                 </div>
 
-                {renderStepContent()}
+                {renderAllSteps()}
 
                 <div className="mt-8 pt-6 border-t flex items-center justify-between">
                   <Button
@@ -1240,38 +1290,48 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
                     Previous
                   </Button>
 
-                  {currentStep < STEPS.length ? (
+                  <div className="flex gap-3">
                     <Button
                       type="button"
-                      onClick={handleNext}
-                      className="rounded-xl"
+                      variant="ghost"
+                      onClick={() => router.back()}
+                      className="rounded-xl text-muted-foreground"
                     >
-                      Continue
-                      <ChevronRight className="h-4 w-4 ml-2" />
+                      Cancel
                     </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      disabled={isSubmitting}
-                      onClick={() => {
-                        if (validateStep(currentStep)) {
-                          // Call onSubmit directly with form values
-                          const formValues = form.getValues();
-                          onSubmit(formValues);
-                        }
-                      }}
-                      className="rounded-xl bg-primary hover:bg-primary/90"
-                    >
-                      {isSubmitting ? (
-                        <>Saving...</>
-                      ) : (
-                        <>
-                          Save Changes
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </>
-                      )}
-                    </Button>
-                  )}
+                    {currentStep < STEPS.length ? (
+                      <Button
+                        type="button"
+                        onClick={handleNext}
+                        className="rounded-xl"
+                      >
+                        Continue
+                        <ChevronRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        disabled={isSubmitting}
+                        onClick={() => {
+                          if (validateStep(currentStep)) {
+                            // Call onSubmit directly with form values
+                            const formValues = form.getValues();
+                            onSubmit(formValues);
+                          }
+                        }}
+                        className="rounded-xl bg-primary hover:bg-primary/90"
+                      >
+                        {isSubmitting ? (
+                          <>Saving...</>
+                        ) : (
+                          <>
+                            Save Changes
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
