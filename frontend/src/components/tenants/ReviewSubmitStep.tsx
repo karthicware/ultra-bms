@@ -4,6 +4,7 @@
  * Step 6: Review and Submit
  * Review all entered data and submit tenant registration
  * SCP-2025-12-07: Updated for 6-step flow (removed separate payment schedule step)
+ * SCP-2025-12-07: Added preloadedDocuments prop to show "From Quotation" status
  */
 
 import { format } from 'date-fns';
@@ -26,12 +27,21 @@ const getPaymentFrequencyLabel = (numberOfCheques?: number): string => {
   return `${numberOfCheques} Payments`;
 };
 
+// SCP-2025-12-07: Preloaded document paths from quotation
+interface PreloadedDocuments {
+  emiratesIdFrontPath?: string;
+  emiratesIdBackPath?: string;
+  passportFrontPath?: string;
+  passportBackPath?: string;
+}
+
 interface ReviewSubmitStepProps {
   formData: TenantOnboardingFormData;
   onSubmit: () => void;
   onBack: () => void;
   onEdit: (step: number) => void;
   isSubmitting: boolean;
+  preloadedDocuments?: PreloadedDocuments;
 }
 
 export function ReviewSubmitStep({
@@ -40,8 +50,15 @@ export function ReviewSubmitStep({
   onBack,
   onEdit,
   isSubmitting,
+  preloadedDocuments,
 }: ReviewSubmitStepProps) {
   const { personalInfo, leaseInfo, rentBreakdown, parkingAllocation, documentUpload } = formData;
+
+  // SCP-2025-12-07: Check document status including preloaded documents from quotation
+  const hasEmiratesId = documentUpload.emiratesIdFile || preloadedDocuments?.emiratesIdFrontPath;
+  const hasPassport = documentUpload.passportFile || preloadedDocuments?.passportFrontPath;
+  const isEmiratesIdFromQuotation = !documentUpload.emiratesIdFile && !!preloadedDocuments?.emiratesIdFrontPath;
+  const isPassportFromQuotation = !documentUpload.passportFile && !!preloadedDocuments?.passportFrontPath;
 
   return (
     <Card data-testid="step-review-submit">
@@ -305,14 +322,18 @@ export function ReviewSubmitStep({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Emirates ID</span>
-                <Badge variant={documentUpload.emiratesIdFile ? 'default' : 'destructive'}>
-                  {documentUpload.emiratesIdFile ? 'Uploaded' : 'Missing'}
+                <Badge variant={hasEmiratesId ? 'default' : 'destructive'}>
+                  {hasEmiratesId
+                    ? (isEmiratesIdFromQuotation ? 'From Quotation' : 'Uploaded')
+                    : 'Missing'}
                 </Badge>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Passport</span>
-                <Badge variant={documentUpload.passportFile ? 'default' : 'destructive'}>
-                  {documentUpload.passportFile ? 'Uploaded' : 'Missing'}
+                <Badge variant={hasPassport ? 'default' : 'destructive'}>
+                  {hasPassport
+                    ? (isPassportFromQuotation ? 'From Quotation' : 'Uploaded')
+                    : 'Missing'}
                 </Badge>
               </div>
               <div className="flex justify-between items-center">

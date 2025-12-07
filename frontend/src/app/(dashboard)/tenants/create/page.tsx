@@ -722,6 +722,7 @@ function CreateTenantWizard() {
                         onBack={goToPreviousStep}
                         onEdit={(step) => setCurrentStep(step.toString())}
                         isSubmitting={isSubmitting}
+                        preloadedDocuments={preloadedDocuments}
                       />
                     </TabsContent>
                   </Tabs>
