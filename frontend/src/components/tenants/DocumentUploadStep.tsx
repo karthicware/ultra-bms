@@ -4,6 +4,7 @@
  * Step 6: Document Upload
  * Upload required and optional documents
  * Updated: shadcn-studio form styling (SCP-2025-11-30) - uses FileUploadZone component
+ * SCP-2025-12-06: Added support for preloaded documents from quotation conversion
  */
 
 import { useState } from 'react';
@@ -13,24 +14,37 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, X } from 'lucide-react';
+import { AlertCircle, X, CheckCircle2, FileText, ExternalLink } from 'lucide-react';
 
 import { FileUploadZone } from './FileUploadZone';
 import { documentUploadSchema } from '@/lib/validations/tenant';
 import type { TenantDocumentUploadFormData } from '@/types/tenant';
 
+// SCP-2025-12-06: Preloaded document paths from quotation
+interface PreloadedDocuments {
+  emiratesIdFrontPath?: string;
+  emiratesIdBackPath?: string;
+  passportFrontPath?: string;
+  passportBackPath?: string;
+}
+
 interface DocumentUploadStepProps {
   data: TenantDocumentUploadFormData;
   onComplete: (data: TenantDocumentUploadFormData) => void;
   onBack: () => void;
+  preloadedDocuments?: PreloadedDocuments;
 }
 
-export function DocumentUploadStep({ data, onComplete, onBack }: DocumentUploadStepProps) {
+export function DocumentUploadStep({ data, onComplete, onBack, preloadedDocuments }: DocumentUploadStepProps) {
   const [emiratesIdFile, setEmiratesIdFile] = useState<File | null>(data.emiratesIdFile);
   const [passportFile, setPassportFile] = useState<File | null>(data.passportFile);
   const [visaFile, setVisaFile] = useState<File | null>(data.visaFile ?? null);
   const [signedLeaseFile, setSignedLeaseFile] = useState<File | null>(data.signedLeaseFile);
   const [additionalFiles, setAdditionalFiles] = useState<File[]>(data.additionalFiles || []);
+
+  // SCP-2025-12-06: Check if documents are preloaded from quotation
+  const hasPreloadedEmiratesId = !!(preloadedDocuments?.emiratesIdFrontPath || preloadedDocuments?.emiratesIdBackPath);
+  const hasPreloadedPassport = !!(preloadedDocuments?.passportFrontPath || preloadedDocuments?.passportBackPath);
 
   const form = useForm<TenantDocumentUploadFormData>({
     resolver: zodResolver(documentUploadSchema),
@@ -41,20 +55,27 @@ export function DocumentUploadStep({ data, onComplete, onBack }: DocumentUploadS
 
   const onSubmit = () => {
     // Validate manually since we're using custom file inputs
-    const hasEmiratesId = emiratesIdFile !== null;
-    const hasPassport = passportFile !== null;
+    // SCP-2025-12-06: Accept preloaded documents from quotation as valid
+    const hasEmiratesId = emiratesIdFile !== null || hasPreloadedEmiratesId;
+    const hasPassport = passportFile !== null || hasPreloadedPassport;
     const hasSignedLease = signedLeaseFile !== null;
 
     if (!hasEmiratesId || !hasPassport || !hasSignedLease) {
-      form.setError('emiratesIdFile', {
-        message: !hasEmiratesId ? 'Emirates ID is required' : undefined!,
-      });
-      form.setError('passportFile', {
-        message: !hasPassport ? 'Passport is required' : undefined!,
-      });
-      form.setError('signedLeaseFile', {
-        message: !hasSignedLease ? 'Signed lease agreement is required' : undefined!,
-      });
+      if (!hasEmiratesId) {
+        form.setError('emiratesIdFile', {
+          message: 'Emirates ID is required',
+        });
+      }
+      if (!hasPassport) {
+        form.setError('passportFile', {
+          message: 'Passport is required',
+        });
+      }
+      if (!hasSignedLease) {
+        form.setError('signedLeaseFile', {
+          message: 'Signed lease agreement is required',
+        });
+      }
       return;
     }
 
@@ -77,6 +98,54 @@ export function DocumentUploadStep({ data, onComplete, onBack }: DocumentUploadS
     setAdditionalFiles(additionalFiles.filter((_, i) => i !== index));
   };
 
+  // SCP-2025-12-06: Helper to extract filename from S3 path
+  const getFileNameFromPath = (path: string | undefined): string => {
+    if (!path) return 'Document';
+    const parts = path.split('/');
+    return parts[parts.length - 1] || 'Document';
+  };
+
+  // SCP-2025-12-06: Component to display preloaded document
+  const PreloadedDocumentDisplay = ({
+    label,
+    paths
+  }: {
+    label: string;
+    paths: (string | undefined)[];
+  }) => {
+    const validPaths = paths.filter(Boolean) as string[];
+    if (validPaths.length === 0) return null;
+
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium">{label}</p>
+          <span className="text-xs text-green-600 flex items-center gap-1">
+            <CheckCircle2 className="h-3 w-3" />
+            From Quotation
+          </span>
+        </div>
+        <div className="border rounded-lg p-3 bg-green-50/50 border-green-200">
+          <div className="flex items-start gap-3">
+            <FileText className="h-5 w-5 text-green-600 mt-0.5" />
+            <div className="flex-1 space-y-1">
+              {validPaths.map((path, idx) => (
+                <div key={idx} className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {idx === 0 ? 'Front' : 'Back'}: {getFileNameFromPath(path)}
+                  </p>
+                </div>
+              ))}
+              <p className="text-xs text-green-600 mt-1">
+                Document already uploaded during quotation process
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Card data-testid="step-document-upload">
       <CardHeader>
@@ -96,24 +165,38 @@ export function DocumentUploadStep({ data, onComplete, onBack }: DocumentUploadS
           </Alert>
 
           {/* Emirates ID / National ID */}
-          <FileUploadZone
-            label="Emirates ID / National ID"
-            description="PDF, JPG, or PNG (max 5MB)"
-            selectedFile={emiratesIdFile}
-            onFileSelect={setEmiratesIdFile}
-            required
-            testId="upload-emirates-id"
-          />
+          {hasPreloadedEmiratesId ? (
+            <PreloadedDocumentDisplay
+              label="Emirates ID / National ID"
+              paths={[preloadedDocuments?.emiratesIdFrontPath, preloadedDocuments?.emiratesIdBackPath]}
+            />
+          ) : (
+            <FileUploadZone
+              label="Emirates ID / National ID"
+              description="PDF, JPG, or PNG (max 5MB)"
+              selectedFile={emiratesIdFile}
+              onFileSelect={setEmiratesIdFile}
+              required
+              testId="upload-emirates-id"
+            />
+          )}
 
           {/* Passport */}
-          <FileUploadZone
-            label="Passport Copy"
-            description="PDF, JPG, or PNG (max 5MB)"
-            selectedFile={passportFile}
-            onFileSelect={setPassportFile}
-            required
-            testId="upload-passport"
-          />
+          {hasPreloadedPassport ? (
+            <PreloadedDocumentDisplay
+              label="Passport Copy"
+              paths={[preloadedDocuments?.passportFrontPath, preloadedDocuments?.passportBackPath]}
+            />
+          ) : (
+            <FileUploadZone
+              label="Passport Copy"
+              description="PDF, JPG, or PNG (max 5MB)"
+              selectedFile={passportFile}
+              onFileSelect={setPassportFile}
+              required
+              testId="upload-passport"
+            />
+          )}
 
           {/* Visa (Optional) */}
           <FileUploadZone

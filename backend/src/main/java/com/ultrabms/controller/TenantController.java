@@ -60,26 +60,48 @@ public class TenantController {
      *
      * FormData fields:
      * - All CreateTenantRequest fields (firstName, lastName, email, etc.)
-     * - emiratesIdFile (required)
-     * - passportFile (required)
+     * - emiratesIdFile (required unless emiratesIdFrontPath is provided)
+     * - passportFile (required unless passportFrontPath is provided)
      * - visaFile (optional)
      * - signedLeaseFile (required)
      * - mulkiyaFile (optional)
      * - additionalFiles[] (optional, multiple files)
+     *
+     * SCP-2025-12-06: For lead conversions, preloaded document paths from quotation can be used:
+     * - emiratesIdFrontPath, emiratesIdBackPath (S3 paths from quotation)
+     * - passportFrontPath, passportBackPath (S3 paths from quotation)
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'PROPERTY_MANAGER', 'ADMIN')")
     @Operation(summary = "Create new tenant", description = "Register a new tenant with user account creation and document uploads")
     public ResponseEntity<Map<String, Object>> createTenant(
             @Valid @ModelAttribute CreateTenantRequest request,
-            @RequestParam(value = "emiratesIdFile", required = true) MultipartFile emiratesIdFile,
-            @RequestParam(value = "passportFile", required = true) MultipartFile passportFile,
+            @RequestParam(value = "emiratesIdFile", required = false) MultipartFile emiratesIdFile,
+            @RequestParam(value = "passportFile", required = false) MultipartFile passportFile,
             @RequestParam(value = "visaFile", required = false) MultipartFile visaFile,
             @RequestParam(value = "signedLeaseFile", required = true) MultipartFile signedLeaseFile,
             @RequestParam(value = "mulkiyaFile", required = false) MultipartFile mulkiyaFile,
-            @RequestParam(value = "additionalFiles", required = false) List<MultipartFile> additionalFiles
+            @RequestParam(value = "additionalFiles", required = false) List<MultipartFile> additionalFiles,
+            // SCP-2025-12-06: Preloaded document paths from quotation (alternative to file uploads)
+            @RequestParam(value = "emiratesIdFrontPath", required = false) String emiratesIdFrontPath,
+            @RequestParam(value = "emiratesIdBackPath", required = false) String emiratesIdBackPath,
+            @RequestParam(value = "passportFrontPath", required = false) String passportFrontPath,
+            @RequestParam(value = "passportBackPath", required = false) String passportBackPath
     ) {
         LOGGER.info("Creating tenant: {}", request.getEmail());
+
+        // SCP-2025-12-06: Validate that either file or path is provided for required documents
+        boolean hasEmiratesId = (emiratesIdFile != null && !emiratesIdFile.isEmpty()) ||
+                               (emiratesIdFrontPath != null && !emiratesIdFrontPath.isEmpty());
+        boolean hasPassport = (passportFile != null && !passportFile.isEmpty()) ||
+                             (passportFrontPath != null && !passportFrontPath.isEmpty());
+
+        if (!hasEmiratesId) {
+            throw new IllegalArgumentException("Emirates ID is required: either upload a file or provide preloaded document path");
+        }
+        if (!hasPassport) {
+            throw new IllegalArgumentException("Passport is required: either upload a file or provide preloaded document path");
+        }
 
         CreateTenantResponse response = tenantService.createTenant(
                 request,
@@ -88,7 +110,11 @@ public class TenantController {
                 visaFile,
                 signedLeaseFile,
                 mulkiyaFile,
-                additionalFiles
+                additionalFiles,
+                emiratesIdFrontPath,
+                emiratesIdBackPath,
+                passportFrontPath,
+                passportBackPath
         );
 
         Map<String, Object> responseBody = new HashMap<>();

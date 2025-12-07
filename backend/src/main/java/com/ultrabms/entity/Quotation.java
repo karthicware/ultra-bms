@@ -53,10 +53,7 @@ public class Quotation {
     @Column(name = "unit_id", nullable = false)
     private UUID unitId;
 
-    // SCP-2025-12-04: Made optional as it's being removed from frontend
-    @Enumerated(EnumType.STRING)
-    @Column(name = "stay_type", length = 20)
-    private StayType stayType;
+    // SCP-2025-12-06: Removed stayType - unit already has bedroomCount which provides this info
 
     @Column(name = "issue_date", nullable = false)
     private LocalDate issueDate;
@@ -224,13 +221,7 @@ public class Quotation {
         CONVERTED
     }
 
-    public enum StayType {
-        STUDIO,
-        ONE_BHK,
-        TWO_BHK,
-        THREE_BHK,
-        VILLA
-    }
+    // SCP-2025-12-06: Removed StayType enum - unit.bedroomCount provides this info
 
     // SCP-2025-12-06: First month payment method
     public enum FirstMonthPaymentMethod {

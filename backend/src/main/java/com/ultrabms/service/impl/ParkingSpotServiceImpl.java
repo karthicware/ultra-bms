@@ -27,6 +27,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -369,6 +370,31 @@ public class ParkingSpotServiceImpl implements ParkingSpotService {
         parkingSpot = parkingSpotRepository.save(parkingSpot);
 
         log.info("Parking spot {} assigned to tenant {}", parkingSpotId, tenantId);
+        return ParkingSpotResponse.fromEntity(parkingSpot);
+    }
+
+    @Override
+    @Transactional
+    public ParkingSpotResponse assignToTenant(UUID parkingSpotId, UUID tenantId, LocalDate leaseEndDate) {
+        log.info("Assigning parking spot {} to tenant {} until {}", parkingSpotId, tenantId, leaseEndDate);
+
+        ParkingSpot parkingSpot = findParkingSpotById(parkingSpotId);
+
+        // Validate spot is available
+        if (!parkingSpot.isAvailable()) {
+            throw new ValidationException("Parking spot is not available for assignment. " +
+                    "Current status: " + parkingSpot.getStatus());
+        }
+
+        // Validate tenant exists
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found with ID: " + tenantId));
+
+        // Assign spot with lease end date for blocking period
+        parkingSpot.assignToTenant(tenant, leaseEndDate);
+        parkingSpot = parkingSpotRepository.save(parkingSpot);
+
+        log.info("Parking spot {} assigned to tenant {} until {}", parkingSpotId, tenantId, leaseEndDate);
         return ParkingSpotResponse.fromEntity(parkingSpot);
     }
 

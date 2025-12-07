@@ -30,7 +30,19 @@ import {
   Receipt,
   Banknote,
   Sparkles,
+  UserCheck,
+  ChevronRight,
+  Home,
 } from 'lucide-react';
+import Link from 'next/link';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +56,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { getQuotationById, sendQuotation } from '@/services/quotations.service';
+import { getQuotationById, sendQuotation, convertToTenant } from '@/services/quotations.service';
 import type { Quotation } from '@/types/quotations';
 import { QuotationStatus, FirstMonthPaymentMethod } from '@/types/quotations';
 import { QuotationPrintView } from '@/components/quotations/QuotationPrintView';
@@ -119,6 +131,7 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
   const [loading, setLoading] = useState(true);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -202,6 +215,34 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
     router.push(`/quotations/${id}/edit`);
   };
 
+  const handleConvertToTenant = async () => {
+    if (!quotation) return;
+    setIsConverting(true);
+    try {
+      const response = await convertToTenant(quotation.id);
+      toast({
+        title: 'Success',
+        description: response.message || 'Lead converted to tenant successfully',
+        variant: 'success'
+      });
+      // Refresh quotation data
+      const updated = await getQuotationById(quotation.id);
+      if (updated.chequeBreakdown && typeof updated.chequeBreakdown === 'string') {
+        try { updated.chequeBreakdown = JSON.parse(updated.chequeBreakdown); } catch { updated.chequeBreakdown = []; }
+      }
+      setQuotation(updated);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast({
+        title: 'Error',
+        description: err.response?.data?.message || 'Failed to convert lead to tenant',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -260,16 +301,40 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
   return (
     <div className="min-h-screen bg-background">
       <div className="container max-w-6xl mx-auto px-4 py-6">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.back()}
-          className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
+        {/* Breadcrumb Navigation - Shows Lead context */}
+        <Breadcrumb className="mb-4">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/leads" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
+                  <Home className="h-3.5 w-3.5" />
+                  <span>Leads</span>
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+            </BreadcrumbSeparator>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link
+                  href={`/leads/${quotation.leadId}`}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {quotation.leadName || 'Lead Details'}
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+            </BreadcrumbSeparator>
+            <BreadcrumbItem>
+              <BreadcrumbPage className="font-semibold text-foreground">
+                Quotation
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
         {/* Header - Highlighted */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
@@ -300,6 +365,12 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
               <Button size="sm" onClick={handleSend} disabled={isSending}>
                 <Send className="h-4 w-4 mr-2" />
                 {isSending ? 'Sending...' : 'Send'}
+              </Button>
+            )}
+            {quotation.status === QuotationStatus.SENT && (
+              <Button size="sm" onClick={handleConvertToTenant} disabled={isConverting} className="bg-green-600 hover:bg-green-700">
+                <UserCheck className="h-4 w-4 mr-2" />
+                {isConverting ? 'Converting...' : 'Convert to Tenant'}
               </Button>
             )}
           </div>

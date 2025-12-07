@@ -12,6 +12,7 @@ import com.ultrabms.entity.enums.ParkingSpotStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -137,6 +138,18 @@ public interface ParkingSpotService {
      * @return Updated parking spot
      */
     ParkingSpotResponse assignToTenant(UUID parkingSpotId, UUID tenantId);
+
+    /**
+     * Assign parking spot to tenant for lease period
+     * SCP-2025-12-07: Added for lease-period parking blocking
+     * Called during tenant onboarding - spot blocked until lease ends
+     *
+     * @param parkingSpotId Parking spot UUID
+     * @param tenantId Tenant UUID
+     * @param leaseEndDate When the assignment expires (tenant's lease end date)
+     * @return Updated parking spot
+     */
+    ParkingSpotResponse assignToTenant(UUID parkingSpotId, UUID tenantId, LocalDate leaseEndDate);
 
     /**
      * Release parking spot (remove tenant assignment)

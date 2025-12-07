@@ -81,14 +81,12 @@ class QuotationServiceTest {
         testQuotationId = UUID.randomUUID();
         testUnitId = UUID.randomUUID();
 
+        // SCP-2025-12-06: Removed emiratesId, passportNumber, passportExpiryDate, homeCountry
+        // These identity fields were moved to tenant creation workflow
         testLead = Lead.builder()
                 .id(testLeadId)
                 .leadNumber("LEAD-20251115-0001")
                 .fullName("Ahmed Hassan")
-                .emiratesId("784-1234-1234567-1")
-                .passportNumber("AB1234567")
-                .passportExpiryDate(LocalDate.of(2026, 12, 31))
-                .homeCountry("United Arab Emirates")
                 .email("ahmed@example.com")
                 .contactNumber("+971501234567")
                 .leadSource(Lead.LeadSource.WEBSITE)
@@ -101,13 +99,13 @@ class QuotationServiceTest {
         testUnit.setUnitNumber("101");
         testUnit.setStatus(UnitStatus.AVAILABLE);
 
+        // SCP-2025-12-06: Removed stayType - unit.bedroomCount provides this info
         testQuotation = Quotation.builder()
                 .id(testQuotationId)
                 .quotationNumber("QUOT-20251115-0001")
                 .leadId(testLeadId)
                 .propertyId(UUID.randomUUID())
                 .unitId(testUnitId)
-                .stayType(Quotation.StayType.TWO_BHK)
                 .issueDate(LocalDate.now())
                 .validityDate(LocalDate.now().plusDays(30))
                 .baseRent(new BigDecimal("5000"))
@@ -125,11 +123,11 @@ class QuotationServiceTest {
                 .build();
 
         // SCP-2025-12-02: Changed from parkingSpots to parkingSpotId
+        // SCP-2025-12-06: Removed stayType - unit.bedroomCount provides this info
         createQuotationRequest = CreateQuotationRequest.builder()
                 .leadId(testLeadId)
                 .propertyId(UUID.randomUUID())
                 .unitId(testUnitId)
-                .stayType(Quotation.StayType.TWO_BHK)
                 .issueDate(LocalDate.now())
                 .validityDate(LocalDate.now().plusDays(30))
                 .baseRent(new BigDecimal("5000"))
@@ -182,11 +180,11 @@ class QuotationServiceTest {
     void testCreateQuotation_InvalidDates() {
         // Arrange
         // SCP-2025-12-02: Changed from parkingSpots to parkingSpotId
+        // SCP-2025-12-06: Removed stayType - unit.bedroomCount provides this info
         CreateQuotationRequest invalidRequest = CreateQuotationRequest.builder()
                 .leadId(testLeadId)
                 .propertyId(UUID.randomUUID())
                 .unitId(testUnitId)
-                .stayType(Quotation.StayType.TWO_BHK)
                 .issueDate(LocalDate.now())
                 .validityDate(LocalDate.now().minusDays(1)) // Before issue date
                 .baseRent(new BigDecimal("5000"))
@@ -211,8 +209,8 @@ class QuotationServiceTest {
     @Test
     @DisplayName("Should convert lead to tenant successfully")
     void testConvertLeadToTenant_Success() {
-        // Arrange
-        testQuotation.setStatus(Quotation.QuotationStatus.ACCEPTED);
+        // Arrange - SCP-2025-12-06: Conversion allowed from SENT status (no ACCEPTED step)
+        testQuotation.setStatus(Quotation.QuotationStatus.SENT);
         testLead.setStatus(Lead.LeadStatus.QUOTATION_SENT);
 
         when(quotationRepository.findById(testQuotationId)).thenReturn(Optional.of(testQuotation));
@@ -238,10 +236,10 @@ class QuotationServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw ValidationException when quotation is not ACCEPTED")
-    void testConvertLeadToTenant_QuotationNotAccepted() {
-        // Arrange
-        testQuotation.setStatus(Quotation.QuotationStatus.DRAFT); // Not ACCEPTED
+    @DisplayName("Should throw ValidationException when quotation is not SENT")
+    void testConvertLeadToTenant_QuotationNotSent() {
+        // Arrange - SCP-2025-12-06: Conversion requires SENT status
+        testQuotation.setStatus(Quotation.QuotationStatus.DRAFT); // Not SENT
 
         when(quotationRepository.findById(testQuotationId)).thenReturn(Optional.of(testQuotation));
         when(leadRepository.findById(testLeadId)).thenReturn(Optional.of(testLead));
@@ -250,14 +248,14 @@ class QuotationServiceTest {
         // Act & Assert
         assertThatThrownBy(() -> quotationService.convertLeadToTenant(testQuotationId, testUserId))
                 .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("Only ACCEPTED quotations can be converted");
+                .hasMessageContaining("Only SENT quotations can be converted");
     }
 
     @Test
     @DisplayName("Should throw ValidationException when lead already converted")
     void testConvertLeadToTenant_LeadAlreadyConverted() {
-        // Arrange
-        testQuotation.setStatus(Quotation.QuotationStatus.ACCEPTED);
+        // Arrange - SCP-2025-12-06: Conversion from SENT status
+        testQuotation.setStatus(Quotation.QuotationStatus.SENT);
         testLead.setStatus(Lead.LeadStatus.CONVERTED); // Already converted
 
         when(quotationRepository.findById(testQuotationId)).thenReturn(Optional.of(testQuotation));
@@ -273,8 +271,8 @@ class QuotationServiceTest {
     @Test
     @DisplayName("Should throw ValidationException when unit is not available")
     void testConvertLeadToTenant_UnitNotAvailable() {
-        // Arrange
-        testQuotation.setStatus(Quotation.QuotationStatus.ACCEPTED);
+        // Arrange - SCP-2025-12-06: Conversion from SENT status
+        testQuotation.setStatus(Quotation.QuotationStatus.SENT);
         testUnit.setStatus(UnitStatus.OCCUPIED); // Not available
 
         when(quotationRepository.findById(testQuotationId)).thenReturn(Optional.of(testQuotation));
@@ -320,9 +318,11 @@ class QuotationServiceTest {
     }
 
     @Test
-    @DisplayName("Should update quotation status to ACCEPTED and send admin notification")
+    @DisplayName("Should update quotation status to ACCEPTED and send admin notification (legacy support)")
     void testUpdateQuotationStatus_Accepted() {
-        // Arrange
+        // Arrange - SCP-2025-12-06: ACCEPTED status kept for backward compatibility
+        // New workflow: DRAFT → SENT → CONVERTED (no ACCEPTED step)
+        // But updateQuotationStatus still supports ACCEPTED for legacy/edge cases
         testQuotation.setStatus(Quotation.QuotationStatus.SENT);
         QuotationStatusUpdateRequest request = QuotationStatusUpdateRequest.builder()
                 .status(Quotation.QuotationStatus.ACCEPTED)

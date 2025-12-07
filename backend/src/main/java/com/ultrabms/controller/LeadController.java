@@ -2,6 +2,7 @@ package com.ultrabms.controller;
 
 import com.ultrabms.dto.ApiResponse;
 import com.ultrabms.dto.leads.CreateLeadRequest;
+import com.ultrabms.dto.leads.LeadConversionResponse;
 import com.ultrabms.dto.leads.LeadDocumentResponse;
 import com.ultrabms.dto.leads.LeadHistoryResponse;
 import com.ultrabms.dto.leads.LeadResponse;
@@ -161,6 +162,16 @@ public class LeadController {
     public ResponseEntity<ApiResponse<Void>> deleteLead(@PathVariable UUID id) {
         leadService.deleteLead(id);
         return ResponseEntity.ok(ApiResponse.success(null, "Lead deleted successfully"));
+    }
+
+    @GetMapping("/conversion-data")
+    @Operation(summary = "Get lead conversion data for tenant onboarding",
+            description = "Returns lead and quotation data including document paths for tenant onboarding pre-population. SCP-2025-12-06")
+    public ResponseEntity<ApiResponse<LeadConversionResponse>> getConversionData(
+            @RequestParam UUID leadId,
+            @RequestParam UUID quotationId) {
+        LeadConversionResponse response = leadService.getConversionData(leadId, quotationId);
+        return ResponseEntity.ok(ApiResponse.success(response, "Conversion data retrieved successfully"));
     }
 
 }

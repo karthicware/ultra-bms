@@ -1,0 +1,37 @@
+RENTAL QUOTATION
+================
+
+Hi [(${leadName})],
+
+Thank you for your interest in renting with UltraBMS! Please find attached your personalized rental quotation.
+
+QUOTATION DETAILS
+-----------------
+Quotation Number: [(${quotationNumber})]
+Issue Date: [(${issueDate})]
+Valid Until: [(${validityDate})]
+
+TOTAL FIRST PAYMENT: AED [(${#numbers.formatDecimal(totalAmount, 1, 2)})]
+
+IMPORTANT: This quotation is valid until [(${validityDate})]. Please confirm your interest before this date to secure the quoted rates.
+
+NEXT STEPS
+----------
+1. Review the attached quotation PDF carefully
+2. If you have any questions, contact our team
+3. Once you're ready to proceed, reply to confirm your interest
+4. Our team will guide you through the next steps
+
+ATTACHED DOCUMENT
+-----------------
+Your detailed quotation PDF is attached to this email. It includes the complete breakdown of rental costs, terms, and conditions.
+
+---
+
+Questions about this quotation?
+Contact us at [(${supportEmail})]
+
+Visit our portal: [(${frontendUrl})]
+
+This is an automated notification from Ultra BMS.
+Please do not reply directly to this email.

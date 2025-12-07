@@ -32,7 +32,7 @@ public class QuotationResponse {
     private UUID unitId;
     private String unitNumber; // For display purposes
     private String parkingSpotNumber; // For display purposes
-    private Quotation.StayType stayType;
+    // SCP-2025-12-06: Removed stayType - unit.bedroomCount provides this info
     private LocalDate issueDate;
     private LocalDate validityDate;
     private BigDecimal baseRent;
@@ -103,7 +103,7 @@ public class QuotationResponse {
                 .unitId(quotation.getUnitId())
                 .unitNumber(unitNumber)
                 .parkingSpotNumber(parkingSpotNumber)
-                .stayType(quotation.getStayType())
+                // SCP-2025-12-06: Removed stayType - unit.bedroomCount provides this info
                 .issueDate(quotation.getIssueDate())
                 .validityDate(quotation.getValidityDate())
                 .baseRent(quotation.getBaseRent())

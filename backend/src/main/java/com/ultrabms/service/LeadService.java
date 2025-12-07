@@ -1,6 +1,7 @@
 package com.ultrabms.service;
 
 import com.ultrabms.dto.leads.CreateLeadRequest;
+import com.ultrabms.dto.leads.LeadConversionResponse;
 import com.ultrabms.dto.leads.LeadDocumentResponse;
 import com.ultrabms.dto.leads.LeadHistoryResponse;
 import com.ultrabms.dto.leads.LeadResponse;
@@ -101,4 +102,14 @@ public interface LeadService {
      * Delete lead
      */
     void deleteLead(UUID id);
+
+    /**
+     * Get lead conversion data for tenant onboarding
+     * SCP-2025-12-06: Returns lead + quotation data including document paths
+     *
+     * @param leadId Lead UUID
+     * @param quotationId Quotation UUID
+     * @return LeadConversionResponse with all data for tenant onboarding pre-population
+     */
+    LeadConversionResponse getConversionData(UUID leadId, UUID quotationId);
 }

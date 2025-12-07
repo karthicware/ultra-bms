@@ -34,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { NumberInput } from '@/components/ui/number-input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { InfoIcon, Upload, X, Car, AlertTriangle } from 'lucide-react';
 
@@ -42,15 +42,20 @@ import { parkingAllocationSchema, formatFileSize, type ParkingAllocationFormData
 import { useAvailableParkingSpots } from '@/hooks/useParkingSpots';
 import type { ParkingSpot } from '@/types/parking';
 import { formatParkingFee } from '@/types/parking';
+import type { LeaseType } from '@/types/tenant';
 
 interface ParkingAllocationStepProps {
   data: ParkingAllocationFormData;
   onComplete: (data: ParkingAllocationFormData) => void;
   onBack: () => void;
   propertyId?: string;
+  // SCP-2025-12-07: Lease type for annual-only parking restriction
+  leaseType?: LeaseType;
 }
 
-export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: ParkingAllocationStepProps) {
+export function ParkingAllocationStep({ data, onComplete, onBack, propertyId, leaseType }: ParkingAllocationStepProps) {
+  // SCP-2025-12-07: Parking is only available for annual (YEARLY) leases
+  const isAnnualLease = leaseType === 'YEARLY';
   const [selectedFile, setSelectedFile] = useState<File | null>(data.mulkiyaFile ?? null);
   const [selectedSpotId, setSelectedSpotId] = useState<string | null>(data.parkingSpotId ?? null);
   const [parkingFee, setParkingFee] = useState<number>(data.parkingFeePerSpot ?? 0);
@@ -159,6 +164,18 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: 
               </AlertDescription>
             </Alert>
 
+            {/* SCP-2025-12-07: Annual-Only Parking Restriction Warning */}
+            {!isAnnualLease && leaseType && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Parking allocation is only available for annual (yearly) lease tenants.
+                  The current lease type is <strong>{leaseType.toLowerCase()}</strong>.
+                  Please skip this step or change the lease type in the previous step.
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Property Required Warning */}
             {!propertyId && (
               <Alert variant="destructive">
@@ -169,8 +186,8 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: 
               </Alert>
             )}
 
-            {/* Parking Spot Selection */}
-            {propertyId && (
+            {/* Parking Spot Selection - SCP-2025-12-07: Only show for annual leases */}
+            {propertyId && isAnnualLease && (
               <div className="space-y-4">
                 <FormItem>
                   <FormLabel>Select Parking Spot (Optional)</FormLabel>
@@ -216,13 +233,13 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId }: 
                 {/* Editable Parking Fee - only show when spot is selected */}
                 {selectedSpotId && (
                   <FormItem>
-                    <FormLabel>Parking Fee (AED)</FormLabel>
+                    <FormLabel>Parking Fee (Monthly)</FormLabel>
                     <FormControl>
-                      <NumberInput
-                        step={1}
-                        min={0}
+                      <CurrencyInput
                         value={parkingFee}
                         onChange={(val) => setParkingFee(val)}
+                        min={0}
+                        placeholder="0"
                         data-testid="input-parking-fee"
                       />
                     </FormControl>

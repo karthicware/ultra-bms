@@ -111,19 +111,10 @@ public class QuotationPdfServiceImpl implements QuotationPdfService {
         leadTable.addCell(createCell(lead.getFullName(), false));
 
         leadTable.addCell(createCell("Email:", true));
-        leadTable.addCell(createCell(lead.getEmail(), false));
+        leadTable.addCell(createCell(lead.getEmail() != null ? lead.getEmail() : "N/A", false));
 
         leadTable.addCell(createCell("Contact Number:", true));
-        leadTable.addCell(createCell(lead.getContactNumber(), false));
-
-        leadTable.addCell(createCell("Emirates ID:", true));
-        leadTable.addCell(createCell(lead.getEmiratesId(), false));
-
-        leadTable.addCell(createCell("Passport Number:", true));
-        leadTable.addCell(createCell(lead.getPassportNumber(), false));
-
-        leadTable.addCell(createCell("Home Country:", true));
-        leadTable.addCell(createCell(lead.getHomeCountry(), false));
+        leadTable.addCell(createCell(lead.getContactNumber() != null ? lead.getContactNumber() : "N/A", false));
 
         document.add(leadTable);
         document.add(new Paragraph("\n"));
@@ -142,17 +133,17 @@ public class QuotationPdfServiceImpl implements QuotationPdfService {
         Table detailsTable = new Table(UnitValue.createPercentArray(new float[]{1, 2}))
                 .useAllAvailableWidth();
 
-        detailsTable.addCell(createCell("Stay Type:", true));
-        detailsTable.addCell(createCell(formatStayType(quotation.getStayType()), false));
-
+        // SCP-2025-12-06: Removed Stay Type - unit already has bedroomCount which provides this info
         detailsTable.addCell(createCell("Property ID:", true));
         detailsTable.addCell(createCell(quotation.getPropertyId().toString(), false));
 
         detailsTable.addCell(createCell("Unit ID:", true));
         detailsTable.addCell(createCell(quotation.getUnitId().toString(), false));
 
-        detailsTable.addCell(createCell("Parking Spots:", true));
-        detailsTable.addCell(createCell(String.valueOf(quotation.getParkingSpots()), false));
+        if (quotation.getParkingSpots() > 0) {
+            detailsTable.addCell(createCell("Parking Spots:", true));
+            detailsTable.addCell(createCell(String.valueOf(quotation.getParkingSpots()), false));
+        }
 
         document.add(detailsTable);
         document.add(new Paragraph("\n"));
@@ -316,16 +307,5 @@ public class QuotationPdfServiceImpl implements QuotationPdfService {
         return String.format("%,.2f", amount);
     }
 
-    /**
-     * Format stay type enum to readable string
-     */
-    private String formatStayType(Quotation.StayType stayType) {
-        return switch (stayType) {
-            case STUDIO -> "Studio";
-            case ONE_BHK -> "1 BHK";
-            case TWO_BHK -> "2 BHK";
-            case THREE_BHK -> "3 BHK";
-            case VILLA -> "Villa";
-        };
-    }
+    // SCP-2025-12-06: Removed formatStayType method - stayType field removed from Quotation
 }

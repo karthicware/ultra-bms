@@ -43,7 +43,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { FirstMonthPaymentMethod, type ChequeBreakdownItem } from '@/types/quotations';
-import { addMonths } from 'date-fns';
+import { addMonths, format } from 'date-fns';
 
 interface ChequeBreakdownSectionProps {
   yearlyRentAmount: number;
@@ -51,6 +51,9 @@ interface ChequeBreakdownSectionProps {
   firstMonthPaymentMethod: FirstMonthPaymentMethod;
   leaseStartDate: Date;
   chequeBreakdown: ChequeBreakdownItem[];
+  // SCP-2025-12-07: Payment due date (day of month, 1-31) - defaults to 5
+  paymentDueDate?: number;
+  onPaymentDueDateChange?: (value: number) => void;
   // One-time fees
   securityDeposit: number;
   adminFee: number;
@@ -80,6 +83,8 @@ export function ChequeBreakdownSection({
   firstMonthPaymentMethod,
   leaseStartDate,
   chequeBreakdown,
+  paymentDueDate = 5, // SCP-2025-12-07: Default to 5th of month
+  onPaymentDueDateChange,
   securityDeposit,
   adminFee,
   serviceCharges,
@@ -136,7 +141,17 @@ export function ChequeBreakdownSection({
   // Number of remaining cheques after first payment
   const remainingChequeCount = numberOfCheques - 1;
 
+  // Helper function to set the day of month for a date, handling month boundaries
+  const setDayOfMonth = (date: Date, day: number): Date => {
+    const result = new Date(date);
+    const lastDayOfMonth = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+    // If the desired day exceeds the month's days, use the last day of the month
+    result.setDate(Math.min(day, lastDayOfMonth));
+    return result;
+  };
+
   // Calculate cheque breakdown with adjusted amounts (whole numbers only)
+  // SCP-2025-12-07: First payment = today, subsequent payments use paymentDueDate
   useEffect(() => {
     if (yearlyRentAmount > 0 && numberOfCheques > 0) {
       const breakdown: ChequeBreakdownItem[] = [];
@@ -144,16 +159,20 @@ export function ChequeBreakdownSection({
       // First payment rent portion (rounded to whole number)
       const firstRentPortionRounded = Math.round(firstRentPortion);
 
+      // SCP-2025-12-07: First payment due date is TODAY
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       // First payment (includes fees + first rent portion)
       // For CHEQUE: This is cheque #1 with fees
       // For CASH: This is cash payment with fees (shown as payment #1)
       breakdown.push({
         chequeNumber: 1,
         amount: firstRentPortionRounded, // Just the rent portion (whole number), fees shown separately
-        dueDate: leaseStartDate.toISOString().split('T')[0],
+        dueDate: today.toISOString().split('T')[0],
       });
 
-      // Remaining payments (rent only cheques)
+      // Remaining payments (rent only cheques) - use paymentDueDate for due dates
       if (remainingChequeCount > 0) {
         // Calculate remaining rent after first payment (using rounded first portion)
         const actualRemainingRent = yearlyRentAmount - firstRentPortionRounded;
@@ -164,8 +183,11 @@ export function ChequeBreakdownSection({
         // Calculate how many payments need an extra 1 to make up the difference
         const remainder = actualRemainingRent - (baseAmount * remainingChequeCount);
 
+        // Start from next month for subsequent payments
         for (let i = 0; i < remainingChequeCount; i++) {
-          const dueDate = addMonths(leaseStartDate, i + 1);
+          // Add months from today, then set to the paymentDueDate day
+          const nextMonthDate = addMonths(today, i + 1);
+          const dueDate = setDayOfMonth(nextMonthDate, paymentDueDate);
           // Add +1 to the first 'remainder' payments to distribute the difference evenly
           const amount = i < remainder ? baseAmount + 1 : baseAmount;
 
@@ -179,7 +201,7 @@ export function ChequeBreakdownSection({
 
       onChequeBreakdownChange(breakdown);
     }
-  }, [yearlyRentAmount, numberOfCheques, leaseStartDate, firstRentPortion, remainingRentAmount, remainingChequeCount, onChequeBreakdownChange]);
+  }, [yearlyRentAmount, numberOfCheques, leaseStartDate, paymentDueDate, firstRentPortion, remainingRentAmount, remainingChequeCount, oneTimeFees, onChequeBreakdownChange]);
 
   // Reset custom first month when inputs change (unless manually set)
   useEffect(() => {
@@ -244,7 +266,7 @@ export function ChequeBreakdownSection({
           />
         </div>
 
-        {/* Number of Payments & First Month Payment Method */}
+        {/* Number of Payments & Payment Due Date - 2 column grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="space-y-2">
             <Label className="text-muted-foreground">Number of Payments</Label>
@@ -269,41 +291,62 @@ export function ChequeBreakdownSection({
             </Select>
           </div>
 
+          {/* SCP-2025-12-07: Payment Due Date - for subsequent payments (first payment is always today) */}
           <div className="space-y-2">
-            <Label className="text-muted-foreground">First Payment Mode</Label>
-            <RadioGroup
-              value={firstMonthPaymentMethod}
-              onValueChange={(v) => onFirstMonthPaymentMethodChange(v as FirstMonthPaymentMethod)}
-              className="flex gap-4"
+            <Label className="text-muted-foreground">Payment Due Date</Label>
+            <Select
+              value={paymentDueDate.toString()}
+              onValueChange={(v) => onPaymentDueDateChange?.(parseInt(v))}
             >
-              <label
-                htmlFor="payment-cash"
-                className={cn(
-                  'flex-1 flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all',
-                  firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH
-                    ? 'border-primary bg-primary/5'
-                    : 'border-muted hover:border-muted-foreground/30'
-                )}
-              >
-                <RadioGroupItem value={FirstMonthPaymentMethod.CASH} id="payment-cash" />
-                <Banknote className="h-5 w-5 text-green-600" />
-                <span className="font-medium">Cash</span>
-              </label>
-              <label
-                htmlFor="payment-cheque"
-                className={cn(
-                  'flex-1 flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all',
-                  firstMonthPaymentMethod === FirstMonthPaymentMethod.CHEQUE
-                    ? 'border-primary bg-primary/5'
-                    : 'border-muted hover:border-muted-foreground/30'
-                )}
-              >
-                <RadioGroupItem value={FirstMonthPaymentMethod.CHEQUE} id="payment-cheque" />
-                <CreditCard className="h-5 w-5 text-blue-600" />
-                <span className="font-medium">Cheque</span>
-              </label>
-            </RadioGroup>
+              <SelectTrigger className="h-12 rounded-xl border-2" data-testid="select-due-date">
+                <SelectValue placeholder="Select due date" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                  <SelectItem key={day} value={day.toString()}>
+                    {day === 1 ? '1st' : day === 2 ? '2nd' : day === 3 ? '3rd' : `${day}th`} of each month
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+        </div>
+
+        {/* SCP-2025-12-07: First Payment Mode - moved to its own section */}
+        <div className="mb-6">
+          <Label className="text-muted-foreground mb-3 block">First Payment Mode</Label>
+          <RadioGroup
+            value={firstMonthPaymentMethod}
+            onValueChange={(v) => onFirstMonthPaymentMethodChange(v as FirstMonthPaymentMethod)}
+            className="flex gap-4"
+          >
+            <label
+              htmlFor="payment-cash"
+              className={cn(
+                'flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all',
+                firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH
+                  ? 'border-primary bg-primary/5'
+                  : 'border-muted hover:border-muted-foreground/30'
+              )}
+            >
+              <RadioGroupItem value={FirstMonthPaymentMethod.CASH} id="payment-cash" className="shrink-0" />
+              <Banknote className="h-5 w-5 text-green-600 shrink-0" />
+              <span className="font-medium">Cash</span>
+            </label>
+            <label
+              htmlFor="payment-cheque"
+              className={cn(
+                'flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all',
+                firstMonthPaymentMethod === FirstMonthPaymentMethod.CHEQUE
+                  ? 'border-primary bg-primary/5'
+                  : 'border-muted hover:border-muted-foreground/30'
+              )}
+            >
+              <RadioGroupItem value={FirstMonthPaymentMethod.CHEQUE} id="payment-cheque" className="shrink-0" />
+              <CreditCard className="h-5 w-5 text-blue-600 shrink-0" />
+              <span className="font-medium">Cheque</span>
+            </label>
+          </RadioGroup>
         </div>
 
         <Separator className="my-6" />
@@ -413,9 +456,10 @@ export function ChequeBreakdownSection({
             </div>
 
             <div className="rounded-xl border bg-card overflow-hidden">
-              {/* Table Header */}
-              <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground font-medium">
+              {/* Table Header - 4 columns: #, Due Date, Payment Mode, Amount */}
+              <div className="grid grid-cols-4 gap-4 p-3 bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground font-medium">
                 <div>#</div>
+                <div>Due Date</div>
                 <div>Payment Mode</div>
                 <div className="text-right">Amount</div>
               </div>
@@ -425,12 +469,14 @@ export function ChequeBreakdownSection({
                 {chequeBreakdown.map((item, index) => {
                   // First payment shows rent + fees, others show just rent
                   const displayAmount = index === 0 ? item.amount + oneTimeFees : item.amount;
+                  // Format the due date
+                  const formattedDueDate = item.dueDate ? format(new Date(item.dueDate), 'dd MMM yyyy') : '-';
 
                   return (
                     <div
                       key={item.chequeNumber}
                       className={cn(
-                        'grid grid-cols-3 gap-4 p-3 hover:bg-muted/30 transition-colors',
+                        'grid grid-cols-4 gap-4 p-3 hover:bg-muted/30 transition-colors',
                         index !== chequeBreakdown.length - 1 && 'border-b border-muted/50',
                         index === 0 && isFirstMonthOverridden && 'bg-amber-50/30'
                       )}
@@ -440,6 +486,16 @@ export function ChequeBreakdownSection({
                         {index === 0 && (
                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                             + Fees
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-sm tabular-nums">
+                          {formattedDueDate}
+                        </span>
+                        {index === 0 && (
+                          <Badge variant="outline" className="ml-2 text-[10px] px-1.5 py-0 text-green-600 border-green-200">
+                            Today
                           </Badge>
                         )}
                       </div>
@@ -473,21 +529,21 @@ export function ChequeBreakdownSection({
 
               {/* Table Footer - Totals */}
               <div className="bg-primary/5 border-t">
-                <div className="grid grid-cols-3 gap-4 p-3 font-medium">
-                  <div className="col-span-2 text-sm">Total Rent (Yearly)</div>
+                <div className="grid grid-cols-4 gap-4 p-3 font-medium">
+                  <div className="col-span-3 text-sm">Total Rent (Yearly)</div>
                   <div className="text-right text-sm tabular-nums text-primary">
                     {formatCurrencyLocal(yearlyRentAmount)}
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4 px-3 pb-3 text-muted-foreground">
-                  <div className="col-span-2 text-xs">+ One-time Fees</div>
+                <div className="grid grid-cols-4 gap-4 px-3 pb-3 text-muted-foreground">
+                  <div className="col-span-3 text-xs">+ One-time Fees</div>
                   <div className="text-right text-xs tabular-nums">
                     {formatCurrencyLocal(oneTimeFees)}
                   </div>
                 </div>
                 <Separator />
-                <div className="grid grid-cols-3 gap-4 p-3 font-semibold">
-                  <div className="col-span-2 text-sm">Grand Total</div>
+                <div className="grid grid-cols-4 gap-4 p-3 font-semibold">
+                  <div className="col-span-3 text-sm">Grand Total</div>
                   <div className="text-right text-sm tabular-nums text-primary">
                     {formatCurrencyLocal(yearlyRentAmount + oneTimeFees)}
                   </div>

@@ -51,7 +51,7 @@ import {
   deleteLead,
   calculateDaysInPipeline,
 } from '@/services/leads.service';
-import { getQuotationsByLeadId, convertToTenant } from '@/services/quotations.service';
+import { getQuotationsByLeadId } from '@/services/quotations.service';
 import type { Lead, LeadHistory, Quotation } from '@/types';
 import { cn } from '@/lib/utils';
 import {
@@ -176,7 +176,6 @@ export default function LeadDetailPage() {
   const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [history, setHistory] = useState<LeadHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isConverting, setIsConverting] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
   const fetchLeadData = useCallback(async () => {
@@ -246,26 +245,10 @@ export default function LeadDetailPage() {
     }
   };
 
-  const handleConvertToTenant = async () => {
+  const handleConvertToTenant = () => {
     if (!quotation) return;
-    try {
-      setIsConverting(true);
-      const response = await convertToTenant(quotation.id);
-      toast({
-        title: 'Success',
-        description: response.message || 'Lead converted to tenant successfully',
-        variant: 'success',
-      });
-      await fetchLeadData();
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to convert lead to tenant',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsConverting(false);
-    }
+    // SCP-2025-12-06: Redirect to tenant onboarding with pre-populated data from quotation
+    router.push(`/tenants/create?fromLead=${leadId}&fromQuotation=${quotation.id}`);
   };
 
   // Helper functions
@@ -621,7 +604,7 @@ export default function LeadDetailPage() {
                                     {config.label}
                                   </span>
                                 </div>
-                                {index < 4 && (
+                                {index < 2 && (
                                   <div
                                     className={cn(
                                       "absolute top-5 left-[60%] w-[80%] h-0.5",
@@ -664,95 +647,100 @@ export default function LeadDetailPage() {
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          {/* Quotation Summary */}
+                          {/* Quotation Summary Card */}
                           <div
-                            className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                            className="p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
                             onClick={() => router.push(`/quotations/${quotation.id}`)}
                           >
-                            <div className="p-3 rounded-lg bg-primary/10">
-                              <Receipt className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-semibold">{quotation.quotationNumber}</h4>
-                                <Badge className={cn(quotationStatusConfig?.badge)}>
-                                  {quotationStatusConfig?.label}
-                                </Badge>
+                            <div className="flex items-start gap-4">
+                              <div className="p-3 rounded-lg bg-primary/10">
+                                <Receipt className="h-5 w-5 text-primary" />
                               </div>
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                  <Building className="h-3.5 w-3.5" />
-                                  {quotation.propertyName}
-                                </span>
-                                {quotation.unitNumber && (
-                                  <span>Unit {quotation.unitNumber}</span>
-                                )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-semibold">{quotation.quotationNumber}</h4>
+                                  <Badge className={cn(quotationStatusConfig?.badge)}>
+                                    {quotationStatusConfig?.label}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                  <span className="flex items-center gap-1">
+                                    <Building className="h-3.5 w-3.5" />
+                                    {quotation.propertyName}
+                                  </span>
+                                  {quotation.unitNumber && (
+                                    <span>Unit {quotation.unitNumber}</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-lg font-bold">
+                                  AED {quotation.totalFirstPayment?.toLocaleString() || '0'}
+                                </p>
+                                <p className="text-xs text-muted-foreground">Total Payment</p>
+                              </div>
+                              <Button variant="ghost" size="icon" className="shrink-0">
+                                <ArrowUpRight className="h-4 w-4" />
+                              </Button>
+                            </div>
+
+                            {/* Quick Details Grid */}
+                            <div className="grid grid-cols-4 gap-3 mt-4 pt-4 border-t">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Issue Date</p>
+                                <p className="text-sm font-medium">
+                                  {quotation.issueDate
+                                    ? format(new Date(quotation.issueDate), 'dd MMM yyyy')
+                                    : '-'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Valid Until</p>
+                                <p className="text-sm font-medium">
+                                  {quotation.validityDate
+                                    ? format(new Date(quotation.validityDate), 'dd MMM yyyy')
+                                    : '-'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Base Rent</p>
+                                <p className="text-sm font-medium">
+                                  AED {quotation.baseRent?.toLocaleString() || '0'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Security Deposit</p>
+                                <p className="text-sm font-medium">
+                                  AED {quotation.securityDeposit?.toLocaleString() || '0'}
+                                </p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className="text-lg font-bold">
-                                AED {quotation.totalFirstPayment?.toLocaleString() || '0'}
-                              </p>
-                              <p className="text-xs text-muted-foreground">Total Payment</p>
-                            </div>
-                            <Button variant="ghost" size="icon" className="shrink-0">
-                              <ArrowUpRight className="h-4 w-4" />
-                            </Button>
                           </div>
 
-                          {/* Quotation Details */}
-                          <div className="grid grid-cols-2 gap-4 pt-2">
-                            <div className="p-3 rounded-lg bg-muted/50">
-                              <p className="text-xs text-muted-foreground">Issue Date</p>
-                              <p className="text-sm font-medium">
-                                {quotation.issueDate
-                                  ? format(new Date(quotation.issueDate), 'dd MMM yyyy')
-                                  : '-'}
-                              </p>
-                            </div>
-                            <div className="p-3 rounded-lg bg-muted/50">
-                              <p className="text-xs text-muted-foreground">Valid Until</p>
-                              <p className="text-sm font-medium">
-                                {quotation.validityDate
-                                  ? format(new Date(quotation.validityDate), 'dd MMM yyyy')
-                                  : '-'}
-                              </p>
-                            </div>
-                            <div className="p-3 rounded-lg bg-muted/50">
-                              <p className="text-xs text-muted-foreground">Base Rent</p>
-                              <p className="text-sm font-medium">
-                                AED {quotation.baseRent?.toLocaleString() || '0'}
-                              </p>
-                            </div>
-                            <div className="p-3 rounded-lg bg-muted/50">
-                              <p className="text-xs text-muted-foreground">Security Deposit</p>
-                              <p className="text-sm font-medium">
-                                AED {quotation.securityDeposit?.toLocaleString() || '0'}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Actions based on quotation status */}
-                          <div className="flex items-center gap-3 pt-2">
-                            <Button
-                              variant="outline"
-                              onClick={() => router.push(`/quotations/${quotation.id}`)}
-                              className="gap-2 flex-1"
-                            >
-                              <Eye className="h-4 w-4" />
-                              View Details
-                            </Button>
-                            {quotation.status === 'ACCEPTED' && (
+                          {/* Convert to Tenant Action */}
+                          {quotation.status === 'SENT' && (
+                            <div className="flex items-center justify-between p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-full bg-green-100 dark:bg-green-900">
+                                  <UserCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-green-900 dark:text-green-100">Ready to Convert</p>
+                                  <p className="text-sm text-green-700 dark:text-green-300">Quotation has been sent and is ready for conversion</p>
+                                </div>
+                              </div>
                               <Button
-                                onClick={handleConvertToTenant}
-                                disabled={isConverting}
-                                className="gap-2 flex-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleConvertToTenant();
+                                }}
+                                className="gap-2 bg-green-600 hover:bg-green-700"
                               >
                                 <UserCheck className="h-4 w-4" />
-                                {isConverting ? 'Converting...' : 'Convert to Tenant'}
+                                Convert to Tenant
                               </Button>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </CardContent>

@@ -26,7 +26,7 @@ public class UpdateQuotationRequest {
 
     private UUID unitId;
 
-    private Quotation.StayType stayType;
+    // SCP-2025-12-06: Removed stayType - unit.bedroomCount provides this info
 
     // Note: No @Future validation for updates - quotation may have been created earlier
     private LocalDate validityDate;

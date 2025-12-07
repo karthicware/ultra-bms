@@ -280,7 +280,7 @@ export interface PersonalInfoFormData {
   lastName: string;
   email: string;
   phone: string;
-  dateOfBirth: Date;
+  dateOfBirth: Date | undefined; // SCP-2025-12-07: Made optional so user must enter DOB
   nationalId: string;
   nationality: string;
   emergencyContactName: string;
@@ -327,13 +327,24 @@ export interface TenantDocumentUploadFormData {
   additionalFiles: File[];
 }
 
+// SCP-2025-12-07: Extended rent breakdown form data to include payment due date
+// (moved from Step 5 Payment Schedule to Step 3 Rent Breakdown)
+export interface ExtendedRentBreakdownFormData extends RentBreakdownFormData {
+  yearlyRentAmount?: number;
+  numberOfCheques?: number;
+  firstMonthPaymentMethod?: 'CASH' | 'CHEQUE';
+  chequeBreakdown?: unknown[]; // ChequeBreakdownItem[]
+  firstMonthTotal?: number;
+  paymentDueDate?: number; // Day of month (1-31), defaults to 5
+}
+
 // Combined form data for all steps
+// SCP-2025-12-07: Reduced from 7 steps to 6 - removed paymentSchedule
 export interface TenantOnboardingFormData {
   personalInfo: PersonalInfoFormData;
   leaseInfo: LeaseInfoFormData;
-  rentBreakdown: RentBreakdownFormData;
+  rentBreakdown: ExtendedRentBreakdownFormData;
   parkingAllocation: ParkingAllocationFormData;
-  paymentSchedule: PaymentScheduleFormData;
   documentUpload: TenantDocumentUploadFormData;
 
   // Optional lead conversion data
@@ -345,27 +356,65 @@ export interface TenantOnboardingFormData {
 // Utility Types
 // ===========================
 
+/**
+ * SCP-2025-12-06: Extended to include document paths for tenant onboarding
+ */
 export interface LeadConversionData {
   leadId: string;
   quotationId: string;
+  leadNumber?: string;
+  quotationNumber?: string;
 
   // Pre-populated personal info from lead
+  fullName?: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  contactNumber?: string; // alias for phone
   nationalId: string;
   nationality: string;
+
+  // Identity documents info (from quotation)
+  emiratesId?: string;
+  emiratesIdExpiry?: string; // ISO date string
+  passportNumber?: string;
+  passportExpiryDate?: string; // ISO date string
+
+  // SCP-2025-12-06: Document file paths (S3 storage)
+  emiratesIdFrontPath?: string;
+  emiratesIdBackPath?: string;
+  passportFrontPath?: string;
+  passportBackPath?: string;
 
   // Pre-populated lease info from quotation
   propertyId: string;
   unitId: string;
   baseRent: number;
   serviceCharge: number;
+  serviceCharges?: number; // alias
   adminFee: number;
   securityDeposit: number;
+  totalFirstPayment?: number;
   parkingSpots: number;
   parkingFeePerSpot: number;
+  parkingSpotId?: string | null;
+  parkingFee?: number;
+
+  // SCP-2025-12-06: Cheque breakdown for auto-population
+  yearlyRentAmount?: number;
+  numberOfCheques?: number;
+  firstMonthPaymentMethod?: 'CASH' | 'CHEQUE';
+  chequeBreakdown?: string; // JSON string
+
+  // Terms (from quotation)
+  paymentTerms?: string;
+  moveinProcedures?: string;
+  cancellationPolicy?: string;
+  specialTerms?: string;
+
+  // Metadata
+  message?: string;
 }
 
 export interface FileValidationError {

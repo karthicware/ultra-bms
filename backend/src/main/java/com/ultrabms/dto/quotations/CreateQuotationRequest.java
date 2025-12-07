@@ -36,8 +36,7 @@ public class CreateQuotationRequest {
     @NotNull(message = "Unit ID is required")
     private UUID unitId;
 
-    // SCP-2025-12-04: Made optional as it's being removed from frontend
-    private Quotation.StayType stayType;
+    // SCP-2025-12-06: Removed stayType - unit.bedroomCount provides this info
 
     @NotNull(message = "Issue date is required")
     private LocalDate issueDate;

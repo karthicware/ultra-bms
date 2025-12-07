@@ -6,6 +6,7 @@
  * Updated: shadcn-studio form styling (SCP-2025-11-30)
  */
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -62,6 +63,9 @@ const NATIONALITIES = [
 ];
 
 export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepProps) {
+  // SCP-2025-12-07: State for controlling datepicker popover (auto-close after selection)
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+
   const form = useForm<PersonalInfoFormData>({
     resolver: zodResolver(personalInfoSchema),
     mode: 'onBlur',
@@ -219,7 +223,8 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
                     <Label className="flex items-center gap-1">
                       Date of Birth <span className="text-destructive">*</span>
                     </Label>
-                    <Popover>
+                    {/* SCP-2025-12-07: Controlled popover with auto-close after date selection */}
+                    <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -243,7 +248,10 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
                         <Calendar
                           mode="single"
                           selected={field.value || undefined}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            setDatePickerOpen(false); // Auto-close after selection
+                          }}
                           disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                           initialFocus
                           captionLayout="dropdown"

@@ -23,6 +23,8 @@ import com.ultrabms.repository.TenantDocumentRepository;
 import com.ultrabms.repository.TenantRepository;
 import com.ultrabms.repository.UnitRepository;
 import com.ultrabms.repository.UserRepository;
+import com.ultrabms.entity.enums.PaymentFrequency;
+import com.ultrabms.service.ParkingSpotService;
 import com.ultrabms.service.S3Service;
 import com.ultrabms.service.TenantService;
 import org.slf4j.Logger;
@@ -59,6 +61,7 @@ public class TenantServiceImpl implements TenantService {
     private final UnitRepository unitRepository;
     private final S3Service s3Service;
     private final PasswordEncoder passwordEncoder;
+    private final ParkingSpotService parkingSpotService;
 
     public TenantServiceImpl(
             TenantRepository tenantRepository,
@@ -68,7 +71,8 @@ public class TenantServiceImpl implements TenantService {
             PropertyRepository propertyRepository,
             UnitRepository unitRepository,
             S3Service s3Service,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            ParkingSpotService parkingSpotService
     ) {
         this.tenantRepository = tenantRepository;
         this.tenantDocumentRepository = tenantDocumentRepository;
@@ -78,6 +82,7 @@ public class TenantServiceImpl implements TenantService {
         this.unitRepository = unitRepository;
         this.s3Service = s3Service;
         this.passwordEncoder = passwordEncoder;
+        this.parkingSpotService = parkingSpotService;
     }
 
     @Override
@@ -165,7 +170,8 @@ public class TenantServiceImpl implements TenantService {
                     .parkingFeePerSpot(request.getParkingFeePerSpot() != null ? request.getParkingFeePerSpot() : BigDecimal.ZERO)
                     .spotNumbers(request.getSpotNumbers())
                     // Payment Schedule
-                    .paymentFrequency(request.getPaymentFrequency())
+                    // SCP-2025-12-07: paymentFrequency is now optional - defaults to YEARLY
+                    .paymentFrequency(request.getPaymentFrequency() != null ? request.getPaymentFrequency() : PaymentFrequency.YEARLY)
                     .paymentDueDate(request.getPaymentDueDate())
                     .paymentMethod(request.getPaymentMethod())
                     .pdcChequeCount(request.getPdcChequeCount())
@@ -188,8 +194,189 @@ public class TenantServiceImpl implements TenantService {
             unitRepository.save(unit);
             LOGGER.info("Updated unit {} status to OCCUPIED", unit.getUnitNumber());
 
-            // Step 7: Send welcome email (TODO: implement email service)
+            // Step 7: Assign parking spot if provided (SCP-2025-12-07: with lease-period blocking)
+            // Parking is only for annual tenants (YEARLY payment frequency)
+            if (request.getParkingSpotId() != null) {
+                PaymentFrequency frequency = request.getPaymentFrequency() != null
+                        ? request.getPaymentFrequency()
+                        : PaymentFrequency.YEARLY;
+                if (frequency == PaymentFrequency.YEARLY) {
+                    parkingSpotService.assignToTenant(
+                            request.getParkingSpotId(),
+                            savedTenant.getId(),
+                            request.getLeaseEndDate()
+                    );
+                    LOGGER.info("Assigned parking spot {} to tenant {} until {}",
+                            request.getParkingSpotId(), savedTenant.getId(), request.getLeaseEndDate());
+                } else {
+                    LOGGER.warn("Parking spot assignment skipped - only available for annual tenants. " +
+                            "Tenant {} has {} payment frequency", savedTenant.getId(), frequency);
+                }
+            }
+
+            // Step 8: Send welcome email (TODO: implement email service)
             // sendWelcomeEmail(savedTenant, userDto.getPassword());
+
+            return CreateTenantResponse.builder()
+                    .id(savedTenant.getId())
+                    .tenantNumber(savedTenant.getTenantNumber())
+                    .userId(userId)
+                    .message("Tenant registered successfully! Welcome email sent to " + request.getEmail())
+                    .build();
+
+        } catch (Exception e) {
+            LOGGER.error("Failed to create tenant: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to create tenant", e);
+        }
+    }
+
+    /**
+     * SCP-2025-12-06: Overloaded createTenant method to support preloaded document paths from quotation
+     */
+    @Override
+    @Transactional
+    public CreateTenantResponse createTenant(
+            CreateTenantRequest request,
+            MultipartFile emiratesIdFile,
+            MultipartFile passportFile,
+            MultipartFile visaFile,
+            MultipartFile signedLeaseFile,
+            MultipartFile mulkiyaFile,
+            List<MultipartFile> additionalFiles,
+            String emiratesIdFrontPath,
+            String emiratesIdBackPath,
+            String passportFrontPath,
+            String passportBackPath
+    ) {
+        LOGGER.info("Creating tenant for email: {} (with preloaded document support)", request.getEmail());
+
+        // Validate email is unique
+        if (tenantRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("Email already exists: " + request.getEmail());
+        }
+
+        // Validate age (must be 18+)
+        validateAge(request.getDateOfBirth());
+
+        // Validate property exists
+        Property property = propertyRepository.findById(request.getPropertyId())
+                .orElseThrow(() -> new EntityNotFoundException("Property not found: " + request.getPropertyId()));
+
+        // Validate unit exists and is AVAILABLE
+        Unit unit = unitRepository.findById(request.getUnitId())
+                .orElseThrow(() -> new EntityNotFoundException("Unit not found: " + request.getUnitId()));
+
+        if (unit.getStatus() != UnitStatus.AVAILABLE) {
+            throw new ValidationException("Unit is not available. Current status: " + unit.getStatus());
+        }
+
+        // Validate lease dates
+        validateLeaseDates(request.getLeaseStartDate(), request.getLeaseEndDate());
+
+        // Validate PDC cheque count if payment method is PDC
+        if (request.getPaymentMethod() == PaymentMethod.PDC &&
+            (request.getPdcChequeCount() == null || request.getPdcChequeCount() < 1)) {
+            throw new ValidationException("PDC cheque count is required when payment method is PDC");
+        }
+
+        try {
+            // Step 1: Create user account with TENANT role
+            UUID userId = createTenantUser(request);
+
+            // Step 2: Generate tenant number
+            String tenantNumber = generateTenantNumber();
+
+            // Step 3: Calculate lease duration and total monthly rent
+            int leaseDuration = Period.between(request.getLeaseStartDate(), request.getLeaseEndDate()).getMonths();
+            BigDecimal totalMonthlyRent = calculateTotalMonthlyRent(request);
+
+            // Step 4: Create tenant record
+            Tenant tenant = Tenant.builder()
+                    // Personal Info
+                    .userId(userId)
+                    .firstName(request.getFirstName())
+                    .lastName(request.getLastName())
+                    .email(request.getEmail())
+                    .phone(request.getPhone())
+                    .dateOfBirth(request.getDateOfBirth())
+                    .nationalId(request.getNationalId())
+                    .nationality(request.getNationality())
+                    .emergencyContactName(request.getEmergencyContactName())
+                    .emergencyContactPhone(request.getEmergencyContactPhone())
+                    // Lease Info
+                    .property(property)
+                    .unit(unit)
+                    .leaseStartDate(request.getLeaseStartDate())
+                    .leaseEndDate(request.getLeaseEndDate())
+                    .leaseDuration(leaseDuration)
+                    .leaseType(request.getLeaseType())
+                    .renewalOption(request.getRenewalOption())
+                    // Rent Breakdown
+                    .baseRent(request.getBaseRent())
+                    .adminFee(request.getAdminFee() != null ? request.getAdminFee() : BigDecimal.ZERO)
+                    .serviceCharge(request.getServiceCharge() != null ? request.getServiceCharge() : BigDecimal.ZERO)
+                    .securityDeposit(request.getSecurityDeposit())
+                    .totalMonthlyRent(totalMonthlyRent)
+                    // Parking
+                    .parkingSpots(request.getParkingSpots() != null ? request.getParkingSpots() : 0)
+                    .parkingFeePerSpot(request.getParkingFeePerSpot() != null ? request.getParkingFeePerSpot() : BigDecimal.ZERO)
+                    .spotNumbers(request.getSpotNumbers())
+                    // Payment Schedule
+                    // SCP-2025-12-07: paymentFrequency is now optional - defaults to YEARLY
+                    .paymentFrequency(request.getPaymentFrequency() != null ? request.getPaymentFrequency() : PaymentFrequency.YEARLY)
+                    .paymentDueDate(request.getPaymentDueDate())
+                    .paymentMethod(request.getPaymentMethod())
+                    .pdcChequeCount(request.getPdcChequeCount())
+                    // Metadata
+                    .tenantNumber(tenantNumber)
+                    .status(TenantStatus.ACTIVE)
+                    .leadId(request.getLeadId())
+                    .quotationId(request.getQuotationId())
+                    .active(true)
+                    .build();
+
+            Tenant savedTenant = tenantRepository.save(tenant);
+            LOGGER.info("Created tenant record: {} ({})", savedTenant.getTenantNumber(), savedTenant.getId());
+
+            // Step 5: Upload/link documents
+            uploadDocumentsWithPaths(
+                    savedTenant,
+                    emiratesIdFile,
+                    passportFile,
+                    visaFile,
+                    signedLeaseFile,
+                    mulkiyaFile,
+                    additionalFiles,
+                    emiratesIdFrontPath,
+                    emiratesIdBackPath,
+                    passportFrontPath,
+                    passportBackPath
+            );
+
+            // Step 6: Update unit status to OCCUPIED
+            unit.setStatus(UnitStatus.OCCUPIED);
+            unitRepository.save(unit);
+            LOGGER.info("Updated unit {} status to OCCUPIED", unit.getUnitNumber());
+
+            // Step 7: Assign parking spot if provided (SCP-2025-12-07: with lease-period blocking)
+            // Parking is only for annual tenants (YEARLY payment frequency)
+            if (request.getParkingSpotId() != null) {
+                PaymentFrequency frequency = request.getPaymentFrequency() != null
+                        ? request.getPaymentFrequency()
+                        : PaymentFrequency.YEARLY;
+                if (frequency == PaymentFrequency.YEARLY) {
+                    parkingSpotService.assignToTenant(
+                            request.getParkingSpotId(),
+                            savedTenant.getId(),
+                            request.getLeaseEndDate()
+                    );
+                    LOGGER.info("Assigned parking spot {} to tenant {} until {}",
+                            request.getParkingSpotId(), savedTenant.getId(), request.getLeaseEndDate());
+                } else {
+                    LOGGER.warn("Parking spot assignment skipped - only available for annual tenants. " +
+                            "Tenant {} has {} payment frequency", savedTenant.getId(), frequency);
+                }
+            }
 
             return CreateTenantResponse.builder()
                     .id(savedTenant.getId())
@@ -328,6 +515,96 @@ public class TenantServiceImpl implements TenantService {
 
         tenantDocumentRepository.save(document);
         LOGGER.info("Uploaded document: {} for tenant {}", documentType, tenant.getTenantNumber());
+    }
+
+    /**
+     * SCP-2025-12-06: Upload documents with support for preloaded S3 paths from quotation
+     */
+    private void uploadDocumentsWithPaths(
+            Tenant tenant,
+            MultipartFile emiratesIdFile,
+            MultipartFile passportFile,
+            MultipartFile visaFile,
+            MultipartFile signedLeaseFile,
+            MultipartFile mulkiyaFile,
+            List<MultipartFile> additionalFiles,
+            String emiratesIdFrontPath,
+            String emiratesIdBackPath,
+            String passportFrontPath,
+            String passportBackPath
+    ) {
+        String s3Directory = "tenants/" + tenant.getId() + "/documents";
+
+        // Upload Emirates ID: use file if provided, otherwise link preloaded path
+        if (emiratesIdFile != null && !emiratesIdFile.isEmpty()) {
+            uploadAndSaveDocument(tenant, emiratesIdFile, DocumentType.EMIRATES_ID, s3Directory);
+        } else if (emiratesIdFrontPath != null && !emiratesIdFrontPath.isEmpty()) {
+            // Link preloaded Emirates ID front document
+            linkPreloadedDocument(tenant, emiratesIdFrontPath, DocumentType.EMIRATES_ID, "Emirates ID (Front)");
+            // Link back document if available
+            if (emiratesIdBackPath != null && !emiratesIdBackPath.isEmpty()) {
+                linkPreloadedDocument(tenant, emiratesIdBackPath, DocumentType.EMIRATES_ID, "Emirates ID (Back)");
+            }
+        }
+
+        // Upload Passport: use file if provided, otherwise link preloaded path
+        if (passportFile != null && !passportFile.isEmpty()) {
+            uploadAndSaveDocument(tenant, passportFile, DocumentType.PASSPORT, s3Directory);
+        } else if (passportFrontPath != null && !passportFrontPath.isEmpty()) {
+            // Link preloaded Passport front document
+            linkPreloadedDocument(tenant, passportFrontPath, DocumentType.PASSPORT, "Passport (Front)");
+            // Link back document if available
+            if (passportBackPath != null && !passportBackPath.isEmpty()) {
+                linkPreloadedDocument(tenant, passportBackPath, DocumentType.PASSPORT, "Passport (Back)");
+            }
+        }
+
+        // Upload Visa (optional)
+        if (visaFile != null && !visaFile.isEmpty()) {
+            uploadAndSaveDocument(tenant, visaFile, DocumentType.VISA, s3Directory);
+        }
+
+        // Upload Signed Lease (required)
+        uploadAndSaveDocument(tenant, signedLeaseFile, DocumentType.SIGNED_LEASE, s3Directory);
+
+        // Upload Mulkiya (optional)
+        if (mulkiyaFile != null && !mulkiyaFile.isEmpty()) {
+            String mulkiyaPath = s3Service.uploadFile(mulkiyaFile, s3Directory);
+            tenant.setMulkiyaDocumentPath(mulkiyaPath);
+            tenantRepository.save(tenant);
+            uploadAndSaveDocument(tenant, mulkiyaFile, DocumentType.MULKIYA, s3Directory);
+        }
+
+        // Upload additional files (optional)
+        if (additionalFiles != null && !additionalFiles.isEmpty()) {
+            for (MultipartFile file : additionalFiles) {
+                if (file != null && !file.isEmpty()) {
+                    uploadAndSaveDocument(tenant, file, DocumentType.OTHER, s3Directory);
+                }
+            }
+        }
+    }
+
+    /**
+     * SCP-2025-12-06: Link a preloaded document (from quotation) to the tenant
+     */
+    private void linkPreloadedDocument(Tenant tenant, String s3Path, DocumentType documentType, String displayName) {
+        // Extract filename from S3 path
+        String fileName = s3Path;
+        if (s3Path.contains("/")) {
+            fileName = s3Path.substring(s3Path.lastIndexOf("/") + 1);
+        }
+
+        TenantDocument document = TenantDocument.builder()
+                .tenant(tenant)
+                .documentType(documentType)
+                .fileName(displayName + " - " + fileName)
+                .filePath(s3Path)
+                .fileSize(0L) // Size not available for linked documents
+                .build();
+
+        tenantDocumentRepository.save(document);
+        LOGGER.info("Linked preloaded document: {} ({}) for tenant {}", displayName, documentType, tenant.getTenantNumber());
     }
 
     private String generateTenantNumber() {

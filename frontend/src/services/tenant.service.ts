@@ -213,15 +213,12 @@ export async function getProperties(): Promise<Property[]> {
  * ```
  */
 export async function getAvailableUnits(propertyId: string): Promise<Unit[]> {
-  const response = await apiClient.get<Unit[]>(
-    `${PROPERTIES_BASE_PATH}/${propertyId}/units`,
-    {
-      params: {
-        status: 'AVAILABLE',
-      },
-    }
+  // SCP-2025-12-07: Fixed endpoint to match backend UnitController
+  // Backend endpoint: GET /api/v1/units/property/{propertyId}/available
+  const response = await apiClient.get<{ data: Unit[] }>(
+    `/v1/units/property/${propertyId}/available`
   );
-  return response.data;
+  return response.data.data;
 }
 
 /**

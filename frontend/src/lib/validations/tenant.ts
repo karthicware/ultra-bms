@@ -1,10 +1,12 @@
 /**
  * Tenant Onboarding Validation Schemas
- * Zod schemas for 7-step tenant onboarding wizard with comprehensive validation rules
+ * Zod schemas for 6-step tenant onboarding wizard with comprehensive validation rules
+ * SCP-2025-12-07: Reduced from 7 steps to 6 - Payment Schedule (Step 5) eliminated,
+ * paymentDueDate moved to Step 3 (Rent Breakdown)
  */
 
 import { z } from 'zod';
-import { differenceInYears } from 'date-fns';
+import { differenceInYears, differenceInDays } from 'date-fns';
 import { LeaseType, PaymentFrequency, PaymentMethod } from '@/types/tenant';
 
 // ===========================
@@ -155,9 +157,13 @@ export const leaseInfoSchema = z.object({
   leaseType: z.nativeEnum(LeaseType),
   renewalOption: z.boolean(),
 }).refine(
-  (data) => data.leaseEndDate > data.leaseStartDate,
+  (data) => {
+    // SCP-2025-12-07: Lease must be at least 30 days
+    const daysDiff = differenceInDays(data.leaseEndDate, data.leaseStartDate);
+    return daysDiff >= 30;
+  },
   {
-    message: 'Lease end date must be after start date',
+    message: 'Lease duration must be at least 30 days',
     path: ['leaseEndDate'],
   }
 );
@@ -237,39 +243,8 @@ export const parkingAllocationSchema = z.object({
 export type ParkingAllocationFormData = z.infer<typeof parkingAllocationSchema>;
 
 // ===========================
-// Step 5: Payment Schedule Schema
-// ===========================
-
-export const paymentScheduleSchema = z.object({
-  paymentFrequency: z.nativeEnum(PaymentFrequency),
-  paymentDueDate: z
-    .number()
-    .min(1, 'Due date must be between 1 and 31')
-    .max(31, 'Due date must be between 1 and 31'),
-  paymentMethod: z.nativeEnum(PaymentMethod),
-  pdcChequeCount: z
-    .number()
-    .min(1, 'At least 1 PDC cheque is required')
-    .max(12, 'Maximum 12 PDC cheques allowed')
-    .optional(),
-}).refine(
-  (data) => {
-    // If payment method is PDC, pdcChequeCount is required
-    if (data.paymentMethod === PaymentMethod.PDC) {
-      return data.pdcChequeCount !== undefined && data.pdcChequeCount > 0;
-    }
-    return true;
-  },
-  {
-    message: 'PDC cheque count is required when payment method is PDC',
-    path: ['pdcChequeCount'],
-  }
-);
-
-export type PaymentScheduleFormData = z.infer<typeof paymentScheduleSchema>;
-
-// ===========================
-// Step 6: Document Upload Schema
+// Step 5: Document Upload Schema
+// SCP-2025-12-07: Was Step 6, now Step 5 after Payment Schedule was eliminated
 // ===========================
 
 export const documentUploadSchema = z.object({
@@ -285,7 +260,8 @@ export const documentUploadSchema = z.object({
 export type TenantDocumentUploadFormData = z.infer<typeof documentUploadSchema>;
 
 // ===========================
-// Step 7: Review Schema (Combines all schemas)
+// Step 6: Review Schema (Combines all schemas)
+// SCP-2025-12-07: Was Step 7, now Step 6 after Payment Schedule was eliminated
 // ===========================
 
 export const createTenantSchema = z.object({
@@ -320,19 +296,32 @@ export const createTenantSchema = z.object({
   parkingFeePerSpot: parkingAllocationSchema.shape.parkingFeePerSpot,
   spotNumbers: parkingAllocationSchema.shape.spotNumbers,
 
-  // Step 5: Payment Schedule
-  paymentFrequency: paymentScheduleSchema.shape.paymentFrequency,
-  paymentDueDate: paymentScheduleSchema.shape.paymentDueDate,
-  paymentMethod: paymentScheduleSchema.shape.paymentMethod,
-  pdcChequeCount: paymentScheduleSchema.shape.pdcChequeCount,
+  // SCP-2025-12-07: Payment due date moved to Step 3 (Rent Breakdown)
+  // These fields are kept for backward compatibility with backend
+  paymentDueDate: z
+    .number()
+    .min(1, 'Due date must be between 1 and 31')
+    .max(31, 'Due date must be between 1 and 31')
+    .default(5),
+  paymentFrequency: z.nativeEnum(PaymentFrequency).optional(),
+  paymentMethod: z.nativeEnum(PaymentMethod).optional(),
+  pdcChequeCount: z
+    .number()
+    .min(1)
+    .max(12)
+    .optional(),
 
   // Lead conversion (optional)
   leadId: z.string().optional(),
   quotationId: z.string().optional(),
 }).refine(
-  (data) => data.leaseEndDate > data.leaseStartDate,
+  (data) => {
+    // SCP-2025-12-07: Lease must be at least 30 days
+    const daysDiff = differenceInDays(data.leaseEndDate, data.leaseStartDate);
+    return daysDiff >= 30;
+  },
   {
-    message: 'Lease end date must be after start date',
+    message: 'Lease duration must be at least 30 days',
     path: ['leaseEndDate'],
   }
 );

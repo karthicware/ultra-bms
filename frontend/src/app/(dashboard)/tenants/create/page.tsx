@@ -3,11 +3,12 @@
 
 /**
  * Tenant Onboarding Wizard
- * 7-step multi-step form for complete tenant registration
+ * 6-step multi-step form for complete tenant registration
+ * SCP-2025-12-07: Reduced from 7 steps to 6 - Payment Schedule (Step 5) merged into Rent Breakdown (Step 3)
  * Redesigned with modern UX and visual feedback
  */
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -31,7 +32,10 @@ import {
   Clock,
   Shield,
   ChevronRight,
+  MapPin,
+  Banknote,
 } from 'lucide-react';
+import { format, addDays } from 'date-fns';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,7 +54,7 @@ import { PersonalInfoStep } from '@/components/tenants/PersonalInfoStep';
 import { LeaseInfoStep } from '@/components/tenants/LeaseInfoStep';
 import { RentBreakdownStep } from '@/components/tenants/RentBreakdownStep';
 import { ParkingAllocationStep } from '@/components/tenants/ParkingAllocationStep';
-import { PaymentScheduleStep } from '@/components/tenants/PaymentScheduleStep';
+// SCP-2025-12-07: PaymentScheduleStep removed - Payment Due Date moved to Step 3 (Rent Breakdown)
 import { DocumentUploadStep } from '@/components/tenants/DocumentUploadStep';
 import { ReviewSubmitStep } from '@/components/tenants/ReviewSubmitStep';
 
@@ -65,31 +69,51 @@ import type {
   LeaseInfoFormData,
   RentBreakdownFormData,
   ParkingAllocationFormData,
-  PaymentScheduleFormData,
+  // SCP-2025-12-07: PaymentScheduleFormData removed - Payment Due Date moved to rentBreakdown
   TenantDocumentUploadFormData,
   LeaseType,
-  PaymentFrequency,
   PaymentMethod,
 } from '@/types/tenant';
+import { FirstMonthPaymentMethod, type ChequeBreakdownItem } from '@/types/quotations';
 
 // Combined form data for all steps
+// SCP-2025-12-07: Removed paymentSchedule - Payment Due Date moved to rentBreakdown
 interface TenantOnboardingFormData {
   personalInfo: PersonalInfoFormData;
-  leaseInfo: LeaseInfoFormData;
-  rentBreakdown: RentBreakdownFormData;
+  leaseInfo: LeaseInfoFormData & {
+    // SCP-2025-12-07: Store property/unit display names for Lease Preview
+    propertyName?: string;
+    unitNumber?: string;
+  };
+  // SCP-2025-12-07: Extended to include cheque breakdown fields and paymentDueDate (moved from Step 5)
+  rentBreakdown: RentBreakdownFormData & {
+    yearlyRentAmount?: number;
+    numberOfCheques?: number;
+    firstMonthPaymentMethod?: FirstMonthPaymentMethod;
+    chequeBreakdown?: ChequeBreakdownItem[];
+    firstMonthTotal?: number;
+    paymentDueDate?: number; // Day of month (1-31), defaults to 5
+  };
   parkingAllocation: ParkingAllocationFormData;
-  paymentSchedule: PaymentScheduleFormData;
   documentUpload: TenantDocumentUploadFormData;
 }
 
+// SCP-2025-12-06: Preloaded document paths from quotation
+interface PreloadedDocuments {
+  emiratesIdFrontPath?: string;
+  emiratesIdBackPath?: string;
+  passportFrontPath?: string;
+  passportBackPath?: string;
+}
+
+// SCP-2025-12-07: Reduced from 7 to 6 steps - Payment Schedule merged into Rent Breakdown
 const WIZARD_STEPS = [
   { step: 1, title: 'Personal Info', description: 'Basic tenant details', icon: User },
   { step: 2, title: 'Lease Info', description: 'Property & lease terms', icon: FileText },
   { step: 3, title: 'Rent', description: 'Payment breakdown', icon: DollarSign },
   { step: 4, title: 'Parking', description: 'Parking allocation', icon: Car },
-  { step: 5, title: 'Payment', description: 'Schedule setup', icon: CreditCard },
-  { step: 6, title: 'Documents', description: 'Upload files', icon: Upload },
-  { step: 7, title: 'Review', description: 'Final review', icon: CheckCircle2 },
+  { step: 5, title: 'Documents', description: 'Upload files', icon: Upload },
+  { step: 6, title: 'Review', description: 'Final review', icon: CheckCircle2 },
 ];
 
 function CreateTenantWizard() {
@@ -100,6 +124,10 @@ function CreateTenantWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingConversionData, setIsLoadingConversionData] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  // SCP-2025-12-06: Preloaded document paths from quotation
+  const [preloadedDocuments, setPreloadedDocuments] = useState<PreloadedDocuments>({});
+  // Ref to prevent duplicate toast on React Strict Mode double-mount
+  const dataLoadedRef = useRef(false);
 
   // Check for lead conversion query params
   const fromLead = searchParams?.get('fromLead');
@@ -107,13 +135,14 @@ function CreateTenantWizard() {
   const isLeadConversion = !!(fromLead && fromQuotation);
 
   // Form state for all steps
+  // SCP-2025-12-07: DOB should be undefined/null initially so user must enter it
   const [formData, setFormData] = useState<TenantOnboardingFormData>({
     personalInfo: {
       firstName: '',
       lastName: '',
       email: '',
       phone: '',
-      dateOfBirth: new Date(),
+      dateOfBirth: undefined as unknown as Date, // User must enter DOB manually
       nationalId: '',
       nationality: '',
       emergencyContactName: '',
@@ -122,10 +151,12 @@ function CreateTenantWizard() {
     leaseInfo: {
       propertyId: '',
       unitId: '',
-      leaseStartDate: new Date(),
-      leaseEndDate: new Date(),
+      // SCP-2025-12-07: Leave dates undefined so LeaseInfoStep uses its own defaults (today + 1 year)
+      leaseStartDate: undefined as unknown as Date,
+      leaseEndDate: undefined as unknown as Date,
       leaseDuration: 0,
-      leaseType: 'FIXED_TERM' as LeaseType,
+      // SCP-2025-12-07: Default to YEARLY lease type
+      leaseType: 'YEARLY' as LeaseType,
       renewalOption: false,
     },
     rentBreakdown: {
@@ -134,6 +165,8 @@ function CreateTenantWizard() {
       serviceCharge: 0,
       securityDeposit: 0,
       totalMonthlyRent: 0,
+      // SCP-2025-12-07: paymentDueDate moved here from Step 5, default to 5th of month
+      paymentDueDate: 5,
     },
     parkingAllocation: {
       parkingSpots: 0,
@@ -141,12 +174,7 @@ function CreateTenantWizard() {
       spotNumbers: '',
       mulkiyaFile: null,
     },
-    paymentSchedule: {
-      paymentFrequency: 'MONTHLY' as PaymentFrequency,
-      paymentDueDate: 1,
-      paymentMethod: 'BANK_TRANSFER' as PaymentMethod,
-      pdcChequeCount: 0,
-    },
+    // SCP-2025-12-07: paymentSchedule removed - Payment Due Date moved to rentBreakdown
     documentUpload: {
       emiratesIdFile: new File([], ''),
       passportFile: new File([], ''),
@@ -160,6 +188,9 @@ function CreateTenantWizard() {
   useEffect(() => {
     async function loadConversionData() {
       if (!fromLead || !fromQuotation) return;
+      // Prevent duplicate toast on React Strict Mode double-mount
+      if (dataLoadedRef.current) return;
+      dataLoadedRef.current = true;
 
       setIsLoadingConversionData(true);
       try {
@@ -173,8 +204,8 @@ function CreateTenantWizard() {
             firstName: conversionData.firstName,
             lastName: conversionData.lastName,
             email: conversionData.email,
-            phone: conversionData.phone,
-            nationalId: conversionData.nationalId,
+            phone: conversionData.phone || conversionData.contactNumber || '',
+            nationalId: conversionData.nationalId || conversionData.emiratesId || '',
             nationality: conversionData.nationality,
           },
           leaseInfo: {
@@ -185,19 +216,53 @@ function CreateTenantWizard() {
           rentBreakdown: {
             ...prev.rentBreakdown,
             baseRent: conversionData.baseRent,
-            serviceCharge: conversionData.serviceCharge,
+            serviceCharge: conversionData.serviceCharge || conversionData.serviceCharges || 0,
             adminFee: conversionData.adminFee,
             securityDeposit: conversionData.securityDeposit,
-            totalMonthlyRent: conversionData.baseRent + conversionData.serviceCharge,
+            totalMonthlyRent: conversionData.baseRent + (conversionData.serviceCharge || conversionData.serviceCharges || 0),
+            // SCP-2025-12-07: Populate cheque breakdown fields from quotation
+            yearlyRentAmount: conversionData.yearlyRentAmount || (conversionData.baseRent * 12),
+            numberOfCheques: conversionData.numberOfCheques || 1,
+            firstMonthPaymentMethod: conversionData.firstMonthPaymentMethod === 'CASH'
+              ? FirstMonthPaymentMethod.CASH
+              : FirstMonthPaymentMethod.CHEQUE,
+            // SCP-2025-12-07: paymentDueDate moved here from paymentSchedule
+            // Extract day from first cheque due date, default to 5
+            paymentDueDate: (() => {
+              if (conversionData.chequeBreakdown) {
+                try {
+                  const breakdown = JSON.parse(conversionData.chequeBreakdown);
+                  if (breakdown.length > 0 && breakdown[0].dueDate) {
+                    const dueDate = new Date(breakdown[0].dueDate);
+                    return dueDate.getDate();
+                  }
+                } catch (e) {
+                  console.error('Failed to parse cheque breakdown:', e);
+                }
+              }
+              return 5;
+            })(),
           },
           parkingAllocation: {
             ...prev.parkingAllocation,
-            parkingSpots: conversionData.parkingSpots,
-            parkingFeePerSpot: conversionData.parkingFeePerSpot,
+            parkingSpots: conversionData.parkingSpots || (conversionData.parkingSpotId ? 1 : 0),
+            parkingFeePerSpot: conversionData.parkingFeePerSpot || conversionData.parkingFee || 0,
+            // SCP-2025-12-07: Pre-populate parkingSpotId from quotation for parking spot blocking
+            parkingSpotId: conversionData.parkingSpotId || undefined,
           },
         }));
 
-        toast.success('Data Loaded', { description: 'Lead data loaded successfully' });
+        // SCP-2025-12-06: Store preloaded document paths from quotation
+        if (conversionData.emiratesIdFrontPath || conversionData.passportFrontPath) {
+          setPreloadedDocuments({
+            emiratesIdFrontPath: conversionData.emiratesIdFrontPath,
+            emiratesIdBackPath: conversionData.emiratesIdBackPath,
+            passportFrontPath: conversionData.passportFrontPath,
+            passportBackPath: conversionData.passportBackPath,
+          });
+        }
+
+        toast.success('Data Loaded', { description: 'Lead data and documents loaded successfully' });
       } catch (error) {
         console.error('Failed to load conversion data:', error);
         toast.error('Load Error', { description: 'Failed to load lead data' });
@@ -229,6 +294,7 @@ function CreateTenantWizard() {
   };
 
   // Handle step completion and navigation
+  // SCP-2025-12-07: Updated step mapping - removed step 5 (paymentSchedule), renumbered steps
   const handleStepComplete = (stepData: any, step: number) => {
     // Update form data based on step
     const stepKey = {
@@ -236,8 +302,7 @@ function CreateTenantWizard() {
       2: 'leaseInfo',
       3: 'rentBreakdown',
       4: 'parkingAllocation',
-      5: 'paymentSchedule',
-      6: 'documentUpload',
+      5: 'documentUpload', // Was step 6
     }[step] as keyof TenantOnboardingFormData;
 
     if (stepKey) {
@@ -268,7 +333,7 @@ function CreateTenantWizard() {
     if (step === 3 || step === 4) {
       const baseRent = step === 3 ? stepData.baseRent : formData.rentBreakdown.baseRent;
       const serviceCharge = step === 3 ? stepData.serviceCharge : formData.rentBreakdown.serviceCharge;
-      const parkingFee = step === 4 ? stepData.parkingFeePerSpot : formData.parkingAllocation.parkingFeePerSpot;
+      const parkingFee = step === 4 ? (stepData.parkingFeePerSpot * stepData.parkingSpots) : (formData.parkingAllocation.parkingFeePerSpot * formData.parkingAllocation.parkingSpots);
 
       const totalMonthlyRent = calculateTotalMonthlyRent(
         baseRent,
@@ -285,8 +350,28 @@ function CreateTenantWizard() {
       }));
     }
 
+    // SCP-2025-12-07: When parking step (4) completes, recalculate firstMonthTotal
+    // to reflect the updated parking fee in the payment breakdown
+    if (step === 4) {
+      const currentParkingFee = stepData.parkingFeePerSpot * stepData.parkingSpots;
+      const previousParkingFee = formData.parkingAllocation.parkingFeePerSpot * formData.parkingAllocation.parkingSpots;
+      const parkingDifference = currentParkingFee - previousParkingFee;
+
+      // Only update if firstMonthTotal exists and parking changed
+      if (formData.rentBreakdown.firstMonthTotal && parkingDifference !== 0) {
+        setFormData((prev) => ({
+          ...prev,
+          rentBreakdown: {
+            ...prev.rentBreakdown,
+            firstMonthTotal: (prev.rentBreakdown.firstMonthTotal || 0) + parkingDifference,
+          },
+        }));
+      }
+    }
+
     // Navigate to next step (except for last step)
-    if (step < 7) {
+    // SCP-2025-12-07: Updated to 6 steps
+    if (step < 6) {
       goToNextStep();
     }
   };
@@ -303,7 +388,10 @@ function CreateTenantWizard() {
       submitData.append('lastName', formData.personalInfo.lastName);
       submitData.append('email', formData.personalInfo.email);
       submitData.append('phone', formData.personalInfo.phone);
-      submitData.append('dateOfBirth', formData.personalInfo.dateOfBirth?.toISOString() || '');
+      // SCP-2025-12-07: Only submit DOB if it's set
+      if (formData.personalInfo.dateOfBirth) {
+        submitData.append('dateOfBirth', formData.personalInfo.dateOfBirth.toISOString());
+      }
       submitData.append('nationalId', formData.personalInfo.nationalId);
       submitData.append('nationality', formData.personalInfo.nationality);
       submitData.append('emergencyContactName', formData.personalInfo.emergencyContactName);
@@ -329,6 +417,11 @@ function CreateTenantWizard() {
       if (formData.parkingAllocation.spotNumbers) {
         submitData.append('spotNumbers', formData.parkingAllocation.spotNumbers);
       }
+      // SCP-2025-12-07: Include parkingSpotId for parking spot blocking (from quotation or selection)
+      const parkingSpotId = (formData.parkingAllocation as any).parkingSpotId;
+      if (parkingSpotId) {
+        submitData.append('parkingSpotId', parkingSpotId);
+      }
       // Include spot IDs for parking assignment (Story 3.8 integration)
       const spotIds = (formData.parkingAllocation as any).spotIds;
       if (spotIds && Array.isArray(spotIds) && spotIds.length > 0) {
@@ -338,19 +431,29 @@ function CreateTenantWizard() {
       }
 
       // Payment Schedule
-      submitData.append('paymentFrequency', formData.paymentSchedule.paymentFrequency);
-      submitData.append('paymentDueDate', formData.paymentSchedule.paymentDueDate.toString());
-      submitData.append('paymentMethod', formData.paymentSchedule.paymentMethod);
-      if (formData.paymentSchedule.pdcChequeCount) {
-        submitData.append('pdcChequeCount', formData.paymentSchedule.pdcChequeCount.toString());
-      }
+      // SCP-2025-12-07: paymentDueDate moved from paymentSchedule to rentBreakdown (Step 3)
+      // Default to 5 if not set
+      submitData.append('paymentDueDate', (formData.rentBreakdown.paymentDueDate || 5).toString());
 
       // Documents
+      // SCP-2025-12-06: Handle preloaded documents from quotation vs new file uploads
       if (formData.documentUpload.emiratesIdFile) {
         submitData.append('emiratesIdFile', formData.documentUpload.emiratesIdFile);
+      } else if (preloadedDocuments.emiratesIdFrontPath) {
+        // Use preloaded document paths from quotation
+        submitData.append('emiratesIdFrontPath', preloadedDocuments.emiratesIdFrontPath);
+        if (preloadedDocuments.emiratesIdBackPath) {
+          submitData.append('emiratesIdBackPath', preloadedDocuments.emiratesIdBackPath);
+        }
       }
       if (formData.documentUpload.passportFile) {
         submitData.append('passportFile', formData.documentUpload.passportFile);
+      } else if (preloadedDocuments.passportFrontPath) {
+        // Use preloaded document paths from quotation
+        submitData.append('passportFrontPath', preloadedDocuments.passportFrontPath);
+        if (preloadedDocuments.passportBackPath) {
+          submitData.append('passportBackPath', preloadedDocuments.passportBackPath);
+        }
       }
       if (formData.documentUpload.visaFile) {
         submitData.append('visaFile', formData.documentUpload.visaFile);
@@ -482,9 +585,9 @@ function CreateTenantWizard() {
         </div>
 
         <div className="container mx-auto max-w-7xl px-4 py-8">
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-12 gap-4 lg:gap-6">
             {/* Left Sidebar - Step Navigation */}
-            <div className="xl:col-span-1">
+            <div className="lg:col-span-1 xl:col-span-2">
               <Card className="sticky top-8 shadow-lg border-0 overflow-hidden">
                 <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-4 border-b">
                   <h3 className="font-semibold text-sm text-primary">Onboarding Steps</h3>
@@ -545,7 +648,7 @@ function CreateTenantWizard() {
             </div>
 
             {/* Main Content Area */}
-            <div className="xl:col-span-2">
+            <div className="lg:col-span-2 xl:col-span-7">
               <div
                 key={currentStep}
                 className="animate-in fade-in-0 slide-in-from-right-4 duration-300"
@@ -566,15 +669,19 @@ function CreateTenantWizard() {
                         data={formData.leaseInfo}
                         onComplete={(data) => handleStepComplete(data, 2)}
                         onBack={goToPreviousStep}
+                        isLeadConversion={isLeadConversion}
                       />
                     </TabsContent>
 
-                    {/* Step 3: Rent Breakdown */}
+                    {/* Step 3: Rent Breakdown - SCP-2025-12-07: Pass lease start date for cheque schedule */}
                     <TabsContent value="3" className="mt-0">
                       <RentBreakdownStep
                         data={formData.rentBreakdown}
                         onComplete={(data) => handleStepComplete(data, 3)}
                         onBack={goToPreviousStep}
+                        leaseStartDate={formData.leaseInfo.leaseStartDate}
+                        parkingFee={formData.parkingAllocation.parkingFeePerSpot * formData.parkingAllocation.parkingSpots}
+                        leaseType={formData.leaseInfo.leaseType}
                       />
                     </TabsContent>
 
@@ -585,30 +692,24 @@ function CreateTenantWizard() {
                         onComplete={(data) => handleStepComplete(data, 4)}
                         onBack={goToPreviousStep}
                         propertyId={formData.leaseInfo.propertyId}
+                        leaseType={formData.leaseInfo.leaseType}
                       />
                     </TabsContent>
 
-                    {/* Step 5: Payment Schedule */}
+                    {/* SCP-2025-12-07: Step 5 (Payment Schedule) removed - merged into Step 3 */}
+
+                    {/* Step 5: Document Upload (was Step 6) */}
                     <TabsContent value="5" className="mt-0">
-                      <PaymentScheduleStep
-                        data={formData.paymentSchedule}
-                        totalMonthlyRent={formData.rentBreakdown.totalMonthlyRent}
-                        onComplete={(data) => handleStepComplete(data, 5)}
-                        onBack={goToPreviousStep}
-                      />
-                    </TabsContent>
-
-                    {/* Step 6: Document Upload */}
-                    <TabsContent value="6" className="mt-0">
                       <DocumentUploadStep
                         data={formData.documentUpload}
-                        onComplete={(data) => handleStepComplete(data, 6)}
+                        onComplete={(data) => handleStepComplete(data, 5)}
                         onBack={goToPreviousStep}
+                        preloadedDocuments={preloadedDocuments}
                       />
                     </TabsContent>
 
-                    {/* Step 7: Review and Submit */}
-                    <TabsContent value="7" className="mt-0">
+                    {/* Step 6: Review and Submit (was Step 7) */}
+                    <TabsContent value="6" className="mt-0">
                       <ReviewSubmitStep
                         formData={formData}
                         onSubmit={handleFinalSubmit}
@@ -621,167 +722,195 @@ function CreateTenantWizard() {
               </div>
             </div>
 
-            {/* Right Sidebar - Live Summary */}
-            <div className="xl:col-span-1">
-              <Card className="sticky top-8 shadow-lg border-0 overflow-hidden">
-                <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-4 border-b">
-                  <h3 className="font-semibold text-sm text-blue-600">Live Summary</h3>
-                </div>
-                <CardContent className="p-4 space-y-4">
-                  {/* Tenant Info */}
-                  {formData.personalInfo.firstName && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        <User className="h-3 w-3" />
-                        Tenant
-                      </div>
-                      <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                        <div className="font-medium">
-                          {formData.personalInfo.firstName} {formData.personalInfo.lastName}
+            {/* Right Sidebar - Financial Summary (SCP-2025-12-07: Redesigned to match quotation style) */}
+            <div className="lg:col-span-1 xl:col-span-3">
+              <div className="sticky top-8 relative overflow-hidden rounded-3xl border border-primary/10 bg-gradient-to-br from-card via-card to-primary/5 p-6 shadow-xl">
+                {/* Decorative elements */}
+                <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl" />
+                <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+
+                <div className="relative">
+                  {/* Header - Financial Summary */}
+                  <div className="flex items-center gap-2 mb-6">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                      Financial Summary
+                    </span>
+                  </div>
+
+                  {/* Valid Until / Lease End Date Section */}
+                  {formData.leaseInfo.leaseEndDate && (
+                    <div className="rounded-2xl bg-muted/50 p-4 mb-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-background shadow-sm">
+                          <Calendar className="h-5 w-5 text-primary" />
                         </div>
-                        {formData.personalInfo.email && (
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Mail className="h-3 w-3" />
-                            {formData.personalInfo.email}
-                          </div>
-                        )}
-                        {formData.personalInfo.phone && (
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Phone className="h-3 w-3" />
-                            {formData.personalInfo.phone}
-                          </div>
-                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-muted-foreground">Valid Until</p>
+                          <p className="font-semibold">
+                            {format(formData.leaseInfo.leaseEndDate, 'MMMM do, yyyy')}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Property Info */}
+                  {/* Annual Rent Section - Main highlight like quotation screenshot */}
+                  {(formData.rentBreakdown.yearlyRentAmount || formData.rentBreakdown.numberOfCheques) && (formData.rentBreakdown.yearlyRentAmount ?? 0) > 0 && (
+                    <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4 mb-4">
+                      {/* Annual Rent Header */}
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-primary">Annual Rent</span>
+                        <span className="text-lg font-bold text-primary tabular-nums">
+                          {formatCurrency(formData.rentBreakdown.yearlyRentAmount || 0)}
+                        </span>
+                      </div>
+
+                      {/* Payment Schedule */}
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-muted-foreground">Payment Schedule</span>
+                        <span className="font-medium">
+                          {formData.rentBreakdown.numberOfCheques || 1} {(formData.rentBreakdown.numberOfCheques || 1) === 1 ? 'Cheque' : 'Cheques'}
+                        </span>
+                      </div>
+
+                      {/* First Payment Mode */}
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">First Payment Mode</span>
+                        <span className="font-medium flex items-center gap-1.5">
+                          {formData.rentBreakdown.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
+                            <>
+                              <Banknote className="h-3.5 w-3.5 text-green-600" />
+                              <span>Cash</span>
+                            </>
+                          ) : (
+                            <>
+                              <CreditCard className="h-3.5 w-3.5 text-blue-600" />
+                              <span>Cheque</span>
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* First Payment Section - with icon */}
+                  {formData.rentBreakdown.firstMonthTotal && formData.rentBreakdown.firstMonthTotal > 0 && (
+                    <div className="rounded-2xl bg-muted/30 p-4 mb-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 shadow-sm">
+                          <Banknote className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                            First Payment
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formData.rentBreakdown.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? 'Cash' : 'Cheque'} • Includes all fees & deposit
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-bold tracking-tight text-primary tabular-nums">
+                            {formatCurrency(formData.rentBreakdown.firstMonthTotal)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fees Breakdown - compact list */}
+                  {formData.rentBreakdown.securityDeposit > 0 && (
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Security Deposit</span>
+                        <span className="font-medium tabular-nums">{formatCurrency(formData.rentBreakdown.securityDeposit)}</span>
+                      </div>
+                      {formData.rentBreakdown.adminFee > 0 && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Admin Fee</span>
+                          <span className="font-medium tabular-nums">{formatCurrency(formData.rentBreakdown.adminFee)}</span>
+                        </div>
+                      )}
+                      {formData.rentBreakdown.serviceCharge > 0 && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Service Charges</span>
+                          <span className="font-medium tabular-nums">{formatCurrency(formData.rentBreakdown.serviceCharge)}</span>
+                        </div>
+                      )}
+                      {formData.parkingAllocation.parkingFeePerSpot > 0 && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Parking</span>
+                          <span className="font-medium tabular-nums">{formatCurrency(formData.parkingAllocation.parkingFeePerSpot * formData.parkingAllocation.parkingSpots)}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Property & Unit Info - bottom section */}
                   {formData.leaseInfo.propertyId && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        <Building2 className="h-3 w-3" />
-                        Property
-                      </div>
-                      <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Home className="h-4 w-4 text-muted-foreground" />
-                          <span>Unit Selected</span>
+                    <>
+                      <Separator className="my-4" />
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
                         </div>
-                        {formData.leaseInfo.leaseStartDate && formData.leaseInfo.leaseEndDate && (
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            <span>
-                              {formData.leaseInfo.leaseDuration > 0
-                                ? `${formData.leaseInfo.leaseDuration} months`
-                                : 'Dates set'
-                              }
-                            </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">
+                            {formData.leaseInfo.propertyName || 'Property Selected'}
+                          </p>
+                          {formData.leaseInfo.unitNumber && (
+                            <p className="text-xs text-muted-foreground">
+                              Unit {formData.leaseInfo.unitNumber}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            {formData.leaseInfo.leaseType && (
+                              <Badge variant="outline" className="text-xs capitalize">
+                                {formData.leaseInfo.leaseType.replace('_', ' ').toLowerCase()}
+                              </Badge>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Financial Summary */}
-                  {formData.rentBreakdown.baseRent > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        <DollarSign className="h-3 w-3" />
-                        Financial
-                      </div>
-                      <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Base Rent</span>
-                          <span className="font-medium">{formatCurrency(formData.rentBreakdown.baseRent)}</span>
-                        </div>
-                        {formData.rentBreakdown.serviceCharge > 0 && (
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Service Charge</span>
-                            <span>{formatCurrency(formData.rentBreakdown.serviceCharge)}</span>
-                          </div>
-                        )}
-                        {formData.parkingAllocation.parkingFeePerSpot > 0 && (
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Parking</span>
-                            <span>{formatCurrency(formData.parkingAllocation.parkingFeePerSpot)}</span>
-                          </div>
-                        )}
-                        <Separator />
-                        <div className="flex justify-between">
-                          <span className="font-medium">Monthly Total</span>
-                          <span className="font-bold text-primary">
-                            {formatCurrency(formData.rentBreakdown.totalMonthlyRent)}
-                          </span>
-                        </div>
-                        {formData.rentBreakdown.securityDeposit > 0 && (
-                          <div className="flex justify-between text-xs text-muted-foreground pt-1">
-                            <span className="flex items-center gap-1">
-                              <Shield className="h-3 w-3" />
-                              Security Deposit
-                            </span>
-                            <span>{formatCurrency(formData.rentBreakdown.securityDeposit)}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Payment Info */}
-                  {formData.paymentSchedule.paymentMethod && parseInt(currentStep) >= 5 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        <CreditCard className="h-3 w-3" />
-                        Payment
-                      </div>
-                      <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className="capitalize">
-                            {formData.paymentSchedule.paymentFrequency.toLowerCase().replace('_', ' ')}
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Due on day {formData.paymentSchedule.paymentDueDate} of each period
                         </div>
                       </div>
-                    </div>
+                    </>
                   )}
 
                   {/* Documents Count */}
-                  {parseInt(currentStep) >= 6 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        <Upload className="h-3 w-3" />
-                        Documents
+                  {/* SCP-2025-12-07: Updated to step 5 (Documents) which was previously step 6 */}
+                  {parseInt(currentStep) >= 5 && (
+                    <>
+                      <Separator className="my-4" />
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-2">
+                          <Upload className="h-4 w-4" />
+                          Documents
+                        </span>
+                        <Badge variant="secondary">
+                          {[
+                            formData.documentUpload.emiratesIdFile?.name,
+                            formData.documentUpload.passportFile?.name,
+                            formData.documentUpload.visaFile?.name,
+                            formData.documentUpload.signedLeaseFile?.name,
+                            ...formData.documentUpload.additionalFiles.map(f => f.name),
+                          ].filter(Boolean).length} files
+                        </Badge>
                       </div>
-                      <div className="bg-muted/50 rounded-lg p-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Files uploaded</span>
-                          <Badge variant="secondary">
-                            {[
-                              formData.documentUpload.emiratesIdFile?.name,
-                              formData.documentUpload.passportFile?.name,
-                              formData.documentUpload.visaFile?.name,
-                              formData.documentUpload.signedLeaseFile?.name,
-                              ...formData.documentUpload.additionalFiles.map(f => f.name),
-                            ].filter(Boolean).length}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
+                    </>
                   )}
 
                   {/* Empty State */}
-                  {!formData.personalInfo.firstName && (
+                  {!formData.leaseInfo.leaseEndDate && !formData.rentBreakdown.yearlyRentAmount && !formData.rentBreakdown.securityDeposit && (
                     <div className="text-center py-8 text-muted-foreground">
-                      <User className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                      <DollarSign className="h-12 w-12 mx-auto mb-3 opacity-20" />
                       <p className="text-sm">
-                        Complete each step to see the summary here
+                        Complete each step to see the financial summary
                       </p>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -846,14 +975,14 @@ export default function CreateTenantPage() {
           </div>
 
           {/* Content Skeleton */}
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-            <div className="xl:col-span-1">
+          <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-12 gap-4 lg:gap-6">
+            <div className="lg:col-span-1 xl:col-span-2">
               <Skeleton className="h-96 w-full rounded-xl" />
             </div>
-            <div className="xl:col-span-2">
+            <div className="lg:col-span-2 xl:col-span-7">
               <Skeleton className="h-[600px] w-full rounded-xl" />
             </div>
-            <div className="xl:col-span-1">
+            <div className="lg:col-span-1 xl:col-span-3">
               <Skeleton className="h-80 w-full rounded-xl" />
             </div>
           </div>

@@ -1,6 +1,7 @@
 package com.ultrabms.service.impl;
 
 import com.ultrabms.dto.leads.CreateLeadRequest;
+import com.ultrabms.dto.leads.LeadConversionResponse;
 import com.ultrabms.dto.leads.LeadDocumentResponse;
 import com.ultrabms.dto.leads.LeadHistoryResponse;
 import com.ultrabms.dto.leads.LeadResponse;
@@ -9,11 +10,13 @@ import com.ultrabms.dto.response.DownloadUrlResponse;
 import com.ultrabms.entity.Lead;
 import com.ultrabms.entity.LeadDocument;
 import com.ultrabms.entity.LeadHistory;
+import com.ultrabms.entity.Quotation;
 import com.ultrabms.exception.ResourceNotFoundException;
 import com.ultrabms.exception.ValidationException;
 import com.ultrabms.repository.LeadDocumentRepository;
 import com.ultrabms.repository.LeadHistoryRepository;
 import com.ultrabms.repository.LeadRepository;
+import com.ultrabms.repository.QuotationRepository;
 import com.ultrabms.service.FileStorageService;
 import com.ultrabms.service.LeadService;
 import com.ultrabms.util.LeadNumberGenerator;
@@ -42,6 +45,7 @@ public class LeadServiceImpl implements LeadService {
     private final LeadRepository leadRepository;
     private final LeadDocumentRepository leadDocumentRepository;
     private final LeadHistoryRepository leadHistoryRepository;
+    private final QuotationRepository quotationRepository;
     private final LeadNumberGenerator leadNumberGenerator;
     private final FileStorageService fileStorageService;
 
@@ -337,6 +341,84 @@ public class LeadServiceImpl implements LeadService {
         // Delete lead
         leadRepository.delete(lead);
         log.info("Lead deleted successfully: {}", id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LeadConversionResponse getConversionData(UUID leadId, UUID quotationId) {
+        log.info("Fetching conversion data for lead: {} with quotation: {}", leadId, quotationId);
+
+        // Fetch lead
+        Lead lead = findLeadById(leadId);
+
+        // Fetch quotation
+        Quotation quotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quotation not found with ID: " + quotationId));
+
+        // Verify quotation belongs to this lead
+        if (!quotation.getLeadId().equals(leadId)) {
+            throw new ValidationException("Quotation does not belong to the specified lead");
+        }
+
+        // Split fullName into firstName and lastName
+        String firstName = lead.getFullName();
+        String lastName = "";
+        if (lead.getFullName() != null && lead.getFullName().contains(" ")) {
+            String[] parts = lead.getFullName().split(" ", 2);
+            firstName = parts[0];
+            lastName = parts.length > 1 ? parts[1] : "";
+        }
+
+        // Build response with all data for tenant onboarding pre-population
+        LeadConversionResponse response = LeadConversionResponse.builder()
+                // Lead personal info
+                .leadId(lead.getId())
+                .leadNumber(lead.getLeadNumber())
+                .fullName(lead.getFullName())
+                .firstName(firstName)
+                .lastName(lastName)
+                .email(lead.getEmail())
+                .contactNumber(lead.getContactNumber())
+                // Identity documents from quotation (SCP-2025-12-04)
+                .emiratesId(quotation.getEmiratesIdNumber())
+                .emiratesIdExpiry(quotation.getEmiratesIdExpiry())
+                .passportNumber(quotation.getPassportNumber())
+                .passportExpiryDate(quotation.getPassportExpiry())
+                .nationality(quotation.getNationality())
+                // Document file paths (SCP-2025-12-06: for tenant onboarding)
+                .emiratesIdFrontPath(quotation.getEmiratesIdFrontPath())
+                .emiratesIdBackPath(quotation.getEmiratesIdBackPath())
+                .passportFrontPath(quotation.getPassportFrontPath())
+                .passportBackPath(quotation.getPassportBackPath())
+                // Quotation basic info
+                .quotationId(quotation.getId())
+                .quotationNumber(quotation.getQuotationNumber())
+                .propertyId(quotation.getPropertyId())
+                .unitId(quotation.getUnitId())
+                // Financial info
+                .baseRent(quotation.getBaseRent())
+                .serviceCharges(quotation.getServiceCharges())
+                .securityDeposit(quotation.getSecurityDeposit())
+                .adminFee(quotation.getAdminFee())
+                .totalFirstPayment(quotation.getTotalFirstPayment())
+                .parkingSpotId(quotation.getParkingSpotId())
+                .parkingFee(quotation.getParkingFee())
+                // Cheque breakdown (SCP-2025-12-06)
+                .yearlyRentAmount(quotation.getYearlyRentAmount())
+                .numberOfCheques(quotation.getNumberOfCheques())
+                .firstMonthPaymentMethod(quotation.getFirstMonthPaymentMethod())
+                .chequeBreakdown(quotation.getChequeBreakdown())
+                // Terms
+                .paymentTerms(quotation.getPaymentTerms())
+                .moveinProcedures(quotation.getMoveinProcedures())
+                .cancellationPolicy(quotation.getCancellationPolicy())
+                .specialTerms(quotation.getSpecialTerms())
+                // Message
+                .message("Lead and quotation data retrieved for tenant onboarding")
+                .build();
+
+        log.info("Conversion data retrieved successfully for lead: {}", leadId);
+        return response;
     }
 
     /**

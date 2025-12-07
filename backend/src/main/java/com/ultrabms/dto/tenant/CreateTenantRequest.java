@@ -120,7 +120,11 @@ public class CreateTenantRequest {
 
     // =============================
     // PARKING ALLOCATION
+    // SCP-2025-12-07: Added parkingSpotId to receive from quotation
     // =============================
+
+    // Parking spot ID from quotation (for pre-selection and blocking)
+    private UUID parkingSpotId;
 
     @Min(value = 0, message = "Parking spots cannot be negative")
     @Max(value = 10, message = "Maximum 10 parking spots allowed")
@@ -134,9 +138,10 @@ public class CreateTenantRequest {
 
     // =============================
     // PAYMENT SCHEDULE
+    // SCP-2025-12-07: paymentFrequency is now optional - frequency is configured via number of cheques
     // =============================
 
-    @NotNull(message = "Payment frequency is required")
+    // Optional - defaults to YEARLY if not provided
     private PaymentFrequency paymentFrequency;
 
     @NotNull(message = "Payment due date is required")
@@ -144,7 +149,7 @@ public class CreateTenantRequest {
     @Max(value = 31, message = "Due date must be between 1 and 31")
     private Integer paymentDueDate;
 
-    @NotNull(message = "Payment method is required")
+    // Optional - payment method is configured via first payment mode in rent breakdown
     private PaymentMethod paymentMethod;
 
     @Min(value = 1, message = "PDC cheque count must be at least 1")

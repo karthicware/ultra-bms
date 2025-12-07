@@ -24,6 +24,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -100,6 +101,14 @@ public class ParkingSpot extends BaseEntity {
     private LocalDateTime assignedAt;
 
     /**
+     * When the current assignment expires (tenant's lease end date)
+     * Spot remains ASSIGNED until this date
+     * SCP-2025-12-07: Added for lease-period parking blocking
+     */
+    @Column(name = "assigned_until")
+    private LocalDate assignedUntil;
+
+    /**
      * Optional notes about the parking spot
      */
     @Size(max = 500, message = "Notes must be less than 500 characters")
@@ -118,18 +127,31 @@ public class ParkingSpot extends BaseEntity {
     // ================================================================
 
     /**
-     * Assign this parking spot to a tenant
+     * Assign this parking spot to a tenant for their lease period
+     * SCP-2025-12-07: Updated to accept lease end date for time-bound blocking
      *
      * @param tenant The tenant to assign
+     * @param leaseEndDate When the assignment expires (tenant's lease end date)
      * @throws IllegalStateException if spot is not AVAILABLE
      */
-    public void assignToTenant(Tenant tenant) {
+    public void assignToTenant(Tenant tenant, LocalDate leaseEndDate) {
         if (this.status != ParkingSpotStatus.AVAILABLE) {
             throw new IllegalStateException("Cannot assign a spot that is not AVAILABLE");
         }
         this.assignedTenant = tenant;
         this.assignedAt = LocalDateTime.now();
+        this.assignedUntil = leaseEndDate;
         this.status = ParkingSpotStatus.ASSIGNED;
+    }
+
+    /**
+     * Assign this parking spot to a tenant (without lease end date - for backward compatibility)
+     *
+     * @param tenant The tenant to assign
+     * @throws IllegalStateException if spot is not AVAILABLE
+     */
+    public void assignToTenant(Tenant tenant) {
+        assignToTenant(tenant, null);
     }
 
     /**
@@ -139,7 +161,18 @@ public class ParkingSpot extends BaseEntity {
     public void release() {
         this.assignedTenant = null;
         this.assignedAt = null;
+        this.assignedUntil = null;
         this.status = ParkingSpotStatus.AVAILABLE;
+    }
+
+    /**
+     * Check if assignment has expired
+     * SCP-2025-12-07: Added for lease-period parking blocking
+     *
+     * @return true if assigned and past lease end date
+     */
+    public boolean isAssignmentExpired() {
+        return this.assignedUntil != null && LocalDate.now().isAfter(this.assignedUntil);
     }
 
     /**

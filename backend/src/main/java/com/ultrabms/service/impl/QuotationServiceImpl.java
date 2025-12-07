@@ -106,7 +106,7 @@ public class QuotationServiceImpl implements QuotationService {
                 .leadId(request.getLeadId())
                 .propertyId(request.getPropertyId())
                 .unitId(request.getUnitId())
-                .stayType(request.getStayType()) // Optional now
+                // SCP-2025-12-06: Removed stayType - unit.bedroomCount provides this info
                 .issueDate(request.getIssueDate())
                 .validityDate(request.getValidityDate())
                 .baseRent(calculatedBaseRent)
@@ -240,9 +240,7 @@ public class QuotationServiceImpl implements QuotationService {
         if (request.getUnitId() != null) {
             quotation.setUnitId(request.getUnitId());
         }
-        if (request.getStayType() != null) {
-            quotation.setStayType(request.getStayType());
-        }
+        // SCP-2025-12-06: Removed stayType - unit.bedroomCount provides this info
         if (request.getValidityDate() != null) {
             quotation.setValidityDate(request.getValidityDate());
         }
@@ -486,9 +484,9 @@ public class QuotationServiceImpl implements QuotationService {
         Unit unit = unitRepository.findById(quotation.getUnitId())
                 .orElseThrow(() -> new ResourceNotFoundException("Unit not found"));
 
-        // Validate quotation status
-        if (quotation.getStatus() != Quotation.QuotationStatus.ACCEPTED) {
-            throw new ValidationException("Only ACCEPTED quotations can be converted to tenant");
+        // Validate quotation status - SCP-2025-12-06: Conversion allowed from SENT status (no ACCEPTED step)
+        if (quotation.getStatus() != Quotation.QuotationStatus.SENT) {
+            throw new ValidationException("Only SENT quotations can be converted to tenant");
         }
 
         // Validate lead status

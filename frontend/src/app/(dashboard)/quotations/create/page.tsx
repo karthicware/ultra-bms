@@ -91,6 +91,23 @@ const STEPS = [
   { id: 4, title: 'Terms', description: 'Conditions', icon: FileText },
 ];
 
+// SCP-2025-12-07: Common nationalities in UAE (alphabetical order) - matching PersonalInfoStep.tsx
+const NATIONALITIES = [
+  'Afghan', 'Albanian', 'Algerian', 'American', 'Argentinian', 'Australian', 'Austrian',
+  'Bahraini', 'Bangladeshi', 'Belgian', 'Brazilian', 'British', 'Bulgarian',
+  'Canadian', 'Chilean', 'Chinese', 'Colombian', 'Croatian', 'Czech',
+  'Danish', 'Dutch', 'Egyptian', 'Emirati', 'Estonian', 'Ethiopian',
+  'Filipino', 'Finnish', 'French', 'German', 'Ghanaian', 'Greek',
+  'Hungarian', 'Indian', 'Indonesian', 'Iranian', 'Iraqi', 'Irish', 'Israeli', 'Italian',
+  'Japanese', 'Jordanian', 'Kenyan', 'Korean', 'Kuwaiti',
+  'Lebanese', 'Libyan', 'Lithuanian', 'Malaysian', 'Mexican', 'Moroccan',
+  'Nepalese', 'New Zealander', 'Nigerian', 'Norwegian',
+  'Omani', 'Pakistani', 'Palestinian', 'Peruvian', 'Polish', 'Portuguese',
+  'Qatari', 'Romanian', 'Russian', 'Saudi', 'Serbian', 'Singaporean', 'Slovak',
+  'Slovenian', 'South African', 'Spanish', 'Sri Lankan', 'Sudanese', 'Swedish', 'Swiss', 'Syrian',
+  'Thai', 'Tunisian', 'Turkish', 'Ukrainian', 'Venezuelan', 'Yemeni',
+];
+
 // Progress Step Component
 function ProgressStep({
   step,
@@ -1084,17 +1101,25 @@ function CreateQuotationForm() {
         </div>
       </div>
 
-      {/* Nationality */}
+      {/* Nationality - SCP-2025-12-07: Changed from Input to Select dropdown */}
       <div className="space-y-2">
         <Label htmlFor="nationality" className="text-muted-foreground">Nationality *</Label>
-        <Input
-          id="nationality"
-          placeholder="e.g., United Arab Emirates"
-          value={nationality}
-          onChange={(e) => setNationality(e.target.value)}
-          className="h-12 rounded-xl border-2"
-          data-testid="input-nationality"
-        />
+        <Select value={nationality} onValueChange={setNationality}>
+          <SelectTrigger
+            id="nationality"
+            className="h-12 rounded-xl border-2"
+            data-testid="select-nationality"
+          >
+            <SelectValue placeholder="Select nationality" />
+          </SelectTrigger>
+          <SelectContent>
+            {NATIONALITIES.map((nat) => (
+              <SelectItem key={nat} value={nat}>
+                {nat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
