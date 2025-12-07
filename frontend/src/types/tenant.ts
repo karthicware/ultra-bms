@@ -319,11 +319,14 @@ export interface PaymentScheduleFormData {
   pdcChequeCount: number;
 }
 
+// SCP-2025-12-07: Updated to support separate front/back uploads for Emirates ID and Passport
 export interface TenantDocumentUploadFormData {
-  emiratesIdFile: File;
-  passportFile: File;
+  emiratesIdFile: File | null;        // Front side (required unless preloaded)
+  emiratesIdBackFile?: File | null;   // Back side (optional)
+  passportFile: File | null;          // Front side (required unless preloaded)
+  passportBackFile?: File | null;     // Back side (optional)
   visaFile?: File | null;
-  signedLeaseFile: File;
+  signedLeaseFile: File | null;
   additionalFiles: File[];
 }
 

@@ -1,8 +1,9 @@
 'use client';
 
 /**
- * Step 7: Review and Submit
+ * Step 6: Review and Submit
  * Review all entered data and submit tenant registration
+ * SCP-2025-12-07: Updated for 6-step flow (removed separate payment schedule step)
  */
 
 import { format } from 'date-fns';
@@ -15,6 +16,15 @@ import { CheckCircle2, Edit, Loader2 } from 'lucide-react';
 
 import { formatCurrency } from '@/lib/validations/tenant';
 import type { TenantOnboardingFormData } from '@/types/tenant';
+
+// Helper function to get payment frequency display label
+const getPaymentFrequencyLabel = (numberOfCheques?: number): string => {
+  if (!numberOfCheques || numberOfCheques <= 1) return 'Annual (1 Payment)';
+  if (numberOfCheques === 2) return 'Semi-Annual (2 Payments)';
+  if (numberOfCheques === 4) return 'Quarterly (4 Payments)';
+  if (numberOfCheques === 12) return 'Monthly (12 Payments)';
+  return `${numberOfCheques} Payments`;
+};
 
 interface ReviewSubmitStepProps {
   formData: TenantOnboardingFormData;
@@ -31,7 +41,7 @@ export function ReviewSubmitStep({
   onEdit,
   isSubmitting,
 }: ReviewSubmitStepProps) {
-  const { personalInfo, leaseInfo, rentBreakdown, parkingAllocation, paymentSchedule, documentUpload } = formData;
+  const { personalInfo, leaseInfo, rentBreakdown, parkingAllocation, documentUpload } = formData;
 
   return (
     <Card data-testid="step-review-submit">
@@ -234,7 +244,7 @@ export function ReviewSubmitStep({
             )}
           </div>
 
-          {/* Step 5: Payment Schedule */}
+          {/* Payment Schedule (included in Rent Breakdown step) */}
           <div className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -245,7 +255,7 @@ export function ReviewSubmitStep({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => onEdit(5)}
+                onClick={() => onEdit(3)}
                 data-testid="btn-edit-payment"
               >
                 <Edit className="h-4 w-4" />
@@ -254,28 +264,28 @@ export function ReviewSubmitStep({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Payment Frequency</p>
-                <p className="font-medium">{paymentSchedule.paymentFrequency}</p>
+                <p className="font-medium">{getPaymentFrequencyLabel(rentBreakdown.numberOfCheques)}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Due Date</p>
                 <p className="font-medium">
-                  Day {paymentSchedule.paymentDueDate} of each month
+                  Day {rentBreakdown.paymentDueDate || 5} of each month
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Payment Method</p>
-                <p className="font-medium">{paymentSchedule.paymentMethod?.replace(/_/g, ' ')}</p>
+                <p className="text-muted-foreground">First Month Payment</p>
+                <p className="font-medium">{rentBreakdown.firstMonthPaymentMethod?.replace(/_/g, ' ') || 'CASH'}</p>
               </div>
-              {paymentSchedule.pdcChequeCount && paymentSchedule.pdcChequeCount > 0 && (
+              {rentBreakdown.numberOfCheques && rentBreakdown.numberOfCheques > 1 && (
                 <div>
                   <p className="text-muted-foreground">PDC Cheques</p>
-                  <p className="font-medium">{paymentSchedule.pdcChequeCount} cheques</p>
+                  <p className="font-medium">{rentBreakdown.numberOfCheques - 1} cheques</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Step 6: Documents */}
+          {/* Step 5: Documents */}
           <div className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -286,7 +296,7 @@ export function ReviewSubmitStep({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => onEdit(6)}
+                onClick={() => onEdit(5)}
                 data-testid="btn-edit-documents"
               >
                 <Edit className="h-4 w-4" />

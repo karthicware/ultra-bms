@@ -436,24 +436,30 @@ function CreateTenantWizard() {
       submitData.append('paymentDueDate', (formData.rentBreakdown.paymentDueDate || 5).toString());
 
       // Documents
-      // SCP-2025-12-06: Handle preloaded documents from quotation vs new file uploads
+      // SCP-2025-12-07: Handle separate front/back uploads with preloaded document replacement
+      // Emirates ID Front: Use new file if uploaded, else use preloaded path
       if (formData.documentUpload.emiratesIdFile) {
         submitData.append('emiratesIdFile', formData.documentUpload.emiratesIdFile);
       } else if (preloadedDocuments.emiratesIdFrontPath) {
-        // Use preloaded document paths from quotation
         submitData.append('emiratesIdFrontPath', preloadedDocuments.emiratesIdFrontPath);
-        if (preloadedDocuments.emiratesIdBackPath) {
-          submitData.append('emiratesIdBackPath', preloadedDocuments.emiratesIdBackPath);
-        }
       }
+      // Emirates ID Back: Use new file if uploaded, else use preloaded path
+      if (formData.documentUpload.emiratesIdBackFile) {
+        submitData.append('emiratesIdBackFile', formData.documentUpload.emiratesIdBackFile);
+      } else if (preloadedDocuments.emiratesIdBackPath) {
+        submitData.append('emiratesIdBackPath', preloadedDocuments.emiratesIdBackPath);
+      }
+      // Passport Front: Use new file if uploaded, else use preloaded path
       if (formData.documentUpload.passportFile) {
         submitData.append('passportFile', formData.documentUpload.passportFile);
       } else if (preloadedDocuments.passportFrontPath) {
-        // Use preloaded document paths from quotation
         submitData.append('passportFrontPath', preloadedDocuments.passportFrontPath);
-        if (preloadedDocuments.passportBackPath) {
-          submitData.append('passportBackPath', preloadedDocuments.passportBackPath);
-        }
+      }
+      // Passport Back: Use new file if uploaded, else use preloaded path
+      if (formData.documentUpload.passportBackFile) {
+        submitData.append('passportBackFile', formData.documentUpload.passportBackFile);
+      } else if (preloadedDocuments.passportBackPath) {
+        submitData.append('passportBackPath', preloadedDocuments.passportBackPath);
       }
       if (formData.documentUpload.visaFile) {
         submitData.append('visaFile', formData.documentUpload.visaFile);
