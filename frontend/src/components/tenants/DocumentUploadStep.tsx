@@ -46,7 +46,8 @@ interface PreloadedDocuments {
 interface DocumentUploadStepProps {
   data: TenantDocumentUploadFormData;
   onComplete: (data: TenantDocumentUploadFormData) => void;
-  onBack: () => void;
+  // SCP-2025-12-08: Updated to accept optional data for saving on back navigation
+  onBack: (data?: TenantDocumentUploadFormData) => void;
   preloadedDocuments?: PreloadedDocuments;
 }
 
@@ -75,7 +76,7 @@ export function DocumentUploadStep({ data, onComplete, onBack, preloadedDocument
 
   // Other documents
   const [visaFile, setVisaFile] = useState<File | null>(data.visaFile ?? null);
-  const [signedLeaseFile, setSignedLeaseFile] = useState<File | null>(data.signedLeaseFile);
+  const [signedLeaseFile, setSignedLeaseFile] = useState<File | null>(data.signedLeaseFile ?? null);
   const [additionalFiles, setAdditionalFiles] = useState<File[]>(data.additionalFiles || []);
 
   // Track if user wants to replace preloaded documents
@@ -594,7 +595,18 @@ export function DocumentUploadStep({ data, onComplete, onBack, preloadedDocument
             <Button
               type="button"
               variant="outline"
-              onClick={onBack}
+              onClick={() => {
+                // SCP-2025-12-08: Save current document state when going back
+                onBack({
+                  emiratesIdFile: emiratesIdFront,
+                  emiratesIdBackFile: emiratesIdBack,
+                  passportFile: passportFront,
+                  passportBackFile: passportBack,
+                  visaFile,
+                  signedLeaseFile,
+                  additionalFiles,
+                } as TenantDocumentUploadFormData);
+              }}
               data-testid="btn-back"
             >
               Back

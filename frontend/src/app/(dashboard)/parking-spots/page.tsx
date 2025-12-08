@@ -26,7 +26,6 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -80,7 +79,6 @@ import {
 import { ParkingSpotFormModal } from '@/components/parking/ParkingSpotFormModal';
 import { ParkingSpotDeleteDialog } from '@/components/parking/ParkingSpotDeleteDialog';
 import { ParkingSpotStatusChangeDialog } from '@/components/parking/ParkingSpotStatusChangeDialog';
-import { BulkActionsBar } from '@/components/parking/BulkActionsBar';
 import { cn } from '@/lib/utils';
 
 type ViewMode = 'grid' | 'list';
@@ -108,9 +106,6 @@ export default function ParkingSpotListPage() {
   const [spotToDelete, setSpotToDelete] = useState<ParkingSpot | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [spotToChangeStatus, setSpotToChangeStatus] = useState<ParkingSpot | null>(null);
-
-  // Bulk selection state
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Properties state
   const [properties, setProperties] = useState<Property[]>([]);
@@ -173,16 +168,10 @@ export default function ParkingSpotListPage() {
 
   // Reset state when property changes
   useEffect(() => {
-    setSelectedIds(new Set());
     setSearchTerm('');
     setStatusFilter('all');
     setCurrentPage(0);
   }, [selectedPropertyId]);
-
-  // Clear selection when filters change
-  useEffect(() => {
-    setSelectedIds(new Set());
-  }, [statusFilter, searchTerm, currentPage]);
 
   // Cleanup debounce
   useEffect(() => {
@@ -227,32 +216,6 @@ export default function ParkingSpotListPage() {
   const handleStatusChangeSuccess = () => {
     setStatusDialogOpen(false);
     setSpotToChangeStatus(null);
-    refetchSpots();
-    refetchCounts();
-  };
-
-  const handleSelectAll = useCallback((checked: boolean) => {
-    if (checked && parkingSpotData?.content) {
-      setSelectedIds(new Set(parkingSpotData.content.map(spot => spot.id)));
-    } else {
-      setSelectedIds(new Set());
-    }
-  }, [parkingSpotData?.content]);
-
-  const handleSelectOne = useCallback((spotId: string, checked: boolean) => {
-    setSelectedIds(prev => {
-      const newSet = new Set(prev);
-      if (checked) {
-        newSet.add(spotId);
-      } else {
-        newSet.delete(spotId);
-      }
-      return newSet;
-    });
-  }, []);
-
-  const handleBulkActionComplete = () => {
-    setSelectedIds(new Set());
     refetchSpots();
     refetchCounts();
   };
@@ -561,18 +524,6 @@ export default function ParkingSpotListPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Bulk Actions */}
-                  {selectedIds.size > 0 && (
-                    <div className="mt-4 pt-4 border-t">
-                      <BulkActionsBar
-                        selectedIds={Array.from(selectedIds)}
-                        selectedSpots={parkingSpots.filter(s => selectedIds.has(s.id))}
-                        onActionComplete={handleBulkActionComplete}
-                        onClearSelection={() => setSelectedIds(new Set())}
-                      />
-                    </div>
-                  )}
                 </CardContent>
               </Card>
 
@@ -610,20 +561,11 @@ export default function ParkingSpotListPage() {
                 </Card>
               ) : (
                 <>
-                  {/* Select All */}
+                  {/* Header Row */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={selectedIds.size === parkingSpots.length && parkingSpots.length > 0}
-                        onCheckedChange={handleSelectAll}
-                      />
-                      <span className="text-sm text-muted-foreground">
-                        {selectedIds.size > 0
-                          ? `${selectedIds.size} of ${totalElements} selected`
-                          : `${totalElements} parking spots`
-                        }
-                      </span>
-                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {totalElements} parking spots
+                    </span>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -652,19 +594,9 @@ export default function ParkingSpotListPage() {
                             key={spot.id}
                             className={cn(
                               "relative group transition-all hover:shadow-md",
-                              colors.border,
-                              selectedIds.has(spot.id) && "ring-2 ring-primary"
+                              colors.border
                             )}
                           >
-                            {/* Selection Checkbox */}
-                            <div className="absolute top-3 left-3 z-10">
-                              <Checkbox
-                                checked={selectedIds.has(spot.id)}
-                                onCheckedChange={(checked) => handleSelectOne(spot.id, checked as boolean)}
-                                className="bg-background"
-                              />
-                            </div>
-
                             {/* Actions Menu */}
                             <div className="absolute top-3 right-3 z-10">
                               <DropdownMenu>
@@ -701,7 +633,7 @@ export default function ParkingSpotListPage() {
                               </DropdownMenu>
                             </div>
 
-                            <CardContent className="pt-12 pb-4 px-4">
+                            <CardContent className="pt-4 pb-4 px-4">
                               {/* Status Badge & Icon */}
                               <div className={cn(
                                 "flex items-center gap-2 px-3 py-2 rounded-lg mb-4",
@@ -789,19 +721,10 @@ export default function ParkingSpotListPage() {
                         return (
                           <Card
                             key={spot.id}
-                            className={cn(
-                              "transition-all hover:shadow-sm",
-                              selectedIds.has(spot.id) && "ring-2 ring-primary"
-                            )}
+                            className="transition-all hover:shadow-sm"
                           >
                             <CardContent className="p-4">
                               <div className="flex items-center gap-4">
-                                {/* Checkbox */}
-                                <Checkbox
-                                  checked={selectedIds.has(spot.id)}
-                                  onCheckedChange={(checked) => handleSelectOne(spot.id, checked as boolean)}
-                                />
-
                                 {/* Status Icon */}
                                 <div className={cn(
                                   "p-2 rounded-lg",

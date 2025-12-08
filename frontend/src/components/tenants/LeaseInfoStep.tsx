@@ -42,7 +42,8 @@ import { cn } from '@/lib/utils';
 interface LeaseInfoStepProps {
   data: LeaseInfoFormData;
   onComplete: (data: LeaseInfoFormData) => void;
-  onBack: () => void;
+  // SCP-2025-12-08: Updated to accept optional data for saving on back navigation
+  onBack: (data?: LeaseInfoFormData) => void;
   /** SCP-2025-12-07: Indicates if this is a lead conversion flow (pre-populated unit) */
   isLeadConversion?: boolean;
 }
@@ -367,6 +368,8 @@ export function LeaseInfoStep({ data, onComplete, onBack, isLeadConversion = fal
                         <Calendar
                           mode="single"
                           selected={field.value || undefined}
+                          // SCP-2025-12-08: Show the month of the selected date when opening the calendar
+                          defaultMonth={field.value || undefined}
                           onSelect={(date) => {
                             field.onChange(date);
                             setStartDatePickerOpen(false); // Auto-close after selection
@@ -422,6 +425,8 @@ export function LeaseInfoStep({ data, onComplete, onBack, isLeadConversion = fal
                         <Calendar
                           mode="single"
                           selected={field.value || undefined}
+                          // SCP-2025-12-08: Show the month of the selected date when opening the calendar
+                          defaultMonth={field.value || undefined}
                           onSelect={(date) => {
                             field.onChange(date);
                             setEndDatePickerOpen(false); // Auto-close after selection
@@ -520,7 +525,7 @@ export function LeaseInfoStep({ data, onComplete, onBack, isLeadConversion = fal
               <Button
                 type="button"
                 variant="outline"
-                onClick={onBack}
+                onClick={() => onBack(form.getValues())}
                 data-testid="btn-back"
               >
                 Back

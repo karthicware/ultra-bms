@@ -6,6 +6,10 @@
  * Story 3.8 Integration: Select from available parking spots in inventory
  * AC#14: Integration with tenant onboarding - parking allocation dropdown
  * Updated: SCP-2025-12-02 - Changed to single parking spot selection with editable fee
+ * SCP-2025-12-08: Parking now available for all lease types with different fee structures:
+ *   - YEARLY (Annual): One-time annual parking payment
+ *   - MONTH_TO_MONTH: Monthly parking fee added to each rental payment
+ *   - FIXED_TERM: Monthly parking fee added to each month until lease end date
  */
 
 import { useForm } from 'react-hook-form';
@@ -23,8 +27,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -36,9 +38,10 @@ import {
 } from '@/components/ui/select';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { InfoIcon, Upload, X, Car, AlertTriangle } from 'lucide-react';
+import { InfoIcon, Car, AlertTriangle } from 'lucide-react';
+import { FileUploadProgress } from '@/components/ui/file-upload-progress';
 
-import { parkingAllocationSchema, formatFileSize, type ParkingAllocationFormData } from '@/lib/validations/tenant';
+import { parkingAllocationSchema, type ParkingAllocationFormData } from '@/lib/validations/tenant';
 import { useAvailableParkingSpots } from '@/hooks/useParkingSpots';
 import type { ParkingSpot } from '@/types/parking';
 import { formatParkingFee } from '@/types/parking';
@@ -47,15 +50,18 @@ import type { LeaseType } from '@/types/tenant';
 interface ParkingAllocationStepProps {
   data: ParkingAllocationFormData;
   onComplete: (data: ParkingAllocationFormData) => void;
-  onBack: () => void;
+  // SCP-2025-12-08: Updated to accept optional data for saving on back navigation
+  onBack: (data?: ParkingAllocationFormData) => void;
   propertyId?: string;
   // SCP-2025-12-07: Lease type for annual-only parking restriction
   leaseType?: LeaseType;
 }
 
 export function ParkingAllocationStep({ data, onComplete, onBack, propertyId, leaseType }: ParkingAllocationStepProps) {
-  // SCP-2025-12-07: Parking is only available for annual (YEARLY) leases
+  // SCP-2025-12-08: Parking is now available for all lease types
   const isAnnualLease = leaseType === 'YEARLY';
+  const isMonthToMonth = leaseType === 'MONTH_TO_MONTH';
+  const isFixedTerm = leaseType === 'FIXED_TERM';
   const [selectedFile, setSelectedFile] = useState<File | null>(data.mulkiyaFile ?? null);
   const [selectedSpotId, setSelectedSpotId] = useState<string | null>(data.parkingSpotId ?? null);
   const [parkingFee, setParkingFee] = useState<number>(data.parkingFeePerSpot ?? 0);
@@ -78,12 +84,15 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId, le
   const selectedSpot = availableSpots?.find((spot: ParkingSpot) => spot.id === selectedSpotId) ?? null;
 
   // Handle parking spot selection - auto-populate fee
+  // SCP-2025-12-08: For YEARLY leases, calculate annual fee (monthly × 12)
   const handleSpotChange = (spotId: string | null) => {
     setSelectedSpotId(spotId);
     if (spotId && spotId !== 'none') {
       const spot = availableSpots?.find((s: ParkingSpot) => s.id === spotId);
       if (spot) {
-        setParkingFee(spot.defaultFee);
+        // For annual leases, calculate the annual parking fee
+        const fee = isAnnualLease ? spot.defaultFee * 12 : spot.defaultFee;
+        setParkingFee(fee);
       }
     } else {
       setSelectedSpotId(null);
@@ -111,19 +120,6 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId, le
       spotIds: selectedSpotId ? [selectedSpotId] : [],
     };
     onComplete(formData as ParkingAllocationFormData);
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      form.setValue('mulkiyaFile', file);
-    }
-  };
-
-  const handleFileRemove = () => {
-    setSelectedFile(null);
-    form.setValue('mulkiyaFile', null);
   };
 
   const handleSkip = () => {
@@ -164,14 +160,20 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId, le
               </AlertDescription>
             </Alert>
 
-            {/* SCP-2025-12-07: Annual-Only Parking Restriction Warning */}
-            {!isAnnualLease && leaseType && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  Parking allocation is only available for annual (yearly) lease tenants.
-                  The current lease type is <strong>{leaseType.toLowerCase()}</strong>.
-                  Please skip this step or change the lease type in the previous step.
+            {/* SCP-2025-12-08: Parking fee structure info based on lease type */}
+            {leaseType && (
+              <Alert className="bg-blue-50 border-blue-200">
+                <InfoIcon className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  {isAnnualLease && (
+                    <>Parking fee will be charged as a <strong>one-time annual payment</strong> included in your first payment.</>
+                  )}
+                  {isMonthToMonth && (
+                    <>Parking fee will be added to your <strong>monthly rental payment</strong> each month.</>
+                  )}
+                  {isFixedTerm && (
+                    <>Parking fee will be added to your <strong>monthly rental payment</strong> throughout the lease period.</>
+                  )}
                 </AlertDescription>
               </Alert>
             )}
@@ -186,8 +188,8 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId, le
               </Alert>
             )}
 
-            {/* Parking Spot Selection - SCP-2025-12-07: Only show for annual leases */}
-            {propertyId && isAnnualLease && (
+            {/* Parking Spot Selection - SCP-2025-12-08: Available for all lease types */}
+            {propertyId && (
               <div className="space-y-4">
                 <FormItem>
                   <FormLabel>Select Parking Spot (Optional)</FormLabel>
@@ -231,9 +233,12 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId, le
                 </FormItem>
 
                 {/* Editable Parking Fee - only show when spot is selected */}
+                {/* SCP-2025-12-08: Label changes based on lease type */}
                 {selectedSpotId && (
                   <FormItem>
-                    <FormLabel>Parking Fee (Monthly)</FormLabel>
+                    <FormLabel>
+                      {isAnnualLease ? 'Parking Fee (Annual - One Time)' : 'Parking Fee (Monthly)'}
+                    </FormLabel>
                     <FormControl>
                       <CurrencyInput
                         value={parkingFee}
@@ -244,7 +249,9 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId, le
                       />
                     </FormControl>
                     <FormDescription>
-                      Auto-filled from spot. You can override if needed.
+                      {isAnnualLease
+                        ? 'One-time annual parking fee. Auto-filled from spot rate × 12 months.'
+                        : 'Monthly parking fee added to each rental payment. Auto-filled from spot.'}
                     </FormDescription>
                   </FormItem>
                 )}
@@ -254,54 +261,21 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId, le
             {/* Selected Spot Summary - only show when spot is selected */}
             {selectedSpotId && selectedSpot && (
               <>
-                {/* Mulkiya Document Upload */}
-                <div className="space-y-2">
-                  <Label>Mulkiya Document (Vehicle Registration)</Label>
-                  {selectedFile ? (
-                    <div className="flex items-center justify-between p-3 border rounded-md">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{selectedFile.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatFileSize(selectedFile.size)}
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleFileRemove}
-                        data-testid="btn-remove-mulkiya"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="relative">
-                      <Input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={handleFileChange}
-                        className="hidden"
-                        id="mulkiya-file"
-                        data-testid="input-mulkiya-file"
-                      />
-                      <label
-                        htmlFor="mulkiya-file"
-                        className="flex items-center justify-center gap-2 cursor-pointer border-2 border-dashed rounded-md p-6 hover:bg-accent transition-colors"
-                      >
-                        <Upload className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
-                          Upload Mulkiya (PDF/JPG/PNG, max 5MB)
-                        </span>
-                      </label>
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    Single file only - Vehicle registration document
-                  </p>
-                </div>
+                {/* Mulkiya Document Upload - using FileUploadProgress for thumbnail preview */}
+                <FileUploadProgress
+                  onFileSelect={(file) => {
+                    setSelectedFile(file);
+                    form.setValue('mulkiyaFile', file);
+                  }}
+                  selectedFile={selectedFile}
+                  accept={{ 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] }}
+                  maxSize={5 * 1024 * 1024}
+                  label="Mulkiya Document (Vehicle Registration)"
+                  testId="input-mulkiya-file"
+                  uploadStatus={selectedFile ? 'success' : 'idle'}
+                />
 
-                {/* Parking Summary */}
+                {/* Parking Summary - SCP-2025-12-08: Updated to show fee type based on lease type */}
                 <Card className="bg-muted/50">
                   <CardContent className="pt-4">
                     <h4 className="font-medium mb-3">Parking Allocation Summary</h4>
@@ -310,12 +284,25 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId, le
                         <span>Selected Spot:</span>
                         <span className="font-medium">{selectedSpot.spotNumber}</span>
                       </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Fee Type:</span>
+                        <Badge variant="outline" className="text-xs">
+                          {isAnnualLease ? 'One-Time Annual' : 'Monthly'}
+                        </Badge>
+                      </div>
                       <div className="flex justify-between border-t pt-2 mt-2">
-                        <span className="font-medium">Monthly Fee:</span>
+                        <span className="font-medium">
+                          {isAnnualLease ? 'Annual Fee:' : 'Monthly Fee:'}
+                        </span>
                         <span className="font-bold text-primary" data-testid="text-total-parking-fee">
                           {formatParkingFee(parkingFee)}
                         </span>
                       </div>
+                      {!isAnnualLease && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          This fee will be added to each monthly rental payment.
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -332,7 +319,18 @@ export function ParkingAllocationStep({ data, onComplete, onBack, propertyId, le
               <Button
                 type="button"
                 variant="outline"
-                onClick={onBack}
+                onClick={() => {
+                  // SCP-2025-12-08: Save current form data when going back
+                  onBack({
+                    ...form.getValues(),
+                    parkingSpotId: selectedSpotId,
+                    parkingSpots: selectedSpotId ? 1 : 0,
+                    parkingFeePerSpot: parkingFee,
+                    spotNumbers: selectedSpot?.spotNumber ?? '',
+                    mulkiyaFile: selectedFile,
+                    spotIds: selectedSpotId ? [selectedSpotId] : [],
+                  } as ParkingAllocationFormData);
+                }}
                 data-testid="btn-back"
               >
                 Back

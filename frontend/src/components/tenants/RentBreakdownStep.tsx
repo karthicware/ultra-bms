@@ -44,7 +44,8 @@ interface ExtendedRentBreakdownFormData extends RentBreakdownFormData {
 interface RentBreakdownStepProps {
   data: RentBreakdownFormData;
   onComplete: (data: ExtendedRentBreakdownFormData) => void;
-  onBack: () => void;
+  // SCP-2025-12-08: Updated to accept optional data for saving on back navigation
+  onBack: (data?: ExtendedRentBreakdownFormData) => void;
   leaseStartDate?: Date;
   parkingFee?: number;
   leaseType?: LeaseType;
@@ -280,6 +281,7 @@ export function RentBreakdownStep({ data, onComplete, onBack, leaseStartDate = n
             )}
 
             {/* SCP-2025-12-07: Payment Breakdown Section (Cheque/Cash schedule) */}
+            {/* SCP-2025-12-08: Added leaseType for parking fee treatment */}
             <ChequeBreakdownSection
               yearlyRentAmount={yearlyRentAmount}
               numberOfCheques={numberOfCheques}
@@ -292,6 +294,7 @@ export function RentBreakdownStep({ data, onComplete, onBack, leaseStartDate = n
               adminFee={adminFee}
               serviceCharges={serviceCharge}
               parkingFee={parkingFee}
+              leaseType={leaseType}
               onYearlyRentAmountChange={handleYearlyRentChange}
               onNumberOfChequesChange={setNumberOfCheques}
               onFirstMonthPaymentMethodChange={setFirstMonthPaymentMethod}
@@ -304,7 +307,18 @@ export function RentBreakdownStep({ data, onComplete, onBack, leaseStartDate = n
               <Button
                 type="button"
                 variant="outline"
-                onClick={onBack}
+                onClick={() => {
+                  // SCP-2025-12-08: Save current form data including cheque breakdown state when going back
+                  onBack({
+                    ...form.getValues(),
+                    yearlyRentAmount,
+                    numberOfCheques,
+                    firstMonthPaymentMethod,
+                    chequeBreakdown,
+                    firstMonthTotal,
+                    paymentDueDate,
+                  });
+                }}
                 data-testid="btn-back"
               >
                 Back
