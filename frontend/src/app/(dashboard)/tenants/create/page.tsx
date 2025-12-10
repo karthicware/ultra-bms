@@ -3,8 +3,9 @@
 
 /**
  * Tenant Onboarding Wizard
- * 6-step multi-step form for complete tenant registration
- * SCP-2025-12-07: Reduced from 7 steps to 6 - Payment Schedule (Step 5) merged into Rent Breakdown (Step 3)
+ * 5-step multi-step form for complete tenant registration
+ * SCP-2025-12-10: Reduced from 6 steps to 5 - Removed Parking step, replaced Rent with Financial Info + Cheque Upload
+ * New Step 3: Financial Info with AWS Textract OCR for cheque processing
  * Redesigned with modern UX and visual feedback
  */
 
@@ -14,28 +15,20 @@ import { toast } from 'sonner';
 
 import {
   ArrowLeft,
-  ArrowRight,
   User,
   FileText,
   DollarSign,
-  Car,
   CreditCard,
   Upload,
   CheckCircle2,
   Loader2,
   Sparkles,
-  Building2,
   Calendar,
-  Mail,
-  Phone,
-  Home,
-  Clock,
-  Shield,
   ChevronRight,
   MapPin,
   Banknote,
 } from 'lucide-react';
-import { format, addDays } from 'date-fns';
+import { format } from 'date-fns';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,9 +45,9 @@ import {
 
 import { PersonalInfoStep } from '@/components/tenants/PersonalInfoStep';
 import { LeaseInfoStep } from '@/components/tenants/LeaseInfoStep';
-import { RentBreakdownStep } from '@/components/tenants/RentBreakdownStep';
-import { ParkingAllocationStep } from '@/components/tenants/ParkingAllocationStep';
-// SCP-2025-12-07: PaymentScheduleStep removed - Payment Due Date moved to Step 3 (Rent Breakdown)
+// SCP-2025-12-10: RentBreakdownStep replaced with FinancialInfoStep for cheque upload with OCR
+import { FinancialInfoStep, type FinancialInfoFormData } from '@/components/tenants/FinancialInfoStep';
+// SCP-2025-12-10: ParkingAllocationStep removed - parking is now handled in quotation
 import { DocumentUploadStep } from '@/components/tenants/DocumentUploadStep';
 import { ReviewSubmitStep } from '@/components/tenants/ReviewSubmitStep';
 import { PageBackButton } from '@/components/common/PageBackButton';
@@ -68,17 +61,14 @@ import {
 import type {
   PersonalInfoFormData,
   LeaseInfoFormData,
-  RentBreakdownFormData,
-  ParkingAllocationFormData,
-  // SCP-2025-12-07: PaymentScheduleFormData removed - Payment Due Date moved to rentBreakdown
+  // SCP-2025-12-10: RentBreakdownFormData and ParkingAllocationFormData removed - replaced with FinancialInfoFormData
   TenantDocumentUploadFormData,
   LeaseType,
-  PaymentMethod,
 } from '@/types/tenant';
-import { FirstMonthPaymentMethod, type ChequeBreakdownItem } from '@/types/quotations';
+import { FirstMonthPaymentMethod } from '@/types/quotations';
 
 // Combined form data for all steps
-// SCP-2025-12-07: Removed paymentSchedule - Payment Due Date moved to rentBreakdown
+// SCP-2025-12-10: Replaced rentBreakdown and parkingAllocation with financialInfo
 interface TenantOnboardingFormData {
   personalInfo: PersonalInfoFormData;
   leaseInfo: LeaseInfoFormData & {
@@ -86,16 +76,18 @@ interface TenantOnboardingFormData {
     propertyName?: string;
     unitNumber?: string;
   };
-  // SCP-2025-12-07: Extended to include cheque breakdown fields and paymentDueDate (moved from Step 5)
-  rentBreakdown: RentBreakdownFormData & {
+  // SCP-2025-12-10: Financial info includes cheque details from OCR processing
+  financialInfo: FinancialInfoFormData & {
+    // From quotation (read-only display)
     yearlyRentAmount?: number;
     numberOfCheques?: number;
     firstMonthPaymentMethod?: FirstMonthPaymentMethod;
-    chequeBreakdown?: ChequeBreakdownItem[];
-    firstMonthTotal?: number;
-    paymentDueDate?: number; // Day of month (1-31), defaults to 5
+    baseRent?: number;
+    serviceCharge?: number;
+    adminFee?: number;
+    securityDeposit?: number;
+    parkingFee?: number;
   };
-  parkingAllocation: ParkingAllocationFormData;
   documentUpload: TenantDocumentUploadFormData;
 }
 
@@ -107,14 +99,13 @@ interface PreloadedDocuments {
   passportBackPath?: string;
 }
 
-// SCP-2025-12-07: Reduced from 7 to 6 steps - Payment Schedule merged into Rent Breakdown
+// SCP-2025-12-10: Reduced from 6 to 5 steps - Removed Parking, replaced Rent with Financial Info + Cheque OCR
 const WIZARD_STEPS = [
   { step: 1, title: 'Personal Info', description: 'Basic tenant details', icon: User },
   { step: 2, title: 'Lease Info', description: 'Property & lease terms', icon: FileText },
-  { step: 3, title: 'Rent', description: 'Payment breakdown', icon: DollarSign },
-  { step: 4, title: 'Parking', description: 'Parking allocation', icon: Car },
-  { step: 5, title: 'Documents', description: 'Upload files', icon: Upload },
-  { step: 6, title: 'Review', description: 'Final review', icon: CheckCircle2 },
+  { step: 3, title: 'Financial', description: 'Cheques & payment', icon: Banknote },
+  { step: 4, title: 'Documents', description: 'Upload files', icon: Upload },
+  { step: 5, title: 'Review', description: 'Final review', icon: CheckCircle2 },
 ];
 
 function CreateTenantWizard() {
@@ -136,7 +127,7 @@ function CreateTenantWizard() {
   const isLeadConversion = !!(fromLead && fromQuotation);
 
   // Form state for all steps
-  // SCP-2025-12-07: DOB should be undefined/null initially so user must enter it
+  // SCP-2025-12-10: Updated for 5-step wizard with Financial Info
   const [formData, setFormData] = useState<TenantOnboardingFormData>({
     personalInfo: {
       firstName: '',
@@ -152,30 +143,25 @@ function CreateTenantWizard() {
     leaseInfo: {
       propertyId: '',
       unitId: '',
-      // SCP-2025-12-07: Leave dates undefined so LeaseInfoStep uses its own defaults (today + 1 year)
       leaseStartDate: undefined as unknown as Date,
       leaseEndDate: undefined as unknown as Date,
       leaseDuration: 0,
-      // SCP-2025-12-07: Default to YEARLY lease type
       leaseType: 'YEARLY' as LeaseType,
       renewalOption: false,
     },
-    rentBreakdown: {
+    // SCP-2025-12-10: Financial info with cheque OCR details
+    financialInfo: {
+      chequeDetails: [],
+      // From quotation (populated on load)
+      yearlyRentAmount: 0,
+      numberOfCheques: 1,
+      firstMonthPaymentMethod: FirstMonthPaymentMethod.CHEQUE,
       baseRent: 0,
-      adminFee: 0,
       serviceCharge: 0,
+      adminFee: 0,
       securityDeposit: 0,
-      totalMonthlyRent: 0,
-      // SCP-2025-12-07: paymentDueDate moved here from Step 5, default to 5th of month
-      paymentDueDate: 5,
+      parkingFee: 0,
     },
-    parkingAllocation: {
-      parkingSpots: 0,
-      parkingFeePerSpot: 0,
-      spotNumbers: '',
-      mulkiyaFile: null,
-    },
-    // SCP-2025-12-07: paymentSchedule removed - Payment Due Date moved to rentBreakdown
     documentUpload: {
       emiratesIdFile: null,
       passportFile: null,
@@ -198,6 +184,7 @@ function CreateTenantWizard() {
         const conversionData = await getLeadConversionData(fromLead, fromQuotation);
 
         // Pre-populate personal info from lead
+        // SCP-2025-12-10: Updated for 5-step wizard with Financial Info (replaces rentBreakdown/parkingAllocation)
         setFormData((prev) => ({
           ...prev,
           personalInfo: {
@@ -213,43 +200,31 @@ function CreateTenantWizard() {
             ...prev.leaseInfo,
             propertyId: conversionData.propertyId,
             unitId: conversionData.unitId,
+            // SCP-2025-12-07: Store property/unit display names for Lease Preview
+            propertyName: conversionData.propertyName,
+            unitNumber: conversionData.unitNumber,
           },
-          rentBreakdown: {
-            ...prev.rentBreakdown,
-            baseRent: conversionData.baseRent,
-            serviceCharge: conversionData.serviceCharge || conversionData.serviceCharges || 0,
-            adminFee: conversionData.adminFee,
-            securityDeposit: conversionData.securityDeposit,
-            totalMonthlyRent: conversionData.baseRent + (conversionData.serviceCharge || conversionData.serviceCharges || 0),
-            // SCP-2025-12-07: Populate cheque breakdown fields from quotation
+          // SCP-2025-12-10: Financial info now holds all rent/cheque/parking data (read-only from quotation)
+          financialInfo: {
+            ...prev.financialInfo,
+            chequeDetails: [], // Will be populated from OCR processing
             yearlyRentAmount: conversionData.yearlyRentAmount || (conversionData.baseRent * 12),
             numberOfCheques: conversionData.numberOfCheques || 1,
             firstMonthPaymentMethod: conversionData.firstMonthPaymentMethod === 'CASH'
               ? FirstMonthPaymentMethod.CASH
               : FirstMonthPaymentMethod.CHEQUE,
-            // SCP-2025-12-07: paymentDueDate moved here from paymentSchedule
-            // Extract day from first cheque due date, default to 5
-            paymentDueDate: (() => {
-              if (conversionData.chequeBreakdown) {
-                try {
-                  const breakdown = JSON.parse(conversionData.chequeBreakdown);
-                  if (breakdown.length > 0 && breakdown[0].dueDate) {
-                    const dueDate = new Date(breakdown[0].dueDate);
-                    return dueDate.getDate();
-                  }
-                } catch (e) {
-                  console.error('Failed to parse cheque breakdown:', e);
-                }
-              }
-              return 5;
-            })(),
-          },
-          parkingAllocation: {
-            ...prev.parkingAllocation,
-            parkingSpots: conversionData.parkingSpots || (conversionData.parkingSpotId ? 1 : 0),
-            parkingFeePerSpot: conversionData.parkingFeePerSpot || conversionData.parkingFee || 0,
-            // SCP-2025-12-07: Pre-populate parkingSpotId from quotation for parking spot blocking
-            parkingSpotId: conversionData.parkingSpotId || undefined,
+            baseRent: conversionData.baseRent,
+            serviceCharge: conversionData.serviceCharge || conversionData.serviceCharges || 0,
+            adminFee: conversionData.adminFee,
+            securityDeposit: conversionData.securityDeposit,
+            // SCP-2025-12-10: Store parking details for read-only display
+            parkingSpots: conversionData.parkingSpots || 0,
+            parkingFeePerSpot: conversionData.parkingFeePerSpot || 0,
+            parkingFee: conversionData.parkingFee || (conversionData.parkingFeePerSpot * (conversionData.parkingSpots || 0)) || 0,
+            // Bank account info will be populated in FinancialInfoStep from quotation
+            bankAccountId: conversionData.bankAccountId,
+            bankAccountName: conversionData.bankAccountName,
+            bankName: conversionData.bankName,
           },
         }));
 
@@ -295,20 +270,19 @@ function CreateTenantWizard() {
   };
 
   // SCP-2025-12-08: Handle back navigation with data saving (same behavior as Next button)
-  // This saves the current step's data before navigating back
-  // SCP-2025-12-08: Fixed to use single setFormData call to avoid stale state issues
+  // SCP-2025-12-10: Updated for 5-step wizard (removed Parking step, added Financial Info)
   const handleBackWithSave = (stepData: any, step: number) => {
     // Update form data based on step - use single setFormData to avoid race conditions
     setFormData((prev) => {
       let newState = { ...prev };
 
       // Update the step-specific data
+      // SCP-2025-12-10: New step mapping for 5-step wizard
       const stepKey = {
         1: 'personalInfo',
         2: 'leaseInfo',
-        3: 'rentBreakdown',
-        4: 'parkingAllocation',
-        5: 'documentUpload',
+        3: 'financialInfo',
+        4: 'documentUpload',
       }[step] as keyof TenantOnboardingFormData;
 
       if (stepKey && stepData) {
@@ -328,31 +302,6 @@ function CreateTenantWizard() {
             },
           };
         }
-
-        // Calculate total monthly rent if rent breakdown or parking step
-        if (step === 3 || step === 4) {
-          // Use stepData for the current step, prev for the other step
-          const baseRent = step === 3 ? stepData.baseRent : prev.rentBreakdown.baseRent;
-          const serviceCharge = step === 3 ? stepData.serviceCharge : prev.rentBreakdown.serviceCharge;
-          // For step 4 (parking), use the NEW parking data from stepData
-          const parkingFee = step === 4
-            ? (stepData.parkingFeePerSpot * stepData.parkingSpots)
-            : (prev.parkingAllocation.parkingFeePerSpot * prev.parkingAllocation.parkingSpots);
-
-          const totalMonthlyRent = calculateTotalMonthlyRent(
-            baseRent,
-            serviceCharge,
-            parkingFee
-          );
-
-          newState = {
-            ...newState,
-            rentBreakdown: {
-              ...newState.rentBreakdown,
-              totalMonthlyRent,
-            },
-          };
-        }
       }
 
       return newState;
@@ -363,15 +312,15 @@ function CreateTenantWizard() {
   };
 
   // Handle step completion and navigation
-  // SCP-2025-12-07: Updated step mapping - removed step 5 (paymentSchedule), renumbered steps
+  // SCP-2025-12-10: Updated for 5-step wizard (removed Parking, added Financial Info with OCR)
   const handleStepComplete = (stepData: any, step: number) => {
     // Update form data based on step
+    // SCP-2025-12-10: New step mapping for 5-step wizard
     const stepKey = {
       1: 'personalInfo',
       2: 'leaseInfo',
-      3: 'rentBreakdown',
-      4: 'parkingAllocation',
-      5: 'documentUpload', // Was step 6
+      3: 'financialInfo',
+      4: 'documentUpload',
     }[step] as keyof TenantOnboardingFormData;
 
     if (stepKey) {
@@ -398,49 +347,8 @@ function CreateTenantWizard() {
       }));
     }
 
-    // Calculate total monthly rent if rent breakdown or parking step
-    if (step === 3 || step === 4) {
-      const baseRent = step === 3 ? stepData.baseRent : formData.rentBreakdown.baseRent;
-      const serviceCharge = step === 3 ? stepData.serviceCharge : formData.rentBreakdown.serviceCharge;
-      const parkingFee = step === 4 ? (stepData.parkingFeePerSpot * stepData.parkingSpots) : (formData.parkingAllocation.parkingFeePerSpot * formData.parkingAllocation.parkingSpots);
-
-      const totalMonthlyRent = calculateTotalMonthlyRent(
-        baseRent,
-        serviceCharge,
-        parkingFee
-      );
-
-      setFormData((prev) => ({
-        ...prev,
-        rentBreakdown: {
-          ...prev.rentBreakdown,
-          totalMonthlyRent,
-        },
-      }));
-    }
-
-    // SCP-2025-12-07: When parking step (4) completes, recalculate firstMonthTotal
-    // to reflect the updated parking fee in the payment breakdown
-    if (step === 4) {
-      const currentParkingFee = stepData.parkingFeePerSpot * stepData.parkingSpots;
-      const previousParkingFee = formData.parkingAllocation.parkingFeePerSpot * formData.parkingAllocation.parkingSpots;
-      const parkingDifference = currentParkingFee - previousParkingFee;
-
-      // Only update if firstMonthTotal exists and parking changed
-      if (formData.rentBreakdown.firstMonthTotal && parkingDifference !== 0) {
-        setFormData((prev) => ({
-          ...prev,
-          rentBreakdown: {
-            ...prev.rentBreakdown,
-            firstMonthTotal: (prev.rentBreakdown.firstMonthTotal || 0) + parkingDifference,
-          },
-        }));
-      }
-    }
-
-    // Navigate to next step (except for last step)
-    // SCP-2025-12-07: Updated to 6 steps
-    if (step < 6) {
+    // Navigate to next step (except for last step - Review is step 5)
+    if (step < 5) {
       goToNextStep();
     }
   };
@@ -495,35 +403,23 @@ function CreateTenantWizard() {
       submitData.append('leaseType', formData.leaseInfo.leaseType);
       submitData.append('renewalOption', formData.leaseInfo.renewalOption.toString());
 
-      // Rent Breakdown
-      submitData.append('baseRent', formData.rentBreakdown.baseRent.toString());
-      submitData.append('adminFee', formData.rentBreakdown.adminFee.toString());
-      submitData.append('serviceCharge', formData.rentBreakdown.serviceCharge.toString());
-      submitData.append('securityDeposit', formData.rentBreakdown.securityDeposit.toString());
+      // SCP-2025-12-10: Financial Info (replaces rent breakdown and parking)
+      // Rent values from quotation
+      submitData.append('baseRent', (formData.financialInfo.baseRent || 0).toString());
+      submitData.append('adminFee', (formData.financialInfo.adminFee || 0).toString());
+      submitData.append('serviceCharge', (formData.financialInfo.serviceCharge || 0).toString());
+      submitData.append('securityDeposit', (formData.financialInfo.securityDeposit || 0).toString());
+      submitData.append('parkingFee', (formData.financialInfo.parkingFee || 0).toString());
 
-      // Parking Allocation
-      submitData.append('parkingSpots', formData.parkingAllocation.parkingSpots.toString());
-      submitData.append('parkingFeePerSpot', formData.parkingAllocation.parkingFeePerSpot.toString());
-      if (formData.parkingAllocation.spotNumbers) {
-        submitData.append('spotNumbers', formData.parkingAllocation.spotNumbers);
-      }
-      // SCP-2025-12-07: Include parkingSpotId for parking spot blocking (from quotation or selection)
-      const parkingSpotId = (formData.parkingAllocation as any).parkingSpotId;
-      if (parkingSpotId) {
-        submitData.append('parkingSpotId', parkingSpotId);
-      }
-      // Include spot IDs for parking assignment (Story 3.8 integration)
-      const spotIds = (formData.parkingAllocation as any).spotIds;
-      if (spotIds && Array.isArray(spotIds) && spotIds.length > 0) {
-        spotIds.forEach((spotId: string) => {
-          submitData.append('parkingSpotIds', spotId);
-        });
+      // Cheque details from OCR processing
+      if (formData.financialInfo.chequeDetails && formData.financialInfo.chequeDetails.length > 0) {
+        submitData.append('chequeDetails', JSON.stringify(formData.financialInfo.chequeDetails));
       }
 
-      // Payment Schedule
-      // SCP-2025-12-07: paymentDueDate moved from paymentSchedule to rentBreakdown (Step 3)
-      // Default to 5 if not set
-      submitData.append('paymentDueDate', (formData.rentBreakdown.paymentDueDate || 5).toString());
+      // Bank account info
+      if (formData.financialInfo.bankAccountId) {
+        submitData.append('bankAccountId', formData.financialInfo.bankAccountId);
+      }
 
       // Documents
       // SCP-2025-12-07: Handle separate front/back uploads with preloaded document replacement
@@ -557,9 +453,7 @@ function CreateTenantWizard() {
       if (formData.documentUpload.signedLeaseFile) {
         submitData.append('signedLeaseFile', formData.documentUpload.signedLeaseFile);
       }
-      if (formData.parkingAllocation.mulkiyaFile) {
-        submitData.append('mulkiyaFile', formData.parkingAllocation.mulkiyaFile);
-      }
+      // SCP-2025-12-10: mulkiyaFile is now in additionalFiles (parking handled via quotation)
       if (formData.documentUpload.additionalFiles && formData.documentUpload.additionalFiles.length > 0) {
         formData.documentUpload.additionalFiles.forEach((file) => {
           submitData.append(`additionalFiles`, file);
@@ -759,46 +653,38 @@ function CreateTenantWizard() {
                         onComplete={(data) => handleStepComplete(data, 2)}
                         onBack={(data) => handleBackWithSave(data, 2)}
                         isLeadConversion={isLeadConversion}
+                        parkingInfo={isLeadConversion ? {
+                          parkingSpots: (formData.financialInfo as any).parkingSpots || 0,
+                          parkingFeePerSpot: (formData.financialInfo as any).parkingFeePerSpot || 0,
+                          parkingFee: formData.financialInfo.parkingFee || 0,
+                        } : undefined}
                       />
                     </TabsContent>
 
-                    {/* Step 3: Rent Breakdown - SCP-2025-12-07: Pass lease start date for cheque schedule */}
+                    {/* Step 3: Financial Info - SCP-2025-12-10: NEW step with cheque OCR upload */}
                     <TabsContent value="3" className="mt-0">
-                      <RentBreakdownStep
-                        data={formData.rentBreakdown}
+                      <FinancialInfoStep
+                        data={formData.financialInfo}
                         onComplete={(data) => handleStepComplete(data, 3)}
                         onBack={(data) => handleBackWithSave(data, 3)}
-                        leaseStartDate={formData.leaseInfo.leaseStartDate}
-                        parkingFee={formData.parkingAllocation.parkingFeePerSpot * formData.parkingAllocation.parkingSpots}
-                        leaseType={formData.leaseInfo.leaseType}
+                        quotationId={fromQuotation || ''}
+                        expectedChequeCount={formData.financialInfo.numberOfCheques || 1}
+                        firstMonthPaymentMethod={formData.financialInfo.firstMonthPaymentMethod}
                       />
                     </TabsContent>
 
-                    {/* Step 4: Parking Allocation */}
+                    {/* Step 4: Document Upload */}
                     <TabsContent value="4" className="mt-0">
-                      <ParkingAllocationStep
-                        data={formData.parkingAllocation}
-                        onComplete={(data) => handleStepComplete(data, 4)}
-                        onBack={(data) => handleBackWithSave(data, 4)}
-                        propertyId={formData.leaseInfo.propertyId}
-                        leaseType={formData.leaseInfo.leaseType}
-                      />
-                    </TabsContent>
-
-                    {/* SCP-2025-12-07: Step 5 (Payment Schedule) removed - merged into Step 3 */}
-
-                    {/* Step 5: Document Upload (was Step 6) */}
-                    <TabsContent value="5" className="mt-0">
                       <DocumentUploadStep
                         data={formData.documentUpload}
-                        onComplete={(data) => handleStepComplete(data, 5)}
-                        onBack={(data) => handleBackWithSave(data, 5)}
+                        onComplete={(data) => handleStepComplete(data, 4)}
+                        onBack={(data) => handleBackWithSave(data, 4)}
                         preloadedDocuments={preloadedDocuments}
                       />
                     </TabsContent>
 
-                    {/* Step 6: Review and Submit (was Step 7) */}
-                    <TabsContent value="6" className="mt-0">
+                    {/* Step 5: Review and Submit */}
+                    <TabsContent value="5" className="mt-0">
                       <ReviewSubmitStep
                         formData={formData}
                         onSubmit={handleFinalSubmit}
@@ -830,31 +716,43 @@ function CreateTenantWizard() {
                     </span>
                   </div>
 
-                  {/* Valid Until / Lease End Date Section */}
-                  {formData.leaseInfo.leaseEndDate && (
+                  {/* Lease Period Section */}
+                  {(formData.leaseInfo.leaseStartDate || formData.leaseInfo.leaseEndDate) && (
                     <div className="rounded-2xl bg-muted/50 p-4 mb-4">
                       <div className="flex items-start gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-background shadow-sm">
                           <Calendar className="h-5 w-5 text-primary" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-muted-foreground">Valid Until</p>
-                          <p className="font-semibold">
-                            {format(formData.leaseInfo.leaseEndDate, 'MMMM do, yyyy')}
-                          </p>
+                        <div className="flex-1 min-w-0 space-y-2">
+                          {formData.leaseInfo.leaseStartDate && (
+                            <div>
+                              <p className="text-xs text-muted-foreground">Lease Start</p>
+                              <p className="font-semibold text-sm">
+                                {format(formData.leaseInfo.leaseStartDate, 'MMMM do, yyyy')}
+                              </p>
+                            </div>
+                          )}
+                          {formData.leaseInfo.leaseEndDate && (
+                            <div>
+                              <p className="text-xs text-muted-foreground">Lease End</p>
+                              <p className="font-semibold text-sm">
+                                {format(formData.leaseInfo.leaseEndDate, 'MMMM do, yyyy')}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Annual Rent Section - Main highlight like quotation screenshot */}
-                  {(formData.rentBreakdown.yearlyRentAmount || formData.rentBreakdown.numberOfCheques) && (formData.rentBreakdown.yearlyRentAmount ?? 0) > 0 && (
+                  {/* SCP-2025-12-10: Annual Rent Section - Using financialInfo instead of rentBreakdown */}
+                  {(formData.financialInfo.yearlyRentAmount || formData.financialInfo.numberOfCheques) && (formData.financialInfo.yearlyRentAmount ?? 0) > 0 && (
                     <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4 mb-4">
                       {/* Annual Rent Header */}
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-sm font-medium text-primary">Annual Rent</span>
                         <span className="text-lg font-bold text-primary tabular-nums">
-                          {formatCurrency(formData.rentBreakdown.yearlyRentAmount || 0)}
+                          {formatCurrency(formData.financialInfo.yearlyRentAmount || 0)}
                         </span>
                       </div>
 
@@ -862,96 +760,65 @@ function CreateTenantWizard() {
                       <div className="flex items-center justify-between text-sm mb-2">
                         <span className="text-muted-foreground">Payment Schedule</span>
                         <span className="font-medium">
-                          {formData.rentBreakdown.numberOfCheques || 1} {(formData.rentBreakdown.numberOfCheques || 1) === 1 ? 'Cheque' : 'Cheques'}
+                          {formData.financialInfo.numberOfCheques || 1} {(formData.financialInfo.numberOfCheques || 1) === 1 ? 'Cheque' : 'Cheques'}
                         </span>
                       </div>
 
-                      {/* First Payment Mode */}
+                      {/* First Payment */}
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">First Payment Mode</span>
-                        <span className="font-medium flex items-center gap-1.5">
-                          {formData.rentBreakdown.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          {formData.financialInfo.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
                             <>
                               <Banknote className="h-3.5 w-3.5 text-green-600" />
-                              <span>Cash</span>
+                              <span>First Payment (Cash)</span>
                             </>
                           ) : (
                             <>
                               <CreditCard className="h-3.5 w-3.5 text-blue-600" />
-                              <span>Cheque</span>
+                              <span>First Payment (Cheque)</span>
                             </>
+                          )}
+                        </span>
+                        <span className="font-medium tabular-nums">
+                          {formatCurrency(
+                            (formData.financialInfo.yearlyRentAmount || 0) /
+                            (formData.financialInfo.numberOfCheques || 1)
                           )}
                         </span>
                       </div>
                     </div>
                   )}
 
-                  {/* First Payment Section - with icon */}
-                  {/* SCP-2025-12-08: Compute first payment including parking based on lease type */}
-                  {(() => {
-                    const parkingFee = formData.parkingAllocation.parkingFeePerSpot * formData.parkingAllocation.parkingSpots;
-                    const isAnnualLease = formData.leaseInfo.leaseType === 'YEARLY';
-                    // For YEARLY: parking is already in firstMonthTotal (one-time annual)
-                    // For MONTH_TO_MONTH/FIXED_TERM: add monthly parking to firstMonthTotal
-                    const monthlyParkingToAdd = !isAnnualLease && parkingFee > 0 ? parkingFee : 0;
-                    const firstPaymentWithParking = (formData.rentBreakdown.firstMonthTotal || 0) + monthlyParkingToAdd;
-
-                    return firstPaymentWithParking > 0 && (
-                      <div className="rounded-2xl bg-muted/30 p-4 mb-4">
-                        <div className="flex items-start gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 shadow-sm">
-                            <Banknote className="h-5 w-5 text-green-600" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                              First Payment
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {formData.rentBreakdown.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? 'Cash' : 'Cheque'} • Includes all fees & deposit
-                              {monthlyParkingToAdd > 0 && ' + parking'}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xl font-bold tracking-tight text-primary tabular-nums">
-                              {formatCurrency(firstPaymentWithParking)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Fees Breakdown - compact list */}
-                  {formData.rentBreakdown.securityDeposit > 0 && (
+                  {/* Fees Breakdown - SCP-2025-12-10: Using financialInfo */}
+                  {(formData.financialInfo.securityDeposit ?? 0) > 0 && (
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">Security Deposit</span>
-                        <span className="font-medium tabular-nums">{formatCurrency(formData.rentBreakdown.securityDeposit)}</span>
+                        <span className="font-medium tabular-nums">{formatCurrency(formData.financialInfo.securityDeposit || 0)}</span>
                       </div>
-                      {formData.rentBreakdown.adminFee > 0 && (
+                      {(formData.financialInfo.adminFee ?? 0) > 0 && (
                         <div className="flex justify-between text-xs">
                           <span className="text-muted-foreground">Admin Fee</span>
-                          <span className="font-medium tabular-nums">{formatCurrency(formData.rentBreakdown.adminFee)}</span>
+                          <span className="font-medium tabular-nums">{formatCurrency(formData.financialInfo.adminFee || 0)}</span>
                         </div>
                       )}
-                      {formData.rentBreakdown.serviceCharge > 0 && (
+                      {(formData.financialInfo.serviceCharge ?? 0) > 0 && (
                         <div className="flex justify-between text-xs">
                           <span className="text-muted-foreground">Service Charges</span>
-                          <span className="font-medium tabular-nums">{formatCurrency(formData.rentBreakdown.serviceCharge)}</span>
+                          <span className="font-medium tabular-nums">{formatCurrency(formData.financialInfo.serviceCharge || 0)}</span>
                         </div>
                       )}
-                      {/* SCP-2025-12-08: Show parking with lease-type context */}
-                      {formData.parkingAllocation.parkingFeePerSpot > 0 && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">
-                            Parking {formData.leaseInfo.leaseType === 'YEARLY' ? '(Annual)' : '(Monthly)'}
-                          </span>
-                          <span className="font-medium tabular-nums">
-                            {formatCurrency(formData.parkingAllocation.parkingFeePerSpot * formData.parkingAllocation.parkingSpots)}
-                            {formData.leaseInfo.leaseType !== 'YEARLY' && '/mo'}
-                          </span>
-                        </div>
-                      )}
+                      {/* SCP-2025-12-10: Always show parking fee from quotation (even if zero) */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">
+                          Parking {formData.leaseInfo.leaseType === 'YEARLY' ? '(Annual)' : '(Monthly)'}
+                        </span>
+                        <span className="font-medium tabular-nums">
+                          {(formData.financialInfo.parkingFee ?? 0) > 0
+                            ? `${formatCurrency(formData.financialInfo.parkingFee || 0)}${formData.leaseInfo.leaseType !== 'YEARLY' ? '/mo' : ''}`
+                            : 'AED 0 (No Parking)'}
+                        </span>
+                      </div>
                     </div>
                   )}
 
@@ -985,8 +852,8 @@ function CreateTenantWizard() {
                   )}
 
                   {/* Documents Count */}
-                  {/* SCP-2025-12-07: Updated to step 5 (Documents) which was previously step 6 */}
-                  {parseInt(currentStep) >= 5 && (
+                  {/* SCP-2025-12-10: Updated to step 4 (Documents) in 5-step wizard */}
+                  {parseInt(currentStep) >= 4 && (
                     <>
                       <Separator className="my-4" />
                       <div className="flex justify-between text-sm">
@@ -1007,8 +874,8 @@ function CreateTenantWizard() {
                     </>
                   )}
 
-                  {/* Empty State */}
-                  {!formData.leaseInfo.leaseEndDate && !formData.rentBreakdown.yearlyRentAmount && !formData.rentBreakdown.securityDeposit && (
+                  {/* Empty State - SCP-2025-12-10: Using financialInfo */}
+                  {!formData.leaseInfo.leaseEndDate && !formData.financialInfo.yearlyRentAmount && !formData.financialInfo.securityDeposit && (
                     <div className="text-center py-8 text-muted-foreground">
                       <DollarSign className="h-12 w-12 mx-auto mb-3 opacity-20" />
                       <p className="text-sm">

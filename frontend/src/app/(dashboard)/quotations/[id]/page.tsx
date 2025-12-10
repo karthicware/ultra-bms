@@ -345,13 +345,23 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
                 <StatusIcon className="h-3 w-3" />
                 {statusConfig.label}
               </Badge>
+              {/* SCP-2025-12-10: Show "Modified" badge if quotation was edited after SENT */}
+              {quotation.isModified && (
+                <Badge variant="outline" className="gap-1 px-2 py-0.5 text-xs text-amber-600 border-amber-300 bg-amber-50">
+                  <Edit className="h-3 w-3" />
+                  Modified
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-muted-foreground">
               Created {format(new Date(quotation.createdAt), 'PPP')}
             </p>
           </div>
           <div className="flex gap-2">
-            {quotation.status === QuotationStatus.DRAFT && (
+            {/* SCP-2025-12-10: Allow editing for DRAFT, SENT, and ACCEPTED status. Block only CONVERTED, REJECTED, EXPIRED */}
+            {(quotation.status === QuotationStatus.DRAFT ||
+              quotation.status === QuotationStatus.SENT ||
+              quotation.status === QuotationStatus.ACCEPTED) && (
               <Button variant="outline" size="sm" onClick={handleEdit}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
@@ -367,7 +377,9 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
                 {isSending ? 'Sending...' : 'Send'}
               </Button>
             )}
-            {quotation.status === QuotationStatus.SENT && (
+            {/* SCP-2025-12-10: Show Convert button for both SENT and ACCEPTED status */}
+            {(quotation.status === QuotationStatus.SENT ||
+              quotation.status === QuotationStatus.ACCEPTED) && (
               <Button size="sm" onClick={handleConvertToTenant} disabled={isConverting} className="bg-green-600 hover:bg-green-700">
                 <UserCheck className="h-4 w-4 mr-2" />
                 {isConverting ? 'Converting...' : 'Convert to Tenant'}

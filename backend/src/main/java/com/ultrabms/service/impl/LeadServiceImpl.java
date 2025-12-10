@@ -404,7 +404,9 @@ public class LeadServiceImpl implements LeadService {
                 .parkingSpotId(quotation.getParkingSpotId())
                 .parkingFee(quotation.getParkingFee())
                 // Cheque breakdown (SCP-2025-12-06)
+                // SCP-2025-12-10: Added numberOfPayments
                 .yearlyRentAmount(quotation.getYearlyRentAmount())
+                .numberOfPayments(quotation.getNumberOfPayments())
                 .numberOfCheques(quotation.getNumberOfCheques())
                 .firstMonthPaymentMethod(quotation.getFirstMonthPaymentMethod())
                 .chequeBreakdown(quotation.getChequeBreakdown())

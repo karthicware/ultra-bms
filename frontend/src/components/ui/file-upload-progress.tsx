@@ -19,13 +19,15 @@ import { Progress } from '@/components/ui/progress';
 export type FileUploadStatus = 'idle' | 'uploading' | 'success' | 'error';
 
 export interface FileUploadProgressProps {
-  onFileSelect: (file: File | null) => void;
-  selectedFile: File | null;
+  onFileSelect?: (file: File | null) => void;
+  onFilesSelect?: (files: File[]) => void;
+  selectedFile?: File | null;
   accept?: Accept;
   maxSize?: number;
   label?: string;
   required?: boolean;
   disabled?: boolean;
+  multiple?: boolean;
   testId?: string;
   className?: string;
   // Simulated upload progress (parent can control this)
@@ -51,12 +53,14 @@ const formatFileSize = (bytes: number): string => {
 
 export function FileUploadProgress({
   onFileSelect,
+  onFilesSelect,
   selectedFile,
   accept = { 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] },
   maxSize = 5 * 1024 * 1024, // 5MB default
   label = 'Upload File',
   required = false,
   disabled = false,
+  multiple = false,
   testId,
   className,
   uploadProgress = 0,
@@ -83,35 +87,43 @@ export function FileUploadProgress({
       }
 
       if (acceptedFiles.length > 0) {
-        const file = acceptedFiles[0];
-        onFileSelect(file);
-
-        // Create preview for images
-        if (file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            setLocalPreview(reader.result as string);
-          };
-          reader.readAsDataURL(file);
-        } else {
+        // Handle multiple file selection
+        if (multiple && onFilesSelect) {
+          onFilesSelect(acceptedFiles);
+          // Clear preview for multiple files mode
           setLocalPreview(null);
+        } else if (onFileSelect) {
+          // Single file mode (backward compatible)
+          const file = acceptedFiles[0];
+          onFileSelect(file);
+
+          // Create preview for images
+          if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              setLocalPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+          } else {
+            setLocalPreview(null);
+          }
         }
       }
     },
-    [onFileSelect, maxSize]
+    [onFileSelect, onFilesSelect, multiple, maxSize]
   );
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     onDrop,
     accept,
     maxSize,
-    multiple: false,
+    multiple,
     disabled,
   });
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onFileSelect(null);
+    onFileSelect?.(null);
     setLocalPreview(null);
     setDragError(null);
   };

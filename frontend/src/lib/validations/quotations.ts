@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { addMonths } from 'date-fns';
+import { addMonths, addYears } from 'date-fns';
 import { QuotationStatus, FirstMonthPaymentMethod, type ChequeBreakdownItem } from '@/types/quotations';
 
 // ===========================
@@ -340,12 +340,10 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
- * Validate default validity date (30 days from issue date)
+ * Validate default validity date (1 year from issue date)
  */
 export function getDefaultValidityDate(issueDate: Date): Date {
-  const validity = new Date(issueDate);
-  validity.setDate(validity.getDate() + 30);
-  return validity;
+  return addYears(issueDate, 1);
 }
 
 /**

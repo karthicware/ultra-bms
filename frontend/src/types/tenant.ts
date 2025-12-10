@@ -45,6 +45,22 @@ export enum TenantStatus {
 }
 
 // ===========================
+// Bank Account Types
+// Story 3.9: Tenant Onboarding Bank Account Integration
+// ===========================
+
+/**
+ * Bank account summary for tenant display
+ * AC #4: Update TenantResponse to include bank account details
+ */
+export interface BankAccountSummary {
+  id: string;
+  bankName: string;
+  accountName: string;
+  maskedAccountNumber: string; // e.g., "****1234"
+}
+
+// ===========================
 // Core Entity Types
 // ===========================
 
@@ -90,6 +106,9 @@ export interface Tenant {
   paymentDueDate: number; // day of month (1-31)
   paymentMethod: PaymentMethod;
   pdcChequeCount?: number; // required if paymentMethod = PDC
+
+  // Bank Account (Story 3.9)
+  bankAccount?: BankAccountSummary; // Optional - used for rent payment instructions on invoices
 
   // Metadata
   tenantNumber: string; // e.g., TNT-2025-0001
@@ -169,6 +188,10 @@ export interface CreateTenantRequest {
   paymentMethod: PaymentMethod;
   pdcChequeCount?: number;
 
+  // Bank Account (Story 3.9)
+  // AC #3: Update TenantRequest DTO to accept bankAccountId (optional)
+  bankAccountId?: string; // Optional - FK to BankAccount
+
   // Lead conversion (optional)
   leadId?: string;
   quotationId?: string;
@@ -242,6 +265,10 @@ export interface TenantResponse {
   paymentMethod: PaymentMethod;
   pdcChequeCount?: number;
 
+  // Bank Account (Story 3.9)
+  // AC #4: Update TenantResponse to include bank account details
+  bankAccount?: BankAccountSummary; // Optional - used for rent payment instructions on invoices
+
   // Metadata
   tenantNumber: string;
   status: TenantStatus;
@@ -280,7 +307,7 @@ export interface PersonalInfoFormData {
   lastName: string;
   email: string;
   phone: string;
-  dateOfBirth: Date | undefined; // SCP-2025-12-07: Made optional so user must enter DOB
+  dateOfBirth: Date; // Required - validated by zod schema
   nationalId: string;
   nationality: string;
   emergencyContactName: string;
@@ -344,12 +371,37 @@ export interface ExtendedRentBreakdownFormData extends RentBreakdownFormData {
 }
 
 // Combined form data for all steps
-// SCP-2025-12-07: Reduced from 7 steps to 6 - removed paymentSchedule
+// SCP-2025-12-10: Reduced from 6 to 5 steps - Replaced rentBreakdown and parkingAllocation with financialInfo
 export interface TenantOnboardingFormData {
   personalInfo: PersonalInfoFormData;
-  leaseInfo: LeaseInfoFormData;
-  rentBreakdown: ExtendedRentBreakdownFormData;
-  parkingAllocation: ParkingAllocationFormData;
+  leaseInfo: LeaseInfoFormData & {
+    propertyName?: string;
+    unitNumber?: string;
+  };
+  // SCP-2025-12-10: Financial info includes cheque details from OCR processing
+  financialInfo: {
+    chequeDetails: Array<{
+      chequeIndex: number;
+      bankName?: string;
+      chequeNumber?: string;
+      amount?: number;
+      chequeDate?: string;
+      status: 'SUCCESS' | 'PARTIAL' | 'FAILED';
+      confidenceScore: number;
+    }>;
+    bankAccountId?: string;
+    bankAccountName?: string;
+    bankName?: string;
+    // From quotation (read-only display)
+    yearlyRentAmount?: number;
+    numberOfCheques?: number;
+    firstMonthPaymentMethod?: 'CASH' | 'CHEQUE';
+    baseRent?: number;
+    serviceCharge?: number;
+    adminFee?: number;
+    securityDeposit?: number;
+    parkingFee?: number;
+  };
   documentUpload: TenantDocumentUploadFormData;
 
   // Optional lead conversion data
@@ -394,7 +446,9 @@ export interface LeadConversionData {
 
   // Pre-populated lease info from quotation
   propertyId: string;
+  propertyName?: string; // Display name
   unitId: string;
+  unitNumber?: string; // Display number
   baseRent: number;
   serviceCharge: number;
   serviceCharges?: number; // alias
@@ -417,6 +471,11 @@ export interface LeadConversionData {
   moveinProcedures?: string;
   cancellationPolicy?: string;
   specialTerms?: string;
+
+  // Bank account info (populated during financial info step)
+  bankAccountId?: string;
+  bankAccountName?: string;
+  bankName?: string;
 
   // Metadata
   message?: string;

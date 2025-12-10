@@ -96,6 +96,14 @@ public class Quotation {
     @Column(name = "yearly_rent_amount", precision = 12, scale = 2)
     private BigDecimal yearlyRentAmount;
 
+    // SCP-2025-12-10: Renamed from number_of_cheques to number_of_payments
+    // numberOfPayments = total payment installments (what user selects, e.g., 12)
+    @Column(name = "number_of_payments")
+    @Builder.Default
+    private Integer numberOfPayments = 12;
+
+    // SCP-2025-12-10: Added actual cheques count
+    // numberOfCheques = numberOfPayments - 1 if first month is CASH, else same as numberOfPayments
     @Column(name = "number_of_cheques")
     @Builder.Default
     private Integer numberOfCheques = 12;
@@ -182,6 +190,18 @@ public class Quotation {
 
     @Column(name = "rejection_reason", length = 500)
     private String rejectionReason;
+
+    // SCP-2025-12-10: Track if quotation was modified after SENT status
+    @Column(name = "is_modified")
+    @Builder.Default
+    private Boolean isModified = false;
+
+    // SCP-2025-12-10: Track conversion to tenant
+    @Column(name = "converted_tenant_id")
+    private UUID convertedTenantId;
+
+    @Column(name = "converted_at")
+    private LocalDateTime convertedAt;
 
     @Column(name = "created_by", nullable = false)
     private UUID createdBy;

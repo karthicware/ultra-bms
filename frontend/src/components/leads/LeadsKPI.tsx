@@ -8,7 +8,7 @@ interface LeadsKPIProps {
 
 export function LeadsKPI({ leads }: LeadsKPIProps) {
   const totalLeads = leads.length;
-  const newLeads = leads.filter((l) => l.status === 'NEW').length;
+  const newLeads = leads.filter((l) => l.status === 'NEW_LEAD').length;
   const convertedLeads = leads.filter((l) => l.status === 'CONVERTED').length;
   const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : '0';
 

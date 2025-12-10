@@ -198,8 +198,7 @@ export default function LeadsPage() {
         l.fullName?.toLowerCase().includes(query) ||
         l.email?.toLowerCase().includes(query) ||
         l.contactNumber?.includes(query) ||
-        l.leadNumber?.toLowerCase().includes(query) ||
-        l.emiratesId?.toLowerCase().includes(query)
+        l.leadNumber?.toLowerCase().includes(query)
       );
     }
 
@@ -414,15 +413,6 @@ export default function LeadsPage() {
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>New</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-yellow-50 dark:bg-yellow-950/30">
-                          <MessageSquare className="h-3.5 w-3.5 text-yellow-600" />
-                          <span className="text-sm font-semibold text-yellow-600">{stats.contacted}</span>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>Contacted</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>

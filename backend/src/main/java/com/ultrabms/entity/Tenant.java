@@ -348,6 +348,15 @@ public class Tenant extends BaseEntity {
     @Column(name = "pdc_cheque_count")
     private Integer pdcChequeCount;
 
+    /**
+     * Company bank account for rent payment instructions on invoices
+     * Story 3.9: Tenant Onboarding Bank Account Integration
+     * Optional field - tenants can exist without a linked bank account
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bank_account_id")
+    private BankAccount bankAccount;
+
     // =================================================================
     // METADATA
     // =================================================================

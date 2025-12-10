@@ -52,10 +52,8 @@ import { calculateDaysInPipeline } from '@/services/leads.service';
 export type LeadItem = Lead;
 
 const LEAD_STATUS_STYLES: Record<LeadStatus, string> = {
-  NEW: 'bg-blue-600/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400',
-  CONTACTED: 'bg-yellow-600/10 text-yellow-600 dark:bg-yellow-400/10 dark:text-yellow-400',
+  NEW_LEAD: 'bg-blue-600/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400',
   QUOTATION_SENT: 'bg-purple-600/10 text-purple-600 dark:bg-purple-400/10 dark:text-purple-400',
-  ACCEPTED: 'bg-green-600/10 text-green-600 dark:bg-green-400/10 dark:text-green-400',
   CONVERTED: 'bg-emerald-600/10 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400',
   LOST: 'bg-red-600/10 text-red-600 dark:bg-red-400/10 dark:text-red-400',
 };
@@ -118,10 +116,7 @@ const LeadsDatatable = ({
         header: 'Contact',
         accessorKey: 'contactNumber',
         cell: ({ row }) => (
-          <div className="flex flex-col">
-            <span className="text-sm">{row.getValue('contactNumber')}</span>
-            <span className="text-xs text-muted-foreground">{row.original.emiratesId}</span>
-          </div>
+          <span className="text-sm">{row.getValue('contactNumber')}</span>
         ),
         size: 150,
       },

@@ -75,6 +75,7 @@ interface BankAccountFormModalProps {
   onOpenChange: (open: boolean) => void;
   bankAccount: BankAccount | null;
   onSuccess: () => void;
+  mode?: 'create' | 'edit' | 'view';
 }
 
 export function BankAccountFormModal({
@@ -82,17 +83,19 @@ export function BankAccountFormModal({
   onOpenChange,
   bankAccount,
   onSuccess,
+  mode = 'create',
 }: BankAccountFormModalProps) {
-  const isEditing = !!bankAccount;
+  const isEditing = mode === 'edit';
+  const isViewing = mode === 'view';
 
   // State for real-time validation feedback
   const [ibanValidation, setIbanValidation] = useState<{ valid: boolean; error?: string } | null>(null);
   const [swiftValidation, setSwiftValidation] = useState<{ valid: boolean; error?: string } | null>(null);
 
-  // Fetch full account details when editing (to get decrypted values for admin)
+  // Fetch full account details when editing or viewing (to get decrypted values for admin)
   const { data: accountDetail, isLoading: isLoadingDetail } = useBankAccount(
     bankAccount?.id || '',
-    isEditing && open
+    (isEditing || isViewing) && open
   );
 
   // Mutations
@@ -133,7 +136,7 @@ export function BankAccountFormModal({
   // Reset form when modal opens/closes or bankAccount changes
   useEffect(() => {
     if (open) {
-      if (isEditing && accountDetail) {
+      if ((isEditing || isViewing) && accountDetail) {
         form.reset({
           bankName: accountDetail.bankName,
           accountName: accountDetail.accountName,
@@ -143,7 +146,7 @@ export function BankAccountFormModal({
           isPrimary: accountDetail.isPrimary,
           status: accountDetail.status,
         });
-      } else if (!isEditing) {
+      } else if (!isEditing && !isViewing) {
         form.reset({
           bankName: '',
           accountName: '',
@@ -213,16 +216,18 @@ export function BankAccountFormModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-primary" />
-            {isEditing ? 'Edit Bank Account' : 'Add Bank Account'}
+            {isViewing ? 'View Bank Account' : isEditing ? 'Edit Bank Account' : 'Add Bank Account'}
           </DialogTitle>
           <DialogDescription id="bank-account-form-description">
-            {isEditing
+            {isViewing
+              ? `Viewing details for "${bankAccount?.bankName}"`
+              : isEditing
               ? `Update bank account "${bankAccount?.bankName}"`
               : 'Add a new company bank account for PDC deposits'}
           </DialogDescription>
         </DialogHeader>
 
-        {isEditing && isLoadingDetail ? (
+        {(isEditing || isViewing) && isLoadingDetail ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
@@ -243,23 +248,21 @@ export function BankAccountFormModal({
                         <LandmarkIcon className="size-4" />
                       </div>
                       <FormControl>
-                        <>
-                          <Input
-                            id="bankName"
-                            className="pl-9"
-                            placeholder="Select or type bank name"
-                            {...field}
-                            disabled={isSubmitting}
-                            list="uae-banks-list"
-                            data-testid="input-bank-name"
-                          />
-                          <datalist id="uae-banks-list">
-                            {UAE_BANKS.map((bank) => (
-                              <option key={bank} value={bank} />
-                            ))}
-                          </datalist>
-                        </>
+                        <Input
+                          id="bankName"
+                          className="pl-9"
+                          placeholder="Select or type bank name"
+                          {...field}
+                          disabled={isSubmitting || isViewing}
+                          list="uae-banks-list"
+                          data-testid="input-bank-name"
+                        />
                       </FormControl>
+                      <datalist id="uae-banks-list">
+                        {UAE_BANKS.map((bank) => (
+                          <option key={bank} value={bank} />
+                        ))}
+                      </datalist>
                     </div>
                     <p className="text-muted-foreground text-xs">
                       Select from common UAE banks or enter a custom name
@@ -288,7 +291,7 @@ export function BankAccountFormModal({
                           className="pl-9"
                           placeholder="e.g., Company Main Account"
                           {...field}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isViewing}
                           data-testid="input-account-name"
                         />
                       </FormControl>
@@ -320,7 +323,7 @@ export function BankAccountFormModal({
                           className="pl-9"
                           placeholder="e.g., 1234567890123456"
                           {...field}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isViewing}
                           data-testid="input-account-number"
                         />
                       </FormControl>
@@ -369,7 +372,7 @@ export function BankAccountFormModal({
                           placeholder="AE070331234567890123456"
                           {...field}
                           onChange={(e) => handleIbanChange(e.target.value)}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isViewing}
                           data-testid="input-iban"
                         />
                         {ibanValidation && (
@@ -430,7 +433,7 @@ export function BankAccountFormModal({
                           placeholder="EMIRAEADXXX"
                           {...field}
                           onChange={(e) => handleSwiftChange(e.target.value)}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isViewing}
                           data-testid="input-swift-code"
                         />
                         {swiftValidation && (
@@ -531,26 +534,38 @@ export function BankAccountFormModal({
               </Alert>
 
               <DialogFooter className="pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting} data-testid="btn-submit-form">
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {isEditing ? 'Updating...' : 'Creating...'}
-                    </>
-                  ) : isEditing ? (
-                    'Update Bank Account'
-                  ) : (
-                    'Add Bank Account'
-                  )}
-                </Button>
+                {isViewing ? (
+                  <Button
+                    type="button"
+                    onClick={handleClose}
+                    className="w-full sm:w-auto"
+                  >
+                    Close
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleClose}
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting} data-testid="btn-submit-form">
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          {isEditing ? 'Updating...' : 'Creating...'}
+                        </>
+                      ) : isEditing ? (
+                        'Update Bank Account'
+                      ) : (
+                        'Add Bank Account'
+                      )}
+                    </Button>
+                  </>
+                )}
               </DialogFooter>
             </form>
           </Form>

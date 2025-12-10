@@ -212,7 +212,7 @@ const menuSections: MenuSection[] = [
         icon: Landmark,
         label: 'Bank Accounts',
         href: '/settings/bank-accounts',
-        role: 'ADMIN',
+        // Visible to users with finance access (backend restricts to SUPER_ADMIN, ADMIN, FINANCE_MANAGER)
       },
     ],
   },

@@ -1,9 +1,9 @@
 'use client';
 
 /**
- * Step 6: Review and Submit
+ * Step 5: Review and Submit
  * Review all entered data and submit tenant registration
- * SCP-2025-12-07: Updated for 6-step flow (removed separate payment schedule step)
+ * SCP-2025-12-10: Updated for 5-step flow (replaced rentBreakdown/parkingAllocation with financialInfo)
  * SCP-2025-12-07: Added preloadedDocuments prop to show "From Quotation" status
  */
 
@@ -52,7 +52,7 @@ export function ReviewSubmitStep({
   isSubmitting,
   preloadedDocuments,
 }: ReviewSubmitStepProps) {
-  const { personalInfo, leaseInfo, rentBreakdown, parkingAllocation, documentUpload } = formData;
+  const { personalInfo, leaseInfo, financialInfo, documentUpload } = formData;
 
   // SCP-2025-12-07: Check document status including preloaded documents from quotation
   const hasEmiratesId = documentUpload.emiratesIdFile || preloadedDocuments?.emiratesIdFrontPath;
@@ -172,19 +172,19 @@ export function ReviewSubmitStep({
             </div>
           </div>
 
-          {/* Step 3: Rent Breakdown */}
+          {/* Step 3: Financial Info */}
           <div className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <h3 className="font-semibold">Rent Breakdown</h3>
+                <h3 className="font-semibold">Financial Information</h3>
               </div>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => onEdit(3)}
-                data-testid="btn-edit-rent-breakdown"
+                data-testid="btn-edit-financial"
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -192,81 +192,45 @@ export function ReviewSubmitStep({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Base Rent (Monthly)</span>
-                <span className="font-medium">{formatCurrency(rentBreakdown.baseRent)}</span>
+                <span className="font-medium">{formatCurrency(financialInfo.baseRent || 0)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Service Charge (Monthly)</span>
-                <span className="font-medium">{formatCurrency(rentBreakdown.serviceCharge)}</span>
+                <span className="font-medium">{formatCurrency(financialInfo.serviceCharge || 0)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Admin Fee (One-time)</span>
-                <span className="font-medium">{formatCurrency(rentBreakdown.adminFee)}</span>
+                <span className="font-medium">{formatCurrency(financialInfo.adminFee || 0)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Security Deposit</span>
-                <span className="font-medium">{formatCurrency(rentBreakdown.securityDeposit)}</span>
+                <span className="font-medium">{formatCurrency(financialInfo.securityDeposit || 0)}</span>
+              </div>
+              {/* SCP-2025-12-10: Always show parking fee (even if zero) */}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Parking Fee</span>
+                <span className="font-medium">
+                  {(financialInfo.parkingFee ?? 0) > 0
+                    ? formatCurrency(financialInfo.parkingFee || 0)
+                    : 'AED 0 (Not Required)'}
+                </span>
               </div>
               <Separator />
               <div className="flex justify-between font-semibold">
-                <span>Total Monthly Rent</span>
-                <span data-testid="text-review-total-monthly-rent">
-                  {formatCurrency(rentBreakdown.totalMonthlyRent)}
+                <span>Yearly Rent Amount</span>
+                <span data-testid="text-review-yearly-rent">
+                  {formatCurrency(financialInfo.yearlyRentAmount || 0)}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Step 4: Parking Allocation */}
+          {/* Payment & Cheques Summary */}
           <div className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <h3 className="font-semibold">Parking Allocation</h3>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onEdit(4)}
-                data-testid="btn-edit-parking"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            </div>
-            {parkingAllocation.parkingSpots > 0 ? (
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Parking Spots</p>
-                  <p className="font-medium">{parkingAllocation.parkingSpots}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Fee Per Spot</p>
-                  <p className="font-medium">{formatCurrency(parkingAllocation.parkingFeePerSpot)}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-muted-foreground">Spot Numbers</p>
-                  <p className="font-medium">{parkingAllocation.spotNumbers || 'N/A'}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-muted-foreground">Mulkiya Document</p>
-                  <p className="font-medium">
-                    {parkingAllocation.mulkiyaFile
-                      ? parkingAllocation.mulkiyaFile.name
-                      : 'Not uploaded'}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No parking allocated</p>
-            )}
-          </div>
-
-          {/* Payment Schedule (included in Rent Breakdown step) */}
-          <div className="border rounded-lg p-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <h3 className="font-semibold">Payment Schedule</h3>
+                <h3 className="font-semibold">Payment & Cheques</h3>
               </div>
               <Button
                 type="button"
@@ -278,31 +242,54 @@ export function ReviewSubmitStep({
                 <Edit className="h-4 w-4" />
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Payment Frequency</p>
-                <p className="font-medium">{getPaymentFrequencyLabel(rentBreakdown.numberOfCheques)}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Due Date</p>
-                <p className="font-medium">
-                  Day {rentBreakdown.paymentDueDate || 5} of each month
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">First Month Payment</p>
-                <p className="font-medium">{rentBreakdown.firstMonthPaymentMethod?.replace(/_/g, ' ') || 'CASH'}</p>
-              </div>
-              {rentBreakdown.numberOfCheques && rentBreakdown.numberOfCheques > 1 && (
+            <div className="space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-muted-foreground">PDC Cheques</p>
-                  <p className="font-medium">{rentBreakdown.numberOfCheques - 1} cheques</p>
+                  <p className="text-muted-foreground">Payment Frequency</p>
+                  <p className="font-medium">{getPaymentFrequencyLabel(financialInfo.numberOfCheques)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">First Month Payment</p>
+                  <p className="font-medium">{financialInfo.firstMonthPaymentMethod?.replace(/_/g, ' ') || 'CASH'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-muted-foreground">Cheques Uploaded</p>
+                  <p className="font-medium">{financialInfo.chequeDetails?.length || 0} cheque(s)</p>
+                </div>
+              </div>
+
+              {/* Story 3.9: Bank Account Details */}
+              {financialInfo.bankAccountId && financialInfo.bankName ? (
+                <div>
+                  <Separator className="mb-4" />
+                  <p className="text-muted-foreground mb-3 font-medium">Selected Bank Account</p>
+                  <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground">Bank Name</span>
+                      <span className="font-medium">{financialInfo.bankName}</span>
+                    </div>
+                    {financialInfo.bankAccountName && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-muted-foreground">Account Name</span>
+                        <span className="font-medium">{financialInfo.bankAccountName}</span>
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      This account will appear on invoices for rent payment instructions
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <Separator className="mb-4" />
+                  <p className="text-muted-foreground mb-2">Bank Account</p>
+                  <p className="text-sm font-medium">Not selected (optional)</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Step 5: Documents */}
+          {/* Step 4: Documents */}
           <div className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -313,7 +300,7 @@ export function ReviewSubmitStep({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => onEdit(5)}
+                onClick={() => onEdit(4)}
                 data-testid="btn-edit-documents"
               >
                 <Edit className="h-4 w-4" />

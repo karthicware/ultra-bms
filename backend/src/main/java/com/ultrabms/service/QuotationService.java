@@ -71,4 +71,13 @@ public interface QuotationService {
      * Delete quotation
      */
     void deleteQuotation(UUID id);
+
+    /**
+     * SCP-2025-12-10: Mark quotation as CONVERTED after successful tenant onboarding.
+     * This makes the quotation non-editable.
+     *
+     * @param quotationId The quotation ID to mark as converted
+     * @param tenantId The ID of the newly created tenant
+     */
+    void markAsConverted(UUID quotationId, UUID tenantId);
 }

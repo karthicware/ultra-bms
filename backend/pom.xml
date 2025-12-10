@@ -167,6 +167,13 @@
 			<version>2.20.26</version>
 		</dependency>
 
+		<!-- SCP-2025-12-10: AWS Textract SDK for cheque OCR processing -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>textract</artifactId>
+			<version>2.20.26</version>
+		</dependency>
+
 		<!-- Password Validation -->
 		<dependency>
 			<groupId>org.passay</groupId>

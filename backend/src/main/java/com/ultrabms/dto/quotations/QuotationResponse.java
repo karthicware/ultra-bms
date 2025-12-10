@@ -45,8 +45,10 @@ public class QuotationResponse {
     private BigDecimal totalFirstPayment;
     private String documentRequirements;
     // SCP-2025-12-06: Cheque breakdown fields
+    // SCP-2025-12-10: Added numberOfPayments (total installments) and numberOfCheques (actual cheques)
     private BigDecimal yearlyRentAmount;
-    private Integer numberOfCheques;
+    private Integer numberOfPayments; // Total payment installments (what user selects, e.g., 12)
+    private Integer numberOfCheques;  // Actual cheques needed (numberOfPayments - 1 if first month is CASH)
     private Quotation.FirstMonthPaymentMethod firstMonthPaymentMethod;
     private BigDecimal firstMonthTotal; // Custom first month total (includes one-time fees + first rent)
     private String chequeBreakdown; // JSON string of cheque breakdown items
@@ -65,6 +67,11 @@ public class QuotationResponse {
     private String passportFrontPath;
     private String passportBackPath;
     private Quotation.QuotationStatus status;
+    // SCP-2025-12-10: Track if quotation was modified after being sent
+    private Boolean isModified;
+    // SCP-2025-12-10: Conversion tracking
+    private UUID convertedTenantId;
+    private LocalDateTime convertedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime sentAt;
@@ -115,7 +122,9 @@ public class QuotationResponse {
                 .totalFirstPayment(quotation.getTotalFirstPayment())
                 .documentRequirements(quotation.getDocumentRequirements())
                 // SCP-2025-12-06: Cheque breakdown fields
+                // SCP-2025-12-10: Added numberOfPayments
                 .yearlyRentAmount(quotation.getYearlyRentAmount())
+                .numberOfPayments(quotation.getNumberOfPayments())
                 .numberOfCheques(quotation.getNumberOfCheques())
                 .firstMonthPaymentMethod(quotation.getFirstMonthPaymentMethod())
                 .firstMonthTotal(quotation.getFirstMonthTotal())
@@ -135,6 +144,11 @@ public class QuotationResponse {
                 .passportFrontPath(quotation.getPassportFrontPath())
                 .passportBackPath(quotation.getPassportBackPath())
                 .status(quotation.getStatus())
+                // SCP-2025-12-10: Track if quotation was modified after being sent
+                .isModified(quotation.getIsModified())
+                // SCP-2025-12-10: Conversion tracking
+                .convertedTenantId(quotation.getConvertedTenantId())
+                .convertedAt(quotation.getConvertedAt())
                 .createdAt(quotation.getCreatedAt())
                 .updatedAt(quotation.getUpdatedAt())
                 .sentAt(quotation.getSentAt())

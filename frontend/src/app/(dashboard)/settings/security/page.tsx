@@ -53,6 +53,7 @@ import {
   Wifi,
 } from 'lucide-react';
 import { PageBackButton } from '@/components/common/PageBackButton';
+import Link from 'next/link';
 import type { SessionDto } from '@/types/auth';
 
 // Quick links for navigation

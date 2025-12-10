@@ -24,7 +24,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -74,10 +73,6 @@ class LeadServiceTest {
                 .id(testLeadId)
                 .leadNumber("LEAD-20251115-0001")
                 .fullName("Ahmed Hassan")
-                .emiratesId("784-1234-1234567-1")
-                .passportNumber("AB1234567")
-                .passportExpiryDate(LocalDate.of(2026, 12, 31))
-                .homeCountry("United Arab Emirates")
                 .email("ahmed@example.com")
                 .contactNumber("+971501234567")
                 .leadSource(Lead.LeadSource.WEBSITE)
@@ -87,10 +82,6 @@ class LeadServiceTest {
 
         createLeadRequest = CreateLeadRequest.builder()
                 .fullName("Ahmed Hassan")
-                .emiratesId("784-1234-1234567-1")
-                .passportNumber("AB1234567")
-                .passportExpiryDate(LocalDate.of(2026, 12, 31))
-                .homeCountry("United Arab Emirates")
                 .email("ahmed@example.com")
                 .contactNumber("+971501234567")
                 .leadSource(Lead.LeadSource.WEBSITE)
@@ -103,8 +94,6 @@ class LeadServiceTest {
     void testCreateLead_Success() {
         // Arrange
         when(leadNumberGenerator.generate()).thenReturn("LEAD-20251115-0001");
-        when(leadRepository.existsByEmiratesId(anyString())).thenReturn(false);
-        when(leadRepository.existsByPassportNumber(anyString())).thenReturn(false);
         when(leadRepository.save(any(Lead.class))).thenReturn(testLead);
 
         // Act
@@ -116,39 +105,8 @@ class LeadServiceTest {
         assertThat(response.getFullName()).isEqualTo("Ahmed Hassan");
         assertThat(response.getStatus()).isEqualTo(Lead.LeadStatus.NEW_LEAD);
 
-        verify(leadRepository).existsByEmiratesId("784-1234-1234567-1");
-        verify(leadRepository).existsByPassportNumber("AB1234567");
         verify(leadRepository).save(any(Lead.class));
         verify(leadHistoryRepository).save(any(LeadHistory.class));
-    }
-
-    @Test
-    @DisplayName("Should throw ValidationException when Emirates ID already exists")
-    void testCreateLead_DuplicateEmiratesId() {
-        // Arrange
-        when(leadRepository.existsByEmiratesId(anyString())).thenReturn(true);
-
-        // Act & Assert
-        assertThatThrownBy(() -> leadService.createLead(createLeadRequest, testUserId))
-                .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("Emirates ID already exists");
-
-        verify(leadRepository, never()).save(any(Lead.class));
-    }
-
-    @Test
-    @DisplayName("Should throw ValidationException when passport number already exists")
-    void testCreateLead_DuplicatePassportNumber() {
-        // Arrange
-        when(leadRepository.existsByEmiratesId(anyString())).thenReturn(false);
-        when(leadRepository.existsByPassportNumber(anyString())).thenReturn(true);
-
-        // Act & Assert
-        assertThatThrownBy(() -> leadService.createLead(createLeadRequest, testUserId))
-                .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("passport number already exists");
-
-        verify(leadRepository, never()).save(any(Lead.class));
     }
 
     @Test

@@ -879,7 +879,7 @@ export default function WorkOrderDetailPage() {
               onClick={prevPhoto}
               disabled={currentPhotoIndex === 0}
             >
-              <ChevronLeftIcon className="h-4 w-4 mr-2" />
+              <ChevronLeft className="h-4 w-4 mr-2" />
               Previous
             </Button>
             <Button

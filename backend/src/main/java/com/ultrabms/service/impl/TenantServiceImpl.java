@@ -1,9 +1,11 @@
 package com.ultrabms.service.impl;
 
+import com.ultrabms.dto.tenant.BankAccountSummary;
 import com.ultrabms.dto.tenant.CreateTenantRequest;
 import com.ultrabms.dto.tenant.CreateTenantResponse;
 import com.ultrabms.dto.tenant.TenantDocumentResponse;
 import com.ultrabms.dto.tenant.TenantResponse;
+import com.ultrabms.entity.BankAccount;
 import com.ultrabms.entity.Property;
 import com.ultrabms.entity.Role;
 import com.ultrabms.entity.Tenant;
@@ -17,6 +19,7 @@ import com.ultrabms.entity.enums.UnitStatus;
 import com.ultrabms.exception.DuplicateResourceException;
 import com.ultrabms.exception.EntityNotFoundException;
 import com.ultrabms.exception.ValidationException;
+import com.ultrabms.repository.BankAccountRepository;
 import com.ultrabms.repository.PropertyRepository;
 import com.ultrabms.repository.RoleRepository;
 import com.ultrabms.repository.TenantDocumentRepository;
@@ -25,6 +28,7 @@ import com.ultrabms.repository.UnitRepository;
 import com.ultrabms.repository.UserRepository;
 import com.ultrabms.entity.enums.PaymentFrequency;
 import com.ultrabms.service.ParkingSpotService;
+import com.ultrabms.service.QuotationService;
 import com.ultrabms.service.S3Service;
 import com.ultrabms.service.TenantService;
 import org.slf4j.Logger;
@@ -62,6 +66,10 @@ public class TenantServiceImpl implements TenantService {
     private final S3Service s3Service;
     private final PasswordEncoder passwordEncoder;
     private final ParkingSpotService parkingSpotService;
+    // SCP-2025-12-10: Add QuotationService to mark quotation as CONVERTED after tenant creation
+    private final QuotationService quotationService;
+    // Story 3.9: Add BankAccountRepository for bank account validation
+    private final BankAccountRepository bankAccountRepository;
 
     public TenantServiceImpl(
             TenantRepository tenantRepository,
@@ -72,7 +80,9 @@ public class TenantServiceImpl implements TenantService {
             UnitRepository unitRepository,
             S3Service s3Service,
             PasswordEncoder passwordEncoder,
-            ParkingSpotService parkingSpotService
+            ParkingSpotService parkingSpotService,
+            QuotationService quotationService,
+            BankAccountRepository bankAccountRepository
     ) {
         this.tenantRepository = tenantRepository;
         this.tenantDocumentRepository = tenantDocumentRepository;
@@ -83,6 +93,8 @@ public class TenantServiceImpl implements TenantService {
         this.s3Service = s3Service;
         this.passwordEncoder = passwordEncoder;
         this.parkingSpotService = parkingSpotService;
+        this.quotationService = quotationService;
+        this.bankAccountRepository = bankAccountRepository;
     }
 
     @Override
@@ -125,6 +137,14 @@ public class TenantServiceImpl implements TenantService {
         if (request.getPaymentMethod() == PaymentMethod.PDC &&
             (request.getPdcChequeCount() == null || request.getPdcChequeCount() < 1)) {
             throw new ValidationException("PDC cheque count is required when payment method is PDC");
+        }
+
+        // Story 3.9: Validate bank account exists if provided (AC #5)
+        BankAccount bankAccount = null;
+        if (request.getBankAccountId() != null) {
+            bankAccount = bankAccountRepository.findById(request.getBankAccountId())
+                    .orElseThrow(() -> new EntityNotFoundException("Bank account not found: " + request.getBankAccountId()));
+            LOGGER.info("Validated bank account {} for tenant", request.getBankAccountId());
         }
 
         try {
@@ -175,6 +195,8 @@ public class TenantServiceImpl implements TenantService {
                     .paymentDueDate(request.getPaymentDueDate())
                     .paymentMethod(request.getPaymentMethod())
                     .pdcChequeCount(request.getPdcChequeCount())
+                    // Bank Account (Story 3.9)
+                    .bankAccount(bankAccount)
                     // Metadata
                     .tenantNumber(tenantNumber)
                     .status(TenantStatus.ACTIVE)
@@ -216,6 +238,13 @@ public class TenantServiceImpl implements TenantService {
 
             // Step 8: Send welcome email (TODO: implement email service)
             // sendWelcomeEmail(savedTenant, userDto.getPassword());
+
+            // SCP-2025-12-10: Mark quotation as CONVERTED if tenant was created from a quotation
+            if (request.getQuotationId() != null) {
+                quotationService.markAsConverted(request.getQuotationId(), savedTenant.getId());
+                LOGGER.info("Marked quotation {} as CONVERTED for tenant {}",
+                        request.getQuotationId(), savedTenant.getId());
+            }
 
             return CreateTenantResponse.builder()
                     .id(savedTenant.getId())
@@ -281,6 +310,14 @@ public class TenantServiceImpl implements TenantService {
             throw new ValidationException("PDC cheque count is required when payment method is PDC");
         }
 
+        // Story 3.9: Validate bank account exists if provided (AC #5)
+        BankAccount bankAccount = null;
+        if (request.getBankAccountId() != null) {
+            bankAccount = bankAccountRepository.findById(request.getBankAccountId())
+                    .orElseThrow(() -> new EntityNotFoundException("Bank account not found: " + request.getBankAccountId()));
+            LOGGER.info("Validated bank account {} for tenant", request.getBankAccountId());
+        }
+
         try {
             // Step 1: Create user account with TENANT role
             UUID userId = createTenantUser(request);
@@ -329,6 +366,8 @@ public class TenantServiceImpl implements TenantService {
                     .paymentDueDate(request.getPaymentDueDate())
                     .paymentMethod(request.getPaymentMethod())
                     .pdcChequeCount(request.getPdcChequeCount())
+                    // Bank Account (Story 3.9)
+                    .bankAccount(bankAccount)
                     // Metadata
                     .tenantNumber(tenantNumber)
                     .status(TenantStatus.ACTIVE)
@@ -379,6 +418,13 @@ public class TenantServiceImpl implements TenantService {
                     LOGGER.warn("Parking spot assignment skipped - only available for annual tenants. " +
                             "Tenant {} has {} payment frequency", savedTenant.getId(), frequency);
                 }
+            }
+
+            // SCP-2025-12-10: Mark quotation as CONVERTED if tenant was created from a quotation
+            if (request.getQuotationId() != null) {
+                quotationService.markAsConverted(request.getQuotationId(), savedTenant.getId());
+                LOGGER.info("Marked quotation {} as CONVERTED for tenant {}",
+                        request.getQuotationId(), savedTenant.getId());
             }
 
             return CreateTenantResponse.builder()
@@ -732,6 +778,8 @@ public class TenantServiceImpl implements TenantService {
                 .paymentDueDate(tenant.getPaymentDueDate())
                 .paymentMethod(tenant.getPaymentMethod())
                 .pdcChequeCount(tenant.getPdcChequeCount())
+                // Bank Account (Story 3.9)
+                .bankAccount(BankAccountSummary.fromEntity(tenant.getBankAccount()))
                 // Documents
                 .documents(documents)
                 // Lead Conversion

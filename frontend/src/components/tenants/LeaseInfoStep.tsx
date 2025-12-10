@@ -30,7 +30,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CalendarIcon, Building2, DoorOpenIcon, AlertCircle } from 'lucide-react';
+import { CalendarIcon, Building2, DoorOpenIcon, AlertCircle, Lock, Car } from 'lucide-react';
 
 import { leaseInfoSchema, type LeaseInfoFormData } from '@/lib/validations/tenant';
 import { getProperties, getAvailableUnits } from '@/services/tenant.service';
@@ -46,9 +46,15 @@ interface LeaseInfoStepProps {
   onBack: (data?: LeaseInfoFormData) => void;
   /** SCP-2025-12-07: Indicates if this is a lead conversion flow (pre-populated unit) */
   isLeadConversion?: boolean;
+  /** SCP-2025-12-10: Parking details from quotation (read-only display) */
+  parkingInfo?: {
+    parkingSpots: number;
+    parkingFeePerSpot: number;
+    parkingFee: number;
+  };
 }
 
-export function LeaseInfoStep({ data, onComplete, onBack, isLeadConversion = false }: LeaseInfoStepProps) {
+export function LeaseInfoStep({ data, onComplete, onBack, isLeadConversion = false, parkingInfo }: LeaseInfoStepProps) {
   const [properties, setProperties] = useState<Property[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [isLoadingProperties, setIsLoadingProperties] = useState(true);
@@ -136,7 +142,10 @@ export function LeaseInfoStep({ data, onComplete, onBack, isLeadConversion = fal
           monthlyRent: unitData.monthlyRent,
           status: unitData.status,
           squareFootage: unitData.squareFootage,
-          amenities: unitData.amenities || [],
+          features: unitData.features,
+          active: unitData.active,
+          createdAt: unitData.createdAt,
+          updatedAt: unitData.updatedAt,
         };
         setPreselectedUnit(unit);
       } catch (error) {
@@ -519,6 +528,50 @@ export function LeaseInfoStep({ data, onComplete, onBack, isLeadConversion = fal
                 </FormItem>
               )}
             />
+
+            {/* SCP-2025-12-10: Parking Details from Quotation (Read-Only) */}
+            {isLeadConversion && parkingInfo && (
+              <div className="rounded-lg border border-muted bg-muted/30 p-4" data-testid="parking-info-readonly">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <Car className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium flex items-center gap-2">
+                      Parking Details
+                      <Lock className="h-3 w-3 text-muted-foreground" />
+                    </h4>
+                    <p className="text-xs text-muted-foreground">From Quotation (Read-Only)</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground text-xs">Parking Spots</p>
+                    <p className="font-medium">
+                      {parkingInfo.parkingSpots > 0 ? `${parkingInfo.parkingSpots} spot(s)` : 'No parking'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Fee per Spot</p>
+                    <p className="font-medium">
+                      {parkingInfo.parkingFeePerSpot > 0
+                        ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', minimumFractionDigits: 0 }).format(parkingInfo.parkingFeePerSpot)
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="col-span-2 pt-2 border-t">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground text-xs">Total Parking Fee</span>
+                      <span className="font-semibold text-primary">
+                        {parkingInfo.parkingFee > 0
+                          ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', minimumFractionDigits: 0 }).format(parkingInfo.parkingFee)
+                          : 'AED 0 (No Parking)'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex justify-between pt-4">

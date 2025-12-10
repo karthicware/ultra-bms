@@ -26,7 +26,8 @@ import {
   Receipt,
   Shield,
   User,
-  MapPin
+  MapPin,
+  Loader2,
 } from 'lucide-react';
 import { PageBackButton } from '@/components/common/PageBackButton';
 import { cn } from '@/lib/utils';
@@ -72,13 +73,17 @@ import {
   calculateChequeBreakdown,
 } from '@/lib/validations/quotations';
 import type { ParkingSpot } from '@/types/parking';
-import { FirstMonthPaymentMethod, type ChequeBreakdownItem } from '@/types/quotations';
+import { FirstMonthPaymentMethod, type ChequeBreakdownItem, type CreateQuotationRequest } from '@/types/quotations';
 import { ChequeBreakdownSection } from '@/components/quotations/ChequeBreakdownSection';
 import { FileUploadProgress, type FileUploadStatus } from '@/components/ui/file-upload-progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Banknote } from 'lucide-react';
+import {
+  processIdentityDocuments,
+  IdentityOverallStatus,
+} from '@/services/textract.service';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', minimumFractionDigits: 0 }).format(amount);
@@ -219,9 +224,14 @@ function QuotationPreview({
                 Quotation Preview
               </span>
             </div>
-            <h3 className="mt-3 text-lg font-semibold">
-              {leadName || 'New Quotation'}
-            </h3>
+            {leadName ? (
+              <>
+                <p className="mt-3 text-xs text-muted-foreground">Tenant</p>
+                <h3 className="text-lg font-semibold">{leadName}</h3>
+              </>
+            ) : (
+              <h3 className="mt-3 text-lg font-semibold">New Quotation</h3>
+            )}
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Draft</p>
@@ -364,6 +374,11 @@ function CreateQuotationForm() {
   const [passportExpiry, setPassportExpiry] = useState<Date | null>(null);
   const [nationality, setNationality] = useState('');
   const [documentErrors, setDocumentErrors] = useState<string[]>([]);
+
+  // Story 3.10: OCR processing state
+  const [isProcessingOcr, setIsProcessingOcr] = useState(false);
+  const [ocrMessage, setOcrMessage] = useState<string | null>(null);
+  const [ocrSuccess, setOcrSuccess] = useState<boolean | null>(null);
 
   // SCP-2025-12-06: Cheque breakdown state
   // Default: 5 cheques and Cash as first payment method
@@ -533,6 +548,131 @@ function CreateQuotationForm() {
         yearlyRentAmount,
         numberOfCheques,
       });
+
+  // Story 3.10: Process identity documents with OCR (auto-triggered on front-side upload)
+  // Note: OCR only processes front-side documents - back sides are for storage only
+  const processOcrForDocument = async (
+    passportFrontFile?: File | null,
+    emiratesIdFrontFile?: File | null
+  ) => {
+    // Only process if we have at least one front-side document
+    if (!passportFrontFile && !emiratesIdFrontFile) {
+      return;
+    }
+
+    setIsProcessingOcr(true);
+    setOcrMessage(null);
+    setOcrSuccess(null);
+
+    try {
+      // Only send front-side documents for OCR processing
+      const result = await processIdentityDocuments(
+        passportFrontFile || undefined,
+        undefined, // passportBack - not used for OCR
+        emiratesIdFrontFile || undefined,
+        undefined  // emiratesIdBack - not used for OCR
+      );
+
+      // Auto-fill passport fields if extracted (number and expiry only)
+      if (result.passportDetails) {
+        const passport = result.passportDetails;
+        if (passport.documentNumber && !passportNumber) {
+          setPassportNumber(passport.documentNumber);
+        }
+        if (passport.expiryDate && !passportExpiry) {
+          setPassportExpiry(new Date(passport.expiryDate));
+        }
+      }
+
+      // Auto-fill Emirates ID fields if extracted (including nationality and name)
+      if (result.emiratesIdDetails) {
+        const emiratesId = result.emiratesIdDetails;
+        if (emiratesId.documentNumber && !emiratesIdNumber) {
+          setEmiratesIdNumber(emiratesId.documentNumber);
+        }
+        if (emiratesId.expiryDate && !emiratesIdExpiry) {
+          setEmiratesIdExpiry(new Date(emiratesId.expiryDate));
+        }
+        // Auto-fill tenant name from Emirates ID
+        if (emiratesId.fullName && !leadName) {
+          setLeadName(emiratesId.fullName);
+        }
+        // Auto-fill nationality from Emirates ID
+        if (emiratesId.nationality && !nationality) {
+          const extractedNationality = emiratesId.nationality.trim().toUpperCase();
+          // Try exact match first
+          let matchedNationality = NATIONALITIES.find(
+            nat => nat.toUpperCase() === extractedNationality
+          );
+          // If no exact match, try partial match
+          if (!matchedNationality) {
+            matchedNationality = NATIONALITIES.find(
+              nat => extractedNationality.includes(nat.toUpperCase()) ||
+                     nat.toUpperCase().includes(extractedNationality)
+            );
+          }
+          if (matchedNationality) {
+            setNationality(matchedNationality);
+          }
+        }
+      }
+
+      // Set message based on result
+      if (result.overallStatus === IdentityOverallStatus.SUCCESS) {
+        setOcrSuccess(true);
+        setOcrMessage('Documents scanned successfully! Fields have been auto-filled.');
+        toast({
+          title: 'OCR Complete',
+          description: 'Identity documents scanned successfully. Please verify the extracted data.',
+        });
+      } else if (result.overallStatus === IdentityOverallStatus.PARTIAL_SUCCESS) {
+        setOcrSuccess(true);
+        setOcrMessage('Some fields extracted. Please complete missing information manually.');
+        toast({
+          title: 'Partial OCR',
+          description: 'Some fields could not be extracted. Please fill in missing data.',
+          variant: 'default',
+        });
+      } else {
+        setOcrSuccess(false);
+        setOcrMessage('Could not extract data. Please enter details manually.');
+        toast({
+          title: 'OCR Failed',
+          description: 'Could not extract data from documents. Please enter details manually.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('OCR processing error:', error);
+      setOcrSuccess(false);
+      setOcrMessage('An error occurred during scanning. Please enter details manually.');
+      toast({
+        title: 'OCR Error',
+        description: 'Failed to process documents. Please enter details manually.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessingOcr(false);
+    }
+  };
+
+  // Story 3.10: Handler for Emirates ID front upload - auto-triggers OCR
+  const handleEmiratesIdFrontUpload = (file: File | null) => {
+    setEmiratesIdFront(file);
+    if (file) {
+      // Auto-trigger OCR with the new Emirates ID front (include existing passport front if any)
+      processOcrForDocument(passportFront, file);
+    }
+  };
+
+  // Story 3.10: Handler for Passport front upload - auto-triggers OCR
+  const handlePassportFrontUpload = (file: File | null) => {
+    setPassportFront(file);
+    if (file) {
+      // Auto-trigger OCR with the new passport front (include existing Emirates ID front if any)
+      processOcrForDocument(file, emiratesIdFront);
+    }
+  };
 
   // Validate document uploads before form submission
   const validateDocuments = (): boolean => {
@@ -712,14 +852,26 @@ function CreateQuotationForm() {
       ]);
 
       // Build payload with document paths from S3
-      const payload = {
-        ...data,
+      const payload: CreateQuotationRequest = {
+        leadId: data.leadId,
         issueDate: data.issueDate.toISOString(),
         validityDate: data.validityDate.toISOString(),
-        // Convert documentRequirements array to comma-separated string (backend expects String)
+        propertyId: data.propertyId,
+        unitId: data.unitId,
+        baseRent: data.baseRent || 0,
+        serviceCharges: data.serviceCharges,
+        parkingSpotId: data.parkingSpotId || undefined,
+        parkingFee: data.parkingFee,
+        securityDeposit: data.securityDeposit,
+        adminFee: data.adminFee,
+        // Convert documentRequirements array to string array (backend expects String[])
         documentRequirements: Array.isArray(data.documentRequirements)
-          ? data.documentRequirements.join(', ')
-          : data.documentRequirements,
+          ? data.documentRequirements
+          : [data.documentRequirements],
+        paymentTerms: data.paymentTerms,
+        moveinProcedures: data.moveinProcedures,
+        cancellationPolicy: data.cancellationPolicy,
+        specialTerms: data.specialTerms,
         // Document metadata
         emiratesIdNumber,
         emiratesIdExpiry: emiratesIdExpiry!.toISOString(),
@@ -729,8 +881,7 @@ function CreateQuotationForm() {
         // Document file paths from S3 upload
         emiratesIdFrontPath,
         emiratesIdBackPath,
-        passportFrontPath,
-        passportBackPath,
+        passportPath: passportFrontPath, // Using front as the main passport path
         // SCP-2025-12-06: Cheque breakdown data
         yearlyRentAmount: yearlyRentAmount > 0 ? yearlyRentAmount : undefined,
         numberOfCheques: numberOfCheques > 0 ? numberOfCheques : undefined,
@@ -798,6 +949,7 @@ function CreateQuotationForm() {
                         field.onChange(date);
                         setIssueDateOpen(false);
                       }}
+                      defaultMonth={field.value}
                     />
                   </PopoverContent>
                 </Popover>
@@ -836,6 +988,7 @@ function CreateQuotationForm() {
                         setValidityDateOpen(false);
                       }}
                       disabled={(date) => date < form.getValues('issueDate')}
+                      defaultMonth={field.value}
                     />
                   </PopoverContent>
                 </Popover>
@@ -946,6 +1099,26 @@ function CreateQuotationForm() {
         </Alert>
       )}
 
+      {/* Story 3.10: OCR Status Indicator (auto-triggered on front-side document upload) */}
+      {(isProcessingOcr || ocrMessage) && (
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+          {isProcessingOcr ? (
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span className="text-sm font-medium">Scanning document and extracting details...</span>
+            </div>
+          ) : ocrMessage && (
+            <div className={cn(
+              "flex items-center gap-3 text-sm",
+              ocrSuccess ? "text-green-700 dark:text-green-400" : "text-amber-700 dark:text-amber-400"
+            )}>
+              <Sparkles className="h-5 w-5" />
+              <span>{ocrMessage}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Emirates ID Section */}
       <div className="rounded-2xl border border-muted bg-muted/20 p-6">
         <div className="flex items-center gap-3 mb-6">
@@ -960,14 +1133,14 @@ function CreateQuotationForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <FileUploadProgress
-            onFileSelect={(file) => setEmiratesIdFront(file)}
+            onFileSelect={handleEmiratesIdFrontUpload}
             selectedFile={emiratesIdFront}
             accept={{ 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] }}
             maxSize={5 * 1024 * 1024}
-            label="Front Side"
+            label="Front Side (OCR enabled)"
             required
             testId="upload-emirates-id-front"
-            uploadStatus={emiratesIdFront ? 'success' : 'idle'}
+            uploadStatus={isProcessingOcr && emiratesIdFront ? 'uploading' : (emiratesIdFront ? 'success' : 'idle')}
           />
           <FileUploadProgress
             onFileSelect={(file) => setEmiratesIdBack(file)}
@@ -1017,6 +1190,7 @@ function CreateQuotationForm() {
                     setEmiratesIdExpiryOpen(false);
                   }}
                   disabled={(date) => date < new Date()}
+                  defaultMonth={emiratesIdExpiry || new Date()}
                 />
               </PopoverContent>
             </Popover>
@@ -1038,14 +1212,14 @@ function CreateQuotationForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <FileUploadProgress
-            onFileSelect={(file) => setPassportFront(file)}
+            onFileSelect={handlePassportFrontUpload}
             selectedFile={passportFront}
             accept={{ 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] }}
             maxSize={5 * 1024 * 1024}
-            label="Front Side"
+            label="Front Side (OCR enabled)"
             required
             testId="upload-passport-front"
-            uploadStatus={passportFront ? 'success' : 'idle'}
+            uploadStatus={isProcessingOcr && passportFront ? 'uploading' : (passportFront ? 'success' : 'idle')}
           />
           <FileUploadProgress
             onFileSelect={(file) => setPassportBack(file)}
@@ -1095,6 +1269,7 @@ function CreateQuotationForm() {
                     setPassportExpiryOpen(false);
                   }}
                   disabled={(date) => date < new Date()}
+                  defaultMonth={passportExpiry || new Date()}
                 />
               </PopoverContent>
             </Popover>

@@ -66,7 +66,7 @@ import {
   DEFAULT_QUOTATION_TERMS,
 } from '@/lib/validations/quotations';
 import type { ParkingSpot } from '@/types/parking';
-import { FirstMonthPaymentMethod, type ChequeBreakdownItem, QuotationStatus, type Quotation } from '@/types/quotations';
+import { FirstMonthPaymentMethod, type ChequeBreakdownItem, QuotationStatus, type Quotation, type UpdateQuotationRequest } from '@/types/quotations';
 import { ChequeBreakdownSection } from '@/components/quotations/ChequeBreakdownSection';
 import { Banknote, CreditCard } from 'lucide-react';
 
@@ -366,10 +366,17 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
       setLoading(true);
       getQuotationById(quotationId)
         .then((data) => {
-          if (data.status !== QuotationStatus.DRAFT) {
+          // SCP-2025-12-10: Allow editing for DRAFT, SENT, and ACCEPTED. Block CONVERTED, REJECTED, EXPIRED
+          const editableStatuses = [QuotationStatus.DRAFT, QuotationStatus.SENT, QuotationStatus.ACCEPTED];
+          const blockedStatuses = [QuotationStatus.CONVERTED, QuotationStatus.REJECTED, QuotationStatus.EXPIRED];
+
+          if (blockedStatuses.includes(data.status)) {
+            const statusMessage = data.status === QuotationStatus.CONVERTED
+              ? 'This quotation has been converted to a tenant and cannot be edited.'
+              : `This quotation is ${data.status.toLowerCase()} and cannot be edited.`;
             toast({
               title: 'Cannot Edit',
-              description: 'Only draft quotations can be edited',
+              description: statusMessage,
               variant: 'destructive',
             });
             router.push(`/quotations/${quotationId}`);
@@ -378,17 +385,6 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
 
           setQuotation(data);
           setLeadName(data.leadName || '');
-
-          // Check if quotation is editable (only DRAFT status)
-          if (data.status !== 'DRAFT') {
-            toast({
-              title: 'Warning',
-              description: `This quotation is in ${data.status} status and cannot be edited. Only DRAFT quotations can be modified.`,
-              variant: 'destructive',
-            });
-            router.push(`/quotations/${quotationId}`);
-            return;
-          }
 
           // Parse cheque breakdown if string
           if (data.chequeBreakdown && typeof data.chequeBreakdown === 'string') {
@@ -429,7 +425,9 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
             adminFee: data.adminFee || 0,
             documentRequirements: Array.isArray(data.documentRequirements)
               ? data.documentRequirements
-              : data.documentRequirements?.split(', ') || ['Emirates ID', 'Passport', 'Visa'],
+              : typeof data.documentRequirements === 'string'
+                ? (data.documentRequirements as string).split(', ')
+                : ['Emirates ID', 'Passport', 'Visa'],
             paymentTerms: data.paymentTerms || DEFAULT_QUOTATION_TERMS.paymentTerms,
             moveinProcedures: data.moveinProcedures || DEFAULT_QUOTATION_TERMS.moveinProcedures,
             cancellationPolicy: data.cancellationPolicy || DEFAULT_QUOTATION_TERMS.cancellationPolicy,
@@ -696,32 +694,31 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
 
       // Note: UpdateQuotationRequest does not have issueDate - it's set on creation
       // Only include fields that are in UpdateQuotationRequest DTO
-      // Send null instead of 0/empty for fields to support partial updates
+      // Send undefined instead of 0/empty for fields to support partial updates
       // Backend validates @DecimalMin only when value is non-null
-      const payload = {
+      const payload: UpdateQuotationRequest = {
         validityDate: validityDateValue,
-        propertyId: data.propertyId || null,
-        unitId: data.unitId || null,
-        baseRent: data.baseRent && data.baseRent > 0 ? data.baseRent : null,
-        serviceCharges: data.serviceCharges && data.serviceCharges > 0 ? data.serviceCharges : null,
-        parkingSpotId: data.parkingSpotId || null,
-        parkingFee: data.parkingFee && data.parkingFee > 0 ? data.parkingFee : null,
-        securityDeposit: data.securityDeposit && data.securityDeposit > 0 ? data.securityDeposit : null,
-        adminFee: data.adminFee && data.adminFee > 0 ? data.adminFee : null,
+        propertyId: data.propertyId || undefined,
+        unitId: data.unitId || undefined,
+        baseRent: data.baseRent && data.baseRent > 0 ? data.baseRent : undefined,
+        serviceCharges: data.serviceCharges && data.serviceCharges > 0 ? data.serviceCharges : undefined,
+        parkingSpotId: data.parkingSpotId || undefined,
+        parkingFee: data.parkingFee && data.parkingFee > 0 ? data.parkingFee : undefined,
+        securityDeposit: data.securityDeposit && data.securityDeposit > 0 ? data.securityDeposit : undefined,
+        adminFee: data.adminFee && data.adminFee > 0 ? data.adminFee : undefined,
         documentRequirements: Array.isArray(data.documentRequirements)
-          ? data.documentRequirements.join(', ')
-          : data.documentRequirements,
+          ? data.documentRequirements
+          : undefined,
         paymentTerms: data.paymentTerms,
         moveinProcedures: data.moveinProcedures,
         cancellationPolicy: data.cancellationPolicy,
         specialTerms: data.specialTerms,
         // Only send cheque fields if yearlyRentAmount is set
-        yearlyRentAmount: yearlyRentAmount > 0 ? yearlyRentAmount : null,
-        numberOfCheques: numberOfCheques > 0 ? numberOfCheques : null,
-        firstMonthPaymentMethod: yearlyRentAmount > 0 ? firstMonthPaymentMethod : null,
-        firstMonthTotal: (firstMonthTotal ?? 0) > 0 ? firstMonthTotal : null,
-        // Backend expects chequeBreakdown as a JSON string, not an array
-        chequeBreakdown: chequeBreakdown.length > 0 ? JSON.stringify(chequeBreakdown) : null,
+        yearlyRentAmount: yearlyRentAmount > 0 ? yearlyRentAmount : undefined,
+        numberOfCheques: numberOfCheques > 0 ? numberOfCheques : undefined,
+        firstMonthPaymentMethod: yearlyRentAmount > 0 ? firstMonthPaymentMethod : undefined,
+        firstMonthTotal: (firstMonthTotal ?? 0) > 0 ? firstMonthTotal : undefined,
+        chequeBreakdown: chequeBreakdown.length > 0 ? chequeBreakdown : undefined,
       };
 
       console.log('Update quotation payload:', JSON.stringify(payload, null, 2));
@@ -1357,11 +1354,15 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                      <span>Only draft quotations can be edited</span>
+                      <span>Quotations can be edited until converted to tenant</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
                       <span>Cheque breakdown will be recalculated if rent changes</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                      <span>Editing a sent quotation will mark it as &quot;Modified&quot;</span>
                     </li>
                   </ul>
                 </div>

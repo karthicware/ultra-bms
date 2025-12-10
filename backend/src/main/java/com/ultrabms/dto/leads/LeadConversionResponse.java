@@ -61,8 +61,10 @@ public class LeadConversionResponse {
     private BigDecimal parkingFee;
 
     // ===== SCP-2025-12-06: Cheque Breakdown =====
+    // SCP-2025-12-10: Added numberOfPayments (total installments)
     private BigDecimal yearlyRentAmount;
-    private Integer numberOfCheques;
+    private Integer numberOfPayments; // Total payment installments (what user selects)
+    private Integer numberOfCheques;  // Actual cheques needed (adjusted for first month payment method)
     private Quotation.FirstMonthPaymentMethod firstMonthPaymentMethod;
     private String chequeBreakdown; // JSON string of cheque items
 

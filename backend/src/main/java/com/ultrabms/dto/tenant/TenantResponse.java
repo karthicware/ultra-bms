@@ -74,6 +74,10 @@ public class TenantResponse {
     private PaymentMethod paymentMethod;
     private Integer pdcChequeCount;
 
+    // Bank Account (Story 3.9)
+    // AC #4: Update TenantResponse DTO to include bank account details
+    private BankAccountSummary bankAccount;
+
     // Documents
     private List<TenantDocumentResponse> documents;
 

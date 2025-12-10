@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story-context version="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>10</storyId>
+    <storyKey>3-10-quotation-identity-document-ocr-integration</storyKey>
+    <title>Quotation Identity Document OCR Integration</title>
+    <status>ready-for-development</status>
+    <estimatedEffort>1-2 days</estimatedEffort>
+    <generatedAt>2025-12-10T00:00:00Z</generatedAt>
+    <sourceStoryPath>docs/sprint-artifacts/epic-3/3-10-quotation-identity-document-ocr-integration.md</sourceStoryPath>
+    <prerequisiteStories>
+      <story>3.1 - Lead Management and Quotation System (COMPLETED)</story>
+      <story>3.9 - Tenant Onboarding Bank Account Integration (Similar Textract pattern)</story>
+    </prerequisiteStories>
+    <sprintChangeProposal>SCP-2025-12-10-quotation-bugs-correct-course</sprintChangeProposal>
+  </metadata>
+
+  <story>
+    <asA>Admin or Property Manager creating a quotation</asA>
+    <iWant>identity documents (Passport and Emirates ID) to be automatically processed with OCR after upload</iWant>
+    <soThat>document fields are auto-populated and data entry time is reduced</soThat>
+    <taskCount>30</taskCount>
+    <acceptanceCriteriaCount>20</acceptanceCriteriaCount>
+    <tasks>
+      <category name="Backend Implementation" count="13">
+        <task id="1">Create IdentityDocumentDetailResponse DTO</task>
+        <task id="2">Create ProcessIdentityDocumentsRequest DTO (optional fields)</task>
+        <task id="3">Create ProcessIdentityDocumentsResponse DTO</task>
+        <task id="4">Add processIdentityDocuments() method to TextractService interface</task>
+        <task id="5">Implement passport OCR extraction logic in TextractServiceImpl</task>
+        <task id="6">Implement Emirates ID OCR extraction logic in TextractServiceImpl</task>
+        <task id="7">Add regex patterns for passport number, expiry date, nationality extraction</task>
+        <task id="8">Add regex patterns for Emirates ID number (784-YYYY-XXXXXXX-X format) and expiry extraction</task>
+        <task id="9">Add /process-identity-documents endpoint to TextractController</task>
+        <task id="10">Implement file validation (JPEG/PNG, 5MB max)</task>
+        <task id="11">Add error handling and logging</task>
+        <task id="12">Create TextractServiceImplTest.java with 15+ test cases</task>
+        <task id="13">Update Swagger API documentation</task>
+      </category>
+      <category name="Frontend Implementation" count="11">
+        <task id="14">Create TypeScript types in textract.ts</task>
+        <task id="15">Add processIdentityDocuments() function to textract.service.ts</task>
+        <task id="16">Update quotation create page Step 2 to trigger OCR after uploads</task>
+        <task id="17">Add OCR processing state management and loading spinner</task>
+        <task id="18">Implement auto-population logic for extracted fields</task>
+        <task id="19">Add confidence score indicators and warnings for low confidence</task>
+        <task id="20">Implement toast notifications for SUCCESS/PARTIAL/FAILED</task>
+        <task id="21">Add user override capability (editable fields)</task>
+        <task id="22">Handle edge cases (partial documents, OCR failures)</task>
+        <task id="23">Create textract.service.test.ts unit tests</task>
+        <task id="24">Create QuotationCreatePage.IdentityOCR.test.tsx integration tests</task>
+      </category>
+      <category name="Testing &amp; Documentation" count="6">
+        <task id="25">Manual testing with real passport and Emirates ID samples</task>
+        <task id="26">Verify confidence scores and accuracy</task>
+        <task id="27">Test error scenarios (invalid files, Textract failures)</task>
+        <task id="28">Performance testing (processing time for 4 documents)</task>
+        <task id="29">Update user documentation with OCR feature instructions</task>
+        <task id="30">Add troubleshooting guide for OCR failures</task>
+      </category>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1" category="Backend Changes">
+      Create IdentityDocumentDetailResponse DTO with fields: documentType, documentNumber, expiryDate, nationality, fullName, dateOfBirth, confidenceScore, status, errorMessage
+    </criterion>
+    <criterion id="AC2" category="Backend Changes">
+      Create ProcessIdentityDocumentsRequest DTO with optional MultipartFile fields for passport and Emirates ID (front/back)
+    </criterion>
+    <criterion id="AC3" category="Backend Changes">
+      Create ProcessIdentityDocumentsResponse DTO with passportDetails, emiratesIdDetails, overallStatus, message
+    </criterion>
+    <criterion id="AC4" category="Backend Changes">
+      Add processIdentityDocuments() method to TextractService interface
+    </criterion>
+    <criterion id="AC5" category="Backend Changes">
+      Implement identity document OCR processing in TextractServiceImpl using AWS Textract detectDocumentText() API with patterns for passport (number, expiry, nationality) and Emirates ID (784-YYYY-XXXXXXX-X format)
+    </criterion>
+    <criterion id="AC6" category="Backend Changes">
+      Add POST /api/v1/textract/process-identity-documents endpoint to TextractController with role authorization
+    </criterion>
+    <criterion id="AC7" category="Backend Changes">
+      Handle edge cases: invalid file formats (400), Textract API failures (FAILED status), low confidence &lt;70% (PARTIAL status), no text extracted
+    </criterion>
+    <criterion id="AC8" category="Backend Changes">
+      Create TextractServiceImplTest.java with 15+ test cases covering success, failure, and edge scenarios
+    </criterion>
+    <criterion id="AC9" category="Frontend Changes">
+      Create TypeScript types for IdentityDocumentDetail and ProcessIdentityDocumentsResponse in frontend/src/types/textract.ts
+    </criterion>
+    <criterion id="AC10" category="Frontend Changes">
+      Add processIdentityDocuments() function to textract.service.ts
+    </criterion>
+    <criterion id="AC11" category="Frontend Changes">
+      Update quotation create page Step 2 to automatically call OCR after all 4 documents uploaded, show loading spinner, auto-populate fields on success
+    </criterion>
+    <criterion id="AC12" category="Frontend Changes">
+      Display OCR processing status with confidence scores, highlight low confidence fields (&lt;70%) in yellow with warning icon
+    </criterion>
+    <criterion id="AC13" category="Frontend Changes">
+      User can always edit auto-populated fields - no fields locked after OCR
+    </criterion>
+    <criterion id="AC14" category="Frontend Changes">
+      Handle edge cases: partial documents, OCR partial data, OCR failure allows manual entry
+    </criterion>
+    <criterion id="AC15" category="Frontend Changes">
+      Create frontend tests: textract.service.test.ts and QuotationCreatePage.IdentityOCR.test.tsx with 20+ test cases
+    </criterion>
+    <criterion id="AC16" category="Additional">
+      Update Swagger/OpenAPI documentation for /process-identity-documents endpoint
+    </criterion>
+    <criterion id="AC17" category="Additional">
+      OCR performance: single document &lt;5s, all 4 documents &lt;15s
+    </criterion>
+    <criterion id="AC18" category="Additional">
+      Security: JPEG/PNG only, 5MB max, sanitize text, in-memory processing, audit logging
+    </criterion>
+    <criterion id="AC19" category="Additional">
+      Backend logs: Textract API details, patterns matched, confidence scores, processing time
+    </criterion>
+    <criterion id="AC20" category="Additional">
+      Graceful degradation: user-friendly error on Textract unavailability, fall back to manual entry
+    </criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="3.3 Tenant Management Module">
+        <snippet>
+Tenant Onboarding Data Capture: Personal information (name, contact, ID), Lease terms and duration, Document attachments (ID, visa, tenancy contract)
+Features: Digital signature integration, Move-in inspection scheduling
+        </snippet>
+        <relevance>Provides context for tenant onboarding document requirements and workflow</relevance>
+      </doc>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="5.1 System Architecture">
+        <snippet>
+Frontend: React.js with TypeScript, UI Components: shadcn/ui
+Backend: Java 17 with Spring Boot framework
+Database: PostgreSQL with Redis caching
+File Storage: AWS S3
+Deployment Region: AWS UAE (Middle East)
+        </snippet>
+        <relevance>Technical stack constraints for implementation</relevance>
+      </doc>
+      <doc path="docs/epics/epic-3-tenant-management-portal.md" title="Epic 3 - Tenant Management">
+        <relevance>Parent epic context for tenant management features including quotation and onboarding workflows</relevance>
+      </doc>
+      <doc path="docs/scp/SCP-2025-12-10.md" title="Sprint Change Proposal">
+        <relevance>Decision document for adding Story 3.10 to implement identity document OCR</relevance>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact path="backend/src/main/java/com/ultrabms/service/TextractService.java" kind="interface" symbol="TextractService">
+        <lines>1-35</lines>
+        <reason>MODIFY: Add processIdentityDocuments() method to existing interface that currently only handles cheques</reason>
+        <currentContent>
+/**
+ * Textract Service Interface
+ * Handles cheque image OCR processing using AWS Textract
+ * SCP-2025-12-10: Added for tenant onboarding Step 3 cheque processing
+ */
+public interface TextractService {
+    ProcessChequesResponse processChequeImages(List&lt;MultipartFile&gt; chequeImages, UUID quotationId);
+}
+        </currentContent>
+      </artifact>
+
+      <artifact path="backend/src/main/java/com/ultrabms/service/impl/TextractServiceImpl.java" kind="class" symbol="TextractServiceImpl">
+        <lines>1-442</lines>
+        <reason>EXTEND: Add identity document processing methods following existing cheque OCR patterns. Use same Textract API integration but with different regex patterns for passport/Emirates ID extraction</reason>
+        <patterns>
+          <pattern type="UAE_BANKS">List of UAE bank names for cheque detection - reference pattern</pattern>
+          <pattern type="AMOUNT_PATTERN">Regex for currency amounts - adapt for document patterns</pattern>
+          <pattern type="CHEQUE_NUMBER_PATTERN">Regex for cheque numbers - reference for document number patterns</pattern>
+          <pattern type="DATE_FORMATTERS">Multiple date format parsers - reuse for document expiry dates</pattern>
+        </patterns>
+        <keyMethods>
+          <method>processChequeImages() - main entry point pattern to follow</method>
+          <method>processSingleCheque() - single document processing pattern</method>
+          <method>parseChequeText() - text extraction and parsing pattern</method>
+          <method>extractBankName() / extractChequeNumber() / extractAmount() / extractDate() - field extraction patterns</method>
+        </keyMethods>
+      </artifact>
+
+      <artifact path="backend/src/main/java/com/ultrabms/controller/TextractController.java" kind="class" symbol="TextractController">
+        <lines>1-159</lines>
+        <reason>EXTEND: Add /process-identity-documents endpoint following existing /process-cheques pattern</reason>
+        <existingEndpoint>
+          <path>POST /api/v1/textract/process-cheques</path>
+          <authorization>SUPER_ADMIN, ADMIN, PROPERTY_MANAGER</authorization>
+          <contentType>multipart/form-data</contentType>
+          <validation>JPEG/PNG file type validation</validation>
+        </existingEndpoint>
+      </artifact>
+
+      <artifact path="backend/src/main/java/com/ultrabms/config/TextractConfig.java" kind="class" symbol="TextractConfig">
+        <reason>REUSE: Existing TextractClient bean - Region: ap-south-1 (Mumbai, closest to UAE with Textract support)</reason>
+      </artifact>
+
+      <artifact path="backend/src/main/java/com/ultrabms/dto/textract/ChequeDetailResponse.java" kind="class">
+        <reason>REFERENCE: Pattern for creating IdentityDocumentDetailResponse DTO</reason>
+      </artifact>
+
+      <artifact path="backend/src/main/java/com/ultrabms/dto/textract/ProcessChequesResponse.java" kind="class">
+        <reason>REFERENCE: Pattern for creating ProcessIdentityDocumentsResponse DTO with OverallStatus enum</reason>
+      </artifact>
+
+      <artifact path="frontend/src/services/textract.service.ts" kind="service" symbol="textract.service">
+        <lines>1-95</lines>
+        <reason>EXTEND: Add processIdentityDocuments() function following existing processChequeImages() pattern</reason>
+        <existingTypes>
+          <type>ChequeProcessingStatus enum</type>
+          <type>OverallStatus enum</type>
+          <type>ChequeDetail interface</type>
+          <type>ProcessChequesResponse interface</type>
+        </existingTypes>
+      </artifact>
+
+      <artifact path="frontend/src/app/(dashboard)/quotations/create/page.tsx" kind="page" symbol="CreateQuotationPage">
+        <lines>947-1141 (renderIdentityStep function)</lines>
+        <reason>MODIFY: Add OCR trigger after document uploads, auto-populate fields, show processing states</reason>
+        <relevantState>
+          <state name="emiratesIdFront/Back">File states for Emirates ID uploads</state>
+          <state name="passportFront/Back">File states for passport uploads</state>
+          <state name="emiratesIdNumber">Manual input field - auto-populate from OCR</state>
+          <state name="emiratesIdExpiry">Manual input field - auto-populate from OCR</state>
+          <state name="passportNumber">Manual input field - auto-populate from OCR</state>
+          <state name="passportExpiry">Manual input field - auto-populate from OCR</state>
+          <state name="nationality">Manual dropdown - auto-populate from OCR</state>
+        </relevantState>
+        <existingPattern>
+          <description>FileUploadProgress component used for document uploads with success/error states</description>
+          <toastPattern>useToast hook for showing success/error notifications</toastPattern>
+        </existingPattern>
+      </artifact>
+
+      <artifact path="frontend/src/components/ui/file-upload-progress.tsx" kind="component" symbol="FileUploadProgress">
+        <reason>REFERENCE: Existing upload component with status states (idle, uploading, success, error)</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <backend>
+        <dependency name="Spring Boot" version="3.4.0" />
+        <dependency name="Java" version="17" />
+        <dependency name="AWS SDK Textract" package="software.amazon.awssdk:textract" />
+        <dependency name="PostgreSQL" scope="runtime" />
+        <dependency name="Lombok" version="1.18.36" />
+        <dependency name="Spring Security" />
+        <dependency name="SpringDoc OpenAPI" version="2.8.4" />
+      </backend>
+      <frontend>
+        <dependency name="Next.js" version="16.0.2" />
+        <dependency name="React" version="19.2.0" />
+        <dependency name="TypeScript" version="5.x" />
+        <dependency name="React Hook Form" version="7.66.0" />
+        <dependency name="Zod" version="4.1.12" />
+        <dependency name="date-fns" version="4.1.0" />
+        <dependency name="axios" version="1.13.2" />
+        <dependency name="@tanstack/react-query" version="5.90.9" />
+        <dependency name="lucide-react" version="0.553.0" />
+        <dependency name="radix-ui" components="dialog, popover, select" />
+      </frontend>
+      <testing>
+        <backend>JUnit 5, Mockito, AssertJ, Spring Security Test</backend>
+        <frontend>Jest 30.2.0, @testing-library/react 16.3.0, @testing-library/user-event 14.6.1</frontend>
+        <e2e>Playwright 1.49.1</e2e>
+      </testing>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="technical">
+      AWS Textract Region: ap-south-1 (Mumbai) - closest region to UAE with Textract support. Use detectDocumentText() API not analyzeDocument().
+    </constraint>
+    <constraint type="performance">
+      OCR processing: Single document &lt;5 seconds, All 4 documents &lt;15 seconds
+    </constraint>
+    <constraint type="security">
+      File validation: JPEG/PNG only, max 5MB per file. Process documents in-memory only - do NOT persist raw images on server. Sanitize extracted text to prevent injection. Log OCR requests with user ID for audit trail.
+    </constraint>
+    <constraint type="api">
+      Endpoint: POST /api/v1/textract/process-identity-documents. Authorization: SUPER_ADMIN, ADMIN, PROPERTY_MANAGER roles. Content-Type: multipart/form-data.
+    </constraint>
+    <constraint type="ui">
+      Fields must remain editable after OCR auto-population. Show confidence indicators for low-confidence extractions (&lt;70%). Graceful degradation - OCR failure must not block manual entry.
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface type="backend-service">
+      <signature>
+ProcessIdentityDocumentsResponse processIdentityDocuments(
+    MultipartFile passportFront,
+    MultipartFile passportBack,
+    MultipartFile emiratesIdFront,
+    MultipartFile emiratesIdBack
+);
+      </signature>
+    </interface>
+    <interface type="rest-endpoint">
+      <method>POST</method>
+      <path>/api/v1/textract/process-identity-documents</path>
+      <consumes>multipart/form-data</consumes>
+      <produces>application/json</produces>
+      <requestParts>
+        <part name="passportFront" required="false" type="MultipartFile" />
+        <part name="passportBack" required="false" type="MultipartFile" />
+        <part name="emiratesIdFront" required="false" type="MultipartFile" />
+        <part name="emiratesIdBack" required="false" type="MultipartFile" />
+      </requestParts>
+      <response>
+{
+  "success": true,
+  "message": "Documents processed successfully",
+  "data": {
+    "passportDetails": {
+      "documentType": "PASSPORT",
+      "documentNumber": "AB1234567",
+      "expiryDate": "2030-12-15",
+      "nationality": "British",
+      "fullName": "John Smith",
+      "dateOfBirth": "1985-06-20",
+      "confidenceScore": 92.5,
+      "status": "SUCCESS"
+    },
+    "emiratesIdDetails": {
+      "documentType": "EMIRATES_ID",
+      "documentNumber": "784-1990-1234567-8",
+      "expiryDate": "2027-08-15",
+      "fullName": "John Smith",
+      "dateOfBirth": "1985-06-20",
+      "confidenceScore": 95.0,
+      "status": "SUCCESS"
+    },
+    "overallStatus": "SUCCESS",
+    "message": "All documents processed successfully"
+  },
+  "timestamp": "2025-12-10T12:00:00Z"
+}
+      </response>
+    </interface>
+    <interface type="frontend-service">
+      <signature>
+export async function processIdentityDocuments(
+  passportFront?: File,
+  passportBack?: File,
+  emiratesIdFront?: File,
+  emiratesIdBack?: File
+): Promise&lt;ProcessIdentityDocumentsResponse&gt;
+      </signature>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      <backend>
+        <framework>JUnit 5 with Mockito</framework>
+        <pattern>@ExtendWith(MockitoExtension.class), @Mock, @InjectMocks</pattern>
+        <assertions>AssertJ (assertThat, assertThatThrownBy)</assertions>
+        <naming>@DisplayName for readable test names</naming>
+        <location>backend/src/test/java/com/ultrabms/service/</location>
+        <referenceFile>QuotationServiceTest.java, LeadServiceTest.java</referenceFile>
+      </backend>
+      <frontend>
+        <framework>Jest with React Testing Library</framework>
+        <pattern>describe/it blocks, jest.mock for API mocking</pattern>
+        <assertions>expect().toHaveBeenCalledWith(), expect().toEqual()</assertions>
+        <location>frontend/src/services/__tests__/, frontend/src/components/__tests__/</location>
+        <referenceFile>quotations.service.test.ts</referenceFile>
+      </frontend>
+    </standards>
+    <locations>
+      <backendTests>backend/src/test/java/com/ultrabms/service/TextractServiceImplTest.java (NEW)</backendTests>
+      <frontendServiceTests>frontend/src/services/__tests__/textract.service.test.ts (NEW or EXTEND)</frontendServiceTests>
+      <frontendComponentTests>frontend/src/components/quotations/__tests__/QuotationCreatePage.IdentityOCR.test.tsx (NEW)</frontendComponentTests>
+    </locations>
+    <ideas>
+      <backendTests>
+        <test ac="AC5">testProcessPassportSuccess - Mock Textract response with passport text, verify all fields extracted correctly</test>
+        <test ac="AC5">testProcessEmiratesIdSuccess - Mock Textract response with Emirates ID text, verify 784-YYYY-XXXXXXX-X format parsed</test>
+        <test ac="AC5">testProcessBothDocumentsSuccess - Process passport and Emirates ID together, verify combined response</test>
+        <test ac="AC7">testProcessNoDocuments - Call with no files, expect ValidationException</test>
+        <test ac="AC7">testProcessInvalidFileFormat - Upload non-image file, expect ValidationException</test>
+        <test ac="AC7">testTextractApiFailure - Mock TextractException, verify FAILED status returned with error message</test>
+        <test ac="AC7">testLowConfidenceScore - Mock response with few fields, verify PARTIAL status when confidence &lt;70%</test>
+        <test ac="AC5">testEmiratesIdNumberPatternVariants - Test 784-YYYY-XXXXXXX-X and 784YYYYXXXXXXXX formats</test>
+        <test ac="AC5">testPassportExpiryDateFormats - Test dd/MM/yyyy, yyyy-MM-dd, dd-MMM-yyyy formats</test>
+        <test ac="AC5">testNationalityExtraction - Test extraction after "Nationality", "Citizen of", "National" keywords</test>
+        <test ac="AC14">testPartialDocumentUpload - Upload only passport or only Emirates ID, verify partial processing</test>
+        <test ac="AC17">testProcessingPerformance - Verify single document &lt;5s, mock to test timeout handling</test>
+        <test ac="AC18">testFileSizeLimit - Upload &gt;5MB file, expect ValidationException</test>
+        <test ac="AC19">testAuditLogging - Verify log entries include user ID, request details</test>
+        <test ac="AC5">testArabicEnglishNameExtraction - Test bilingual name extraction from Emirates ID</test>
+      </backendTests>
+      <frontendTests>
+        <test ac="AC10">testProcessIdentityDocuments_FormDataConstruction - Verify FormData built correctly with files</test>
+        <test ac="AC10">testProcessIdentityDocuments_ApiCall - Verify POST to correct endpoint</test>
+        <test ac="AC10">testProcessIdentityDocuments_ResponseParsing - Verify response mapped to types</test>
+        <test ac="AC10">testProcessIdentityDocuments_ErrorHandling - Verify error thrown on API failure</test>
+        <test ac="AC11">testOCRTrigger_AfterAllDocumentsUploaded - Verify OCR called when 4 docs uploaded</test>
+        <test ac="AC11">testAutoPopulation_OnSuccess - Verify form fields populated from response</test>
+        <test ac="AC11">testLoadingSpinner_DuringProcessing - Verify spinner shown during API call</test>
+        <test ac="AC12">testConfidenceIndicator_HighConfidence - No warning for &gt;70% confidence</test>
+        <test ac="AC12">testConfidenceIndicator_LowConfidence - Yellow highlight with warning for &lt;70%</test>
+        <test ac="AC13">testManualOverride_EditableFields - Verify fields remain editable after auto-population</test>
+        <test ac="AC14">testPartialOCR_PopulateAvailableFields - Some fields empty if OCR returns partial data</test>
+        <test ac="AC14">testOCRFailure_AllowManualEntry - Form still submittable after OCR failure</test>
+        <test ac="AC11">testToast_Success - Show success toast on OCR completion</test>
+        <test ac="AC11">testToast_PartialSuccess - Show warning toast for partial extraction</test>
+        <test ac="AC11">testToast_Failure - Show error toast on OCR failure</test>
+        <test ac="AC14">testPartialDocumentUpload - Only trigger OCR for uploaded documents</test>
+        <test ac="AC17">testLoadingState_LongProcessing - Verify UI handles long processing times</test>
+        <test ac="AC20">testGracefulDegradation - Form usable when Textract unavailable</test>
+        <test ac="AC13">testFormValidation_StillApplies - Required field validation after OCR</test>
+      </frontendTests>
+    </ideas>
+  </tests>
+
+  <successMetrics>
+    <metric>80%+ of identity document fields auto-populated successfully</metric>
+    <metric>90%+ accuracy for Emirates ID extraction (standardized 784-YYYY-XXXXXXX-X format)</metric>
+    <metric>70%+ accuracy for passport extraction (varies by country format)</metric>
+    <metric>Average OCR processing time &lt;10 seconds for all 4 documents</metric>
+    <metric>Reduces data entry time by 60%+</metric>
+  </successMetrics>
+
+  <risks>
+    <risk id="1" impact="medium">
+      <description>OCR accuracy may vary for different document qualities (blurry, low light, worn documents)</description>
+      <mitigation>Show confidence scores, allow manual override, highlight low-confidence fields with warning</mitigation>
+    </risk>
+    <risk id="2" impact="medium">
+      <description>Textract API failures or rate limiting during peak usage</description>
+      <mitigation>Implement exponential backoff retry, graceful degradation to manual entry</mitigation>
+    </risk>
+    <risk id="3" impact="low">
+      <description>International passport formats vary widely (100+ countries)</description>
+      <mitigation>Start with common formats (UAE, GCC, Western countries), expand patterns iteratively based on usage</mitigation>
+    </risk>
+    <risk id="4" impact="low">
+      <description>Processing time may frustrate users on slow connections</description>
+      <mitigation>Show progress indicator, allow background processing, cache results</mitigation>
+    </risk>
+  </risks>
+
+  <definitionOfDone>
+    <item>All 20 acceptance criteria met and verified</item>
+    <item>Backend: 15+ unit tests passing</item>
+    <item>Frontend: 20+ unit tests passing</item>
+    <item>Manual testing with sample documents completed</item>
+    <item>Code review approved</item>
+    <item>API documentation (Swagger) updated</item>
+    <item>No new linting errors</item>
+    <item>Performance benchmarks met (&lt;15s for 4 documents)</item>
+    <item>Security validation passed (file upload limits, text sanitization)</item>
+    <item>sprint-status.yaml updated to reflect completion</item>
+  </definitionOfDone>
+</story-context>

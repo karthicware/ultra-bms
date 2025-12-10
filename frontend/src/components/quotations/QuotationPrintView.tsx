@@ -165,7 +165,7 @@ export const QuotationPrintView = forwardRef<HTMLDivElement, QuotationPrintViewP
                 <tr className="border-b border-gray-100">
                   <td className="py-3 text-gray-600">Parking Fee</td>
                   <td className="py-3 text-right font-medium tabular-nums">
-                    {formatCurrency(quotation.parkingFee)}
+                    {formatCurrency(quotation.parkingFee ?? 0)}
                   </td>
                 </tr>
               ) : null}

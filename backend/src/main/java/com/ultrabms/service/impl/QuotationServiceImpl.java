@@ -101,6 +101,16 @@ public class QuotationServiceImpl implements QuotationService {
         // SCP-2025-12-02: Changed from parkingSpots count to parkingSpotId (single spot from inventory)
         // SCP-2025-12-04: Added identity document fields (moved from Lead)
         // SCP-2025-12-06: Added cheque breakdown fields
+        // SCP-2025-12-10: Calculate numberOfCheques based on firstMonthPaymentMethod
+        int numberOfPayments = request.getNumberOfCheques() != null ? request.getNumberOfCheques() : 12;
+        Quotation.FirstMonthPaymentMethod paymentMethod = request.getFirstMonthPaymentMethod() != null
+                ? request.getFirstMonthPaymentMethod()
+                : Quotation.FirstMonthPaymentMethod.CHEQUE;
+        // numberOfCheques = numberOfPayments - 1 if first month is CASH, else same as numberOfPayments
+        int numberOfCheques = paymentMethod == Quotation.FirstMonthPaymentMethod.CASH
+                ? Math.max(0, numberOfPayments - 1)
+                : numberOfPayments;
+
         Quotation quotation = Quotation.builder()
                 .quotationNumber(quotationNumberGenerator.generate())
                 .leadId(request.getLeadId())
@@ -118,11 +128,11 @@ public class QuotationServiceImpl implements QuotationService {
                 .adminFee(request.getAdminFee())
                 .documentRequirements(request.getDocumentRequirements())
                 // SCP-2025-12-06: Cheque breakdown fields
+                // SCP-2025-12-10: numberOfPayments = total installments, numberOfCheques = actual cheques needed
                 .yearlyRentAmount(request.getYearlyRentAmount())
-                .numberOfCheques(request.getNumberOfCheques() != null ? request.getNumberOfCheques() : 12)
-                .firstMonthPaymentMethod(request.getFirstMonthPaymentMethod() != null
-                        ? request.getFirstMonthPaymentMethod()
-                        : Quotation.FirstMonthPaymentMethod.CHEQUE)
+                .numberOfPayments(numberOfPayments)
+                .numberOfCheques(numberOfCheques)
+                .firstMonthPaymentMethod(paymentMethod)
                 .firstMonthTotal(request.getFirstMonthTotal())
                 .chequeBreakdown(serializeChequeBreakdown(request.getChequeBreakdown()))
                 // Identity document fields
@@ -228,10 +238,13 @@ public class QuotationServiceImpl implements QuotationService {
 
         Quotation quotation = findQuotationById(id);
 
-        // Only allow updates if quotation is in DRAFT status
-        if (quotation.getStatus() != Quotation.QuotationStatus.DRAFT) {
-            throw new ValidationException("Only DRAFT quotations can be updated");
+        // SCP-2025-12-10: Block updates ONLY for CONVERTED status (all other statuses can be updated)
+        if (quotation.getStatus() == Quotation.QuotationStatus.CONVERTED) {
+            throw new ValidationException("Quotation cannot be modified after tenant conversion");
         }
+
+        // SCP-2025-12-10: Mark as modified if updating a non-DRAFT quotation
+        boolean wasNonDraft = quotation.getStatus() != Quotation.QuotationStatus.DRAFT;
 
         // Update fields if provided
         if (request.getPropertyId() != null) {
@@ -331,6 +344,13 @@ public class QuotationServiceImpl implements QuotationService {
             quotation.setPassportBackPath(request.getPassportBackPath());
         }
 
+        // SCP-2025-12-10: Mark as modified if updating a non-DRAFT quotation (SENT, ACCEPTED, etc.)
+        if (wasNonDraft) {
+            quotation.setIsModified(true);
+            log.info("Quotation {} marked as modified (status was: {})",
+                    quotation.getQuotationNumber(), quotation.getStatus());
+        }
+
         quotation = quotationRepository.save(quotation);
         log.info("Quotation updated successfully: {}", quotation.getQuotationNumber());
         return QuotationResponse.fromEntity(quotation);
@@ -405,23 +425,36 @@ public class QuotationServiceImpl implements QuotationService {
         Lead lead = leadRepository.findById(quotation.getLeadId())
                 .orElseThrow(() -> new ResourceNotFoundException("Lead not found"));
 
-        // Validate status
-        if (quotation.getStatus() != Quotation.QuotationStatus.DRAFT) {
-            throw new ValidationException("Only DRAFT quotations can be sent");
+        // SCP-2025-12-10: Allow sending for DRAFT, or re-sending for SENT/ACCEPTED quotations
+        // Only block CONVERTED, REJECTED, EXPIRED statuses
+        if (quotation.getStatus() == Quotation.QuotationStatus.CONVERTED ||
+            quotation.getStatus() == Quotation.QuotationStatus.REJECTED ||
+            quotation.getStatus() == Quotation.QuotationStatus.EXPIRED) {
+            throw new ValidationException("Cannot send quotation with status: " + quotation.getStatus());
         }
 
-        // Update status to SENT
-        QuotationStatusUpdateRequest statusUpdate = QuotationStatusUpdateRequest.builder()
-                .status(Quotation.QuotationStatus.SENT)
-                .build();
+        boolean isResend = quotation.getStatus() != Quotation.QuotationStatus.DRAFT;
 
-        QuotationResponse response = updateQuotationStatus(id, statusUpdate, sentBy);
+        // Update status to SENT (if not already)
+        if (quotation.getStatus() == Quotation.QuotationStatus.DRAFT) {
+            QuotationStatusUpdateRequest statusUpdate = QuotationStatusUpdateRequest.builder()
+                    .status(Quotation.QuotationStatus.SENT)
+                    .build();
+            updateQuotationStatus(id, statusUpdate, sentBy);
+        } else {
+            // SCP-2025-12-10: For re-send, update sentAt timestamp and clear isModified flag
+            quotation.setSentAt(LocalDateTime.now());
+            quotation.setIsModified(false);
+            quotationRepository.save(quotation);
+            log.info("Quotation {} re-sent (isModified cleared)", quotation.getQuotationNumber());
+        }
 
-        // Generate PDF and send email asynchronously
+        // Generate PDF and send email
         byte[] pdfContent = quotationPdfService.generatePdf(quotation, lead);
         emailService.sendQuotationEmail(lead, quotation, pdfContent);
 
-        return response;
+        // Return updated quotation
+        return QuotationResponse.fromEntity(findQuotationById(id));
     }
 
     @Override
@@ -594,6 +627,30 @@ public class QuotationServiceImpl implements QuotationService {
         Quotation quotation = findQuotationById(id);
         quotationRepository.delete(quotation);
         log.info("Quotation deleted successfully: {}", id);
+    }
+
+    /**
+     * SCP-2025-12-10: Mark quotation as CONVERTED after successful tenant onboarding.
+     * This makes the quotation non-editable.
+     *
+     * @param quotationId The quotation ID to mark as converted
+     * @param tenantId The ID of the newly created tenant
+     */
+    @Override
+    @Transactional
+    public void markAsConverted(UUID quotationId, UUID tenantId) {
+        log.info("Marking quotation {} as CONVERTED for tenant {}", quotationId, tenantId);
+
+        Quotation quotation = findQuotationById(quotationId);
+
+        // Update status to CONVERTED
+        quotation.setStatus(Quotation.QuotationStatus.CONVERTED);
+        quotation.setConvertedTenantId(tenantId);
+        quotation.setConvertedAt(java.time.LocalDateTime.now());
+
+        quotationRepository.save(quotation);
+
+        log.info("Quotation {} marked as CONVERTED successfully", quotationId);
     }
 
     /**

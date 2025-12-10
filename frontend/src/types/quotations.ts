@@ -40,7 +40,8 @@ export interface ChequeBreakdownItem {
 }
 
 export interface ChequeBreakdown {
-  numberOfCheques: number;
+  numberOfPayments: number; // Total payment installments (what user selects)
+  numberOfCheques: number;  // Actual cheques needed (adjusted for first month payment method)
   firstMonthPaymentMethod: FirstMonthPaymentMethod;
   yearlyRentAmount: number;
   items: ChequeBreakdownItem[];
@@ -76,8 +77,10 @@ export interface Quotation {
   totalFirstPayment: number; // Calculated
 
   // SCP-2025-12-06: Cheque breakdown fields
+  // SCP-2025-12-10: Added numberOfPayments (total installments) and numberOfCheques (actual cheques)
   yearlyRentAmount?: number;
-  numberOfCheques?: number;
+  numberOfPayments?: number; // Total payment installments (what user selects, e.g., 12)
+  numberOfCheques?: number;  // Actual cheques needed (numberOfPayments - 1 if first month is CASH)
   firstMonthPaymentMethod?: FirstMonthPaymentMethod;
   firstMonthTotal?: number; // Custom first month total (includes one-time fees + first rent)
   chequeBreakdown?: ChequeBreakdownItem[];
@@ -110,6 +113,11 @@ export interface Quotation {
   rejectedAt?: string; // ISO date string
   rejectionReason?: string;
   createdBy: string; // userId
+
+  // SCP-2025-12-10: Modification and conversion tracking
+  isModified?: boolean; // True if quotation was edited after SENT status
+  convertedTenantId?: string; // ID of the tenant created from this quotation
+  convertedAt?: string; // ISO date string when converted to tenant
 }
 
 // ===========================
@@ -129,8 +137,10 @@ export interface CreateQuotationRequest {
   securityDeposit: number;
   adminFee: number;
   // SCP-2025-12-06: Cheque breakdown fields
+  // SCP-2025-12-10: Added numberOfPayments (total installments)
   yearlyRentAmount?: number;
-  numberOfCheques?: number;
+  numberOfPayments?: number; // Total payment installments (what user selects)
+  numberOfCheques?: number;  // Actual cheques needed
   firstMonthPaymentMethod?: FirstMonthPaymentMethod;
   firstMonthTotal?: number; // Custom first month total (includes one-time fees + first rent)
   chequeBreakdown?: ChequeBreakdownItem[];
@@ -163,8 +173,10 @@ export interface UpdateQuotationRequest {
   securityDeposit?: number;
   adminFee?: number;
   // SCP-2025-12-06: Cheque breakdown fields
+  // SCP-2025-12-10: Added numberOfPayments (total installments)
   yearlyRentAmount?: number;
-  numberOfCheques?: number;
+  numberOfPayments?: number; // Total payment installments (what user selects)
+  numberOfCheques?: number;  // Actual cheques needed
   firstMonthPaymentMethod?: FirstMonthPaymentMethod;
   firstMonthTotal?: number; // Custom first month total (includes one-time fees + first rent)
   chequeBreakdown?: ChequeBreakdownItem[];
@@ -393,8 +405,10 @@ export interface LeadConversionResponse {
   totalFirstPayment: number;
 
   // SCP-2025-12-06: Cheque breakdown for auto-population
+  // SCP-2025-12-10: Added numberOfPayments (total installments)
   yearlyRentAmount?: number;
-  numberOfCheques?: number;
+  numberOfPayments?: number; // Total payment installments (what user selects)
+  numberOfCheques?: number;  // Actual cheques needed
   firstMonthPaymentMethod?: FirstMonthPaymentMethod;
   chequeBreakdown?: ChequeBreakdownItem[];
 

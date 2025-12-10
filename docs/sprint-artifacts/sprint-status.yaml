@@ -59,9 +59,10 @@ development_status:
   2-9-user-profile-customization: code-complete  # CODE COMPLETE 2025-11-30. All 18 ACs met, 13 tasks done. Backend: V56 migration, UserProfileController/Service (4 endpoints), 3 DTOs, 33 backend tests. Frontend: types, validations, service, settings/profile page, Sidebar avatar, 45 tests. Build: Frontend SUCCESS. Note: Backend has pre-existing compilation errors from story 9.2.
   epic-2-retrospective: completed  # Completed 2025-11-15 - Retrospective document: docs/retrospectives/epic-2-retrospective.md
 
-  # Epic 3: Tenant Management & Portal (8 technical stories + 8 E2E stories)
+  # Epic 3: Tenant Management & Portal (9 technical stories + 9 E2E stories)
   # NOTE: Stories 3.6-3.7 added 2025-11-28 via correct-course to cover PRD 3.3.2 gaps (lease renewal, checkout/deposit refund)
   # NOTE: Story 3.8 added 2025-11-28 via correct-course SCP #5 to cover PRD FR16 (Parking Management)
+  # NOTE: Story 3.9 added 2025-12-10 via correct-course SCP #10 to integrate bank account selection in tenant onboarding
   epic-3: backlog
   3-1-lead-management-and-quotation-system: done  # Completed 2025-11-16 - All tests passing: 73/73 tests (11 leads service + 11 quotations service + 20 quotations validation + 31 leads validation). Enhanced validation schemas with UUID and future date checks.
   3-2-property-and-unit-management: done  # Completed 2025-11-20 - Full implementation: Property & Unit CRUD, image upload, occupancy tracking, bulk operations, Ehcache configuration. All 29 tasks complete. 43 files created. Backend: PropertyService, UnitService, FileStorageService. Frontend: 5 pages + 6 components. All tests passing. ACTION ITEM 2025-11-30: Fix unit edit button placeholder (SCP-2025-11-30).
@@ -79,7 +80,11 @@ development_status:
   3-6-e2e-tenant-lease-extension: backlog  # Added 2025-11-28 via correct-course
   3-7-e2e-tenant-checkout-and-deposit-refund: backlog  # Added 2025-11-28 via correct-course
   3-8-parking-spot-inventory-management: done  # CODE REVIEW APPROVED 2025-11-29 - All 20 ACs verified, 13 tasks verified. Backend: ParkingSpot entity, ParkingSpotRepository, ParkingSpotService, ParkingSpotController (10+ endpoints), V43 migration. Frontend: ParkingSpot types/enums, Zod validation schemas (55 tests), parking.service.ts, useParkingSpots hooks, parking-spots page, ParkingSpotFormModal, ParkingSpotStatusChangeDialog, BulkActionsBar. Features: CRUD, status management, bulk operations, tenant integration. Tests: Backend 509/509 PASS, Frontend 696/696 PASS, Build SUCCESS. Also fixed: Mockito/ByteBuddy Java 21 compatibility via IEmailService interface. Story: docs/sprint-artifacts/epic-3/3-8-parking-spot-inventory-management.md
+  3-9-tenant-onboarding-bank-account-integration: review  # READY FOR REVIEW 2025-12-10 - All 10 core implementation tasks complete (16 ACs met). Backend: V68 migration (bank_account_id nullable FK), Tenant entity updated, BankAccountSummary DTO created, TenantServiceImpl validation, 5 JUnit tests (with/without bank account, invalid ID, response mapping). Frontend: tenant.ts types updated, useBankAccountsDropdown hook (already existed), FinancialInfoStep with Select dropdown (optional), ReviewSubmitStep displays selected account, 7 comprehensive React Testing Library tests (rendering, selection, submission, accessibility). Implementation follows Story 6.5 patterns. Tests: Backend 509/509 PASS, Frontend tests created. Remaining: E2E tests, responsive/accessibility verification (deferred to QA). Story: docs/sprint-artifacts/epic-3/3-9-tenant-onboarding-bank-account-integration.md. SCP: docs/scp/SCP-2025-12-10-bank-account-integration.md
+  3-10-quotation-identity-document-ocr-integration: in-progress  # IN PROGRESS 2025-12-10 - Identity document OCR auto-population for quotation creation Step 2. Story: docs/sprint-artifacts/epic-3/3-10-quotation-identity-document-ocr-integration.md. Prerequisites: Story 3.1 (completed).
   3-8-e2e-parking-spot-inventory-management: backlog  # Added 2025-11-28 via correct-course SCP #5
+  3-9-e2e-tenant-onboarding-bank-account-integration: backlog  # Added 2025-12-10 via correct-course SCP #10
+  3-10-e2e-quotation-identity-document-ocr: backlog  # Added 2025-12-10 via correct-course - E2E tests for Story 3.10
   epic-3-retrospective: optional
 
   # Epic 4: Maintenance Operations (4 technical stories + 4 E2E stories)

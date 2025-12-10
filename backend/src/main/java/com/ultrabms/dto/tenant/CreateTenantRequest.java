@@ -157,6 +157,17 @@ public class CreateTenantRequest {
     private Integer pdcChequeCount;
 
     // =============================
+    // BANK ACCOUNT (OPTIONAL)
+    // Story 3.9: Tenant Onboarding Bank Account Integration
+    // AC #3: Update TenantRequest DTO to accept bankAccountId (optional)
+    // =============================
+
+    /**
+     * Optional bank account ID for rent payment instructions on invoices
+     */
+    private UUID bankAccountId;
+
+    // =============================
     // LEAD CONVERSION (OPTIONAL)
     // =============================
 
