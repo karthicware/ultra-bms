@@ -22,7 +22,6 @@ import {
   DollarSign,
   Plus,
   X,
-  ArrowLeft,
   ArrowUpRight,
   Trophy
 } from 'lucide-react';
@@ -32,6 +31,7 @@ import type { VendorComparisonEntry } from '@/types/vendor-ratings';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/validations/quotations';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 /**
  * Vendor Comparison Page
@@ -254,14 +254,7 @@ function VendorComparePageContent() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.back()}
-            data-testid="btn-back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <PageBackButton href="/property-manager/vendors" aria-label="Back to vendors" />
           <div>
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
               <Scale className="h-7 w-7 text-primary" />

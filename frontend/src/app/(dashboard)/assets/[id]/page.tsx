@@ -27,7 +27,6 @@ import { useAsset, useAssetMaintenanceHistory, useDeleteAsset } from '@/hooks/us
 import { assetService } from '@/services/asset.service';
 import { formatAssetCurrency } from '@/types/asset';
 import {
-  ArrowLeft,
   Edit,
   Trash2,
   Upload,
@@ -43,6 +42,7 @@ import {
   Building,
   DollarSign,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -173,9 +173,7 @@ export default function AssetDetailPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/assets')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <PageBackButton href="/assets" aria-label="Back to assets" />
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-gray-900">{asset.assetName}</h1>

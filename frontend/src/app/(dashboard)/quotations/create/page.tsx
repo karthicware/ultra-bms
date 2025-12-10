@@ -28,6 +28,7 @@ import {
   User,
   MapPin
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -1381,14 +1382,9 @@ function CreateQuotationForm() {
       <div className="container max-w-7xl mx-auto px-4 py-8 lg:py-12">
         {/* Header */}
         <div className="mb-10">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
+          <div className="mb-4">
+            <PageBackButton href="/quotations" aria-label="Back to quotations" />
+          </div>
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">

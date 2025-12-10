@@ -53,7 +53,6 @@ import {
 import { formatCurrency } from '@/types/invoice';
 import type { TenantResponse } from '@/types';
 import {
-  ArrowLeft,
   Loader2,
   Plus,
   Trash2,
@@ -82,6 +81,7 @@ import {
   Clock,
   Send,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { cn } from '@/lib/utils';
 
 // Wrapper component to handle Suspense boundary for useSearchParams
@@ -307,14 +307,7 @@ function CreateInvoicePageContent() {
             <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]" />
             <div className="relative px-8 py-8">
               <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => router.push('/invoices')}
-                  className="h-12 w-12 rounded-xl bg-background/80 backdrop-blur-sm shrink-0"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
+                <PageBackButton href="/invoices" aria-label="Back to invoices" />
                 <div className="flex items-center gap-4">
                   <div className="p-3 rounded-xl bg-primary/10 ring-1 ring-primary/20">
                     <Receipt className="h-8 w-8 text-primary" />

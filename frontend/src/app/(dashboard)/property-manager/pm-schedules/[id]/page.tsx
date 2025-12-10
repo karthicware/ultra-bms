@@ -11,7 +11,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { format } from 'date-fns';
 import {
-  ArrowLeft,
   Play,
   Pause,
   CheckCircle,
@@ -27,6 +26,7 @@ import {
   AlertTriangle,
   BarChart3,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -298,14 +298,7 @@ export default function PMScheduleDetailPage() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push('/property-manager/pm-schedules')}
-            data-testid="btn-back"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <PageBackButton href="/property-manager/pm-schedules" aria-label="Back to PM schedules" />
           <div>
             <div className="flex items-center gap-3">
               <Calendar className="h-8 w-8 text-primary" />

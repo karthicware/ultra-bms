@@ -75,13 +75,13 @@ import {
 } from '@/types/expense';
 import { PaymentMethod } from '@/types/tenant';
 import {
-  ArrowLeft,
   CreditCard,
   Briefcase,
   Calendar as CalendarIcon,
   CheckCircle,
   Loader2,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 // Payment method options
 const PAYMENT_METHOD_OPTIONS = [
@@ -271,9 +271,7 @@ export default function PendingPaymentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/expenses')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <PageBackButton href="/expenses" aria-label="Back to expenses" />
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Pending Payments</h1>
             <p className="text-muted-foreground">

@@ -42,6 +42,7 @@ import {
   RefreshCw,
   Loader2
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { useDocument, useUpdateDocument } from '@/hooks/useDocuments';
 import { DocumentReplaceDialog } from '@/components/documents';
 import {
@@ -198,9 +199,7 @@ export default function DocumentEditPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <PageBackButton href={`/documents/${documentId}`} aria-label="Back to document" />
           <div>
             <div className="flex items-center gap-3">
               <FileText className="h-8 w-8 text-primary" />

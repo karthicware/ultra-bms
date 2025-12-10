@@ -51,10 +51,10 @@ import {
   Sparkles,
   Home,
   Store,
-  ArrowLeft,
   CheckCircle2,
   ImageIcon,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 export default function CreatePropertyPage() {
   const router = useRouter();
@@ -182,9 +182,7 @@ export default function CreatePropertyPage() {
     <div className="container max-w-5xl mx-auto py-8 space-y-8">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-10 w-10">
-          <ArrowLeft className="h-6 w-6" />
-        </Button>
+        <PageBackButton href="/properties" aria-label="Back to properties" />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Create Property</h1>
           <p className="text-muted-foreground mt-1">Add a new property to your portfolio.</p>

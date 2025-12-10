@@ -34,7 +34,6 @@ import { useCreateAsset } from '@/hooks/useAssets';
 import { assetCreateSchema, type AssetCreateInput } from '@/lib/validations/asset';
 import { ASSET_CATEGORY_OPTIONS, type AssetCreateRequest, AssetCategory } from '@/types/asset';
 import {
-  ArrowLeft,
   Save,
   Package,
   Building2,
@@ -46,6 +45,7 @@ import {
   ClockIcon,
   TagIcon,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { useEffect, useState } from 'react';
 import { getProperties } from '@/services/properties.service';
 
@@ -135,9 +135,7 @@ export default function NewAssetPage() {
     <div className="container mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push('/assets')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <PageBackButton href="/assets" aria-label="Back to assets" />
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Add New Asset</h1>
           <p className="text-gray-500">Register a new property asset or equipment</p>

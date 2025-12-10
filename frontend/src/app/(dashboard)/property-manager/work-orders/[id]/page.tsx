@@ -77,7 +77,6 @@ import {
   Pencil,
   UserPlus,
   RefreshCw,
-  ChevronLeft,
   Calendar,
   User,
   Building2,
@@ -85,7 +84,7 @@ import {
   DollarSign,
   Clock,
   Key,
-  ChevronLeft as ChevronLeftIcon,
+  ChevronLeft,
   ChevronRight,
   Droplet,
   Zap,
@@ -103,6 +102,7 @@ import {
   AlertTriangle,
   Package,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { format } from 'date-fns';
 import { useUser } from '@/contexts/auth-context';
 
@@ -520,10 +520,7 @@ export default function WorkOrderDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.back()}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
+          <PageBackButton href="/property-manager/work-orders" aria-label="Back to work orders" />
           {canEdit && (
             <Button variant="outline" onClick={handleEdit} data-testid="btn-edit-work-order">
               <Pencil className="mr-2 h-4 w-4" />

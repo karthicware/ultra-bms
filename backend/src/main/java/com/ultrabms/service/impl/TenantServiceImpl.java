@@ -232,6 +232,7 @@ public class TenantServiceImpl implements TenantService {
 
     /**
      * SCP-2025-12-06: Overloaded createTenant method to support preloaded document paths from quotation
+     * SCP-2025-12-09: Added chequeFiles parameter for scanned cheque copies
      */
     @Override
     @Transactional
@@ -243,6 +244,7 @@ public class TenantServiceImpl implements TenantService {
             MultipartFile signedLeaseFile,
             MultipartFile mulkiyaFile,
             List<MultipartFile> additionalFiles,
+            List<MultipartFile> chequeFiles,
             String emiratesIdFrontPath,
             String emiratesIdBackPath,
             String passportFrontPath,
@@ -347,6 +349,7 @@ public class TenantServiceImpl implements TenantService {
                     signedLeaseFile,
                     mulkiyaFile,
                     additionalFiles,
+                    chequeFiles, // SCP-2025-12-09: Scanned cheque copies
                     emiratesIdFrontPath,
                     emiratesIdBackPath,
                     passportFrontPath,
@@ -519,6 +522,7 @@ public class TenantServiceImpl implements TenantService {
 
     /**
      * SCP-2025-12-06: Upload documents with support for preloaded S3 paths from quotation
+     * SCP-2025-12-09: Added chequeFiles parameter for scanned cheque copies
      */
     private void uploadDocumentsWithPaths(
             Tenant tenant,
@@ -528,6 +532,7 @@ public class TenantServiceImpl implements TenantService {
             MultipartFile signedLeaseFile,
             MultipartFile mulkiyaFile,
             List<MultipartFile> additionalFiles,
+            List<MultipartFile> chequeFiles,
             String emiratesIdFrontPath,
             String emiratesIdBackPath,
             String passportFrontPath,
@@ -582,6 +587,23 @@ public class TenantServiceImpl implements TenantService {
                     uploadAndSaveDocument(tenant, file, DocumentType.OTHER, s3Directory);
                 }
             }
+        }
+
+        // SCP-2025-12-09: Upload scanned cheque copies (optional, max 12 files)
+        if (chequeFiles != null && !chequeFiles.isEmpty()) {
+            int chequeCount = 0;
+            for (MultipartFile file : chequeFiles) {
+                if (file != null && !file.isEmpty()) {
+                    if (chequeCount >= 12) {
+                        LOGGER.warn("Maximum 12 cheque files allowed. Skipping additional files for tenant {}",
+                                tenant.getTenantNumber());
+                        break;
+                    }
+                    uploadAndSaveDocument(tenant, file, DocumentType.CHEQUE, s3Directory);
+                    chequeCount++;
+                }
+            }
+            LOGGER.info("Uploaded {} cheque file(s) for tenant {}", chequeCount, tenant.getTenantNumber());
         }
     }
 

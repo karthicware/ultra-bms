@@ -10,7 +10,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  ChevronLeft,
   Loader2,
   ShieldCheck,
   Pencil,
@@ -21,6 +20,7 @@ import {
   Calendar,
 } from 'lucide-react';
 
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -163,10 +163,7 @@ export default function RequirementDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.back()}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
+          <PageBackButton href="/property-manager/compliance/requirements" aria-label="Back to requirements" />
           <Button variant="outline" onClick={() => router.push(`/property-manager/compliance/requirements/${requirementId}/edit`)}>
             <Pencil className="mr-2 h-4 w-4" />
             Edit

@@ -4,12 +4,14 @@
  * Expiring Leases Page
  * Story 3.6: Tenant Lease Extension and Renewal (AC: #1, #2)
  *
- * Displays list of expiring leases with filtering and ability to extend
+ * Modern redesign with KPI dashboard, status tabs, grid/list views
+ * Design patterns from /leads page
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { debounce } from 'lodash';
+import { format, differenceInDays } from 'date-fns';
 import {
   Table,
   TableBody,
@@ -20,6 +22,8 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -27,10 +31,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   CalendarClock,
   AlertTriangle,
@@ -41,6 +57,23 @@ import {
   Phone,
   Mail,
   ArrowRight,
+  Search,
+  LayoutGrid,
+  List,
+  Filter,
+  RefreshCw,
+  TrendingUp,
+  Activity,
+  MoreVertical,
+  Eye,
+  Hourglass,
+  Timer,
+  Flame,
+  CheckCircle2,
+  XCircle,
+  Calendar,
+  DollarSign,
+  Home,
 } from 'lucide-react';
 
 import { getExpiringLeases } from '@/services/lease.service';
@@ -48,168 +81,47 @@ import { getProperties } from '@/services/tenant.service';
 import type { ExpiringLease, ExpiringLeasesFilters } from '@/types/lease';
 import type { Property } from '@/types';
 import { getExpiryUrgencyLevel } from '@/lib/validations/lease';
+import { cn } from '@/lib/utils';
+
+type ViewMode = 'grid' | 'list';
+type UrgencyLevel = 'critical' | 'urgent' | 'warning' | 'normal';
 
 /**
- * Get urgency badge variant
+ * Urgency level styles
  */
-function getUrgencyBadge(daysRemaining: number) {
+const URGENCY_STYLES: Record<UrgencyLevel, { badge: string; dot: string; icon: React.ReactNode; bg: string }> = {
+  critical: {
+    badge: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-400 border-red-200',
+    dot: 'bg-red-500',
+    icon: <Flame className="h-3.5 w-3.5" />,
+    bg: 'from-red-500/10 via-red-500/5',
+  },
+  urgent: {
+    badge: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-400 border-orange-200',
+    dot: 'bg-orange-500',
+    icon: <AlertTriangle className="h-3.5 w-3.5" />,
+    bg: 'from-orange-500/10 via-orange-500/5',
+  },
+  warning: {
+    badge: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-400 border-amber-200',
+    dot: 'bg-amber-500',
+    icon: <Clock className="h-3.5 w-3.5" />,
+    bg: 'from-amber-500/10 via-amber-500/5',
+  },
+  normal: {
+    badge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400 border-emerald-200',
+    dot: 'bg-emerald-500',
+    icon: <CheckCircle2 className="h-3.5 w-3.5" />,
+    bg: 'from-emerald-500/10 via-emerald-500/5',
+  },
+};
+
+/**
+ * Get urgency level from days remaining
+ */
+function getUrgencyLevel(daysRemaining: number): UrgencyLevel {
   const level = getExpiryUrgencyLevel(daysRemaining);
-
-  switch (level) {
-    case 'critical':
-      return {
-        variant: 'destructive' as const,
-        className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-        icon: AlertCircle,
-        label: 'Critical',
-      };
-    case 'urgent':
-      return {
-        variant: 'default' as const,
-        className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-        icon: AlertTriangle,
-        label: 'Urgent',
-      };
-    case 'warning':
-      return {
-        variant: 'default' as const,
-        className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-        icon: Clock,
-        label: 'Warning',
-      };
-    default:
-      return {
-        variant: 'secondary' as const,
-        className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
-        icon: CalendarClock,
-        label: 'Normal',
-      };
-  }
-}
-
-/**
- * Expiring Lease Row Component
- */
-function ExpiringLeaseRow({
-  lease,
-  onExtend,
-}: {
-  lease: ExpiringLease;
-  onExtend: (tenantId: string) => void;
-}) {
-  const urgency = getUrgencyBadge(lease.daysRemaining);
-  const UrgencyIcon = urgency.icon;
-
-  return (
-    <TableRow className="hover:bg-muted/50">
-      <TableCell>
-        <div className="flex flex-col">
-          <span className="font-medium">{lease.tenantName}</span>
-          <span className="text-xs text-muted-foreground font-mono">{lease.tenantNumber}</span>
-        </div>
-      </TableCell>
-      <TableCell>
-        <div className="flex flex-col">
-          <span className="font-medium">{lease.propertyName}</span>
-          <span className="text-sm text-muted-foreground">Unit {lease.unitNumber}</span>
-        </div>
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <Mail className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm">{lease.email}</span>
-        </div>
-        {lease.phone && (
-          <div className="flex items-center gap-2 mt-1">
-            <Phone className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">{lease.phone}</span>
-          </div>
-        )}
-      </TableCell>
-      <TableCell>
-        <span className="font-medium">
-          AED {lease.currentRent?.toLocaleString() ?? 'N/A'}
-        </span>
-      </TableCell>
-      <TableCell>
-        <span className="font-medium">{format(new Date(lease.leaseEndDate), 'dd MMM yyyy')}</span>
-      </TableCell>
-      <TableCell>
-        <Badge variant={urgency.variant} className={urgency.className}>
-          <UrgencyIcon className="h-3 w-3 mr-1" />
-          {lease.daysRemaining} days
-        </Badge>
-      </TableCell>
-      <TableCell>
-        {lease.pendingRenewalRequest ? (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            Renewal Requested
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="bg-gray-50 text-gray-600">
-            No Request
-          </Badge>
-        )}
-      </TableCell>
-      <TableCell className="text-right">
-        <Button
-          size="sm"
-          onClick={() => onExtend(lease.tenantId)}
-          className="gap-1"
-        >
-          <FileText className="h-4 w-4" />
-          Extend
-          <ArrowRight className="h-3 w-3" />
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-}
-
-/**
- * Lease Table Component
- */
-function LeaseTable({
-  leases,
-  onExtend,
-  emptyMessage,
-}: {
-  leases: ExpiringLease[];
-  onExtend: (tenantId: string) => void;
-  emptyMessage: string;
-}) {
-  if (leases.length === 0) {
-    return (
-      <div className="p-8 text-center">
-        <CalendarClock className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-        <p className="text-muted-foreground">{emptyMessage}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Tenant</TableHead>
-            <TableHead>Property / Unit</TableHead>
-            <TableHead>Contact</TableHead>
-            <TableHead>Monthly Rent</TableHead>
-            <TableHead>Lease End</TableHead>
-            <TableHead>Days Left</TableHead>
-            <TableHead>Renewal Status</TableHead>
-            <TableHead className="text-right">Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {leases.map((lease) => (
-            <ExpiringLeaseRow key={lease.tenantId} lease={lease} onExtend={onExtend} />
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+  return level as UrgencyLevel;
 }
 
 /**
@@ -227,13 +139,29 @@ export default function ExpiringLeasesPage() {
   } | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+
+  // Debounced search
+  const debouncedSearch = useMemo(
+    () => debounce((value: string) => {
+      setSearchTerm(value);
+    }, 300),
+    []
+  );
 
   // Fetch data
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isInitial = false) => {
     try {
-      setIsLoading(true);
+      if (isInitial) {
+        setIsInitialLoading(true);
+      } else {
+        setIsFiltering(true);
+      }
+
       const filters: ExpiringLeasesFilters = selectedPropertyId
         ? { propertyId: selectedPropertyId }
         : {};
@@ -248,13 +176,19 @@ export default function ExpiringLeasesPage() {
     } catch (error) {
       console.error('Failed to fetch expiring leases:', error);
     } finally {
-      setIsLoading(false);
+      setIsInitialLoading(false);
+      setIsFiltering(false);
     }
   }, [selectedPropertyId]);
 
   useEffect(() => {
-    fetchData();
+    fetchData(true);
   }, [fetchData]);
+
+  // Cleanup debounce
+  useEffect(() => {
+    return () => debouncedSearch.cancel();
+  }, [debouncedSearch]);
 
   // Handlers
   const handleExtendLease = (tenantId: string) => {
@@ -265,222 +199,566 @@ export default function ExpiringLeasesPage() {
     setSelectedPropertyId(value === 'all' ? '' : value);
   };
 
-  // Calculate total counts
-  const totalExpiring =
-    (expiringLeases?.counts.expiring14Days ?? 0) +
-    (expiringLeases?.counts.expiring30Days ?? 0) +
-    (expiringLeases?.counts.expiring60Days ?? 0);
-
-  // Get all leases combined for "All" tab
-  const allLeases = [
+  // Get all leases combined
+  const allLeases = useMemo(() => [
     ...(expiringLeases?.expiring14Days ?? []),
     ...(expiringLeases?.expiring30Days ?? []),
     ...(expiringLeases?.expiring60Days ?? []),
-  ].sort((a, b) => a.daysRemaining - b.daysRemaining);
+  ].sort((a, b) => a.daysRemaining - b.daysRemaining), [expiringLeases]);
+
+  // Filter leases based on status and search
+  const filteredLeases = useMemo(() => {
+    let result = allLeases;
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      result = result.filter(lease => {
+        const level = getUrgencyLevel(lease.daysRemaining);
+        return level === statusFilter;
+      });
+    }
+
+    // Search filter
+    if (searchTerm.trim()) {
+      const query = searchTerm.toLowerCase().trim();
+      result = result.filter(lease =>
+        lease.tenantName?.toLowerCase().includes(query) ||
+        lease.email?.toLowerCase().includes(query) ||
+        lease.phone?.includes(query) ||
+        lease.tenantNumber?.toLowerCase().includes(query) ||
+        lease.propertyName?.toLowerCase().includes(query) ||
+        lease.unitNumber?.toLowerCase().includes(query)
+      );
+    }
+
+    return result;
+  }, [allLeases, statusFilter, searchTerm]);
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    const total = allLeases.length;
+    const critical = expiringLeases?.counts.expiring14Days ?? 0;
+    const urgent = expiringLeases?.counts.expiring30Days ?? 0;
+    const warning = expiringLeases?.counts.expiring60Days ?? 0;
+
+    const withRenewalRequest = allLeases.filter(l => l.pendingRenewalRequest).length;
+    const renewalRate = total > 0 ? (withRenewalRequest / total) * 100 : 0;
+
+    const totalMonthlyRent = allLeases.reduce((sum, l) => sum + (l.currentRent ?? 0), 0);
+
+    return {
+      total,
+      critical,
+      urgent,
+      warning,
+      withRenewalRequest,
+      renewalRate,
+      totalMonthlyRent,
+    };
+  }, [allLeases, expiringLeases]);
+
+  // Format date helper
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '-';
+    try {
+      return format(new Date(dateString), 'dd MMM yyyy');
+    } catch {
+      return '-';
+    }
+  };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <CalendarClock className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Expiring Leases</h1>
-            <p className="text-muted-foreground">
-              Manage lease extensions for tenants with expiring leases
-            </p>
+    <TooltipProvider>
+      <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
+        <div className="container mx-auto px-4 py-8 max-w-7xl space-y-8">
+
+          {/* Hero Header */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-background border shadow-sm">
+            <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]" />
+            <div className="relative px-8 py-10">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-xl bg-amber-500/10 ring-1 ring-amber-500/20">
+                      <CalendarClock className="h-8 w-8 text-amber-600" />
+                    </div>
+                    <div>
+                      <h1 className="text-3xl font-bold tracking-tight">Lease Extensions</h1>
+                      <p className="text-muted-foreground">
+                        Monitor expiring leases and manage renewal processes
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Critical Alert Badge */}
+                {!isInitialLoading && stats.critical > 0 && (
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20">
+                    <div className="p-2 rounded-lg bg-red-500/20">
+                      <Flame className="h-5 w-5 text-red-600 animate-pulse" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-red-700 dark:text-red-400">
+                        {stats.critical} Critical
+                      </p>
+                      <p className="text-xs text-red-600/80">
+                        Expiring within 14 days
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+
+          {/* KPI Dashboard */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Total Expiring */}
+            <Card className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 rounded-full -translate-y-6 translate-x-6" />
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Expiring
+                </CardTitle>
+                <Hourglass className="h-4 w-4 text-amber-600" />
+              </CardHeader>
+              <CardContent>
+                {isInitialLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold">{stats.total}</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-400">
+                        Next 60 days
+                      </Badge>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Renewal Rate */}
+            <Card className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-full -translate-y-6 translate-x-6" />
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Renewal Requests
+                </CardTitle>
+                <TrendingUp className="h-4 w-4 text-emerald-600" />
+              </CardHeader>
+              <CardContent>
+                {isInitialLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-emerald-600">
+                      {stats.renewalRate.toFixed(0)}%
+                    </div>
+                    <div className="mt-2">
+                      <Progress value={stats.renewalRate} className="h-1.5" />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* At Risk Revenue */}
+            <Card className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full -translate-y-6 translate-x-6" />
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  At Risk Revenue
+                </CardTitle>
+                <DollarSign className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                {isInitialLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-blue-600">
+                      {stats.totalMonthlyRent.toLocaleString()}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      AED / month
+                    </p>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Urgency Breakdown */}
+            <Card className="relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/5 rounded-full -translate-y-6 translate-x-6" />
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Urgency Breakdown
+                </CardTitle>
+                <Activity className="h-4 w-4 text-purple-600" />
+              </CardHeader>
+              <CardContent>
+                {isInitialLoading ? (
+                  <Skeleton className="h-8 w-full" />
+                ) : (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-red-50 dark:bg-red-950/30">
+                          <Flame className="h-3.5 w-3.5 text-red-600" />
+                          <span className="text-sm font-semibold text-red-600">{stats.critical}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>Critical (≤14 days)</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-orange-50 dark:bg-orange-950/30">
+                          <AlertTriangle className="h-3.5 w-3.5 text-orange-600" />
+                          <span className="text-sm font-semibold text-orange-600">{stats.urgent}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>Urgent (≤30 days)</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-950/30">
+                          <Clock className="h-3.5 w-3.5 text-amber-600" />
+                          <span className="text-sm font-semibold text-amber-600">{stats.warning}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>Warning (≤60 days)</TooltipContent>
+                    </Tooltip>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filters & Controls */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col lg:flex-row gap-4">
+                {/* Status Tabs */}
+                <Tabs
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                  className="w-full lg:w-auto"
+                >
+                  <TabsList className="grid w-full lg:w-auto grid-cols-5 h-10">
+                    <TabsTrigger value="all" className="gap-1.5 px-2 text-xs lg:text-sm">
+                      <Filter className="h-3.5 w-3.5" />
+                      All
+                    </TabsTrigger>
+                    <TabsTrigger value="critical" className="gap-1.5 px-2 text-xs lg:text-sm">
+                      <Flame className="h-3.5 w-3.5" />
+                      Critical
+                    </TabsTrigger>
+                    <TabsTrigger value="urgent" className="gap-1.5 px-2 text-xs lg:text-sm">
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      Urgent
+                    </TabsTrigger>
+                    <TabsTrigger value="warning" className="gap-1.5 px-2 text-xs lg:text-sm">
+                      <Clock className="h-3.5 w-3.5" />
+                      Warning
+                    </TabsTrigger>
+                    <TabsTrigger value="normal" className="gap-1.5 px-2 text-xs lg:text-sm">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Normal
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+
+                <div className="flex-1 flex flex-col sm:flex-row gap-3">
+                  {/* Property Filter */}
+                  <Select value={selectedPropertyId || 'all'} onValueChange={handlePropertyFilter}>
+                    <SelectTrigger className="w-full sm:w-[200px] h-10">
+                      <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <SelectValue placeholder="All Properties" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Properties</SelectItem>
+                      {properties.map((property) => (
+                        <SelectItem key={property.id} value={property.id}>
+                          {property.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Search */}
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search tenants, properties..."
+                      defaultValue={searchTerm}
+                      onChange={(e) => debouncedSearch(e.target.value)}
+                      className="pl-9 h-10"
+                    />
+                  </div>
+
+                  {/* View Toggle */}
+                  <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+                    <Button
+                      variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('grid')}
+                      className="h-8 px-3"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('list')}
+                      className="h-8 px-3"
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Results Header */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              {isInitialLoading ? (
+                <Skeleton className="h-4 w-32" />
+              ) : (
+                `${filteredLeases.length} ${filteredLeases.length === 1 ? 'lease' : 'leases'} found`
+              )}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => fetchData()}
+              className="gap-2"
+              disabled={isFiltering}
+            >
+              <RefreshCw className={cn("h-4 w-4", isFiltering && "animate-spin")} />
+              Refresh
+            </Button>
+          </div>
+
+          {/* Content Area */}
+          {isInitialLoading ? (
+            <div className={cn(
+              "grid gap-6",
+              viewMode === 'grid'
+                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                : "grid-cols-1"
+            )}>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className={viewMode === 'grid' ? "h-56" : "h-24"} />
+              ))}
+            </div>
+          ) : filteredLeases.length === 0 ? (
+            <Card className="border-dashed border-2">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="p-4 rounded-full bg-muted mb-4">
+                  <CalendarClock className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">No expiring leases found</h3>
+                <p className="text-muted-foreground max-w-sm">
+                  {searchTerm || statusFilter !== 'all' || selectedPropertyId
+                    ? "Try adjusting your search or filters to find what you're looking for."
+                    : "No leases are expiring within the next 60 days."}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className={cn(
+              "transition-opacity duration-200",
+              isFiltering ? "opacity-60" : "opacity-100"
+            )}>
+              {/* Grid View */}
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {filteredLeases.map((lease) => {
+                    const urgencyLevel = getUrgencyLevel(lease.daysRemaining);
+                    const urgencyStyles = URGENCY_STYLES[urgencyLevel];
+
+                    return (
+                      <Card
+                        key={lease.tenantId}
+                        className="overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
+                        onClick={() => handleExtendLease(lease.tenantId)}
+                      >
+                        {/* Header */}
+                        <div className={cn(
+                          "relative h-24 bg-gradient-to-br to-muted",
+                          urgencyStyles.bg
+                        )}>
+                          {/* Urgency Badge */}
+                          <div className="absolute top-3 left-3">
+                            <Badge variant="secondary" className={cn("shadow-sm", urgencyStyles.badge)}>
+                              <div className={cn("h-1.5 w-1.5 rounded-full mr-1.5", urgencyStyles.dot)} />
+                              {lease.daysRemaining} days
+                            </Badge>
+                          </div>
+
+                          {/* Renewal Status */}
+                          <div className="absolute top-3 right-3">
+                            {lease.pendingRenewalRequest ? (
+                              <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 shadow-sm">
+                                <FileText className="h-3 w-3 mr-1" />
+                                Requested
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary" className="bg-muted/80 backdrop-blur-sm shadow-sm">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                No Request
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Avatar */}
+                          <div className="absolute -bottom-8 left-4">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-xl ring-4 ring-background shadow-lg">
+                              {lease.tenantName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <CardContent className="p-4 pt-10 flex-1 flex flex-col">
+                          <div className="mb-1">
+                            <h3 className="font-semibold text-lg truncate" title={lease.tenantName}>
+                              {lease.tenantName}
+                            </h3>
+                            <p className="text-xs text-muted-foreground font-mono">
+                              {lease.tenantNumber || '-'}
+                            </p>
+                          </div>
+
+                          <div className="space-y-1.5 mt-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2 truncate">
+                              <Home className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{lease.propertyName} - Unit {lease.unitNumber}</span>
+                            </div>
+                            <div className="flex items-center gap-2 truncate">
+                              <Mail className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{lease.email || '-'}</span>
+                            </div>
+                            {lease.phone && (
+                              <div className="flex items-center gap-2">
+                                <Phone className="h-3.5 w-3.5 shrink-0" />
+                                <span>{lease.phone}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mt-auto pt-3 border-t flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                              <DollarSign className="h-3.5 w-3.5" />
+                              <span className="font-medium">AED {lease.currentRent?.toLocaleString() ?? 'N/A'}</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              Ends {formatDate(lease.leaseEndDate)}
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* List View */
+                <div className="space-y-3">
+                  {filteredLeases.map((lease) => {
+                    const urgencyLevel = getUrgencyLevel(lease.daysRemaining);
+                    const urgencyStyles = URGENCY_STYLES[urgencyLevel];
+
+                    return (
+                      <Card
+                        key={lease.tenantId}
+                        className="overflow-hidden hover:shadow-md transition-all cursor-pointer"
+                        onClick={() => handleExtendLease(lease.tenantId)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-4">
+                            {/* Avatar */}
+                            <div className={cn(
+                              "flex h-12 w-12 items-center justify-center rounded-full font-semibold text-lg shrink-0",
+                              urgencyLevel === 'critical' ? 'bg-red-100 text-red-700' :
+                              urgencyLevel === 'urgent' ? 'bg-orange-100 text-orange-700' :
+                              urgencyLevel === 'warning' ? 'bg-amber-100 text-amber-700' :
+                              'bg-emerald-100 text-emerald-700'
+                            )}>
+                              {lease.tenantName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                            </div>
+
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <h3 className="font-semibold truncate">
+                                  {lease.tenantName}
+                                </h3>
+                                <Badge variant="secondary" className={cn("text-xs shrink-0", urgencyStyles.badge)}>
+                                  {urgencyStyles.icon}
+                                  <span className="ml-1">{lease.daysRemaining} days</span>
+                                </Badge>
+                                {lease.pendingRenewalRequest && (
+                                  <Badge variant="secondary" className="text-xs shrink-0 bg-blue-50 text-blue-700 border-blue-200">
+                                    <FileText className="h-3 w-3 mr-1" />
+                                    Renewal Requested
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground font-mono mb-2">
+                                {lease.tenantNumber || '-'}
+                              </p>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                                <span className="flex items-center gap-1">
+                                  <Home className="h-3.5 w-3.5 shrink-0" />
+                                  {lease.propertyName} - Unit {lease.unitNumber}
+                                </span>
+                                <span className="flex items-center gap-1 truncate">
+                                  <Mail className="h-3.5 w-3.5 shrink-0" />
+                                  {lease.email || '-'}
+                                </span>
+                                {lease.phone && (
+                                  <span className="flex items-center gap-1">
+                                    <Phone className="h-3.5 w-3.5" />
+                                    {lease.phone}
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1">
+                                  <DollarSign className="h-3.5 w-3.5" />
+                                  AED {lease.currentRent?.toLocaleString() ?? 'N/A'}/mo
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3.5 w-3.5" />
+                                  Ends {formatDate(lease.leaseEndDate)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                size="sm"
+                                onClick={() => handleExtendLease(lease.tenantId)}
+                                className="gap-1"
+                              >
+                                <FileText className="h-4 w-4" />
+                                Extend
+                                <ArrowRight className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-red-200 bg-red-50/50 dark:bg-red-950/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-red-700 dark:text-red-400 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              Critical (≤14 days)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
-              <p className="text-3xl font-bold text-red-700 dark:text-red-400">
-                {expiringLeases?.counts.expiring14Days ?? 0}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-orange-200 bg-orange-50/50 dark:bg-orange-950/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-400 flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              Urgent (≤30 days)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
-              <p className="text-3xl font-bold text-orange-700 dark:text-orange-400">
-                {expiringLeases?.counts.expiring30Days ?? 0}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-yellow-200 bg-yellow-50/50 dark:bg-yellow-950/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-yellow-700 dark:text-yellow-400 flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Warning (≤60 days)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
-              <p className="text-3xl font-bold text-yellow-700 dark:text-yellow-400">
-                {expiringLeases?.counts.expiring60Days ?? 0}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <CalendarClock className="h-4 w-4" />
-              Total Expiring
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
-              <p className="text-3xl font-bold">{totalExpiring}</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Critical Alert */}
-      {!isLoading && (expiringLeases?.counts.expiring14Days ?? 0) > 0 && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Immediate Action Required</AlertTitle>
-          <AlertDescription>
-            There are {expiringLeases?.counts.expiring14Days} leases expiring within 14 days.
-            Please review and process extensions urgently.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filter</CardTitle>
-          <CardDescription>Filter expiring leases by property</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-              <Select value={selectedPropertyId || 'all'} onValueChange={handlePropertyFilter}>
-                <SelectTrigger className="w-[250px]">
-                  <SelectValue placeholder="All Properties" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Properties</SelectItem>
-                  {properties.map((property) => (
-                    <SelectItem key={property.id} value={property.id}>
-                      {property.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Expiring Leases Table with Tabs */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Expiring Leases</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-6 space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="border-b px-4">
-                <TabsList className="bg-transparent h-12">
-                  <TabsTrigger value="all" className="data-[state=active]:bg-muted">
-                    All ({totalExpiring})
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="critical"
-                    className="data-[state=active]:bg-red-100 data-[state=active]:text-red-700"
-                  >
-                    Critical ({expiringLeases?.counts.expiring14Days ?? 0})
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="urgent"
-                    className="data-[state=active]:bg-orange-100 data-[state=active]:text-orange-700"
-                  >
-                    Urgent ({expiringLeases?.counts.expiring30Days ?? 0})
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="warning"
-                    className="data-[state=active]:bg-yellow-100 data-[state=active]:text-yellow-700"
-                  >
-                    Warning ({expiringLeases?.counts.expiring60Days ?? 0})
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="all" className="mt-0">
-                <LeaseTable
-                  leases={allLeases}
-                  onExtend={handleExtendLease}
-                  emptyMessage="No expiring leases found"
-                />
-              </TabsContent>
-
-              <TabsContent value="critical" className="mt-0">
-                <LeaseTable
-                  leases={expiringLeases?.expiring14Days ?? []}
-                  onExtend={handleExtendLease}
-                  emptyMessage="No leases expiring within 14 days"
-                />
-              </TabsContent>
-
-              <TabsContent value="urgent" className="mt-0">
-                <LeaseTable
-                  leases={expiringLeases?.expiring30Days ?? []}
-                  onExtend={handleExtendLease}
-                  emptyMessage="No leases expiring within 30 days"
-                />
-              </TabsContent>
-
-              <TabsContent value="warning" className="mt-0">
-                <LeaseTable
-                  leases={expiringLeases?.expiring60Days ?? []}
-                  onExtend={handleExtendLease}
-                  emptyMessage="No leases expiring within 60 days"
-                />
-              </TabsContent>
-            </Tabs>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    </TooltipProvider>
   );
 }

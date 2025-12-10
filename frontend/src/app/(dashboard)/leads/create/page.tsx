@@ -13,7 +13,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import {
-  ChevronLeft,
   User,
   Mail,
   Phone,
@@ -26,7 +25,9 @@ import {
   ArrowRight,
   CheckCircle2,
   MapPin,
+  ChevronLeft,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -262,17 +263,10 @@ export default function CreateLeadPage() {
       <div className="container max-w-6xl mx-auto px-4 py-8 lg:py-12">
         {/* Header */}
         <div className="mb-10">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
+                <PageBackButton href="/leads" aria-label="Back to leads" />
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
                   <UserPlus className="h-6 w-6 text-primary" />
                 </div>
@@ -280,7 +274,7 @@ export default function CreateLeadPage() {
                   Create Lead
                 </h1>
               </div>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-lg text-muted-foreground ml-[88px]">
                 Add a new potential tenant to the system
               </p>
             </div>

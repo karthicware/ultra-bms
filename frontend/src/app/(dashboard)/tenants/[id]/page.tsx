@@ -11,7 +11,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { format, differenceInDays } from 'date-fns';
 import {
-  ArrowLeft,
   User,
   Building2,
   Calendar,
@@ -33,7 +32,9 @@ import {
   Car,
   Download,
   ExternalLink,
+  ArrowLeft,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -181,9 +182,7 @@ export default function TenantDetailPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/tenants')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <PageBackButton href="/tenants" aria-label="Back to tenants" />
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight">

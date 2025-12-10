@@ -45,7 +45,6 @@ import {
 } from '@/types/expense';
 import { PaymentMethod } from '@/types/tenant';
 import {
-  ArrowLeft,
   Edit,
   Trash2,
   CreditCard,
@@ -59,6 +58,7 @@ import {
   Briefcase,
   ClipboardList,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import ExpensePaymentDialog from '@/components/expenses/ExpensePaymentDialog';
 
 export default function ExpenseDetailPage() {
@@ -197,9 +197,7 @@ export default function ExpenseDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <PageBackButton onClick={handleBack} aria-label="Back to expenses" />
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
               {expense.expenseNumber}

@@ -62,7 +62,6 @@ import {
   AnnouncementStatus,
 } from '@/types/announcement';
 import {
-  ArrowLeft,
   Loader2,
   Send,
   Save,
@@ -82,6 +81,7 @@ import {
   Printer,
   FileDown,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 // Wrapper for Suspense
 export default function AnnouncementDetailPage() {
@@ -434,9 +434,7 @@ function AnnouncementDetailContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/announcements')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <PageBackButton href="/announcements" aria-label="Back to announcements" />
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight">

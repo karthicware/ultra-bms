@@ -35,7 +35,6 @@ import {
   getNewPaymentMethodLabel,
 } from '@/types/pdc';
 import {
-  ArrowLeft,
   AlertTriangle,
   Building2,
   CheckCircle,
@@ -54,6 +53,7 @@ import {
   Phone,
   Mail,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { useState } from 'react';
 import { PDCDepositModal } from '@/components/pdc/PDCDepositModal';
 import { PDCClearModal } from '@/components/pdc/PDCClearModal';
@@ -129,9 +129,7 @@ export default function PDCDetailPage() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <PageBackButton href="/pdc" aria-label="Back to PDC list" />
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight">

@@ -47,7 +47,6 @@ import {
 import type { Property } from '@/types';
 import type { VendorListItem } from '@/types/vendors';
 import {
-  ArrowLeft,
   Loader2,
   ReceiptIcon,
   DollarSignIcon,
@@ -60,6 +59,7 @@ import {
   UserIcon,
   MessageSquareIcon,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 export default function CreateExpensePage() {
   return (
@@ -232,9 +232,7 @@ function CreateExpensePageContent() {
     <div className="container mx-auto space-y-6" data-testid="form-expense-create">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push('/expenses')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <PageBackButton href="/expenses" aria-label="Back to expenses" />
         <div>
           <div className="flex items-center gap-3">
             <ReceiptIcon className="h-8 w-8 text-primary" />

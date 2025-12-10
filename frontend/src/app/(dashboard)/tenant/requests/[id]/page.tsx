@@ -18,10 +18,11 @@ import { use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Calendar, Clock, ArrowLeft, User, Wrench } from 'lucide-react';
+import { Calendar, Clock, User, Wrench } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
@@ -93,13 +94,7 @@ export default function RequestDetailsPage({ params }: { params: Promise<{ id: s
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push('/tenant/requests')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <PageBackButton href="/tenant/requests" aria-label="Back to requests" />
           <div>
             <div className="flex items-center gap-3">
               <Wrench className="h-8 w-8 text-primary" />

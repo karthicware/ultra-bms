@@ -39,11 +39,12 @@ import type {
   PropertyComplianceHistoryResponse
 } from '@/types/compliance';
 
-const COMPLIANCE_REQUIREMENTS_BASE_PATH = '/v1/compliance-requirements';
-const COMPLIANCE_SCHEDULES_BASE_PATH = '/v1/compliance-schedules';
+const COMPLIANCE_BASE_PATH = '/v1/compliance';
+const COMPLIANCE_REQUIREMENTS_BASE_PATH = `${COMPLIANCE_BASE_PATH}/requirements`;
+const COMPLIANCE_SCHEDULES_BASE_PATH = `${COMPLIANCE_BASE_PATH}/schedules`;
 const INSPECTIONS_BASE_PATH = '/v1/inspections';
 const VIOLATIONS_BASE_PATH = '/v1/violations';
-const COMPLIANCE_DASHBOARD_PATH = '/v1/compliance/dashboard';
+const COMPLIANCE_DASHBOARD_PATH = `${COMPLIANCE_BASE_PATH}/dashboard`;
 
 // ============================================================================
 // COMPLIANCE REQUIREMENTS - CRUD

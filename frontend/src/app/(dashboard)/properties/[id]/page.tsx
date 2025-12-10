@@ -29,6 +29,7 @@ import type { Unit } from '@/types/units';
 import { PropertyDeleteDialog } from '@/components/properties/PropertyDeleteDialog';
 import { UnitFormModal } from '@/components/properties/UnitFormModal';
 import { UnitDataTable } from '@/components/properties/UnitDataTable';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import {
   Building2,
   Pencil,
@@ -300,9 +301,7 @@ export default function PropertyDetailPage() {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 -ml-2">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <PageBackButton href="/properties" aria-label="Back to properties" />
           <div>
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
               {property.name}

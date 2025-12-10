@@ -49,7 +49,7 @@ public class TenantDocument extends BaseEntity {
     private Tenant tenant;
 
     /**
-     * Document type (EMIRATES_ID, PASSPORT, VISA, SIGNED_LEASE, MULKIYA, OTHER)
+     * Document type (EMIRATES_ID, PASSPORT, VISA, SIGNED_LEASE, MULKIYA, OTHER, CHEQUE)
      */
     @NotNull(message = "Document type is required")
     @Enumerated(EnumType.STRING)

@@ -66,6 +66,7 @@ public class TenantController {
      * - signedLeaseFile (required)
      * - mulkiyaFile (optional)
      * - additionalFiles[] (optional, multiple files)
+     * - chequeFiles[] (optional, scanned cheque copies - max 12 files) [SCP-2025-12-09]
      *
      * SCP-2025-12-06: For lead conversions, preloaded document paths from quotation can be used:
      * - emiratesIdFrontPath, emiratesIdBackPath (S3 paths from quotation)
@@ -82,6 +83,8 @@ public class TenantController {
             @RequestParam(value = "signedLeaseFile", required = true) MultipartFile signedLeaseFile,
             @RequestParam(value = "mulkiyaFile", required = false) MultipartFile mulkiyaFile,
             @RequestParam(value = "additionalFiles", required = false) List<MultipartFile> additionalFiles,
+            // SCP-2025-12-09: Scanned cheque copies (max 12 files)
+            @RequestParam(value = "chequeFiles", required = false) List<MultipartFile> chequeFiles,
             // SCP-2025-12-06: Preloaded document paths from quotation (alternative to file uploads)
             @RequestParam(value = "emiratesIdFrontPath", required = false) String emiratesIdFrontPath,
             @RequestParam(value = "emiratesIdBackPath", required = false) String emiratesIdBackPath,
@@ -111,6 +114,7 @@ public class TenantController {
                 signedLeaseFile,
                 mulkiyaFile,
                 additionalFiles,
+                chequeFiles, // SCP-2025-12-09: Scanned cheque copies
                 emiratesIdFrontPath,
                 emiratesIdBackPath,
                 passportFrontPath,

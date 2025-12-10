@@ -33,5 +33,10 @@ public enum DocumentType {
     /**
      * Other documents (salary certificate, bank statements, etc.)
      */
-    OTHER
+    OTHER,
+
+    /**
+     * SCP-2025-12-09: Scanned cheque copies (max 12 files)
+     */
+    CHEQUE
 }

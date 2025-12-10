@@ -13,7 +13,8 @@
 
 import { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Wrench } from 'lucide-react';
+import { Wrench } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,9 +27,7 @@ export default function NewMaintenanceRequestPage() {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/tenant/requests')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <PageBackButton href="/tenant/requests" aria-label="Back to requests" />
           <div>
             <div className="flex items-center gap-3">
               <Wrench className="h-8 w-8 text-primary" />

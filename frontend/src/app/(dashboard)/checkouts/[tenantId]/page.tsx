@@ -29,6 +29,7 @@ import {
   Download,
   Check,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -385,9 +386,7 @@ export default function CheckoutWizardPage({ params }: PageProps) {
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={handleBackToList}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <PageBackButton href="/checkouts" aria-label="Back to checkouts" />
         <div className="flex-1">
           <h1 className="text-3xl font-bold tracking-tight">Tenant Checkout</h1>
           <p className="text-muted-foreground">

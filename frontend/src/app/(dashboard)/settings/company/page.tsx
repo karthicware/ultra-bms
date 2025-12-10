@@ -23,8 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Loader2, Building2, Upload, Trash2, ImageIcon, AlertCircle, Check, X } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2, Building2, Upload, Trash2, ImageIcon, AlertCircle, Check, X } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import Image from 'next/image';
 import { getValidImageSrc, isExternalImage } from '@/lib/utils/image-url';
 import { useToast } from '@/hooks/use-toast';
@@ -246,13 +246,9 @@ export default function CompanyProfilePage() {
   return (
     <div className="container max-w-3xl py-8">
       {/* Back navigation */}
-      <div className="mb-6">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/settings" className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Settings
-          </Link>
-        </Button>
+      <div className="mb-6 flex items-center gap-2">
+        <PageBackButton href="/settings" aria-label="Back to settings" />
+        <span className="text-sm text-muted-foreground">Back to Settings</span>
       </div>
 
       {/* Page header */}

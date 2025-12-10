@@ -17,7 +17,6 @@ import {
   CalendarIcon,
   Plus,
   Trash2,
-  ArrowLeft,
   Loader2,
   UserIcon,
   FileTextIcon,
@@ -28,6 +27,7 @@ import {
   SearchIcon,
   CheckCircle2,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import {
   Card,
   CardContent,
@@ -173,9 +173,7 @@ export default function PDCRegistrationPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => router.back()} className="h-10 w-10 rounded-full">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <PageBackButton href="/pdc" aria-label="Back to PDC list" />
           <div>
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
               <CreditCardIcon className="h-8 w-8 text-primary hidden sm:block" />

@@ -16,13 +16,13 @@ import { format, parseISO } from 'date-fns';
 import {
   CalendarIcon,
   Loader2,
-  ArrowLeft,
   Info,
   Building2,
   Clock,
   Calendar as CalendarIconOutline,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -198,15 +198,7 @@ export default function EditPMSchedulePage({ params }: PageProps) {
   if (error || !schedule) {
     return (
       <div className="container max-w-4xl mx-auto py-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.back()}
-          className="mb-4"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
+        <PageBackButton href="/property-manager/pm-schedules" aria-label="Back to PM schedules" className="mb-4" />
         <Alert variant="destructive">
           <AlertDescription>{error || 'Failed to load PM schedule'}</AlertDescription>
         </Alert>
@@ -221,14 +213,7 @@ export default function EditPMSchedulePage({ params }: PageProps) {
     <div className="container max-w-4xl mx-auto py-6">
       {/* Header with Back Button */}
       <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push(`/property-manager/pm-schedules/${scheduleId}`)}
-          data-testid="btn-back"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <PageBackButton href={`/property-manager/pm-schedules/${scheduleId}`} aria-label="Back to PM schedule details" />
         <div>
           <div className="flex items-center gap-3">
             <CalendarIcon className="h-8 w-8 text-primary" />

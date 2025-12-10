@@ -11,7 +11,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  ChevronLeft,
   Calendar,
   Building2,
   DollarSign,
@@ -22,6 +21,7 @@ import {
   Clock,
 } from 'lucide-react';
 
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -134,10 +134,7 @@ export default function ViolationDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.back()}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
+          <PageBackButton href="/property-manager/compliance/violations" aria-label="Back to violations" />
           <Button variant="outline" onClick={() => router.push(`/property-manager/compliance/violations/${violationId}/edit`)}>
             <Pencil className="mr-2 h-4 w-4" />
             Edit

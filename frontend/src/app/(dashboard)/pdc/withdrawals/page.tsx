@@ -52,7 +52,6 @@ import {
 import {
   Search,
   ArrowUpDown,
-  ArrowLeft,
   Calendar as CalendarIcon,
   Filter,
   X,
@@ -71,6 +70,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { debounce } from 'lodash';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 function WithdrawalHistoryContent() {
   const router = useRouter();
@@ -165,9 +165,7 @@ function WithdrawalHistoryContent() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <PageBackButton href="/pdc" aria-label="Back to PDC management" />
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Withdrawal History</h1>
             <p className="text-muted-foreground">

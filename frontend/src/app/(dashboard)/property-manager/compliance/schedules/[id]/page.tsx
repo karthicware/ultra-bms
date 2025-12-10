@@ -11,7 +11,6 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ChevronLeft,
   Calendar,
   Building2,
   ShieldCheck,
@@ -22,6 +21,7 @@ import {
   ClipboardCheck,
 } from 'lucide-react';
 
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -132,10 +132,7 @@ export default function ScheduleDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.back()}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
+          <PageBackButton href="/property-manager/compliance/schedules" aria-label="Back to schedules" />
           {schedule.status !== ComplianceScheduleStatus.COMPLETED && (
             <Button onClick={() => router.push(`/property-manager/compliance/schedules/${scheduleId}/complete`)}>
               <CheckCircle2 className="mr-2 h-4 w-4" />

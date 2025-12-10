@@ -52,7 +52,6 @@ import type { Property } from '@/types';
 import type { ExpenseDetail } from '@/types/expense';
 import type { VendorListItem } from '@/types/vendors';
 import {
-  ArrowLeft,
   Loader2,
   Receipt,
   DollarSign,
@@ -63,6 +62,7 @@ import {
   Download,
   AlertCircle,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function EditExpensePage() {
@@ -292,9 +292,7 @@ export default function EditExpensePage() {
     <div className="container mx-auto space-y-6" data-testid="form-expense-edit">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push(`/expenses/${expenseId}`)}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <PageBackButton href={`/expenses/${expenseId}`} aria-label="Back to expense details" />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Edit Expense</h1>
           <p className="text-muted-foreground">{expense.expenseNumber}</p>

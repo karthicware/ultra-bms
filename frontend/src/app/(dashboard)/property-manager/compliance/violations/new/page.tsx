@@ -13,9 +13,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Loader2, ChevronLeft, FileWarning } from 'lucide-react';
+import { CalendarIcon, Loader2, FileWarning } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -147,10 +148,7 @@ function NewViolationContent() {
   return (
     <div className="container max-w-2xl mx-auto py-6">      {/* Header */}
       <div className="mb-6">
-        <Button variant="ghost" onClick={() => router.back()} className="mb-4">
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
+        <PageBackButton href="/property-manager/compliance/violations" aria-label="Back to violations" className="mb-4" />
         <h1 className="text-3xl font-bold tracking-tight">Record Violation</h1>
         <p className="text-muted-foreground">
           Record a new compliance violation

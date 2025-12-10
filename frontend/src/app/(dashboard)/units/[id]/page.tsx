@@ -18,6 +18,7 @@ import { getUnitById, getUnitHistory } from '@/services/units.service';
 import type { Unit, UnitHistory, UnitStatus } from '@/types/units';
 import { UnitDeleteDialog } from '@/components/properties/UnitDeleteDialog';
 import { UnitFormModal } from '@/components/properties/UnitFormModal';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import {
   Home,
   Pencil,
@@ -29,7 +30,6 @@ import {
   Calendar,
   User,
   History as HistoryIcon,
-  ArrowLeft,
   Building2,
   CheckCircle2,
   AlertCircle,
@@ -215,9 +215,7 @@ export default function UnitDetailPage() {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 -ml-2">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <PageBackButton onClick={handleBack} aria-label="Back to property" />
           <div>
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
               Unit {unit.unitNumber}

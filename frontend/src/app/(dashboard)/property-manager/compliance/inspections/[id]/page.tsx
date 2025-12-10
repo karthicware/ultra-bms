@@ -10,7 +10,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  ChevronLeft,
   Calendar,
   Building2,
   User,
@@ -24,6 +23,7 @@ import {
   Wrench,
 } from 'lucide-react';
 
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -136,10 +136,7 @@ export default function InspectionDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.back()}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
+          <PageBackButton href="/property-manager/compliance/inspections" aria-label="Back to inspections" />
           {inspection.status === InspectionStatus.SCHEDULED && (
             <Button onClick={() => router.push(`/property-manager/compliance/inspections/${inspectionId}/record`)}>
               <ClipboardCheck className="mr-2 h-4 w-4" />

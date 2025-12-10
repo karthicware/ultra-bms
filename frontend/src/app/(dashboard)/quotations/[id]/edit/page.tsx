@@ -26,6 +26,7 @@ import {
   MapPin,
   AlertTriangle,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -1228,20 +1229,15 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <div className="container max-w-7xl mx-auto px-4 py-8 lg:py-12">
         <div className="mb-10">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
-                Edit Quotation
-              </h1>
-              <p className="mt-2 text-lg text-muted-foreground">
+              <div className="flex items-center gap-3 mb-2">
+                <PageBackButton href={`/quotations/${quotation.id}`} aria-label="Back to quotation" />
+                <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
+                  Edit Quotation
+                </h1>
+              </div>
+              <p className="mt-2 text-lg text-muted-foreground ml-[52px]">
                 {quotation.quotationNumber} for <span className="text-foreground font-medium">{leadName}</span>
               </p>
             </div>

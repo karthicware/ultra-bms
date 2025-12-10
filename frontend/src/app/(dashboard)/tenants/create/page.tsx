@@ -57,6 +57,7 @@ import { ParkingAllocationStep } from '@/components/tenants/ParkingAllocationSte
 // SCP-2025-12-07: PaymentScheduleStep removed - Payment Due Date moved to Step 3 (Rent Breakdown)
 import { DocumentUploadStep } from '@/components/tenants/DocumentUploadStep';
 import { ReviewSubmitStep } from '@/components/tenants/ReviewSubmitStep';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 import { createTenant, getLeadConversionData } from '@/services/tenant.service';
 import {
@@ -470,7 +471,26 @@ function CreateTenantWizard() {
       submitData.append('propertyId', formData.leaseInfo.propertyId);
       submitData.append('unitId', formData.leaseInfo.unitId);
       // SCP-2025-12-08: Format as YYYY-MM-DD for backend LocalDate parsing
-      submitData.append('leaseStartDate', formData.leaseInfo.leaseStartDate?.toISOString().split('T')[0] || '');
+      // SCP-2025-12-09: Ensure leaseStartDate is at least today (backend has @FutureOrPresent validation)
+      // This handles edge case where quotation date becomes past date by the time user submits
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+      // Get lease start date as string (YYYY-MM-DD)
+      let leaseStartDateStr = formData.leaseInfo.leaseStartDate
+        ? (formData.leaseInfo.leaseStartDate instanceof Date
+            ? formData.leaseInfo.leaseStartDate.toISOString().split('T')[0]
+            : String(formData.leaseInfo.leaseStartDate).split('T')[0])
+        : '';
+
+      // If lease start date is in the past, use today instead
+      if (leaseStartDateStr && leaseStartDateStr < todayStr) {
+        console.log('[TenantCreate] Adjusting past leaseStartDate:', leaseStartDateStr, '→', todayStr);
+        leaseStartDateStr = todayStr;
+      }
+
+      submitData.append('leaseStartDate', leaseStartDateStr);
       submitData.append('leaseEndDate', formData.leaseInfo.leaseEndDate?.toISOString().split('T')[0] || '');
       submitData.append('leaseType', formData.leaseInfo.leaseType);
       submitData.append('renewalOption', formData.leaseInfo.renewalOption.toString());
@@ -616,14 +636,7 @@ function CreateTenantWizard() {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => router.push('/tenants')}
-                    className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-sm"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
+                  <PageBackButton href="/tenants" aria-label="Back to tenants" />
                   <div>
                     <div className="flex items-center gap-3">
                       <h1 className="text-3xl font-bold tracking-tight">New Tenant Onboarding</h1>

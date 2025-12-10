@@ -36,7 +36,6 @@ import { useAsset, useUpdateAsset } from '@/hooks/useAssets';
 import { assetUpdateSchema } from '@/lib/validations/asset';
 import { ASSET_CATEGORY_OPTIONS } from '@/types/asset';
 import {
-  ArrowLeft,
   Save,
   Package,
   Building2,
@@ -48,6 +47,7 @@ import {
   ClockIcon,
   TagIcon,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { getProperties } from '@/services/properties.service';
 
 interface PropertyOption {
@@ -179,9 +179,7 @@ export default function EditAssetPage() {
     <div className="container mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push(`/assets/${assetId}`)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <PageBackButton href={`/assets/${assetId}`} aria-label="Back to asset details" />
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Edit Asset</h1>
           <p className="text-gray-500">{asset.assetNumber}</p>

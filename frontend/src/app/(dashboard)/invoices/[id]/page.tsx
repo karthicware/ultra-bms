@@ -56,7 +56,6 @@ import {
   canSendInvoice,
 } from '@/types/invoice';
 import {
-  ArrowLeft,
   Send,
   XCircle,
   Edit,
@@ -69,6 +68,7 @@ import {
   CreditCard,
   Plus,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import PaymentRecordForm from '@/components/invoices/PaymentRecordForm';
 
 interface PageProps {
@@ -197,9 +197,7 @@ export default function InvoiceDetailPage({ params }: PageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/invoices')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <PageBackButton href="/invoices" aria-label="Back to invoices" />
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight">

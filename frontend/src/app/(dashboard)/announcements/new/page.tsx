@@ -57,7 +57,6 @@ import {
   TEMPLATE_CONTENT,
 } from '@/types/announcement';
 import {
-  ArrowLeft,
   Loader2,
   Save,
   FileText,
@@ -66,6 +65,7 @@ import {
   Calendar,
   AlertCircle,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 export default function CreateAnnouncementPage() {
   const router = useRouter();
@@ -202,9 +202,7 @@ export default function CreateAnnouncementPage() {
     <div className="container mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <PageBackButton href="/announcements" aria-label="Back to announcements" />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Create Announcement</h1>
           <p className="text-muted-foreground">

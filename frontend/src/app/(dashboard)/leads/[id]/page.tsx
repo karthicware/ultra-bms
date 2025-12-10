@@ -59,7 +59,6 @@ import {
   Phone,
   Building,
   Calendar,
-  ArrowLeft,
   Plus,
   Trash2,
   Pencil,
@@ -85,6 +84,7 @@ import {
   Eye,
   AlertCircle,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 const LEAD_STATUS_CONFIG: Record<string, {
   badge: string;
@@ -301,15 +301,8 @@ export default function LeadDetailPage() {
             <div className="relative px-8 py-8">
               {/* Breadcrumb */}
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => router.push('/leads')}
-                  className="gap-1 h-8 px-2 -ml-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Leads
-                </Button>
+                <PageBackButton href="/leads" aria-label="Back to leads" />
+                <span>Leads</span>
                 <ChevronRight className="h-4 w-4" />
                 <span className="font-medium text-foreground">{lead.leadNumber}</span>
               </div>

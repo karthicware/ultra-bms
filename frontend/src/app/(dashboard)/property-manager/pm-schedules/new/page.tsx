@@ -12,8 +12,9 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Loader2, ArrowLeft } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -146,14 +147,7 @@ export default function CreatePMSchedulePage() {
     <div className="container max-w-4xl mx-auto py-6">
       {/* Header with Back Button */}
       <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push('/property-manager/pm-schedules')}
-          data-testid="btn-back"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <PageBackButton href="/property-manager/pm-schedules" aria-label="Back to PM schedules" />
         <div>
           <div className="flex items-center gap-3">
             <CalendarIcon className="h-8 w-8 text-primary" />

@@ -11,8 +11,9 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, ArrowLeft, Save, ShieldCheck } from 'lucide-react';
+import { Loader2, Save, ShieldCheck } from 'lucide-react';
 
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -162,9 +163,7 @@ export default function EditRequirementPage() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push(`/property-manager/compliance/requirements/${requirementId}`)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <PageBackButton href={`/property-manager/compliance/requirements/${requirementId}`} aria-label="Back to requirement details" />
           <div>
             <div className="flex items-center gap-3">
               <ShieldCheck className="h-8 w-8 text-primary" />

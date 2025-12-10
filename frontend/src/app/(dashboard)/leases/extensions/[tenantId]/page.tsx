@@ -26,6 +26,7 @@ import {
   Loader2,
   Info,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -349,9 +350,7 @@ export default function LeaseExtensionPage({ params }: PageProps) {
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={handleBack}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <PageBackButton href="/leases/extensions" aria-label="Back to expiring leases" />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Extend Lease</h1>
           <p className="text-muted-foreground">

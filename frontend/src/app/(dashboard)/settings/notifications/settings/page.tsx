@@ -7,7 +7,6 @@
  */
 
 import { useState, useCallback } from 'react';
-import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -44,7 +43,6 @@ import {
   type NotificationCategory,
 } from '@/types/notification';
 import {
-  ArrowLeft,
   RotateCcw,
   Loader2,
   Shield,
@@ -56,6 +54,7 @@ import {
   FileText,
   Megaphone,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 
 /**
  * Category icons and labels
@@ -222,11 +221,7 @@ export default function NotificationSettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/settings/notifications">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
+          <PageBackButton href="/settings/notifications" aria-label="Back to notifications" />
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Notification Settings</h1>
             <p className="text-muted-foreground">

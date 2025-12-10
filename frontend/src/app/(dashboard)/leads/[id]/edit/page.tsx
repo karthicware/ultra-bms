@@ -11,7 +11,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  ArrowLeft,
   UserIcon,
   MailIcon,
   PhoneIcon,
@@ -21,6 +20,7 @@ import {
   SparklesIcon,
   FileTextIcon,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -137,9 +137,7 @@ export default function EditLeadPage() {
     <div className="container max-w-4xl mx-auto py-6">
       <div className="mb-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push(`/leads/${leadId}`)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <PageBackButton href={`/leads/${leadId}`} aria-label="Back to lead details" />
           <div>
             <div className="flex items-center gap-3">
               <UserIcon className="h-8 w-8 text-primary" />

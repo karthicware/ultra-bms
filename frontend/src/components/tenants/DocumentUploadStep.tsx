@@ -29,6 +29,7 @@ import {
   Files,
   Image as ImageIcon,
   Loader2,
+  Banknote, // SCP-2025-12-09: For Scanned Cheque Copies section
 } from 'lucide-react';
 
 import { FileUploadProgress } from '@/components/ui/file-upload-progress';
@@ -78,6 +79,9 @@ export function DocumentUploadStep({ data, onComplete, onBack, preloadedDocument
   const [visaFile, setVisaFile] = useState<File | null>(data.visaFile ?? null);
   const [signedLeaseFile, setSignedLeaseFile] = useState<File | null>(data.signedLeaseFile ?? null);
   const [additionalFiles, setAdditionalFiles] = useState<File[]>(data.additionalFiles || []);
+
+  // SCP-2025-12-09: Scanned cheque copies (up to 12 files)
+  const [chequeFiles, setChequeFiles] = useState<File[]>((data as TenantDocumentUploadFormData & { chequeFiles?: File[] }).chequeFiles || []);
 
   // Track if user wants to replace preloaded documents
   const [replaceEmiratesIdFront, setReplaceEmiratesIdFront] = useState(false);
@@ -174,6 +178,7 @@ export function DocumentUploadStep({ data, onComplete, onBack, preloadedDocument
       visaFile,
       signedLeaseFile,
       additionalFiles,
+      chequeFiles, // SCP-2025-12-09: Scanned cheque copies
     } as TenantDocumentUploadFormData);
   };
 
@@ -185,6 +190,17 @@ export function DocumentUploadStep({ data, onComplete, onBack, preloadedDocument
 
   const handleAdditionalFileRemove = (index: number) => {
     setAdditionalFiles(additionalFiles.filter((_, i) => i !== index));
+  };
+
+  // SCP-2025-12-09: Cheque file handlers (up to 12 files)
+  const handleChequeFileAdd = (file: File | null) => {
+    if (file && chequeFiles.length < 12) {
+      setChequeFiles([...chequeFiles, file]);
+    }
+  };
+
+  const handleChequeFileRemove = (index: number) => {
+    setChequeFiles(chequeFiles.filter((_, i) => i !== index));
   };
 
   // Component to display preloaded document with thumbnail
@@ -528,6 +544,68 @@ export function DocumentUploadStep({ data, onComplete, onBack, preloadedDocument
             />
           </div>
 
+          {/* SCP-2025-12-09: Scanned Cheque Copies Section */}
+          <div className="rounded-2xl border border-muted bg-muted/20 p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+                <Banknote className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="font-semibold">Scanned Cheque Copies</h3>
+                <p className="text-sm text-muted-foreground">
+                  Optional - Upload scanned cheque copies (max 12 files)
+                </p>
+              </div>
+            </div>
+
+            {/* Existing cheque files */}
+            {chequeFiles.length > 0 && (
+              <div className="space-y-2 mb-4">
+                {chequeFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 border rounded-xl bg-background"
+                    data-testid={`cheque-file-${index}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                        <Banknote className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium truncate max-w-[200px]">{file.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => handleChequeFileRemove(index)}
+                      data-testid={`btn-remove-cheque-${index}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add more cheque button */}
+            {chequeFiles.length < 12 && (
+              <FileUploadProgress
+                onFileSelect={handleChequeFileAdd}
+                selectedFile={null}
+                accept={{ 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] }}
+                maxSize={5 * 1024 * 1024}
+                label={`Add Cheque Copy (${chequeFiles.length}/12)`}
+                testId="upload-cheque"
+              />
+            )}
+          </div>
+
           {/* Additional Documents Section */}
           <div className="rounded-2xl border border-muted bg-muted/20 p-6">
             <div className="flex items-center gap-3 mb-6">
@@ -537,7 +615,7 @@ export function DocumentUploadStep({ data, onComplete, onBack, preloadedDocument
               <div>
                 <h3 className="font-semibold">Additional Documents</h3>
                 <p className="text-sm text-muted-foreground">
-                  Optional - salary certificate, bank statements, etc. (max 5 files)
+                  Optional - marriage certificate, bank statements, etc. (max 5 files)
                 </p>
               </div>
             </div>
@@ -605,6 +683,7 @@ export function DocumentUploadStep({ data, onComplete, onBack, preloadedDocument
                   visaFile,
                   signedLeaseFile,
                   additionalFiles,
+                  chequeFiles, // SCP-2025-12-09: Scanned cheque copies
                 } as TenantDocumentUploadFormData);
               }}
               data-testid="btn-back"

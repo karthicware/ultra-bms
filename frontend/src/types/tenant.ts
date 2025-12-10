@@ -320,6 +320,7 @@ export interface PaymentScheduleFormData {
 }
 
 // SCP-2025-12-07: Updated to support separate front/back uploads for Emirates ID and Passport
+// SCP-2025-12-09: Added chequeFiles for scanned cheque copies (max 12 files)
 export interface TenantDocumentUploadFormData {
   emiratesIdFile: File | null;        // Front side (required unless preloaded)
   emiratesIdBackFile?: File | null;   // Back side (optional)
@@ -328,6 +329,7 @@ export interface TenantDocumentUploadFormData {
   visaFile?: File | null;
   signedLeaseFile: File | null;
   additionalFiles: File[];
+  chequeFiles?: File[];               // Scanned cheque copies (max 12 files)
 }
 
 // SCP-2025-12-07: Extended rent breakdown form data to include payment due date

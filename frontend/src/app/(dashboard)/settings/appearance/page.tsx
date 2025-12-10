@@ -11,9 +11,8 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Monitor, Sun, Moon, ArrowLeft, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { Monitor, Sun, Moon, Loader2 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { useThemeSync } from '@/hooks/useThemeSync';
 import { ThemePreference, THEME_OPTIONS } from '@/types/settings';
 
@@ -73,13 +72,9 @@ export default function AppearanceSettingsPage() {
   return (
     <div className="container max-w-2xl py-8">
       {/* Back navigation */}
-      <div className="mb-6">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/settings" className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Settings
-          </Link>
-        </Button>
+      <div className="mb-6 flex items-center gap-2">
+        <PageBackButton href="/settings" aria-label="Back to settings" />
+        <span className="text-sm text-muted-foreground">Back to Settings</span>
       </div>
 
       {/* Page header */}

@@ -28,6 +28,7 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import {
   Form,
   FormControl,
@@ -267,9 +268,7 @@ export default function TenantLeaseRenewalPage() {
       <div className="container mx-auto p-6 max-w-2xl space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/tenant/dashboard')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <PageBackButton href="/tenant/dashboard" aria-label="Back to dashboard" />
           <div>
             <h1 className="text-2xl font-bold">Lease Renewal</h1>
             <p className="text-muted-foreground">Your current renewal request status</p>
@@ -351,9 +350,7 @@ export default function TenantLeaseRenewalPage() {
       <div className="container mx-auto p-6 max-w-2xl space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/tenant/dashboard')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <PageBackButton href="/tenant/dashboard" aria-label="Back to dashboard" />
           <div>
             <h1 className="text-2xl font-bold">Lease Renewal</h1>
             <p className="text-muted-foreground">Your renewal request has been processed</p>
@@ -446,9 +443,7 @@ export default function TenantLeaseRenewalPage() {
     <div className="container mx-auto p-6 max-w-2xl space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push('/tenant/dashboard')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <PageBackButton href="/tenant/dashboard" aria-label="Back to dashboard" />
         <div>
           <h1 className="text-2xl font-bold">Request Lease Renewal</h1>
           <p className="text-muted-foreground">Submit a request to renew your lease</p>

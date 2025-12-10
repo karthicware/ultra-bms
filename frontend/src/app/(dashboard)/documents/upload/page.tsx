@@ -26,7 +26,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  ArrowLeft,
   Upload,
   FileText,
   X,
@@ -39,6 +38,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from 'lucide-react';
+import { PageBackButton } from '@/components/common/PageBackButton';
 import { useUploadDocument } from '@/hooks/useDocuments';
 import {
   documentUploadSchema,
@@ -171,9 +171,7 @@ export default function DocumentUploadPage() {
     <div className="container mx-auto space-y-6" data-testid="page-document-upload">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={handleBack}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <PageBackButton href="/documents" aria-label="Back to documents" />
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Upload Document</h1>
           <p className="text-gray-500">Add a new document to the system</p>

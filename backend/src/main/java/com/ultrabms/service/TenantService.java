@@ -40,6 +40,7 @@ public interface TenantService {
     /**
      * Create a new tenant with user account creation and document uploads
      * SCP-2025-12-06: Overloaded method to support preloaded document paths from quotation
+     * SCP-2025-12-09: Added chequeFiles parameter for scanned cheque copies
      *
      * @param request Tenant creation request
      * @param emiratesIdFile Emirates ID file (optional if paths provided)
@@ -48,6 +49,7 @@ public interface TenantService {
      * @param signedLeaseFile Signed lease agreement (required)
      * @param mulkiyaFile Mulkiya document (optional)
      * @param additionalFiles Additional documents (optional)
+     * @param chequeFiles Scanned cheque copies (optional, max 12 files)
      * @param emiratesIdFrontPath S3 path to Emirates ID front (from quotation)
      * @param emiratesIdBackPath S3 path to Emirates ID back (from quotation)
      * @param passportFrontPath S3 path to passport front (from quotation)
@@ -62,6 +64,7 @@ public interface TenantService {
             MultipartFile signedLeaseFile,
             MultipartFile mulkiyaFile,
             List<MultipartFile> additionalFiles,
+            List<MultipartFile> chequeFiles,
             String emiratesIdFrontPath,
             String emiratesIdBackPath,
             String passportFrontPath,
