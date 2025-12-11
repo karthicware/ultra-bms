@@ -2,7 +2,7 @@
 
 /**
  * Quotation Detail Page
- * SCP-2025-12-06: Clean, compact design with highlighted title only
+ * SCP-2025-12-10: Bold redesign with modern aesthetic
  */
 
 import { useState, useEffect, useRef, use } from 'react';
@@ -19,30 +19,21 @@ import {
   FileText,
   Edit,
   Building2,
-  MapPin,
   User,
-  Mail,
-  Phone,
   Globe,
   CreditCard,
-  Shield,
   Calendar,
   Receipt,
   Banknote,
   Sparkles,
   UserCheck,
-  ChevronRight,
-  Home,
+  BadgeCheck,
+  Wallet,
+  CalendarClock,
+  ShieldCheck,
+  ScrollText,
 } from 'lucide-react';
 import Link from 'next/link';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -81,8 +72,10 @@ const STATUS_CONFIG = {
     label: 'Draft',
     variant: 'secondary' as const,
     icon: FileText,
-    color: 'text-muted-foreground',
-    bg: 'bg-muted',
+    color: 'text-slate-600',
+    bg: 'bg-slate-100',
+    gradient: 'from-slate-500 to-slate-600',
+    ringColor: 'ring-slate-200',
   },
   [QuotationStatus.SENT]: {
     label: 'Sent',
@@ -90,13 +83,17 @@ const STATUS_CONFIG = {
     icon: Send,
     color: 'text-blue-600',
     bg: 'bg-blue-50',
+    gradient: 'from-blue-500 to-blue-600',
+    ringColor: 'ring-blue-200',
   },
   [QuotationStatus.ACCEPTED]: {
     label: 'Accepted',
     variant: 'success' as const,
     icon: CheckCircle,
-    color: 'text-green-600',
-    bg: 'bg-green-50',
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50',
+    gradient: 'from-emerald-500 to-emerald-600',
+    ringColor: 'ring-emerald-200',
   },
   [QuotationStatus.REJECTED]: {
     label: 'Rejected',
@@ -104,6 +101,8 @@ const STATUS_CONFIG = {
     icon: XCircle,
     color: 'text-red-600',
     bg: 'bg-red-50',
+    gradient: 'from-red-500 to-red-600',
+    ringColor: 'ring-red-200',
   },
   [QuotationStatus.EXPIRED]: {
     label: 'Expired',
@@ -111,13 +110,17 @@ const STATUS_CONFIG = {
     icon: Clock,
     color: 'text-amber-600',
     bg: 'bg-amber-50',
+    gradient: 'from-amber-500 to-amber-600',
+    ringColor: 'ring-amber-200',
   },
   [QuotationStatus.CONVERTED]: {
     label: 'Converted',
     variant: 'success' as const,
-    icon: CheckCircle,
-    color: 'text-emerald-600',
-    bg: 'bg-emerald-50',
+    icon: BadgeCheck,
+    color: 'text-violet-600',
+    bg: 'bg-violet-50',
+    gradient: 'from-violet-500 to-violet-600',
+    ringColor: 'ring-violet-200',
   },
 };
 
@@ -225,7 +228,6 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
         description: response.message || 'Lead converted to tenant successfully',
         variant: 'success'
       });
-      // Refresh quotation data
       const updated = await getQuotationById(quotation.id);
       if (updated.chequeBreakdown && typeof updated.chequeBreakdown === 'string') {
         try { updated.chequeBreakdown = JSON.parse(updated.chequeBreakdown); } catch { updated.chequeBreakdown = []; }
@@ -245,18 +247,19 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container max-w-6xl mx-auto px-4 py-6">
-          <div className="animate-pulse space-y-3">
-            <div className="h-8 w-32 bg-muted rounded" />
-            <div className="h-12 w-64 bg-muted rounded" />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              <div className="lg:col-span-2 space-y-3">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+        <div className="container max-w-7xl mx-auto px-6 py-8">
+          {/* Loading skeleton with shimmer effect */}
+          <div className="animate-pulse space-y-6">
+            <div className="h-6 w-48 bg-slate-200 rounded-lg" />
+            <div className="h-48 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-3xl" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-40 bg-muted rounded-xl" />
+                  <div key={i} className="h-44 bg-slate-100 rounded-2xl" />
                 ))}
               </div>
-              <div className="h-80 bg-muted rounded-xl" />
+              <div className="h-96 bg-slate-100 rounded-2xl" />
             </div>
           </div>
         </div>
@@ -266,14 +269,20 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
 
   if (!quotation) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mx-auto mb-4">
-            <AlertTriangle className="h-8 w-8 text-muted-foreground" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="relative">
+            <div className="absolute inset-0 bg-red-500/20 blur-3xl rounded-full" />
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-red-500 to-rose-600 mx-auto mb-6 shadow-xl shadow-red-500/25">
+              <AlertTriangle className="h-12 w-12 text-white" />
+            </div>
           </div>
-          <h2 className="text-xl font-bold mb-2">Quotation Not Found</h2>
-          <p className="text-muted-foreground mb-4">The quotation doesn&apos;t exist or has been deleted.</p>
-          <Button onClick={() => router.push('/leads')} size="sm">
+          <h2 className="text-2xl font-bold mb-3 text-slate-900">Quotation Not Found</h2>
+          <p className="text-slate-500 mb-6">The quotation you're looking for doesn't exist or may have been deleted.</p>
+          <Button
+            onClick={() => router.push('/leads')}
+            className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl px-6 py-3 h-auto"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Leads
           </Button>
@@ -299,423 +308,454 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
     : quotation.totalFirstPayment || (firstMonthRent + (quotation.serviceCharges || 0) + (quotation.parkingFee || 0) + (quotation.securityDeposit || 0) + (quotation.adminFee || 0));
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-6xl mx-auto px-4 py-6">
-        {/* Breadcrumb Navigation - Shows Lead context */}
-        <Breadcrumb className="mb-4">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/leads" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
-                  <Home className="h-3.5 w-3.5" />
-                  <span>Leads</span>
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator>
-              <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            </BreadcrumbSeparator>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link
-                  href={`/leads/${quotation.leadId}`}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {quotation.leadName || 'Lead Details'}
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator>
-              <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            </BreadcrumbSeparator>
-            <BreadcrumbItem>
-              <BreadcrumbPage className="font-semibold text-foreground">
-                Quotation
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <div className="container max-w-7xl mx-auto px-6 py-6">
+        {/* Hero Header Section */}
+        <div className="relative mb-8">
+          {/* Background gradient decoration */}
+          <div className={cn(
+            "absolute inset-0 bg-gradient-to-r opacity-10 rounded-3xl blur-xl",
+            statusConfig.gradient
+          )} />
 
-        {/* Header - Highlighted */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
-          <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-4 border border-primary/20">
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold tracking-tight text-primary">{quotation.quotationNumber}</h1>
-              <Badge variant={statusConfig.variant} className={cn("gap-1 px-2 py-0.5 text-xs", statusConfig.bg, statusConfig.color)}>
-                <StatusIcon className="h-3 w-3" />
-                {statusConfig.label}
-              </Badge>
-              {/* SCP-2025-12-10: Show "Modified" badge if quotation was edited after SENT */}
-              {quotation.isModified && (
-                <Badge variant="outline" className="gap-1 px-2 py-0.5 text-xs text-amber-600 border-amber-300 bg-amber-50">
-                  <Edit className="h-3 w-3" />
-                  Modified
-                </Badge>
-              )}
+          <div className="relative bg-white rounded-3xl border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden">
+            {/* Top accent bar */}
+            <div className={cn("h-1.5 bg-gradient-to-r", statusConfig.gradient)} />
+
+            <div className="p-6 md:p-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                {/* Left side - Quotation info */}
+                <div className="flex items-start gap-5">
+                  {/* Status icon */}
+                  <div className={cn(
+                    "flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg",
+                    statusConfig.gradient,
+                    `shadow-${statusConfig.color.split('-')[1]}-500/25`
+                  )}>
+                    <StatusIcon className="h-8 w-8 text-white" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                        {quotation.quotationNumber}
+                      </h1>
+                      <Badge
+                        className={cn(
+                          "px-3 py-1 text-sm font-medium rounded-full ring-2",
+                          statusConfig.bg,
+                          statusConfig.color,
+                          statusConfig.ringColor
+                        )}
+                      >
+                        {statusConfig.label}
+                      </Badge>
+                      {quotation.isModified && (
+                        <Badge className="px-3 py-1 text-sm font-medium rounded-full bg-amber-50 text-amber-600 ring-2 ring-amber-200">
+                          <Edit className="h-3 w-3 mr-1" />
+                          Modified
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-slate-500">
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="h-4 w-4" />
+                        Created {format(new Date(quotation.createdAt), 'PPP')}
+                      </span>
+                      {quotation.sentAt && (
+                        <span className="flex items-center gap-1.5">
+                          <Send className="h-4 w-4" />
+                          Sent {format(new Date(quotation.sentAt), 'PPP')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right side - Actions */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {(quotation.status === QuotationStatus.DRAFT ||
+                    quotation.status === QuotationStatus.SENT ||
+                    quotation.status === QuotationStatus.ACCEPTED) && (
+                    <Button
+                      variant="outline"
+                      onClick={handleEdit}
+                      className="rounded-xl border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={handlePrint}
+                    className="rounded-xl border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                  >
+                    <Printer className="h-4 w-4 mr-2" />
+                    Print
+                  </Button>
+                  {quotation.status === QuotationStatus.DRAFT && (
+                    <Button
+                      onClick={handleSend}
+                      disabled={isSending}
+                      className="rounded-xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/25"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {isSending ? 'Sending...' : 'Send Quotation'}
+                    </Button>
+                  )}
+                  {(quotation.status === QuotationStatus.SENT ||
+                    quotation.status === QuotationStatus.ACCEPTED) && (
+                    <Button
+                      onClick={handleConvertToTenant}
+                      disabled={isConverting}
+                      className="rounded-xl bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/25"
+                    >
+                      <UserCheck className="h-4 w-4 mr-2" />
+                      {isConverting ? 'Converting...' : 'Convert to Tenant'}
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Created {format(new Date(quotation.createdAt), 'PPP')}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {/* SCP-2025-12-10: Allow editing for DRAFT, SENT, and ACCEPTED status. Block only CONVERTED, REJECTED, EXPIRED */}
-            {(quotation.status === QuotationStatus.DRAFT ||
-              quotation.status === QuotationStatus.SENT ||
-              quotation.status === QuotationStatus.ACCEPTED) && (
-              <Button variant="outline" size="sm" onClick={handleEdit}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-            )}
-            <Button variant="outline" size="sm" onClick={handlePrint}>
-              <Printer className="h-4 w-4 mr-2" />
-              Print
-            </Button>
-            {quotation.status === QuotationStatus.DRAFT && (
-              <Button size="sm" onClick={handleSend} disabled={isSending}>
-                <Send className="h-4 w-4 mr-2" />
-                {isSending ? 'Sending...' : 'Send'}
-              </Button>
-            )}
-            {/* SCP-2025-12-10: Show Convert button for both SENT and ACCEPTED status */}
-            {(quotation.status === QuotationStatus.SENT ||
-              quotation.status === QuotationStatus.ACCEPTED) && (
-              <Button size="sm" onClick={handleConvertToTenant} disabled={isConverting} className="bg-green-600 hover:bg-green-700">
-                <UserCheck className="h-4 w-4 mr-2" />
-                {isConverting ? 'Converting...' : 'Convert to Tenant'}
-              </Button>
-            )}
           </div>
         </div>
 
         {/* Expiry Warning */}
         {isExpired && quotation.status !== QuotationStatus.EXPIRED && (
-          <div className="flex items-center gap-2 p-3 mb-4 rounded-lg bg-destructive/10 border border-destructive/20">
-            <AlertTriangle className="h-4 w-4 text-destructive" />
-            <p className="text-sm text-destructive font-medium">
-              This quotation expired on {format(validityDate, 'PPP')}
-            </p>
+          <div className="flex items-center gap-3 p-4 mb-6 rounded-2xl bg-red-50 border border-red-200">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-red-700">Quotation Expired</p>
+              <p className="text-sm text-red-600">
+                This quotation expired on {format(validityDate, 'PPP')}
+              </p>
+            </div>
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Details */}
-          <div className="lg:col-span-2 space-y-3">
-            {/* Customer Information */}
-            <Card className="shadow-sm">
-              <CardHeader className="py-2 px-3 bg-muted/30">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  Customer Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">Full Name</p>
-                    <p className="text-sm font-medium">{quotation.leadName || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">Email</p>
-                    <p className="text-sm font-medium">{quotation.leadEmail || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">Phone</p>
-                    <p className="text-sm font-medium">{quotation.leadContactNumber || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">Nationality</p>
-                    <p className="text-sm font-medium">{quotation.nationality || '—'}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Property Details */}
-            <Card className="shadow-sm">
-              <CardHeader className="py-2 px-3 bg-muted/30">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  Property Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">Property</p>
-                    <p className="text-sm font-medium">{quotation.propertyName || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">Unit</p>
-                    <p className="text-sm font-medium">{quotation.unitNumber || '—'}</p>
-                  </div>
-                  {quotation.parkingSpotNumber && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">Parking</p>
-                      <p className="text-sm font-medium">{quotation.parkingSpotNumber}</p>
+          <div className="lg:col-span-2 space-y-5">
+            {/* Customer & Property - Combined Card */}
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                {/* Customer Information */}
+                <div className="p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
+                      <User className="h-5 w-5 text-blue-600" />
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Identity Documents - No download links */}
-            {(quotation.emiratesIdNumber || quotation.passportNumber) && (
-              <Card className="shadow-sm">
-                <CardHeader className="py-2 px-3 bg-muted/30">
-                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                    <CreditCard className="h-4 w-4 text-muted-foreground" />
-                    Identity Documents
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    {quotation.emiratesIdNumber && (
+                    <h3 className="font-semibold text-slate-900">Customer</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Full Name</p>
+                      <p className="text-sm font-semibold text-slate-900">{quotation.leadName || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Email</p>
+                      <p className="text-sm text-slate-700">{quotation.leadEmail || '—'}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <p className="text-xs text-muted-foreground mb-0.5">Emirates ID</p>
-                        <p className="text-sm font-medium">{quotation.emiratesIdNumber}</p>
+                        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Phone</p>
+                        <p className="text-sm text-slate-700">{quotation.leadContactNumber || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Nationality</p>
+                        <p className="text-sm text-slate-700">{quotation.nationality || '—'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Property Details */}
+                <div className="p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100">
+                      <Building2 className="h-5 w-5 text-violet-600" />
+                    </div>
+                    <h3 className="font-semibold text-slate-900">Property</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Property Name</p>
+                      <p className="text-sm font-semibold text-slate-900">{quotation.propertyName || '—'}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Unit Number</p>
+                        <p className="text-sm text-slate-700">{quotation.unitNumber || '—'}</p>
+                      </div>
+                      {quotation.parkingSpotNumber && (
+                        <div>
+                          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Parking</p>
+                          <p className="text-sm text-slate-700">{quotation.parkingSpotNumber}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Identity Documents */}
+            {(quotation.emiratesIdNumber || quotation.passportNumber) && (
+              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
+                    <ShieldCheck className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <h3 className="font-semibold text-slate-900">Identity Documents</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {quotation.emiratesIdNumber && (
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50">
+                      <CreditCard className="h-5 w-5 text-slate-400 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Emirates ID</p>
+                        <p className="text-sm font-semibold text-slate-900">{quotation.emiratesIdNumber}</p>
                         {quotation.emiratesIdExpiry && (
-                          <p className="text-xs text-muted-foreground mt-0.5">
+                          <p className="text-xs text-slate-500 mt-1">
                             Expires: {format(new Date(quotation.emiratesIdExpiry), 'PP')}
                           </p>
                         )}
                       </div>
-                    )}
-                    {quotation.passportNumber && (
+                    </div>
+                  )}
+                  {quotation.passportNumber && (
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50">
+                      <Globe className="h-5 w-5 text-slate-400 mt-0.5" />
                       <div>
-                        <p className="text-xs text-muted-foreground mb-0.5">Passport</p>
-                        <p className="text-sm font-medium">{quotation.passportNumber}</p>
+                        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Passport</p>
+                        <p className="text-sm font-semibold text-slate-900">{quotation.passportNumber}</p>
                         {quotation.passportExpiry && (
-                          <p className="text-xs text-muted-foreground mt-0.5">
+                          <p className="text-xs text-slate-500 mt-1">
                             Expires: {format(new Date(quotation.passportExpiry), 'PP')}
                           </p>
                         )}
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* Payment Schedule */}
             {quotation.chequeBreakdown && quotation.chequeBreakdown.length > 0 && (
-              <Card className="shadow-sm">
-                <CardHeader className="py-2 px-3 bg-muted/30">
-                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                    <Receipt className="h-4 w-4 text-muted-foreground" />
-                    Payment Schedule
+              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+                <div className="p-5 border-b border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100">
+                        <Receipt className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <h3 className="font-semibold text-slate-900">Payment Schedule</h3>
+                    </div>
                     {quotation.numberOfCheques && (
-                      <Badge variant="secondary" className="ml-2 text-xs">
+                      <Badge className="px-3 py-1 text-sm font-medium rounded-full bg-emerald-50 text-emerald-700">
                         {quotation.numberOfCheques} {quotation.numberOfCheques === 1 ? 'Payment' : 'Payments'}
                       </Badge>
                     )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted/50">
-                        <tr>
-                          <th className="text-left px-4 py-2 font-medium text-muted-foreground text-xs">#</th>
-                          <th className="text-left px-4 py-2 font-medium text-muted-foreground text-xs">Payment Mode</th>
-                          <th className="text-right px-4 py-2 font-medium text-muted-foreground text-xs">Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {quotation.chequeBreakdown.map((item, index) => (
-                          <tr key={item.chequeNumber} className={cn(index !== quotation.chequeBreakdown!.length - 1 && 'border-b')}>
-                            <td className="px-4 py-2">
-                              <span className="font-medium">{item.chequeNumber}</span>
-                            </td>
-                            <td className="px-4 py-2">
-                              {index === 0 && quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
-                                <span className="flex items-center gap-1.5 text-green-700">
-                                  <Banknote className="h-3.5 w-3.5" />
-                                  Cash
-                                </span>
-                              ) : (
-                                <span className="flex items-center gap-1.5 text-blue-600">
-                                  <CreditCard className="h-3.5 w-3.5" />
-                                  Cheque
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2 text-right font-medium tabular-nums">
-                              {index === 0 ? formatCurrency(totalFirstPaymentDisplay) : formatCurrency(item.amount)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-slate-50/80">
+                        <th className="text-left px-5 py-3 font-semibold text-slate-500 text-xs uppercase tracking-wider">#</th>
+                        <th className="text-left px-5 py-3 font-semibold text-slate-500 text-xs uppercase tracking-wider">Payment Mode</th>
+                        <th className="text-right px-5 py-3 font-semibold text-slate-500 text-xs uppercase tracking-wider">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {quotation.chequeBreakdown.map((item, index) => (
+                        <tr key={item.chequeNumber} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-5 py-4">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-600">
+                              {item.chequeNumber}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            {index === 0 && quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
+                              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 text-sm font-medium">
+                                <Banknote className="h-4 w-4" />
+                                Cash
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium">
+                                <CreditCard className="h-4 w-4" />
+                                Cheque
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-5 py-4 text-right">
+                            <span className="text-lg font-bold text-slate-900 tabular-nums">
+                              {index === 0 ? formatCurrency(totalFirstPaymentDisplay) : formatCurrency(item.amount)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             )}
 
             {/* Terms & Conditions */}
             {(quotation.paymentTerms || quotation.moveinProcedures || quotation.cancellationPolicy || quotation.specialTerms) && (
-              <Card className="shadow-sm">
-                <CardHeader className="py-2 px-3 bg-muted/30">
-                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    Terms & Conditions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-2 space-y-2">
+              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
+                    <ScrollText className="h-5 w-5 text-slate-600" />
+                  </div>
+                  <h3 className="font-semibold text-slate-900">Terms & Conditions</h3>
+                </div>
+                <div className="space-y-4">
                   {quotation.paymentTerms && (
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-1">Payment Terms</p>
-                      <p className="text-sm whitespace-pre-wrap">{quotation.paymentTerms}</p>
+                    <div className="p-4 rounded-xl bg-slate-50">
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Payment Terms</p>
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap">{quotation.paymentTerms}</p>
                     </div>
                   )}
                   {quotation.moveinProcedures && (
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-1">Move-in Procedures</p>
-                      <p className="text-sm whitespace-pre-wrap">{quotation.moveinProcedures}</p>
+                    <div className="p-4 rounded-xl bg-slate-50">
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Move-in Procedures</p>
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap">{quotation.moveinProcedures}</p>
                     </div>
                   )}
                   {quotation.cancellationPolicy && (
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-1">Cancellation Policy</p>
-                      <p className="text-sm whitespace-pre-wrap">{quotation.cancellationPolicy}</p>
+                    <div className="p-4 rounded-xl bg-slate-50">
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Cancellation Policy</p>
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap">{quotation.cancellationPolicy}</p>
                     </div>
                   )}
                   {quotation.specialTerms && (
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-1">Special Terms</p>
-                      <p className="text-sm whitespace-pre-wrap">{quotation.specialTerms}</p>
+                    <div className="p-4 rounded-xl bg-slate-50">
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Special Terms</p>
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap">{quotation.specialTerms}</p>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
           </div>
 
           {/* Right Column - Financial Summary */}
           <div className="lg:col-span-1">
-            <div className="sticky top-6 space-y-3">
+            <div className="sticky top-6 space-y-5">
               {/* Financial Summary Card */}
-              <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-br from-card via-card to-primary/5 p-5 shadow-lg">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 shadow-2xl">
                 {/* Decorative elements */}
-                <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-primary/5 blur-3xl" />
-                <div className="absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/20 to-violet-500/20 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 blur-3xl rounded-full translate-y-1/2 -translate-x-1/2" />
 
                 <div className="relative">
                   {/* Header */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm">
+                      <Sparkles className="h-5 w-5 text-white" />
                     </div>
-                    <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                    <span className="text-sm font-semibold text-white/80 uppercase tracking-widest">
                       Financial Summary
                     </span>
                   </div>
 
+                  {/* Annual Rent - Hero number */}
+                  {yearlyRent > 0 && (
+                    <div className="mb-6">
+                      <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-2">Annual Rent</p>
+                      <p className="text-4xl font-bold text-white tracking-tight">
+                        {formatCurrency(yearlyRent)}
+                      </p>
+                      <p className="text-sm text-white/60 mt-1">
+                        {quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH
+                          ? `${numberOfCheques - 1} ${numberOfCheques - 1 === 1 ? 'Cheque' : 'Cheques'} + Cash`
+                          : `${numberOfCheques} ${numberOfCheques === 1 ? 'Cheque' : 'Cheques'}`}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Validity */}
-                  <div className="rounded-xl bg-muted/50 p-3 mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background shadow-sm">
-                        <Calendar className="h-4 w-4 text-primary" />
-                      </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-4">
+                    <div className="flex items-center gap-3">
+                      <CalendarClock className="h-5 w-5 text-white/70" />
                       <div>
-                        <p className="text-xs text-muted-foreground">Valid Until</p>
-                        <p className={cn('text-sm font-medium', isExpired && 'text-destructive')}>
+                        <p className="text-xs text-white/60 uppercase tracking-wider">Valid Until</p>
+                        <p className={cn(
+                          'text-sm font-semibold',
+                          isExpired ? 'text-red-400' : 'text-white'
+                        )}>
                           {format(validityDate, 'PPP')}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Annual Rent */}
-                  {yearlyRent > 0 && (
-                    <div className="rounded-xl bg-primary/5 border border-primary/10 p-3 mb-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-medium text-primary">Annual Rent</span>
-                        <span className="text-base font-bold text-primary tabular-nums">
-                          {formatCurrency(yearlyRent)}
-                        </span>
+                  {/* First Payment */}
+                  <div className="border-t border-white/10 pt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        {quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
+                          <Banknote className="h-5 w-5 text-emerald-400" />
+                        ) : (
+                          <Wallet className="h-5 w-5 text-blue-400" />
+                        )}
+                        <span className="text-sm font-medium text-white/80">First Payment</span>
                       </div>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Payment Schedule</span>
-                        <span>
-                          {quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH
-                            ? `${numberOfCheques - 1} ${numberOfCheques - 1 === 1 ? 'Cheque' : 'Cheques'}`
-                            : `${numberOfCheques} ${numberOfCheques === 1 ? 'Cheque' : 'Cheques'}`}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
-                        <span>First Payment Mode</span>
-                        <span className="flex items-center gap-1">
-                          {quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
-                            <>
-                              <Banknote className="h-3 w-3 text-green-600" />
-                              Cash
-                            </>
-                          ) : (
-                            <>
-                              <CreditCard className="h-3 w-3 text-blue-600" />
-                              Cheque
-                            </>
-                          )}
-                        </span>
-                      </div>
+                      <Badge className={cn(
+                        "text-xs font-medium",
+                        quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH
+                          ? "bg-emerald-500/20 text-emerald-300"
+                          : "bg-blue-500/20 text-blue-300"
+                      )}>
+                        {quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? 'Cash' : 'Cheque'}
+                      </Badge>
                     </div>
-                  )}
-
-                  {/* First Payment Total */}
-                  <div className="flex items-center justify-between py-3 border-t border-primary/10">
-                    <div className="flex items-center gap-2">
-                      {quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? (
-                        <Banknote className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <CreditCard className="h-4 w-4 text-blue-600" />
-                      )}
-                      <div>
-                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                          First Payment
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? 'Cash' : 'Cheque'} • Includes all fees & deposit
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold tracking-tight text-primary">
-                        {formatCurrency(totalFirstPaymentDisplay)}
-                      </p>
-                    </div>
+                    <p className="text-xs text-white/50 mb-3">Includes rent + all fees & deposit</p>
+                    <p className="text-3xl font-bold text-white tracking-tight">
+                      {formatCurrency(totalFirstPaymentDisplay)}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Quick Info */}
-              <div className="rounded-xl border bg-card/50 p-4">
-                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-primary" />
-                  Quotation Timeline
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Issue Date</span>
-                    <span className="font-medium">{format(issueDate, 'PP')}</span>
+              {/* Timeline Card */}
+              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
+                    <Calendar className="h-5 w-5 text-slate-600" />
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Valid Until</span>
-                    <span className={cn('font-medium', isExpired && 'text-destructive')}>
+                  <h3 className="font-semibold text-slate-900">Timeline</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50">
+                    <span className="text-sm text-slate-600">Issue Date</span>
+                    <span className="text-sm font-semibold text-slate-900">{format(issueDate, 'PP')}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50">
+                    <span className="text-sm text-slate-600">Valid Until</span>
+                    <span className={cn(
+                      'text-sm font-semibold',
+                      isExpired ? 'text-red-600' : 'text-slate-900'
+                    )}>
                       {format(validityDate, 'PP')}
                     </span>
                   </div>
                   {quotation.sentAt && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Sent On</span>
-                      <span className="font-medium">{format(new Date(quotation.sentAt), 'PP')}</span>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50">
+                      <span className="text-sm text-blue-600">Sent On</span>
+                      <span className="text-sm font-semibold text-blue-700">{format(new Date(quotation.sentAt), 'PP')}</span>
                     </div>
                   )}
                   {quotation.acceptedAt && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Accepted On</span>
-                      <span className="font-medium text-green-600">{format(new Date(quotation.acceptedAt), 'PP')}</span>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50">
+                      <span className="text-sm text-emerald-600">Accepted On</span>
+                      <span className="text-sm font-semibold text-emerald-700">{format(new Date(quotation.acceptedAt), 'PP')}</span>
                     </div>
                   )}
                 </div>

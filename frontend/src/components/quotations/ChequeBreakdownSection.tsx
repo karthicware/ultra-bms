@@ -106,26 +106,26 @@ export function ChequeBreakdownSection({
   onFirstMonthTotalChange,
   className,
 }: ChequeBreakdownSectionProps) {
-  // SCP-2025-12-08: Determine if parking is annual (one-time) or monthly
+  // Determine if this is an annual lease (for display purposes)
   const isAnnualLease = leaseType === 'YEARLY';
-  // For YEARLY leases: parking is one-time (included in oneTimeFees)
-  // For MONTH_TO_MONTH/FIXED_TERM: parking is monthly (added to each payment)
+
   // Track if first month payment has been manually overridden
   const [isFirstMonthOverridden, setIsFirstMonthOverridden] = useState(false);
   const [customFirstMonthTotal, setCustomFirstMonthTotal] = useState(0);
 
-  // Calculate one-time fees total
-  // SCP-2025-12-08: Parking is only included in one-time fees for YEARLY leases
-  // For MONTH_TO_MONTH/FIXED_TERM, parking is added to each monthly payment separately
-  const oneTimeFees = useMemo(() => {
-    const parkingOneTime = isAnnualLease ? parkingFee : 0;
-    return securityDeposit + adminFee + serviceCharges + parkingOneTime;
-  }, [securityDeposit, adminFee, serviceCharges, parkingFee, isAnnualLease]);
+  // SCP-2025-12-10: One-time fees WITHOUT parking (for subtotal display)
+  const oneTimeFeesWithoutParking = useMemo(() => {
+    return securityDeposit + adminFee + serviceCharges;
+  }, [securityDeposit, adminFee, serviceCharges]);
 
-  // SCP-2025-12-08: Monthly parking fee for non-annual leases
-  const monthlyParkingFee = useMemo(() => {
-    return isAnnualLease ? 0 : parkingFee;
-  }, [parkingFee, isAnnualLease]);
+  // Calculate one-time fees total (including parking for total calculations)
+  // Parking fee is ALWAYS annual (one-time) - included in first payment only
+  const oneTimeFees = useMemo(() => {
+    return oneTimeFeesWithoutParking + parkingFee;
+  }, [oneTimeFeesWithoutParking, parkingFee]);
+
+  // Parking is always annual - never added to recurring payments
+  const monthlyParkingFee = 0;
 
   // numberOfCheques represents number of PAYMENTS (rent is split across these)
   // The first payment always includes fees + first rent portion
@@ -182,22 +182,21 @@ export function ChequeBreakdownSection({
       // First payment rent portion (rounded to whole number)
       const firstRentPortionRounded = Math.round(firstRentPortion);
 
-      // SCP-2025-12-07: First payment due date is TODAY
+      // First payment due date is TODAY (use local date to avoid timezone issues)
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
       // First payment (includes fees + first rent portion)
       // For CHEQUE: This is cheque #1 with fees
       // For CASH: This is cash payment with fees (shown as payment #1)
-      // SCP-2025-12-08: For non-annual leases, also add monthly parking
+      // Note: Parking fee is included in oneTimeFees, not added separately here
       breakdown.push({
         chequeNumber: 1,
-        amount: firstRentPortionRounded + monthlyParkingFee, // Rent + monthly parking (if applicable)
-        dueDate: today.toISOString().split('T')[0],
+        amount: firstRentPortionRounded, // Rent only (parking is in oneTimeFees)
+        dueDate: todayStr,
       });
 
-      // Remaining payments (rent only cheques) - use paymentDueDate for due dates
-      // SCP-2025-12-08: For non-annual leases, add monthly parking to each payment
+      // Remaining payments (rent only) - use paymentDueDate for due dates
       if (remainingChequeCount > 0) {
         // Calculate remaining rent after first payment (using rounded first portion)
         const actualRemainingRent = yearlyRentAmount - firstRentPortionRounded;
@@ -214,13 +213,11 @@ export function ChequeBreakdownSection({
           const nextMonthDate = addMonths(today, i + 1);
           const dueDate = setDayOfMonth(nextMonthDate, paymentDueDate);
           // Add +1 to the first 'remainder' payments to distribute the difference evenly
-          // SCP-2025-12-08: Add monthly parking for non-annual leases
           const rentAmount = i < remainder ? baseAmount + 1 : baseAmount;
-          const amount = rentAmount + monthlyParkingFee;
 
           breakdown.push({
             chequeNumber: i + 2, // Start from #2
-            amount: amount,
+            amount: rentAmount,
             dueDate: dueDate.toISOString().split('T')[0],
           });
         }
@@ -228,7 +225,7 @@ export function ChequeBreakdownSection({
 
       onChequeBreakdownChange(breakdown);
     }
-  }, [yearlyRentAmount, numberOfCheques, leaseStartDate, paymentDueDate, firstRentPortion, remainingRentAmount, remainingChequeCount, oneTimeFees, monthlyParkingFee, onChequeBreakdownChange]);
+  }, [yearlyRentAmount, numberOfCheques, leaseStartDate, paymentDueDate, firstRentPortion, remainingRentAmount, remainingChequeCount, oneTimeFees, onChequeBreakdownChange]);
 
   // Reset custom first month when inputs change (unless manually set)
   useEffect(() => {
@@ -428,6 +425,7 @@ export function ChequeBreakdownSection({
           />
 
           {/* Breakdown of first month */}
+          {/* SCP-2025-12-10: Parking Fee moved after One-time Fees Subtotal */}
           <div className="mt-3 p-3 rounded-lg bg-muted/30 text-sm space-y-1">
             <div className="flex justify-between text-muted-foreground">
               <span>Security Deposit</span>
@@ -441,8 +439,13 @@ export function ChequeBreakdownSection({
               <span>Service Charges</span>
               <span>{formatCurrencyLocal(serviceCharges)}</span>
             </div>
-            {/* SCP-2025-12-08: Show parking differently based on lease type */}
-            {parkingFee > 0 && isAnnualLease && (
+            <Separator className="my-2" />
+            <div className="flex justify-between font-medium">
+              <span>One-time Fees Subtotal</span>
+              <span>{formatCurrencyLocal(oneTimeFeesWithoutParking)}</span>
+            </div>
+            {/* Parking is always annual - shown after subtotal */}
+            {parkingFee > 0 && (
               <div className="flex justify-between text-muted-foreground">
                 <span className="flex items-center gap-1">
                   Parking Fee (Annual)
@@ -451,37 +454,10 @@ export function ChequeBreakdownSection({
                 <span>{formatCurrencyLocal(parkingFee)}</span>
               </div>
             )}
-            {parkingFee > 0 && !isAnnualLease && (
-              <div className="flex justify-between text-blue-600">
-                <span className="flex items-center gap-1">
-                  Monthly Parking
-                  <Car className="h-3.5 w-3.5" />
-                  <Badge variant="outline" className="text-[10px] px-1 py-0">
-                    per payment
-                  </Badge>
-                </span>
-                <span>{formatCurrencyLocal(parkingFee)}/mo</span>
-              </div>
-            )}
-            <Separator className="my-2" />
-            <div className="flex justify-between font-medium">
-              <span>One-time Fees Subtotal</span>
-              <span>{formatCurrencyLocal(oneTimeFees)}</span>
-            </div>
             <div className="flex justify-between text-primary font-medium">
               <span>First Rent Payment</span>
               <span>{formatCurrencyLocal(firstRentPortion)}</span>
             </div>
-            {/* SCP-2025-12-08: Show monthly parking addition for non-annual leases */}
-            {monthlyParkingFee > 0 && (
-              <div className="flex justify-between text-blue-600 text-sm">
-                <span className="flex items-center gap-1">
-                  + Monthly Parking
-                  <Car className="h-3 w-3" />
-                </span>
-                <span>{formatCurrencyLocal(monthlyParkingFee)}</span>
-              </div>
-            )}
             {adjustmentAmount > 0 && (
               <div className="flex justify-between text-xs pt-1 text-amber-600">
                 <span>Extra collected (reduces other payments)</span>
@@ -543,13 +519,6 @@ export function ChequeBreakdownSection({
                             + Fees
                           </Badge>
                         )}
-                        {/* SCP-2025-12-08: Show parking badge for non-annual leases */}
-                        {monthlyParkingFee > 0 && (
-                          <Badge variant="outline" className="text-[10px] px-1 py-0 text-blue-600 border-blue-200">
-                            <Car className="h-2.5 w-2.5 mr-0.5" />
-                            +P
-                          </Badge>
-                        )}
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm tabular-nums">
@@ -580,13 +549,7 @@ export function ChequeBreakdownSection({
                         </span>
                         {index === 0 && (
                           <div className="text-[10px] text-muted-foreground">
-                            ({formatCurrencyLocal(item.amount - monthlyParkingFee)} rent{monthlyParkingFee > 0 ? ` + ${formatCurrencyLocal(monthlyParkingFee)} parking` : ''} + fees)
-                          </div>
-                        )}
-                        {/* SCP-2025-12-08: Show rent + parking breakdown for non-first payments */}
-                        {index > 0 && monthlyParkingFee > 0 && (
-                          <div className="text-[10px] text-muted-foreground">
-                            ({formatCurrencyLocal(item.amount - monthlyParkingFee)} + {formatCurrencyLocal(monthlyParkingFee)} parking)
+                            ({formatCurrencyLocal(item.amount)} rent + fees)
                           </div>
                         )}
                       </div>
@@ -596,7 +559,6 @@ export function ChequeBreakdownSection({
               </div>
 
               {/* Table Footer - Totals */}
-              {/* SCP-2025-12-08: Updated to show total parking for non-annual leases */}
               <div className="bg-primary/5 border-t">
                 <div className="grid grid-cols-4 gap-4 p-3 font-medium">
                   <div className="col-span-3 text-sm">Total Rent (Yearly)</div>
@@ -604,20 +566,8 @@ export function ChequeBreakdownSection({
                     {formatCurrencyLocal(yearlyRentAmount)}
                   </div>
                 </div>
-                {/* SCP-2025-12-08: Show total parking for non-annual leases */}
-                {monthlyParkingFee > 0 && (
-                  <div className="grid grid-cols-4 gap-4 px-3 pb-1 text-blue-600">
-                    <div className="col-span-3 text-xs flex items-center gap-1">
-                      + Total Parking ({numberOfCheques} × {formatCurrencyLocal(monthlyParkingFee)})
-                      <Car className="h-3 w-3" />
-                    </div>
-                    <div className="text-right text-xs tabular-nums">
-                      {formatCurrencyLocal(monthlyParkingFee * numberOfCheques)}
-                    </div>
-                  </div>
-                )}
                 <div className="grid grid-cols-4 gap-4 px-3 pb-3 text-muted-foreground">
-                  <div className="col-span-3 text-xs">+ One-time Fees</div>
+                  <div className="col-span-3 text-xs">+ One-time Fees (incl. Parking)</div>
                   <div className="text-right text-xs tabular-nums">
                     {formatCurrencyLocal(oneTimeFees)}
                   </div>
@@ -626,7 +576,7 @@ export function ChequeBreakdownSection({
                 <div className="grid grid-cols-4 gap-4 p-3 font-semibold">
                   <div className="col-span-3 text-sm">Grand Total</div>
                   <div className="text-right text-sm tabular-nums text-primary">
-                    {formatCurrencyLocal(yearlyRentAmount + oneTimeFees + (monthlyParkingFee * numberOfCheques))}
+                    {formatCurrencyLocal(yearlyRentAmount + oneTimeFees)}
                   </div>
                 </div>
               </div>

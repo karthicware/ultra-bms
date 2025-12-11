@@ -323,6 +323,8 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
   const [chequeBreakdown, setChequeBreakdown] = useState<ChequeBreakdownItem[]>([]);
   const [leaseStartDate, setLeaseStartDate] = useState<Date>(new Date());
   const [firstMonthTotal, setFirstMonthTotal] = useState<number | undefined>(undefined);
+  // SCP-2025-12-10: Payment due date state (day of month for subsequent payments)
+  const [paymentDueDate, setPaymentDueDate] = useState<number>(5);
 
   // Popover open states
   const [issueDateOpen, setIssueDateOpen] = useState(false);
@@ -612,6 +614,22 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
           });
           return false;
         }
+        // SCP-2025-12-10: Critical validation - First month total must cover rent + one-time fees + parking
+        // Formula: firstMonthTotal >= oneTimeFeesSubtotal + parkingFee + firstRentPayment
+        // watchedValues: [0]=baseRent, [1]=serviceCharges, [2]=parkingFee, [3]=securityDeposit, [4]=adminFee
+        const oneTimeFeesSubtotal = (watchedValues[3] || 0) + (watchedValues[4] || 0) + (watchedValues[1] || 0);
+        const parkingFeeAmount = watchedValues[2] || 0;
+        const firstRentPayment = numberOfCheques > 0 ? yearlyRentAmount / numberOfCheques : 0;
+        const minimumFirstMonthTotal = oneTimeFeesSubtotal + parkingFeeAmount + firstRentPayment;
+
+        if ((firstMonthTotal ?? 0) < minimumFirstMonthTotal) {
+          toast({
+            title: 'Invalid First Month Payment',
+            description: `First month total (${formatCurrency(firstMonthTotal ?? 0)}) cannot be less than One-time Fees Subtotal + Parking Fee + First Rent Payment (${formatCurrency(minimumFirstMonthTotal)})`,
+            variant: 'destructive',
+          });
+          return false;
+        }
         return true;
       case 3: // Terms
         const paymentTerms = form.getValues('paymentTerms');
@@ -646,7 +664,7 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
       default:
         return true;
     }
-  }, [form, toast, yearlyRentAmount]);
+  }, [form, toast, yearlyRentAmount, numberOfCheques, firstMonthTotal, watchedValues]);
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
@@ -654,8 +672,11 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
     }
   };
 
+  // SCP-2025-12-10: Validate current step before allowing navigation (both next and previous)
   const handlePrevious = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    if (validateStep(currentStep)) {
+      setCurrentStep((prev) => Math.max(prev - 1, 1));
+    }
   };
 
   // Helper to safely convert date to ISO string for backend (YYYY-MM-DD format for LocalDate)
@@ -1066,6 +1087,8 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
         firstMonthPaymentMethod={firstMonthPaymentMethod}
         leaseStartDate={leaseStartDate}
         chequeBreakdown={chequeBreakdown}
+        paymentDueDate={paymentDueDate}
+        onPaymentDueDateChange={setPaymentDueDate}
         securityDeposit={watchedValues[3] || 0}
         adminFee={watchedValues[4] || 0}
         serviceCharges={watchedValues[1] || 0}

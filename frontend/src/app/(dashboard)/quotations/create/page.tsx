@@ -97,22 +97,6 @@ const STEPS = [
   { id: 4, title: 'Terms', description: 'Conditions', icon: FileText },
 ];
 
-// SCP-2025-12-07: Common nationalities in UAE (alphabetical order) - matching PersonalInfoStep.tsx
-const NATIONALITIES = [
-  'Afghan', 'Albanian', 'Algerian', 'American', 'Argentinian', 'Australian', 'Austrian',
-  'Bahraini', 'Bangladeshi', 'Belgian', 'Brazilian', 'British', 'Bulgarian',
-  'Canadian', 'Chilean', 'Chinese', 'Colombian', 'Croatian', 'Czech',
-  'Danish', 'Dutch', 'Egyptian', 'Emirati', 'Estonian', 'Ethiopian',
-  'Filipino', 'Finnish', 'French', 'German', 'Ghanaian', 'Greek',
-  'Hungarian', 'Indian', 'Indonesian', 'Iranian', 'Iraqi', 'Irish', 'Israeli', 'Italian',
-  'Japanese', 'Jordanian', 'Kenyan', 'Korean', 'Kuwaiti',
-  'Lebanese', 'Libyan', 'Lithuanian', 'Malaysian', 'Mexican', 'Moroccan',
-  'Nepalese', 'New Zealander', 'Nigerian', 'Norwegian',
-  'Omani', 'Pakistani', 'Palestinian', 'Peruvian', 'Polish', 'Portuguese',
-  'Qatari', 'Romanian', 'Russian', 'Saudi', 'Serbian', 'Singaporean', 'Slovak',
-  'Slovenian', 'South African', 'Spanish', 'Sri Lankan', 'Sudanese', 'Swedish', 'Swiss', 'Syrian',
-  'Thai', 'Tunisian', 'Turkish', 'Ukrainian', 'Venezuelan', 'Yemeni',
-];
 
 // Progress Step Component
 function ProgressStep({
@@ -267,7 +251,12 @@ function QuotationPreview({
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Payment Schedule</span>
-              <span>{numberOfCheques} {numberOfCheques === 1 ? 'Cheque' : 'Cheques'}</span>
+              <span>
+                {numberOfCheques} {numberOfCheques === 1 ? 'Payment' : 'Payments'}
+                {firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH && numberOfCheques > 1 && (
+                  <> ({numberOfCheques - 1} {numberOfCheques - 1 === 1 ? 'Cheque' : 'Cheques'})</>
+                )}
+              </span>
             </div>
           </div>
         )}
@@ -283,7 +272,7 @@ function QuotationPreview({
                 ) : (
                   <CreditCard className="h-4 w-4 text-blue-600" />
                 )}
-                First Payment
+                First Rent Payment
                 <span className="text-xs text-muted-foreground/70">
                   ({firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? 'Cash' : 'Cheque'})
                 </span>
@@ -299,7 +288,7 @@ function QuotationPreview({
           )}
           {(values[2] || 0) > 0 && (
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Parking Fee</span>
+              <span className="text-muted-foreground">Parking Fee (Annual)</span>
               <span className="font-medium tabular-nums">{formatCurrency(values[2])}</span>
             </div>
           )}
@@ -381,9 +370,9 @@ function CreateQuotationForm() {
   const [ocrSuccess, setOcrSuccess] = useState<boolean | null>(null);
 
   // SCP-2025-12-06: Cheque breakdown state
-  // Default: 5 cheques and Cash as first payment method
+  // Default: 6 cheques and Cash as first payment method
   const [yearlyRentAmount, setYearlyRentAmount] = useState<number>(0);
-  const [numberOfCheques, setNumberOfCheques] = useState<number>(5);
+  const [numberOfCheques, setNumberOfCheques] = useState<number>(6);
   const [firstMonthPaymentMethod, setFirstMonthPaymentMethod] = useState<FirstMonthPaymentMethod>(
     FirstMonthPaymentMethod.CASH
   );
@@ -537,17 +526,18 @@ function CreateQuotationForm() {
     rawWatchedValues[4] || 0,
   ];
 
-  // Use custom firstMonthTotal if set, otherwise calculate default
-  const totalFirstPayment = firstMonthTotal !== undefined && firstMonthTotal > 0
-    ? firstMonthTotal
-    : calculateTotalFirstPayment({
-        serviceCharges: watchedValues[1],
-        parkingFee: watchedValues[2],
-        securityDeposit: watchedValues[3],
-        adminFee: watchedValues[4],
-        yearlyRentAmount,
-        numberOfCheques,
-      });
+  // Calculate default first payment
+  const calculatedFirstPayment = calculateTotalFirstPayment({
+    serviceCharges: watchedValues[1],
+    parkingFee: watchedValues[2],
+    securityDeposit: watchedValues[3],
+    adminFee: watchedValues[4],
+    yearlyRentAmount,
+    numberOfCheques,
+  });
+
+  // Use firstMonthTotal from ChequeBreakdownSection if available, otherwise use calculated
+  const totalFirstPayment = firstMonthTotal !== undefined ? firstMonthTotal : calculatedFirstPayment;
 
   // Story 3.10: Process identity documents with OCR (auto-triggered on front-side upload)
   // Note: OCR only processes front-side documents - back sides are for storage only
@@ -597,23 +587,9 @@ function CreateQuotationForm() {
         if (emiratesId.fullName && !leadName) {
           setLeadName(emiratesId.fullName);
         }
-        // Auto-fill nationality from Emirates ID
+        // Auto-fill nationality from Emirates ID directly
         if (emiratesId.nationality && !nationality) {
-          const extractedNationality = emiratesId.nationality.trim().toUpperCase();
-          // Try exact match first
-          let matchedNationality = NATIONALITIES.find(
-            nat => nat.toUpperCase() === extractedNationality
-          );
-          // If no exact match, try partial match
-          if (!matchedNationality) {
-            matchedNationality = NATIONALITIES.find(
-              nat => extractedNationality.includes(nat.toUpperCase()) ||
-                     nat.toUpperCase().includes(extractedNationality)
-            );
-          }
-          if (matchedNationality) {
-            setNationality(matchedNationality);
-          }
+          setNationality(emiratesId.nationality.trim());
         }
       }
 
@@ -816,11 +792,15 @@ function CreateQuotationForm() {
   const handleNext = () => {
     if (validateStep(currentStep)) {
       setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
+      // Scroll to top of content area when moving to next step
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePrevious = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
+    // Scroll to top of content area when moving to previous step
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const onSubmit = async (data: CreateQuotationFormData) => {
@@ -947,6 +927,10 @@ function CreateQuotationForm() {
                       selected={field.value}
                       onSelect={(date) => {
                         field.onChange(date);
+                        // Auto-calculate Valid Until when Issue Date changes
+                        if (date) {
+                          form.setValue('validityDate', getDefaultValidityDate(date));
+                        }
                         setIssueDateOpen(false);
                       }}
                       defaultMonth={field.value}
@@ -1277,25 +1261,17 @@ function CreateQuotationForm() {
         </div>
       </div>
 
-      {/* Nationality - SCP-2025-12-07: Changed from Input to Select dropdown */}
+      {/* Nationality */}
       <div className="space-y-2">
         <Label htmlFor="nationality" className="text-muted-foreground">Nationality *</Label>
-        <Select value={nationality} onValueChange={setNationality}>
-          <SelectTrigger
-            id="nationality"
-            className="h-12 rounded-xl border-2"
-            data-testid="select-nationality"
-          >
-            <SelectValue placeholder="Select nationality" />
-          </SelectTrigger>
-          <SelectContent>
-            {NATIONALITIES.map((nat) => (
-              <SelectItem key={nat} value={nat}>
-                {nat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Input
+          id="nationality"
+          placeholder="Enter nationality"
+          value={nationality}
+          onChange={(e) => setNationality(e.target.value)}
+          className="h-12 rounded-xl border-2"
+          data-testid="input-nationality"
+        />
       </div>
     </div>
   );
@@ -1418,7 +1394,7 @@ function CreateQuotationForm() {
               name="parkingFee"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-muted-foreground">Parking Fee</FormLabel>
+                  <FormLabel className="text-muted-foreground">Parking Fee (Annual)</FormLabel>
                   <FormControl>
                     <CurrencyInput
                       min={0}
@@ -1627,14 +1603,6 @@ function CreateQuotationForm() {
                   <div className="flex gap-2">
                     <Button
                       type="button"
-                      variant="ghost"
-                      onClick={() => router.back()}
-                      className="rounded-xl"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
                       variant="outline"
                       onClick={handlePrevious}
                       disabled={currentStep === 1}
@@ -1642,6 +1610,14 @@ function CreateQuotationForm() {
                     >
                       <ChevronLeft className="h-4 w-4 mr-2" />
                       Previous
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => router.back()}
+                      className="rounded-xl"
+                    >
+                      Cancel
                     </Button>
                   </div>
 

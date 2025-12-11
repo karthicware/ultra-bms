@@ -126,7 +126,7 @@ public class QuotationServiceImpl implements QuotationService {
                 .parkingFee(request.getParkingFee())
                 .securityDeposit(request.getSecurityDeposit())
                 .adminFee(request.getAdminFee())
-                .documentRequirements(request.getDocumentRequirements())
+                .documentRequirements(serializeDocumentRequirements(request.getDocumentRequirements()))
                 // SCP-2025-12-06: Cheque breakdown fields
                 // SCP-2025-12-10: numberOfPayments = total installments, numberOfCheques = actual cheques needed
                 .yearlyRentAmount(request.getYearlyRentAmount())
@@ -301,7 +301,7 @@ public class QuotationServiceImpl implements QuotationService {
             quotation.setAdminFee(request.getAdminFee());
         }
         if (request.getDocumentRequirements() != null) {
-            quotation.setDocumentRequirements(request.getDocumentRequirements());
+            quotation.setDocumentRequirements(serializeDocumentRequirements(request.getDocumentRequirements()));
         }
         if (request.getPaymentTerms() != null) {
             quotation.setPaymentTerms(request.getPaymentTerms());
@@ -712,6 +712,21 @@ public class QuotationServiceImpl implements QuotationService {
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize cheque breakdown: {}", e.getMessage());
             throw new ValidationException("Failed to serialize cheque breakdown");
+        }
+    }
+
+    /**
+     * SCP-2025-12-10: Serialize document requirements list to JSON string
+     */
+    private String serializeDocumentRequirements(List<String> documentRequirements) {
+        if (documentRequirements == null || documentRequirements.isEmpty()) {
+            return null;
+        }
+        try {
+            return OBJECT_MAPPER.writeValueAsString(documentRequirements);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize document requirements: {}", e.getMessage());
+            throw new ValidationException("Failed to serialize document requirements");
         }
     }
 }

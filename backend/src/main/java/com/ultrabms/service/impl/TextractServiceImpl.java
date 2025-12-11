@@ -126,18 +126,6 @@ public class TextractServiceImpl implements TextractService {
             "تنتهي صلاحيته", "تاريخ الانتهاء", "DATE D'EXPIRATION"
     );
 
-    // Common nationalities for extraction validation
-    private static final Set<String> KNOWN_NATIONALITIES = Set.of(
-            "EMIRATI", "INDIAN", "PAKISTANI", "FILIPINO", "EGYPTIAN", "BANGLADESHI",
-            "BRITISH", "AMERICAN", "CANADIAN", "AUSTRALIAN", "FRENCH", "GERMAN",
-            "CHINESE", "JAPANESE", "KOREAN", "INDONESIAN", "MALAYSIAN", "THAI",
-            "JORDANIAN", "LEBANESE", "SYRIAN", "IRAQI", "IRANIAN", "SAUDI",
-            "KUWAITI", "QATARI", "BAHRAINI", "OMANI", "YEMENI", "SUDANESE",
-            "MOROCCAN", "TUNISIAN", "ALGERIAN", "NIGERIAN", "SOUTH AFRICAN",
-            "RUSSIAN", "UKRAINIAN", "POLISH", "ITALIAN", "SPANISH", "PORTUGUESE",
-            "DUTCH", "BELGIAN", "SWISS", "AUSTRIAN", "SWEDISH", "NORWEGIAN",
-            "DANISH", "FINNISH", "IRISH", "SCOTTISH", "WELSH", "NEW ZEALANDER"
-    );
 
     // Allowed image content types
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
@@ -906,14 +894,6 @@ public class TextractServiceImpl implements TextractService {
             }
         }
 
-        // Fallback: scan for known nationalities
-        String upperText = rawText.toUpperCase();
-        for (String nationality : KNOWN_NATIONALITIES) {
-            if (upperText.contains(nationality)) {
-                return capitalize(nationality);
-            }
-        }
-
         return null;
     }
 
@@ -1069,9 +1049,17 @@ public class TextractServiceImpl implements TextractService {
      * Check if string is a valid nationality
      */
     private boolean isValidNationality(String value) {
-        if (value == null || value.length() < 3 || value.length() > 30) return false;
+        if (value == null || value.length() < 3 || value.length() > 50) return false;
         // Should be mostly alphabetic
-        return value.matches("^[A-Za-z\\s\\-]+$");
+        if (!value.matches("^[A-Za-z\\s\\-]+$")) return false;
+
+        // Exclude common document titles and labels that might be mistaken for nationality
+        String upperValue = value.toUpperCase().trim();
+        Set<String> excludedTerms = Set.of(
+            "RESIDENT IDENTITY CARD", "IDENTITY CARD", "EMIRATES ID", "PASSPORT",
+            "NATIONAL ID", "DOCUMENT", "CARD", "RESIDENT", "IDENTITY", "UNITED ARAB EMIRATES"
+        );
+        return !excludedTerms.contains(upperValue);
     }
 
     /**

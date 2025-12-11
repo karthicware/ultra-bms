@@ -74,7 +74,7 @@ public class CreateQuotationRequest {
     @Digits(integer = 10, fraction = 2, message = "Admin fee must have at most 10 integer digits and 2 decimal places")
     private BigDecimal adminFee;
 
-    private String documentRequirements;
+    private List<String> documentRequirements;
 
     // SCP-2025-12-06: Cheque breakdown fields
     @DecimalMin(value = "0.00", message = "Yearly rent amount must be non-negative")

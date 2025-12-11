@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -56,7 +57,7 @@ public class UpdateQuotationRequest {
     @Digits(integer = 10, fraction = 2, message = "Admin fee must have at most 10 integer digits and 2 decimal places")
     private BigDecimal adminFee;
 
-    private String documentRequirements;
+    private List<String> documentRequirements;
 
     private String paymentTerms;
 
