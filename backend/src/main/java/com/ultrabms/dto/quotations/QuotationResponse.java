@@ -51,6 +51,7 @@ public class QuotationResponse {
     private Integer numberOfCheques;  // Actual cheques needed (numberOfPayments - 1 if first month is CASH)
     private Quotation.FirstMonthPaymentMethod firstMonthPaymentMethod;
     private BigDecimal firstMonthTotal; // Custom first month total (includes one-time fees + first rent)
+    private Integer paymentDueDate; // SCP-2025-12-10: Day of month (1-31) for subsequent payment due dates
     private String chequeBreakdown; // JSON string of cheque breakdown items
     private String paymentTerms;
     private String moveinProcedures;
@@ -128,6 +129,7 @@ public class QuotationResponse {
                 .numberOfCheques(quotation.getNumberOfCheques())
                 .firstMonthPaymentMethod(quotation.getFirstMonthPaymentMethod())
                 .firstMonthTotal(quotation.getFirstMonthTotal())
+                .paymentDueDate(quotation.getPaymentDueDate())
                 .chequeBreakdown(quotation.getChequeBreakdown())
                 .paymentTerms(quotation.getPaymentTerms())
                 .moveinProcedures(quotation.getMoveinProcedures())

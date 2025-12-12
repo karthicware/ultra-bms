@@ -24,7 +24,6 @@ import {
   Loader2,
   Sparkles,
   Calendar,
-  ChevronRight,
   MapPin,
   Banknote,
 } from 'lucide-react';
@@ -50,6 +49,7 @@ import { FinancialInfoStep, type FinancialInfoFormData } from '@/components/tena
 // SCP-2025-12-10: ParkingAllocationStep removed - parking is now handled in quotation
 import { DocumentUploadStep } from '@/components/tenants/DocumentUploadStep';
 import { ReviewSubmitStep } from '@/components/tenants/ReviewSubmitStep';
+import { OnboardingStepsSidebar } from '@/components/tenants/OnboardingStepsSidebar';
 import { PageBackButton } from '@/components/common/PageBackButton';
 
 import { createTenant, getLeadConversionData } from '@/services/tenant.service';
@@ -570,68 +570,17 @@ function CreateTenantWizard() {
         <div className="container mx-auto max-w-7xl px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-12 gap-4 lg:gap-6">
             {/* Left Sidebar - Step Navigation */}
-            <div className="lg:col-span-1 xl:col-span-2">
-              <Card className="sticky top-8 shadow-lg border-0 overflow-hidden">
-                <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-4 border-b">
-                  <h3 className="font-semibold text-sm text-primary">Onboarding Steps</h3>
-                </div>
-                <CardContent className="p-0">
-                  <nav className="divide-y">
-                    {WIZARD_STEPS.map(({ step, title, description, icon: Icon }) => {
-                      const isActive = parseInt(currentStep) === step;
-                      const isCompleted = completedSteps.includes(step) || parseInt(currentStep) > step;
-                      const isClickable = isCompleted || parseInt(currentStep) >= step;
-
-                      return (
-                        <button
-                          key={step}
-                          onClick={() => isClickable && setCurrentStep(step.toString())}
-                          disabled={!isClickable}
-                          className={`
-                            w-full flex items-center gap-4 p-4 text-left transition-all
-                            ${isActive
-                              ? 'bg-primary/5 border-l-4 border-l-primary'
-                              : 'hover:bg-muted/50 border-l-4 border-l-transparent'
-                            }
-                            ${!isClickable ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                          `}
-                        >
-                          <div className={`
-                            flex items-center justify-center h-10 w-10 rounded-full shrink-0 transition-all
-                            ${isCompleted
-                              ? 'bg-emerald-500 text-white'
-                              : isActive
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-muted-foreground'
-                            }
-                          `}>
-                            {isCompleted ? (
-                              <CheckCircle2 className="h-5 w-5" />
-                            ) : (
-                              <Icon className="h-5 w-5" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className={`font-medium text-sm truncate ${isActive ? 'text-primary' : ''}`}>
-                              {title}
-                            </div>
-                            <div className="text-xs text-muted-foreground truncate">
-                              {description}
-                            </div>
-                          </div>
-                          {isActive && (
-                            <ChevronRight className="h-4 w-4 text-primary shrink-0" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </nav>
-                </CardContent>
-              </Card>
+            <div className="lg:col-span-1 xl:col-span-3">
+              <OnboardingStepsSidebar
+                steps={WIZARD_STEPS}
+                currentStep={parseInt(currentStep)}
+                completedSteps={completedSteps}
+                onStepClick={(step) => setCurrentStep(step.toString())}
+              />
             </div>
 
             {/* Main Content Area */}
-            <div className="lg:col-span-2 xl:col-span-7">
+            <div className="lg:col-span-2 xl:col-span-6">
               <div
                 key={currentStep}
                 className="animate-in fade-in-0 slide-in-from-right-4 duration-300"
@@ -950,10 +899,10 @@ export default function CreateTenantPage() {
 
           {/* Content Skeleton */}
           <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-12 gap-4 lg:gap-6">
-            <div className="lg:col-span-1 xl:col-span-2">
+            <div className="lg:col-span-1 xl:col-span-3">
               <Skeleton className="h-96 w-full rounded-xl" />
             </div>
-            <div className="lg:col-span-2 xl:col-span-7">
+            <div className="lg:col-span-2 xl:col-span-6">
               <Skeleton className="h-[600px] w-full rounded-xl" />
             </div>
             <div className="lg:col-span-1 xl:col-span-3">

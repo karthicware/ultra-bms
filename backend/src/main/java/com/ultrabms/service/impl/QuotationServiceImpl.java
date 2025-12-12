@@ -134,6 +134,7 @@ public class QuotationServiceImpl implements QuotationService {
                 .numberOfCheques(numberOfCheques)
                 .firstMonthPaymentMethod(paymentMethod)
                 .firstMonthTotal(request.getFirstMonthTotal())
+                .paymentDueDate(request.getPaymentDueDate() != null ? request.getPaymentDueDate() : 5)
                 .chequeBreakdown(serializeChequeBreakdown(request.getChequeBreakdown()))
                 // Identity document fields
                 .emiratesIdNumber(request.getEmiratesIdNumber())
@@ -278,6 +279,10 @@ public class QuotationServiceImpl implements QuotationService {
         }
         if (request.getFirstMonthTotal() != null) {
             quotation.setFirstMonthTotal(request.getFirstMonthTotal());
+        }
+        // SCP-2025-12-10: Payment due date for subsequent payments
+        if (request.getPaymentDueDate() != null) {
+            quotation.setPaymentDueDate(request.getPaymentDueDate());
         }
         // SCP-2025-12-06: Auto-calculate baseRent from yearlyRentAmount/numberOfCheques if yearlyRentAmount updated
         if (request.getYearlyRentAmount() != null && request.getBaseRent() == null) {
@@ -604,6 +609,8 @@ public class QuotationServiceImpl implements QuotationService {
                 .yearlyRentAmount(quotation.getYearlyRentAmount())
                 .numberOfCheques(quotation.getNumberOfCheques())
                 .firstMonthPaymentMethod(quotation.getFirstMonthPaymentMethod())
+                .firstMonthTotal(quotation.getFirstMonthTotal())
+                .paymentDueDate(quotation.getPaymentDueDate())
                 .chequeBreakdown(quotation.getChequeBreakdown())
                 // ===== Terms & Conditions =====
                 .paymentTerms(quotation.getPaymentTerms())

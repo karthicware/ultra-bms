@@ -81,6 +81,10 @@ public class UpdateQuotationRequest {
     @Digits(integer = 12, fraction = 2, message = "First month total must have at most 12 integer digits and 2 decimal places")
     private BigDecimal firstMonthTotal;
 
+    // SCP-2025-12-10: Payment due date (day of month, 1-31) for subsequent payments
+    @Min(value = 1, message = "Payment due date must be between 1 and 31")
+    private Integer paymentDueDate;
+
     private String chequeBreakdown;
 
     // SCP-2025-12-04: Identity document fields (moved from Lead)

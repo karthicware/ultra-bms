@@ -11,7 +11,8 @@
       "mcp__shadcn__get_item_examples_from_registries",
       "mcp__shadcn__view_items_in_registries",
       "mcp__serena__get_current_config",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(./mvnw compile:*)"
     ],
     "deny": [],
     "ask": [],

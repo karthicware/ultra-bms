@@ -177,9 +177,25 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
             <head>
               <title>Quotation ${quotation?.quotationNumber}</title>
               <style>
-                @page { size: A4; margin: 10mm; }
-                body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-                * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                @page {
+                  size: A4 portrait;
+                  margin: 0;
+                }
+                * {
+                  box-sizing: border-box;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                }
+                html, body {
+                  margin: 0;
+                  padding: 0;
+                  width: 210mm;
+                  min-height: 297mm;
+                  font-family: Georgia, 'Times New Roman', serif;
+                }
+                body > div {
+                  position: relative;
+                }
               </style>
             </head>
             <body>${printRef.current.innerHTML}</body>
@@ -568,6 +584,7 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
                     <thead>
                       <tr className="bg-slate-50/80">
                         <th className="text-left px-5 py-3 font-semibold text-slate-500 text-xs uppercase tracking-wider">#</th>
+                        <th className="text-left px-5 py-3 font-semibold text-slate-500 text-xs uppercase tracking-wider">Due Date</th>
                         <th className="text-left px-5 py-3 font-semibold text-slate-500 text-xs uppercase tracking-wider">Payment Mode</th>
                         <th className="text-right px-5 py-3 font-semibold text-slate-500 text-xs uppercase tracking-wider">Amount</th>
                       </tr>
@@ -578,6 +595,11 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
                           <td className="px-5 py-4">
                             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-600">
                               {item.chequeNumber}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="text-sm text-slate-600 tabular-nums">
+                              {item.dueDate ? format(new Date(item.dueDate), 'dd MMM yyyy') : '-'}
                             </span>
                           </td>
                           <td className="px-5 py-4">
@@ -767,21 +789,33 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
 
       {/* Print Dialog */}
       <Dialog open={showPrintDialog} onOpenChange={setShowPrintDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Print Preview</DialogTitle>
-            <DialogDescription>Preview how the quotation will appear when printed</DialogDescription>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b bg-slate-50">
+            <DialogTitle className="text-lg font-semibold">Print Preview</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">
+              A4 format optimized for black & white printing
+            </DialogDescription>
           </DialogHeader>
-          <div className="border rounded-lg overflow-hidden bg-white">
-            <div className="scale-75 origin-top-left" style={{ width: '133.33%' }}>
+          <div className="overflow-auto p-6 bg-slate-100" style={{ maxHeight: 'calc(90vh - 180px)' }}>
+            <div
+              className="mx-auto bg-white shadow-xl"
+              style={{
+                width: '210mm',
+                transform: 'scale(0.5)',
+                transformOrigin: 'top center',
+                marginBottom: '-50%',
+              }}
+            >
               <QuotationPrintView ref={printRef} quotation={quotation} />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPrintDialog(false)}>Cancel</Button>
-            <Button onClick={executePrint}>
+          <DialogFooter className="px-6 py-4 border-t bg-white gap-2">
+            <Button variant="outline" onClick={() => setShowPrintDialog(false)} className="rounded-xl">
+              Cancel
+            </Button>
+            <Button onClick={executePrint} className="rounded-xl bg-slate-900 hover:bg-slate-800">
               <Printer className="h-4 w-4 mr-2" />
-              Print
+              Print Document
             </Button>
           </DialogFooter>
         </DialogContent>

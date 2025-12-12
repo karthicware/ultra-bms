@@ -41,6 +41,7 @@ public interface TenantService {
      * Create a new tenant with user account creation and document uploads
      * SCP-2025-12-06: Overloaded method to support preloaded document paths from quotation
      * SCP-2025-12-09: Added chequeFiles parameter for scanned cheque copies
+     * SCP-2025-12-12: Added chequeDetailsJson parameter for PDC creation from OCR data
      *
      * @param request Tenant creation request
      * @param emiratesIdFile Emirates ID file (optional if paths provided)
@@ -54,6 +55,7 @@ public interface TenantService {
      * @param emiratesIdBackPath S3 path to Emirates ID back (from quotation)
      * @param passportFrontPath S3 path to passport front (from quotation)
      * @param passportBackPath S3 path to passport back (from quotation)
+     * @param chequeDetailsJson JSON string of OCR-extracted cheque details for PDC creation
      * @return Create tenant response with tenant ID and message
      */
     CreateTenantResponse createTenant(
@@ -68,7 +70,8 @@ public interface TenantService {
             String emiratesIdFrontPath,
             String emiratesIdBackPath,
             String passportFrontPath,
-            String passportBackPath
+            String passportBackPath,
+            String chequeDetailsJson
     );
 
     /**

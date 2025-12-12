@@ -2,321 +2,426 @@
 
 /**
  * Quotation Print View Component
- * SCP-2025-12-06: Clean, A4 printable quotation layout
+ * SCP-2025-12-11: Professional A4 single-page print layout
  *
- * Features:
- * - A4 portrait layout optimized for printing
- * - Clean editorial / invoice style
- * - Header/footer placeholders for future customization
- * - Complete financial breakdown
- * - Cheque schedule table
- * - Print-specific CSS with @media print
+ * Design: Corporate invoice aesthetic optimized for B&W printing
+ * - Precise A4 dimensions with optimal margins
+ * - Clear visual hierarchy with proper spacing
+ * - No color dependencies - pure black & white
+ * - Single page layout with careful content flow
  */
 
 import { forwardRef } from 'react';
 import { format } from 'date-fns';
-import { Building2, Phone, Mail, MapPin } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import type { Quotation } from '@/types/quotations';
-import { formatChequeDueDate } from '@/lib/validations/quotations';
+import { FirstMonthPaymentMethod } from '@/types/quotations';
 
 interface QuotationPrintViewProps {
   quotation: Quotation;
-  leadEmail?: string;
-  leadPhone?: string;
   className?: string;
 }
 
-const formatCurrency = (amount: number) => {
+const formatCurrency = (amount: number | undefined | null) => {
+  if (amount === undefined || amount === null) return 'AED 0';
   return new Intl.NumberFormat('en-AE', {
     style: 'currency',
     currency: 'AED',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   }).format(amount);
 };
 
 export const QuotationPrintView = forwardRef<HTMLDivElement, QuotationPrintViewProps>(
-  ({ quotation, leadEmail, leadPhone, className }, ref) => {
+  ({ quotation, className }, ref) => {
     const issueDate = new Date(quotation.issueDate);
     const validityDate = new Date(quotation.validityDate);
+
+    // Financial calculations
+    const yearlyRent = quotation.yearlyRentAmount || 0;
+    const numberOfCheques = quotation.numberOfCheques || 1;
+    const firstMonthRent = yearlyRent > 0 && numberOfCheques > 0 ? Math.round(yearlyRent / numberOfCheques) : 0;
+    const totalFirstPayment = quotation.firstMonthTotal && quotation.firstMonthTotal > 0
+      ? quotation.firstMonthTotal
+      : quotation.totalFirstPayment || (firstMonthRent + (quotation.serviceCharges || 0) + (quotation.parkingFee || 0) + (quotation.securityDeposit || 0) + (quotation.adminFee || 0));
+
+    // Calculate one-time fees
+    const oneTimeFees = (quotation.serviceCharges || 0) + (quotation.securityDeposit || 0) + (quotation.adminFee || 0);
 
     return (
       <div
         ref={ref}
-        className={cn(
-          // A4 dimensions: 210mm x 297mm
-          'bg-white text-black w-[210mm] min-h-[297mm] mx-auto p-8',
-          // Print-specific styles
-          'print:shadow-none print:m-0 print:p-6',
-          className
-        )}
+        className={className}
+        style={{
+          width: '210mm',
+          minHeight: '297mm',
+          maxHeight: '297mm',
+          padding: '15mm 20mm',
+          backgroundColor: '#fff',
+          color: '#000',
+          fontFamily: "'Georgia', 'Times New Roman', serif",
+          fontSize: '10pt',
+          lineHeight: '1.4',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
+        }}
       >
-        {/* Header Placeholder */}
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 mb-8 text-center print:border-gray-400">
-          <p className="text-sm text-gray-400 uppercase tracking-wider font-medium">
-            Header Placeholder
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            Company Logo & Address • Configure in Settings
-          </p>
-        </div>
-
-        {/* Title & Quotation Number */}
-        <div className="flex items-end justify-between mb-6">
+        {/* Header with Company Branding Area */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: '8mm',
+          paddingBottom: '5mm',
+          borderBottom: '2px solid #000',
+        }}>
+          {/* Company Info Placeholder */}
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            <div style={{
+              fontSize: '18pt',
+              fontWeight: 'bold',
+              letterSpacing: '-0.5px',
+              marginBottom: '2mm',
+            }}>
+              ULTRA BMS
+            </div>
+            <div style={{ fontSize: '8pt', color: '#444', lineHeight: '1.5' }}>
+              Property Management Services<br />
+              Dubai, United Arab Emirates
+            </div>
+          </div>
+
+          {/* Document Title */}
+          <div style={{ textAlign: 'right' }}>
+            <div style={{
+              fontSize: '22pt',
+              fontWeight: 'bold',
+              letterSpacing: '2px',
+              marginBottom: '2mm',
+            }}>
               QUOTATION
-            </h1>
-            <div className="h-1 w-20 bg-gray-900 mt-2" />
-          </div>
-          <div className="text-right">
-            <p className="text-xl font-semibold text-gray-900">
+            </div>
+            <div style={{
+              fontSize: '11pt',
+              fontWeight: 'bold',
+              fontFamily: "'Courier New', monospace",
+            }}>
               {quotation.quotationNumber}
-            </p>
+            </div>
           </div>
         </div>
 
-        {/* Customer & Date Info */}
-        <div className="grid grid-cols-2 gap-8 mb-8">
-          <div>
-            <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">
+        {/* Two Column Layout: Client Info & Document Info */}
+        <div style={{
+          display: 'flex',
+          gap: '15mm',
+          marginBottom: '6mm',
+        }}>
+          {/* Client Information */}
+          <div style={{ flex: 1 }}>
+            <div style={{
+              fontSize: '7pt',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              color: '#666',
+              marginBottom: '2mm',
+            }}>
               Prepared For
-            </p>
-            <p className="font-semibold text-lg text-gray-900">
+            </div>
+            <div style={{ fontSize: '12pt', fontWeight: 'bold', marginBottom: '1mm' }}>
               {quotation.leadName}
-            </p>
-            {leadEmail && (
-              <p className="text-sm text-gray-600 flex items-center gap-2 mt-1">
-                <Mail className="h-3 w-3" />
-                {leadEmail}
-              </p>
+            </div>
+            {quotation.leadEmail && (
+              <div style={{ fontSize: '9pt', color: '#444' }}>{quotation.leadEmail}</div>
             )}
-            {leadPhone && (
-              <p className="text-sm text-gray-600 flex items-center gap-2">
-                <Phone className="h-3 w-3" />
-                {leadPhone}
-              </p>
+            {quotation.leadContactNumber && (
+              <div style={{ fontSize: '9pt', color: '#444' }}>{quotation.leadContactNumber}</div>
+            )}
+            {quotation.nationality && (
+              <div style={{ fontSize: '9pt', color: '#444' }}>Nationality: {quotation.nationality}</div>
             )}
           </div>
-          <div className="text-right">
-            <div className="inline-block text-left">
-              <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">
-                Quotation Details
-              </p>
-              <p className="text-sm">
-                <span className="text-gray-500">Issue Date:</span>{' '}
-                <span className="font-medium">{format(issueDate, 'dd MMM yyyy')}</span>
-              </p>
-              <p className="text-sm">
-                <span className="text-gray-500">Valid Until:</span>{' '}
-                <span className="font-medium text-orange-600">
-                  {format(validityDate, 'dd MMM yyyy')}
-                </span>
-              </p>
-            </div>
+
+          {/* Document Details */}
+          <div style={{ width: '55mm', textAlign: 'right' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9pt' }}>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '1mm 0', color: '#666' }}>Issue Date:</td>
+                  <td style={{ padding: '1mm 0', fontWeight: 'bold', textAlign: 'right' }}>
+                    {format(issueDate, 'dd MMM yyyy')}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '1mm 0', color: '#666' }}>Valid Until:</td>
+                  <td style={{ padding: '1mm 0', fontWeight: 'bold', textAlign: 'right' }}>
+                    {format(validityDate, 'dd MMM yyyy')}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '1mm 0', color: '#666' }}>Status:</td>
+                  <td style={{ padding: '1mm 0', fontWeight: 'bold', textAlign: 'right', textTransform: 'uppercase' }}>
+                    {quotation.status}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Separator */}
-        <div className="border-t border-gray-200 my-6" />
-
-        {/* Property Details */}
-        <div className="mb-8">
-          <h2 className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-3">
+        {/* Property Details Box */}
+        <div style={{
+          border: '1px solid #000',
+          padding: '4mm',
+          marginBottom: '5mm',
+          backgroundColor: '#f8f8f8',
+        }}>
+          <div style={{
+            fontSize: '7pt',
+            fontWeight: 'bold',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            color: '#666',
+            marginBottom: '2mm',
+          }}>
             Property Details
-          </h2>
-          <div className="bg-gray-50 rounded-lg p-4 flex items-start gap-4 print:bg-gray-100">
-            <div className="flex-shrink-0 w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-              <Building2 className="h-5 w-5 text-gray-600" />
-            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div>
-              <p className="font-semibold text-gray-900">{quotation.propertyName}</p>
-              <p className="text-sm text-gray-600">
-                Unit {quotation.unitNumber}
-                {quotation.parkingSpotNumber && ` • Parking: ${quotation.parkingSpotNumber}`}
-              </p>
+              <div style={{ fontSize: '11pt', fontWeight: 'bold' }}>{quotation.propertyName}</div>
+              <div style={{ fontSize: '9pt', color: '#444' }}>
+                Unit: {quotation.unitNumber}
+                {quotation.parkingSpotNumber && ` | Parking: ${quotation.parkingSpotNumber}`}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '9pt', color: '#666' }}>Annual Rent</div>
+              <div style={{ fontSize: '14pt', fontWeight: 'bold' }}>{formatCurrency(yearlyRent)}</div>
             </div>
           </div>
         </div>
 
-        {/* Financial Breakdown */}
-        <div className="mb-8">
-          <h2 className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-3">
-            Financial Breakdown
-          </h2>
-          <table className="w-full border-collapse">
+        {/* Financial Summary Table */}
+        <div style={{ marginBottom: '5mm' }}>
+          <div style={{
+            fontSize: '7pt',
+            fontWeight: 'bold',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            color: '#666',
+            marginBottom: '2mm',
+          }}>
+            First Payment Breakdown
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9pt' }}>
             <tbody>
-              <tr className="border-b border-gray-100">
-                <td className="py-3 text-gray-600">Monthly Rent</td>
-                <td className="py-3 text-right font-medium tabular-nums">
-                  {formatCurrency(quotation.baseRent)}
+              <tr style={{ borderBottom: '1px solid #ddd' }}>
+                <td style={{ padding: '2mm 0' }}>First Month Rent ({quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? 'Cash' : 'Cheque'})</td>
+                <td style={{ padding: '2mm 0', textAlign: 'right', fontFamily: "'Courier New', monospace" }}>
+                  {formatCurrency(firstMonthRent)}
                 </td>
               </tr>
-              {(quotation.serviceCharges ?? 0) > 0 ? (
-                <tr className="border-b border-gray-100">
-                  <td className="py-3 text-gray-600">Service Charges</td>
-                  <td className="py-3 text-right font-medium tabular-nums">
+              {(quotation.serviceCharges ?? 0) > 0 && (
+                <tr style={{ borderBottom: '1px solid #ddd' }}>
+                  <td style={{ padding: '2mm 0' }}>Service Charges</td>
+                  <td style={{ padding: '2mm 0', textAlign: 'right', fontFamily: "'Courier New', monospace" }}>
                     {formatCurrency(quotation.serviceCharges)}
                   </td>
                 </tr>
-              ) : null}
-              {(quotation.parkingFee ?? 0) > 0 ? (
-                <tr className="border-b border-gray-100">
-                  <td className="py-3 text-gray-600">Parking Fee</td>
-                  <td className="py-3 text-right font-medium tabular-nums">
-                    {formatCurrency(quotation.parkingFee ?? 0)}
-                  </td>
-                </tr>
-              ) : null}
-              <tr className="border-b border-gray-200">
-                <td className="py-3 text-gray-600">Security Deposit</td>
-                <td className="py-3 text-right font-medium tabular-nums">
+              )}
+              <tr style={{ borderBottom: '1px solid #ddd' }}>
+                <td style={{ padding: '2mm 0' }}>Security Deposit (Refundable)</td>
+                <td style={{ padding: '2mm 0', textAlign: 'right', fontFamily: "'Courier New', monospace" }}>
                   {formatCurrency(quotation.securityDeposit)}
                 </td>
               </tr>
-              {(quotation.adminFee ?? 0) > 0 ? (
-                <tr className="border-b border-gray-200">
-                  <td className="py-3 text-gray-600">Admin Fee</td>
-                  <td className="py-3 text-right font-medium tabular-nums">
+              {(quotation.adminFee ?? 0) > 0 && (
+                <tr style={{ borderBottom: '1px solid #ddd' }}>
+                  <td style={{ padding: '2mm 0' }}>Admin Fee</td>
+                  <td style={{ padding: '2mm 0', textAlign: 'right', fontFamily: "'Courier New', monospace" }}>
                     {formatCurrency(quotation.adminFee)}
                   </td>
                 </tr>
-              ) : null}
-              <tr className="bg-gray-900 text-white print:bg-gray-800">
-                <td className="py-4 px-4 font-semibold">Total First Payment</td>
-                <td className="py-4 px-4 text-right font-bold text-lg tabular-nums">
-                  {formatCurrency(quotation.totalFirstPayment)}
+              )}
+              {(quotation.parkingFee ?? 0) > 0 && (
+                <tr style={{ borderBottom: '1px solid #ddd' }}>
+                  <td style={{ padding: '2mm 0' }}>Parking Fee (Annual)</td>
+                  <td style={{ padding: '2mm 0', textAlign: 'right', fontFamily: "'Courier New', monospace" }}>
+                    {formatCurrency(quotation.parkingFee)}
+                  </td>
+                </tr>
+              )}
+              <tr style={{ backgroundColor: '#000', color: '#fff' }}>
+                <td style={{ padding: '3mm 2mm', fontWeight: 'bold', fontSize: '10pt' }}>
+                  TOTAL FIRST PAYMENT
+                </td>
+                <td style={{ padding: '3mm 2mm', textAlign: 'right', fontWeight: 'bold', fontSize: '12pt', fontFamily: "'Courier New', monospace" }}>
+                  {formatCurrency(totalFirstPayment)}
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        {/* Cheque Schedule */}
+        {/* Payment Schedule */}
         {quotation.chequeBreakdown && quotation.chequeBreakdown.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-3">
-              Cheque Schedule ({quotation.numberOfCheques} cheques)
-            </h2>
-            <table className="w-full border-collapse border border-gray-200 rounded-lg overflow-hidden">
+          <div style={{ marginBottom: '5mm' }}>
+            <div style={{
+              fontSize: '7pt',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              color: '#666',
+              marginBottom: '2mm',
+            }}>
+              Payment Schedule ({numberOfCheques} {numberOfCheques === 1 ? 'Payment' : 'Payments'})
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8pt', border: '1px solid #000' }}>
               <thead>
-                <tr className="bg-gray-100 print:bg-gray-200">
-                  <th className="py-2 px-4 text-left text-xs uppercase tracking-wider text-gray-600 font-medium">
-                    #
-                  </th>
-                  <th className="py-2 px-4 text-left text-xs uppercase tracking-wider text-gray-600 font-medium">
-                    Due Date
-                  </th>
-                  <th className="py-2 px-4 text-right text-xs uppercase tracking-wider text-gray-600 font-medium">
-                    Amount
-                  </th>
+                <tr style={{ backgroundColor: '#e5e5e5' }}>
+                  <th style={{ padding: '2mm', textAlign: 'left', borderBottom: '1px solid #000', width: '15%' }}>#</th>
+                  <th style={{ padding: '2mm', textAlign: 'left', borderBottom: '1px solid #000', width: '35%' }}>Due Date</th>
+                  <th style={{ padding: '2mm', textAlign: 'center', borderBottom: '1px solid #000', width: '25%' }}>Method</th>
+                  <th style={{ padding: '2mm', textAlign: 'right', borderBottom: '1px solid #000', width: '25%' }}>Amount</th>
                 </tr>
               </thead>
               <tbody>
-                {quotation.chequeBreakdown.map((cheque, index) => (
-                  <tr
-                    key={cheque.chequeNumber}
-                    className={cn(
-                      'border-t border-gray-100',
-                      index % 2 === 1 && 'bg-gray-50 print:bg-gray-100'
-                    )}
-                  >
-                    <td className="py-2 px-4 text-sm">
-                      {cheque.chequeNumber}
-                      {index === 0 && quotation.firstMonthPaymentMethod === 'CASH' && (
-                        <span className="ml-2 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
-                          Cash
-                        </span>
-                      )}
+                {quotation.chequeBreakdown.map((item, index) => (
+                  <tr key={item.chequeNumber} style={{ backgroundColor: index % 2 === 0 ? '#fff' : '#f5f5f5' }}>
+                    <td style={{ padding: '1.5mm 2mm', borderBottom: '1px solid #ddd' }}>{item.chequeNumber}</td>
+                    <td style={{ padding: '1.5mm 2mm', borderBottom: '1px solid #ddd' }}>
+                      {item.dueDate ? format(new Date(item.dueDate), 'dd MMM yyyy') : '-'}
                     </td>
-                    <td className="py-2 px-4 text-sm text-gray-600">
-                      {formatChequeDueDate(cheque.dueDate)}
+                    <td style={{ padding: '1.5mm 2mm', borderBottom: '1px solid #ddd', textAlign: 'center' }}>
+                      {index === 0 && quotation.firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? 'CASH' : 'CHEQUE'}
                     </td>
-                    <td className="py-2 px-4 text-sm text-right font-medium tabular-nums">
-                      {formatCurrency(cheque.amount)}
+                    <td style={{ padding: '1.5mm 2mm', borderBottom: '1px solid #ddd', textAlign: 'right', fontFamily: "'Courier New', monospace" }}>
+                      {index === 0 ? formatCurrency(totalFirstPayment) : formatCurrency(item.amount)}
                     </td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot>
-                <tr className="bg-gray-100 border-t border-gray-200 print:bg-gray-200">
-                  <td colSpan={2} className="py-2 px-4 text-sm font-semibold">
-                    Total
-                  </td>
-                  <td className="py-2 px-4 text-sm text-right font-bold tabular-nums">
-                    {formatCurrency(quotation.yearlyRentAmount || 0)}
-                  </td>
-                </tr>
-              </tfoot>
             </table>
           </div>
         )}
 
-        {/* Terms & Conditions */}
-        <div className="mb-8 print:break-inside-avoid">
-          <h2 className="text-sm uppercase tracking-wider text-gray-500 font-medium mb-3">
+        {/* Identity Documents (if available) */}
+        {(quotation.emiratesIdNumber || quotation.passportNumber) && (
+          <div style={{ marginBottom: '5mm' }}>
+            <div style={{
+              fontSize: '7pt',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              color: '#666',
+              marginBottom: '2mm',
+            }}>
+              Identity Documents
+            </div>
+            <div style={{ display: 'flex', gap: '10mm', fontSize: '8pt' }}>
+              {quotation.emiratesIdNumber && (
+                <div>
+                  <span style={{ color: '#666' }}>Emirates ID: </span>
+                  <span style={{ fontWeight: 'bold' }}>{quotation.emiratesIdNumber}</span>
+                  {quotation.emiratesIdExpiry && (
+                    <span style={{ color: '#666' }}> (Exp: {format(new Date(quotation.emiratesIdExpiry), 'MMM yyyy')})</span>
+                  )}
+                </div>
+              )}
+              {quotation.passportNumber && (
+                <div>
+                  <span style={{ color: '#666' }}>Passport: </span>
+                  <span style={{ fontWeight: 'bold' }}>{quotation.passportNumber}</span>
+                  {quotation.passportExpiry && (
+                    <span style={{ color: '#666' }}> (Exp: {format(new Date(quotation.passportExpiry), 'MMM yyyy')})</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Terms & Conditions - Compact */}
+        <div style={{
+          border: '1px solid #999',
+          padding: '3mm',
+          marginBottom: '5mm',
+          fontSize: '7pt',
+          color: '#444',
+          lineHeight: '1.5',
+        }}>
+          <div style={{
+            fontSize: '7pt',
+            fontWeight: 'bold',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            color: '#666',
+            marginBottom: '1.5mm',
+          }}>
             Terms & Conditions
-          </h2>
-          <div className="text-xs text-gray-600 space-y-1 bg-gray-50 p-4 rounded-lg print:bg-gray-100">
-            <p>• Payment due before 5th of each month</p>
-            <p>• Security deposit refundable upon lease end, subject to property inspection</p>
-            <p>• Valid for 7 days from issue date</p>
-            {quotation.paymentTerms && (
-              <p className="pt-2 whitespace-pre-wrap">{quotation.paymentTerms.slice(0, 500)}</p>
-            )}
+          </div>
+          <div style={{ display: 'flex', gap: '5mm' }}>
+            <div style={{ flex: 1 }}>
+              • Payment due by the 5th of each month<br />
+              • Security deposit refundable upon lease end<br />
+              • Subject to property inspection
+            </div>
+            <div style={{ flex: 1 }}>
+              • This quotation is valid for 7 days<br />
+              • All amounts in AED<br />
+              • Prices subject to VAT where applicable
+            </div>
           </div>
         </div>
 
-        {/* Footer Placeholder */}
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 mt-auto text-center print:border-gray-400">
-          <p className="text-sm text-gray-400 uppercase tracking-wider font-medium">
-            Footer Placeholder
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            Contact Information & Legal • Configure in Settings
-          </p>
+        {/* Signature Area */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginTop: '8mm',
+          paddingTop: '5mm',
+        }}>
+          <div style={{ width: '45%' }}>
+            <div style={{ borderTop: '1px solid #000', paddingTop: '2mm', fontSize: '8pt' }}>
+              <div style={{ fontWeight: 'bold' }}>Authorized Signature</div>
+              <div style={{ color: '#666', fontSize: '7pt' }}>For Ultra BMS</div>
+            </div>
+          </div>
+          <div style={{ width: '45%' }}>
+            <div style={{ borderTop: '1px solid #000', paddingTop: '2mm', fontSize: '8pt' }}>
+              <div style={{ fontWeight: 'bold' }}>Client Acceptance</div>
+              <div style={{ color: '#666', fontSize: '7pt' }}>Date: ________________</div>
+            </div>
+          </div>
         </div>
 
-        {/* Print Styles */}
-        <style jsx global>{`
+        {/* Footer */}
+        <div style={{
+          position: 'absolute',
+          bottom: '15mm',
+          left: '20mm',
+          right: '20mm',
+          borderTop: '1px solid #ddd',
+          paddingTop: '2mm',
+          fontSize: '7pt',
+          color: '#888',
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}>
+          <span>Generated on {format(new Date(), 'dd MMM yyyy, HH:mm')}</span>
+          <span>Page 1 of 1</span>
+        </div>
+
+        {/* Print-specific inline styles */}
+        <style>{`
           @media print {
             @page {
-              size: A4;
-              margin: 10mm;
+              size: A4 portrait;
+              margin: 15mm 12mm;
             }
-
             body {
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
-            }
-
-            /* Hide navigation and other non-print elements */
-            nav,
-            header,
-            footer,
-            .no-print,
-            button,
-            [role='navigation'] {
-              display: none !important;
-            }
-
-            /* Ensure backgrounds print */
-            .bg-gray-900,
-            .bg-gray-100,
-            .bg-gray-50 {
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-
-            /* Page break control */
-            .print\\:break-inside-avoid {
-              break-inside: avoid;
-            }
-
-            /* Reset margins for print */
-            .print\\:m-0 {
-              margin: 0 !important;
             }
           }
         `}</style>

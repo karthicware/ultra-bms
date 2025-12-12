@@ -196,7 +196,10 @@ export function ChequeBreakdownSection({
         dueDate: todayStr,
       });
 
-      // Remaining payments (rent only) - use paymentDueDate for due dates
+      // Remaining payments (rent only) - calculate interval based on number of payments
+      // SCP-2025-12-10: Payment interval calculation:
+      // 1 payment = annual (no subsequent), 2 = every 6 months, 3 = every 4 months,
+      // 4 = every 3 months (quarterly), 6 = every 2 months (bi-monthly)
       if (remainingChequeCount > 0) {
         // Calculate remaining rent after first payment (using rounded first portion)
         const actualRemainingRent = yearlyRentAmount - firstRentPortionRounded;
@@ -207,11 +210,14 @@ export function ChequeBreakdownSection({
         // Calculate how many payments need an extra 1 to make up the difference
         const remainder = actualRemainingRent - (baseAmount * remainingChequeCount);
 
-        // Start from next month for subsequent payments
+        // Calculate month interval: 12 months / numberOfCheques
+        const monthInterval = Math.floor(12 / numberOfCheques);
+
         for (let i = 0; i < remainingChequeCount; i++) {
-          // Add months from today, then set to the paymentDueDate day
-          const nextMonthDate = addMonths(today, i + 1);
-          const dueDate = setDayOfMonth(nextMonthDate, paymentDueDate);
+          // Add months based on interval (e.g., 6 payments = every 2 months)
+          const monthsToAdd = (i + 1) * monthInterval;
+          const nextDate = addMonths(today, monthsToAdd);
+          const dueDate = setDayOfMonth(nextDate, paymentDueDate);
           // Add +1 to the first 'remainder' payments to distribute the difference evenly
           const rentAmount = i < remainder ? baseAmount + 1 : baseAmount;
 
@@ -240,12 +246,11 @@ export function ChequeBreakdownSection({
   }, [currentFirstMonthTotal, onFirstMonthTotalChange]);
 
   const handleFirstMonthTotalChange = (value: number) => {
-    // Enforce minimum: first month total cannot be less than default (fees + first rent)
-    // This prevents loss to the business
+    // SCP-2025-12-10: Allow any value to be entered - validation will block navigation
+    // if value is below minimum (handled in page's validateStep)
     const minValue = Math.round(defaultFirstMonthTotal);
-    const adjustedValue = Math.max(value, minValue);
-    setCustomFirstMonthTotal(adjustedValue);
-    setIsFirstMonthOverridden(adjustedValue !== minValue);
+    setCustomFirstMonthTotal(value);
+    setIsFirstMonthOverridden(value !== minValue);
   };
 
   const handleResetFirstMonth = () => {
@@ -253,8 +258,8 @@ export function ChequeBreakdownSection({
     setCustomFirstMonthTotal(defaultFirstMonthTotal);
   };
 
-  // Number of payments options (1-12)
-  const paymentOptions = Array.from({ length: 12 }, (_, i) => i + 1);
+  // Number of payments options: 1, 2, 3, 4, 6 only
+  const paymentOptions = [1, 2, 3, 4, 6];
 
   // Calculate the difference from default
   const adjustmentAmount = currentFirstMonthTotal - defaultFirstMonthTotal;
@@ -305,7 +310,7 @@ export function ChequeBreakdownSection({
                 {paymentOptions.map((num) => (
                   <SelectItem key={num} value={num.toString()}>
                     {num} {num === 1 ? 'Payment' : 'Payments'}
-                    {num === 12 && ' (Monthly)'}
+                    {num === 6 && ' (Bi-monthly)'}
                     {num === 4 && ' (Quarterly)'}
                     {num === 2 && ' (Semi-annual)'}
                     {num === 1 && ' (Annual)'}

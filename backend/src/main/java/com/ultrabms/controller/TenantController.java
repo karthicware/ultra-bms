@@ -89,7 +89,9 @@ public class TenantController {
             @RequestParam(value = "emiratesIdFrontPath", required = false) String emiratesIdFrontPath,
             @RequestParam(value = "emiratesIdBackPath", required = false) String emiratesIdBackPath,
             @RequestParam(value = "passportFrontPath", required = false) String passportFrontPath,
-            @RequestParam(value = "passportBackPath", required = false) String passportBackPath
+            @RequestParam(value = "passportBackPath", required = false) String passportBackPath,
+            // SCP-2025-12-12: Cheque details from OCR processing for PDC creation
+            @RequestParam(value = "chequeDetails", required = false) String chequeDetailsJson
     ) {
         LOGGER.info("Creating tenant: {}", request.getEmail());
 
@@ -118,7 +120,8 @@ public class TenantController {
                 emiratesIdFrontPath,
                 emiratesIdBackPath,
                 passportFrontPath,
-                passportBackPath
+                passportBackPath,
+                chequeDetailsJson // SCP-2025-12-12: OCR cheque details for PDC creation
         );
 
         Map<String, Object> responseBody = new HashMap<>();

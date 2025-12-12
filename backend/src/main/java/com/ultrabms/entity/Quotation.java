@@ -117,6 +117,11 @@ public class Quotation {
     @Column(name = "first_month_total", precision = 12, scale = 2)
     private BigDecimal firstMonthTotal;
 
+    // SCP-2025-12-10: Payment due date (day of month, 1-31) for subsequent payments
+    @Column(name = "payment_due_date")
+    @Builder.Default
+    private Integer paymentDueDate = 5;
+
     // Cheque breakdown stored as JSON array
     // Format: [{"chequeNumber": 1, "amount": 5000.00, "dueDate": "2025-02-01"}, ...]
     @Column(name = "cheque_breakdown", columnDefinition = "TEXT")

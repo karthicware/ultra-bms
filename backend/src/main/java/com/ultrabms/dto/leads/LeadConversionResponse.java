@@ -64,8 +64,10 @@ public class LeadConversionResponse {
     // SCP-2025-12-10: Added numberOfPayments (total installments)
     private BigDecimal yearlyRentAmount;
     private Integer numberOfPayments; // Total payment installments (what user selects)
-    private Integer numberOfCheques;  // Actual cheques needed (adjusted for first month payment method)
+    private Integer numberOfCheques; // Actual cheques needed (adjusted for first month payment method)
     private Quotation.FirstMonthPaymentMethod firstMonthPaymentMethod;
+    private BigDecimal firstMonthTotal; // First month total amount (rent + fees)
+    private Integer paymentDueDate; // Day of month for subsequent payments
     private String chequeBreakdown; // JSON string of cheque items
 
     // ===== Terms & Conditions =====

@@ -25,6 +25,7 @@ import {
   User,
   MapPin,
   AlertTriangle,
+  CreditCard,
 } from 'lucide-react';
 import { PageBackButton } from '@/components/common/PageBackButton';
 import { cn } from '@/lib/utils';
@@ -54,7 +55,7 @@ import {
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getQuotationById, updateQuotation } from '@/services/quotations.service';
+import { getQuotationById, updateQuotation, uploadQuotationDocument, reuploadQuotationDocument } from '@/services/quotations.service';
 import { getAvailableParkingSpots } from '@/services/parking.service';
 import { getProperties } from '@/services/properties.service';
 import { getAvailableUnits } from '@/services/units.service';
@@ -68,17 +69,21 @@ import {
 import type { ParkingSpot } from '@/types/parking';
 import { FirstMonthPaymentMethod, type ChequeBreakdownItem, QuotationStatus, type Quotation, type UpdateQuotationRequest } from '@/types/quotations';
 import { ChequeBreakdownSection } from '@/components/quotations/ChequeBreakdownSection';
-import { Banknote, CreditCard } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Banknote, Loader2, Upload, X, FileCheck } from 'lucide-react';
+import { FileUploadProgress } from '@/components/ui/file-upload-progress';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', minimumFractionDigits: 0 }).format(amount);
 };
 
-// Step configuration (3 steps for edit - no identity step)
+// Step configuration (4 steps for edit - same as create)
 const STEPS = [
   { id: 1, title: 'Property', description: 'Select unit', icon: Building2 },
-  { id: 2, title: 'Financials', description: 'Pricing', icon: Receipt },
-  { id: 3, title: 'Terms', description: 'Conditions', icon: FileText },
+  { id: 2, title: 'Identity', description: 'Documents', icon: User },
+  { id: 3, title: 'Financials', description: 'Pricing', icon: Receipt },
+  { id: 4, title: 'Terms', description: 'Conditions', icon: FileText },
 ];
 
 // Progress Step Component
@@ -219,8 +224,8 @@ function QuotationPreview({
               </span>
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Payment Schedule</span>
-              <span>{numberOfCheques} {numberOfCheques === 1 ? 'Cheque' : 'Cheques'}</span>
+              <span>Payment Schedule (Cheque)</span>
+              <span>{firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? numberOfCheques - 1 : numberOfCheques} {(firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? numberOfCheques - 1 : numberOfCheques) === 1 ? 'Cheque' : 'Cheques'}</span>
             </div>
           </div>
         )}
@@ -234,7 +239,7 @@ function QuotationPreview({
                 ) : (
                   <CreditCard className="h-4 w-4 text-blue-600" />
                 )}
-                First Payment
+                First Rent Payment
                 <span className="text-xs text-muted-foreground/70">
                   ({firstMonthPaymentMethod === FirstMonthPaymentMethod.CASH ? 'Cash' : 'Cheque'})
                 </span>
@@ -314,6 +319,26 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
   const [availableParkingSpots, setAvailableParkingSpots] = useState<ParkingSpot[]>([]);
   const [loadingParkingSpots, setLoadingParkingSpots] = useState(false);
 
+  // Identity document state (editable in edit mode)
+  const [emiratesIdNumber, setEmiratesIdNumber] = useState('');
+  const [emiratesIdExpiry, setEmiratesIdExpiry] = useState<Date | null>(null);
+  const [passportNumber, setPassportNumber] = useState('');
+  const [passportExpiry, setPassportExpiry] = useState<Date | null>(null);
+  const [nationality, setNationality] = useState('');
+
+  // Identity document file upload state
+  const [emiratesIdFront, setEmiratesIdFront] = useState<File | null>(null);
+  const [emiratesIdBack, setEmiratesIdBack] = useState<File | null>(null);
+  const [passportFront, setPassportFront] = useState<File | null>(null);
+  const [passportBack, setPassportBack] = useState<File | null>(null);
+  // Existing file paths from backend
+  const [existingEmiratesIdFrontPath, setExistingEmiratesIdFrontPath] = useState<string | null>(null);
+  const [existingEmiratesIdBackPath, setExistingEmiratesIdBackPath] = useState<string | null>(null);
+  const [existingPassportFrontPath, setExistingPassportFrontPath] = useState<string | null>(null);
+  const [existingPassportBackPath, setExistingPassportBackPath] = useState<string | null>(null);
+  // Upload status tracking
+  const [uploadingDocument, setUploadingDocument] = useState<string | null>(null);
+
   // Cheque breakdown state
   const [yearlyRentAmount, setYearlyRentAmount] = useState<number>(0);
   const [numberOfCheques, setNumberOfCheques] = useState<number>(5);
@@ -329,6 +354,8 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
   // Popover open states
   const [issueDateOpen, setIssueDateOpen] = useState(false);
   const [validityDateOpen, setValidityDateOpen] = useState(false);
+  const [emiratesIdExpiryOpen, setEmiratesIdExpiryOpen] = useState(false);
+  const [passportExpiryOpen, setPassportExpiryOpen] = useState(false);
 
   const form = useForm<CreateQuotationFormData>({
     // Skip resolver validation - we do manual validation in validateStep
@@ -388,21 +415,41 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
           setQuotation(data);
           setLeadName(data.leadName || '');
 
-          // Parse cheque breakdown if string
-          if (data.chequeBreakdown && typeof data.chequeBreakdown === 'string') {
-            try {
-              data.chequeBreakdown = JSON.parse(data.chequeBreakdown);
-            } catch {
-              data.chequeBreakdown = [];
-            }
-          }
-
-          // Set cheque breakdown state
+          // Set cheque breakdown state - values only, NOT the breakdown itself
+          // SCP-2025-12-10: Don't set chequeBreakdown from backend - let component recalculate
+          // with today's date for first payment (always auto-populated to today)
           setYearlyRentAmount(data.yearlyRentAmount || 0);
           setNumberOfCheques(data.numberOfCheques || 5);
           setFirstMonthPaymentMethod(data.firstMonthPaymentMethod || FirstMonthPaymentMethod.CASH);
-          setChequeBreakdown(data.chequeBreakdown || []);
+          // chequeBreakdown will be recalculated by ChequeBreakdownSection with today's date
           setFirstMonthTotal(data.firstMonthTotal);
+          // SCP-2025-12-10: Load payment due date from backend (don't reset to default)
+          if (data.paymentDueDate !== undefined && data.paymentDueDate !== null) {
+            setPaymentDueDate(data.paymentDueDate);
+          }
+
+          // Load identity document fields
+          setEmiratesIdNumber(data.emiratesIdNumber || '');
+          setPassportNumber(data.passportNumber || '');
+          setNationality(data.nationality || '');
+          // Parse expiry dates
+          if (data.emiratesIdExpiry) {
+            const parsed = new Date(data.emiratesIdExpiry + 'T00:00:00');
+            if (!isNaN(parsed.getTime())) {
+              setEmiratesIdExpiry(parsed);
+            }
+          }
+          if (data.passportExpiry) {
+            const parsed = new Date(data.passportExpiry + 'T00:00:00');
+            if (!isNaN(parsed.getTime())) {
+              setPassportExpiry(parsed);
+            }
+          }
+          // Load existing document file paths
+          setExistingEmiratesIdFrontPath(data.emiratesIdFrontPath || null);
+          setExistingEmiratesIdBackPath(data.emiratesIdBackPath || null);
+          setExistingPassportFrontPath(data.passportFrontPath || null);
+          setExistingPassportBackPath(data.passportBackPath || null);
 
           // Helper to safely parse date strings from backend (YYYY-MM-DD format)
           const parseBackendDate = (dateStr: string | undefined | null): Date => {
@@ -596,7 +643,49 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
           return false;
         }
         return true;
-      case 2: // Financials
+      case 2: // Identity
+        if (!emiratesIdNumber.trim()) {
+          toast({
+            title: 'Identity Documents Required',
+            description: 'Emirates ID number is required',
+            variant: 'destructive',
+          });
+          return false;
+        }
+        if (!emiratesIdExpiry) {
+          toast({
+            title: 'Identity Documents Required',
+            description: 'Emirates ID expiry date is required',
+            variant: 'destructive',
+          });
+          return false;
+        }
+        if (!passportNumber.trim()) {
+          toast({
+            title: 'Identity Documents Required',
+            description: 'Passport number is required',
+            variant: 'destructive',
+          });
+          return false;
+        }
+        if (!passportExpiry) {
+          toast({
+            title: 'Identity Documents Required',
+            description: 'Passport expiry date is required',
+            variant: 'destructive',
+          });
+          return false;
+        }
+        if (!nationality.trim()) {
+          toast({
+            title: 'Identity Documents Required',
+            description: 'Nationality is required',
+            variant: 'destructive',
+          });
+          return false;
+        }
+        return true;
+      case 3: // Financials
         const securityDeposit = form.getValues('securityDeposit');
         if (!securityDeposit || securityDeposit <= 0) {
           toast({
@@ -614,24 +703,27 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
           });
           return false;
         }
-        // SCP-2025-12-10: Critical validation - First month total must cover rent + one-time fees + parking
-        // Formula: firstMonthTotal >= oneTimeFeesSubtotal + parkingFee + firstRentPayment
-        // watchedValues: [0]=baseRent, [1]=serviceCharges, [2]=parkingFee, [3]=securityDeposit, [4]=adminFee
-        const oneTimeFeesSubtotal = (watchedValues[3] || 0) + (watchedValues[4] || 0) + (watchedValues[1] || 0);
-        const parkingFeeAmount = watchedValues[2] || 0;
-        const firstRentPayment = numberOfCheques > 0 ? yearlyRentAmount / numberOfCheques : 0;
-        const minimumFirstMonthTotal = oneTimeFeesSubtotal + parkingFeeAmount + firstRentPayment;
+        // SCP-2025-12-10: Critical validation - First month total must cover the calculated default
+        // Uses calculateTotalFirstPayment (same as sidebar) to ensure consistency
+        const minimumFirstMonthTotal = calculateTotalFirstPayment({
+          serviceCharges: watchedValues[1],
+          parkingFee: watchedValues[2],
+          securityDeposit: watchedValues[3],
+          adminFee: watchedValues[4],
+          yearlyRentAmount,
+          numberOfCheques,
+        });
 
         if ((firstMonthTotal ?? 0) < minimumFirstMonthTotal) {
           toast({
             title: 'Invalid First Month Payment',
-            description: `First month total (${formatCurrency(firstMonthTotal ?? 0)}) cannot be less than One-time Fees Subtotal + Parking Fee + First Rent Payment (${formatCurrency(minimumFirstMonthTotal)})`,
+            description: `First Month Total Payment (${formatCurrency(firstMonthTotal ?? 0)}) cannot be less than Total First Payment (${formatCurrency(minimumFirstMonthTotal)})`,
             variant: 'destructive',
           });
           return false;
         }
         return true;
-      case 3: // Terms
+      case 4: // Terms
         const paymentTerms = form.getValues('paymentTerms');
         const moveinProcedures = form.getValues('moveinProcedures');
         const cancellationPolicy = form.getValues('cancellationPolicy');
@@ -664,7 +756,7 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
       default:
         return true;
     }
-  }, [form, toast, yearlyRentAmount, numberOfCheques, firstMonthTotal, watchedValues]);
+  }, [form, toast, yearlyRentAmount, numberOfCheques, firstMonthTotal, watchedValues, emiratesIdNumber, emiratesIdExpiry, passportNumber, passportExpiry, nationality]);
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
@@ -679,30 +771,35 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
     }
   };
 
-  // Helper to safely convert date to ISO string for backend (YYYY-MM-DD format for LocalDate)
+  // Helper to safely convert date to YYYY-MM-DD format for backend (LocalDate)
+  // IMPORTANT: Use local date components to avoid timezone shifts (toISOString converts to UTC)
   const formatDateForBackend = (date: Date | string | undefined | null): string => {
+    const formatLocalDate = (d: Date): string => {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+
     if (!date) {
-      return new Date().toISOString().split('T')[0]; // Return today if no date
+      return formatLocalDate(new Date());
     }
     if (date instanceof Date) {
       // Check if valid date
       if (isNaN(date.getTime())) {
-        return new Date().toISOString().split('T')[0];
+        return formatLocalDate(new Date());
       }
-      return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      return formatLocalDate(date);
     }
     if (typeof date === 'string') {
       // If already in YYYY-MM-DD format, return as is
       if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
         return date;
       }
-      // Try to parse and format
+      // Try to parse and format using local date components
       const parsed = new Date(date);
       if (!isNaN(parsed.getTime())) {
-        return parsed.toISOString().split('T')[0];
+        return formatLocalDate(parsed);
       }
     }
-    return new Date().toISOString().split('T')[0]; // Fallback to today
+    return formatLocalDate(new Date()); // Fallback to today
   };
 
   const onSubmit = async (data: CreateQuotationFormData) => {
@@ -739,11 +836,18 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
         numberOfCheques: numberOfCheques > 0 ? numberOfCheques : undefined,
         firstMonthPaymentMethod: yearlyRentAmount > 0 ? firstMonthPaymentMethod : undefined,
         firstMonthTotal: (firstMonthTotal ?? 0) > 0 ? firstMonthTotal : undefined,
-        chequeBreakdown: chequeBreakdown.length > 0 ? chequeBreakdown : undefined,
+        // SCP-2025-12-10: Backend expects chequeBreakdown as JSON string, not array
+        chequeBreakdown: chequeBreakdown.length > 0 ? JSON.stringify(chequeBreakdown) : undefined,
+        // SCP-2025-12-10: Payment due date for subsequent payments
+        paymentDueDate: paymentDueDate,
+        // Identity document fields
+        emiratesIdNumber: emiratesIdNumber.trim() || undefined,
+        emiratesIdExpiry: emiratesIdExpiry ? formatDateForBackend(emiratesIdExpiry) : undefined,
+        passportNumber: passportNumber.trim() || undefined,
+        passportExpiry: passportExpiry ? formatDateForBackend(passportExpiry) : undefined,
+        nationality: nationality.trim() || undefined,
       };
 
-      console.log('Update quotation payload:', JSON.stringify(payload, null, 2));
-      console.log('validityDate in form data:', data.validityDate, '-> formatted:', validityDateValue);
       await updateQuotation(quotationId, payload);
 
       toast({
@@ -802,6 +906,7 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
                     <Calendar
                       mode="single"
                       selected={field.value}
+                      defaultMonth={field.value}
                       onSelect={(date) => {
                         if (date) {
                           // Use setValue with options to ensure form state is updated properly
@@ -812,6 +917,11 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
                           });
                         }
                         setIssueDateOpen(false);
+                      }}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today;
                       }}
                     />
                   </PopoverContent>
@@ -846,6 +956,7 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
                     <Calendar
                       mode="single"
                       selected={field.value}
+                      defaultMonth={field.value}
                       onSelect={(date) => {
                         if (date) {
                           // Use setValue with options to ensure form state is updated properly
@@ -857,7 +968,11 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
                         }
                         setValidityDateOpen(false);
                       }}
-                      disabled={(date) => date < form.getValues('issueDate')}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today;
+                      }}
                     />
                   </PopoverContent>
                 </Popover>
@@ -943,6 +1058,253 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
             )}
           />
         </div>
+      </div>
+    </div>
+  );
+
+  // Handler for document re-upload - uploads new file and deletes old one
+  const handleDocumentReupload = async (
+    file: File | null,
+    documentType: 'emirates_id_front' | 'emirates_id_back' | 'passport_front' | 'passport_back',
+    existingPath: string | null,
+    setFile: (file: File | null) => void,
+    setExistingPath: (path: string | null) => void
+  ) => {
+    if (!file) {
+      setFile(null);
+      return;
+    }
+
+    setUploadingDocument(documentType);
+    try {
+      let newPath: string;
+      if (existingPath) {
+        // Re-upload: delete old file and upload new one
+        newPath = await reuploadQuotationDocument(file, documentType, existingPath);
+      } else {
+        // First upload
+        newPath = await uploadQuotationDocument(file, documentType);
+      }
+      setFile(file);
+      setExistingPath(newPath);
+      toast({
+        title: 'Success',
+        description: 'Document uploaded successfully',
+        variant: 'success',
+      });
+    } catch (error) {
+      console.error('Document upload error:', error);
+      toast({
+        title: 'Upload Failed',
+        description: 'Failed to upload document. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingDocument(null);
+    }
+  };
+
+  // Helper to get filename from path
+  const getFilenameFromPath = (path: string | null): string => {
+    if (!path) return '';
+    const parts = path.split('/');
+    return parts[parts.length - 1] || '';
+  };
+
+  const renderIdentityStep = () => (
+    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+      {/* Emirates ID Section */}
+      <div className="rounded-2xl border border-muted bg-muted/20 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <CreditCard className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-semibold">Emirates ID</h3>
+            <p className="text-sm text-muted-foreground">Upload front and back sides</p>
+          </div>
+        </div>
+
+        {/* File Upload Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <FileUploadProgress
+            onFileSelect={(file) => handleDocumentReupload(
+              file,
+              'emirates_id_front',
+              existingEmiratesIdFrontPath,
+              setEmiratesIdFront,
+              setExistingEmiratesIdFrontPath
+            )}
+            selectedFile={emiratesIdFront}
+            existingFileName={existingEmiratesIdFrontPath ? getFilenameFromPath(existingEmiratesIdFrontPath) : undefined}
+            accept={{ 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] }}
+            maxSize={5 * 1024 * 1024}
+            label="Front Side"
+            testId="upload-emirates-id-front"
+            uploadStatus={uploadingDocument === 'emirates_id_front' ? 'uploading' : (emiratesIdFront || existingEmiratesIdFrontPath ? 'success' : 'idle')}
+          />
+          <FileUploadProgress
+            onFileSelect={(file) => handleDocumentReupload(
+              file,
+              'emirates_id_back',
+              existingEmiratesIdBackPath,
+              setEmiratesIdBack,
+              setExistingEmiratesIdBackPath
+            )}
+            selectedFile={emiratesIdBack}
+            existingFileName={existingEmiratesIdBackPath ? getFilenameFromPath(existingEmiratesIdBackPath) : undefined}
+            accept={{ 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] }}
+            maxSize={5 * 1024 * 1024}
+            label="Back Side"
+            testId="upload-emirates-id-back"
+            uploadStatus={uploadingDocument === 'emirates_id_back' ? 'uploading' : (emiratesIdBack || existingEmiratesIdBackPath ? 'success' : 'idle')}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="emiratesIdNumber" className="text-muted-foreground">ID Number *</Label>
+            <Input
+              id="emiratesIdNumber"
+              placeholder="784-XXXX-XXXXXXX-X"
+              value={emiratesIdNumber}
+              onChange={(e) => setEmiratesIdNumber(e.target.value)}
+              className="h-12 rounded-xl border-2"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground">Expiry Date *</Label>
+            <Popover open={emiratesIdExpiryOpen} onOpenChange={setEmiratesIdExpiryOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    'w-full h-12 justify-start text-left font-normal rounded-xl border-2',
+                    !emiratesIdExpiry && 'text-muted-foreground'
+                  )}
+                >
+                  <CalendarIcon className="mr-3 h-4 w-4 text-muted-foreground" />
+                  {emiratesIdExpiry ? format(emiratesIdExpiry, 'PPP') : <span>Select date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={emiratesIdExpiry || undefined}
+                  defaultMonth={emiratesIdExpiry || new Date()}
+                  onSelect={(date) => {
+                    setEmiratesIdExpiry(date || null);
+                    setEmiratesIdExpiryOpen(false);
+                  }}
+                  disabled={(date) => date < new Date()}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+      </div>
+
+      {/* Passport Section */}
+      <div className="rounded-2xl border border-muted bg-muted/20 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <Shield className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-semibold">Passport</h3>
+            <p className="text-sm text-muted-foreground">Upload front and back sides</p>
+          </div>
+        </div>
+
+        {/* File Upload Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <FileUploadProgress
+            onFileSelect={(file) => handleDocumentReupload(
+              file,
+              'passport_front',
+              existingPassportFrontPath,
+              setPassportFront,
+              setExistingPassportFrontPath
+            )}
+            selectedFile={passportFront}
+            existingFileName={existingPassportFrontPath ? getFilenameFromPath(existingPassportFrontPath) : undefined}
+            accept={{ 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] }}
+            maxSize={5 * 1024 * 1024}
+            label="Front Side"
+            testId="upload-passport-front"
+            uploadStatus={uploadingDocument === 'passport_front' ? 'uploading' : (passportFront || existingPassportFrontPath ? 'success' : 'idle')}
+          />
+          <FileUploadProgress
+            onFileSelect={(file) => handleDocumentReupload(
+              file,
+              'passport_back',
+              existingPassportBackPath,
+              setPassportBack,
+              setExistingPassportBackPath
+            )}
+            selectedFile={passportBack}
+            existingFileName={existingPassportBackPath ? getFilenameFromPath(existingPassportBackPath) : undefined}
+            accept={{ 'image/*': ['.png', '.jpg', '.jpeg'], 'application/pdf': ['.pdf'] }}
+            maxSize={5 * 1024 * 1024}
+            label="Back Side"
+            testId="upload-passport-back"
+            uploadStatus={uploadingDocument === 'passport_back' ? 'uploading' : (passportBack || existingPassportBackPath ? 'success' : 'idle')}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="passportNumber" className="text-muted-foreground">Passport Number *</Label>
+            <Input
+              id="passportNumber"
+              placeholder="Enter passport number"
+              value={passportNumber}
+              onChange={(e) => setPassportNumber(e.target.value)}
+              className="h-12 rounded-xl border-2"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground">Expiry Date *</Label>
+            <Popover open={passportExpiryOpen} onOpenChange={setPassportExpiryOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    'w-full h-12 justify-start text-left font-normal rounded-xl border-2',
+                    !passportExpiry && 'text-muted-foreground'
+                  )}
+                >
+                  <CalendarIcon className="mr-3 h-4 w-4 text-muted-foreground" />
+                  {passportExpiry ? format(passportExpiry, 'PPP') : <span>Select date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={passportExpiry || undefined}
+                  defaultMonth={passportExpiry || new Date()}
+                  onSelect={(date) => {
+                    setPassportExpiry(date || null);
+                    setPassportExpiryOpen(false);
+                  }}
+                  disabled={(date) => date < new Date()}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+      </div>
+
+      {/* Nationality */}
+      <div className="space-y-2">
+        <Label htmlFor="nationality" className="text-muted-foreground">Nationality *</Label>
+        <Input
+          id="nationality"
+          placeholder="Enter nationality"
+          value={nationality}
+          onChange={(e) => setNationality(e.target.value)}
+          className="h-12 rounded-xl border-2"
+        />
       </div>
     </div>
   );
@@ -1189,9 +1551,12 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
         {renderPropertyStep()}
       </div>
       <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-        {renderFinancialsStep()}
+        {renderIdentityStep()}
       </div>
       <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
+        {renderFinancialsStep()}
+      </div>
+      <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
         {renderTermsStep()}
       </div>
     </>
@@ -1207,10 +1572,10 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
           </div>
           <div className="flex justify-center mb-10">
             <div className="flex items-center gap-4">
-              {[1, 2, 3].map((i) => (
+              {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="flex items-center gap-4">
                   <div className="h-12 w-12 bg-muted animate-pulse rounded-2xl" />
-                  {i < 3 && <div className="h-1 w-20 bg-muted animate-pulse rounded-full" />}
+                  {i < 4 && <div className="h-1 w-20 bg-muted animate-pulse rounded-full" />}
                 </div>
               ))}
             </div>
@@ -1287,8 +1652,9 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
                   </h2>
                   <p className="text-muted-foreground">
                     {currentStep === 1 && 'Update property and unit selection'}
-                    {currentStep === 2 && 'Adjust pricing and fees'}
-                    {currentStep === 3 && 'Review and update terms'}
+                    {currentStep === 2 && 'Update identity document details'}
+                    {currentStep === 3 && 'Adjust pricing and fees'}
+                    {currentStep === 4 && 'Review and update terms'}
                   </p>
                 </div>
 
@@ -1371,10 +1737,6 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
                     Editing Tips
                   </h4>
                   <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                      <span>Identity documents cannot be changed after creation</span>
-                    </li>
                     <li className="flex items-start gap-2">
                       <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
                       <span>Quotations can be edited until converted to tenant</span>

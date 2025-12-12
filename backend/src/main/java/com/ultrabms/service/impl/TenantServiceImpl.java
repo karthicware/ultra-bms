@@ -28,9 +28,15 @@ import com.ultrabms.repository.UnitRepository;
 import com.ultrabms.repository.UserRepository;
 import com.ultrabms.entity.enums.PaymentFrequency;
 import com.ultrabms.service.ParkingSpotService;
+import com.ultrabms.service.PDCService;
 import com.ultrabms.service.QuotationService;
 import com.ultrabms.service.S3Service;
 import com.ultrabms.service.TenantService;
+import com.ultrabms.dto.tenant.ChequeDetailDto;
+import com.ultrabms.dto.pdc.PDCBulkCreateDto;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -43,6 +49,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -70,6 +78,17 @@ public class TenantServiceImpl implements TenantService {
     private final QuotationService quotationService;
     // Story 3.9: Add BankAccountRepository for bank account validation
     private final BankAccountRepository bankAccountRepository;
+    // SCP-2025-12-12: Add PDCService for creating PDC records from OCR cheque details
+    private final PDCService pdcService;
+
+    // SCP-2025-12-12: ObjectMapper for parsing cheque details JSON
+    private static final ObjectMapper OBJECT_MAPPER = createObjectMapper();
+
+    private static ObjectMapper createObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        return mapper;
+    }
 
     public TenantServiceImpl(
             TenantRepository tenantRepository,
@@ -82,7 +101,8 @@ public class TenantServiceImpl implements TenantService {
             PasswordEncoder passwordEncoder,
             ParkingSpotService parkingSpotService,
             QuotationService quotationService,
-            BankAccountRepository bankAccountRepository
+            BankAccountRepository bankAccountRepository,
+            PDCService pdcService
     ) {
         this.tenantRepository = tenantRepository;
         this.tenantDocumentRepository = tenantDocumentRepository;
@@ -95,6 +115,7 @@ public class TenantServiceImpl implements TenantService {
         this.parkingSpotService = parkingSpotService;
         this.quotationService = quotationService;
         this.bankAccountRepository = bankAccountRepository;
+        this.pdcService = pdcService;
     }
 
     @Override
@@ -262,6 +283,7 @@ public class TenantServiceImpl implements TenantService {
     /**
      * SCP-2025-12-06: Overloaded createTenant method to support preloaded document paths from quotation
      * SCP-2025-12-09: Added chequeFiles parameter for scanned cheque copies
+     * SCP-2025-12-12: Added chequeDetailsJson parameter for PDC creation from OCR data
      */
     @Override
     @Transactional
@@ -277,7 +299,8 @@ public class TenantServiceImpl implements TenantService {
             String emiratesIdFrontPath,
             String emiratesIdBackPath,
             String passportFrontPath,
-            String passportBackPath
+            String passportBackPath,
+            String chequeDetailsJson
     ) {
         LOGGER.info("Creating tenant for email: {} (with preloaded document support)", request.getEmail());
 
@@ -425,6 +448,11 @@ public class TenantServiceImpl implements TenantService {
                 quotationService.markAsConverted(request.getQuotationId(), savedTenant.getId());
                 LOGGER.info("Marked quotation {} as CONVERTED for tenant {}",
                         request.getQuotationId(), savedTenant.getId());
+            }
+
+            // SCP-2025-12-12: Create PDC records from OCR cheque details
+            if (chequeDetailsJson != null && !chequeDetailsJson.trim().isEmpty()) {
+                createPDCsFromChequeDetails(savedTenant, chequeDetailsJson, userId);
             }
 
             return CreateTenantResponse.builder()
@@ -789,5 +817,143 @@ public class TenantServiceImpl implements TenantService {
                 .createdAt(tenant.getCreatedAt())
                 .updatedAt(tenant.getUpdatedAt())
                 .build();
+    }
+
+    // =================================================================
+    // SCP-2025-12-12: PDC CREATION FROM OCR CHEQUE DETAILS
+    // =================================================================
+
+    /**
+     * Create PDC records from OCR-extracted cheque details.
+     * Called after tenant is successfully created during onboarding.
+     *
+     * @param savedTenant The newly created tenant
+     * @param chequeDetailsJson JSON string of OCR-extracted cheque details
+     * @param createdBy User UUID who is creating the PDCs
+     */
+    private void createPDCsFromChequeDetails(
+            Tenant savedTenant,
+            String chequeDetailsJson,
+            UUID createdBy
+    ) {
+        if (chequeDetailsJson == null || chequeDetailsJson.trim().isEmpty()) {
+            LOGGER.debug("No cheque details provided for tenant {}", savedTenant.getTenantNumber());
+            return;
+        }
+
+        try {
+            // Parse JSON to list of ChequeDetailDto
+            List<ChequeDetailDto> chequeDetails = parseChequeDetailsJson(chequeDetailsJson);
+
+            if (chequeDetails == null || chequeDetails.isEmpty()) {
+                LOGGER.debug("Empty cheque details for tenant {}", savedTenant.getTenantNumber());
+                return;
+            }
+
+            // Filter: only SUCCESS status cheques with required fields
+            List<PDCBulkCreateDto.PDCEntry> pdcEntries = new ArrayList<>();
+
+            for (ChequeDetailDto cheque : chequeDetails) {
+                // Skip non-SUCCESS status cheques
+                if (!"SUCCESS".equalsIgnoreCase(cheque.getStatus())) {
+                    LOGGER.warn("Skipping cheque {} with status {} for tenant {}",
+                            cheque.getChequeIndex(), cheque.getStatus(), savedTenant.getTenantNumber());
+                    continue;
+                }
+
+                // Skip if missing required fields
+                if (cheque.getBankName() == null || cheque.getBankName().trim().isEmpty()) {
+                    LOGGER.warn("Skipping cheque {} - missing bank name for tenant {}",
+                            cheque.getChequeIndex(), savedTenant.getTenantNumber());
+                    continue;
+                }
+
+                if (cheque.getChequeNumber() == null || cheque.getChequeNumber().trim().isEmpty()) {
+                    LOGGER.warn("Skipping cheque {} - missing cheque number for tenant {}",
+                            cheque.getChequeIndex(), savedTenant.getTenantNumber());
+                    continue;
+                }
+
+                if (cheque.getAmount() == null || cheque.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                    LOGGER.warn("Skipping cheque {} - invalid amount for tenant {}",
+                            cheque.getChequeIndex(), savedTenant.getTenantNumber());
+                    continue;
+                }
+
+                // Parse cheque date
+                LocalDate chequeDate = parseChequeDate(cheque.getChequeDate());
+                if (chequeDate == null) {
+                    LOGGER.warn("Skipping cheque {} - invalid date '{}' for tenant {}",
+                            cheque.getChequeIndex(), cheque.getChequeDate(), savedTenant.getTenantNumber());
+                    continue;
+                }
+
+                // Build PDC entry
+                PDCBulkCreateDto.PDCEntry entry = new PDCBulkCreateDto.PDCEntry(
+                        cheque.getChequeNumber().trim(),
+                        cheque.getBankName().trim(),
+                        cheque.getAmount(),
+                        chequeDate,
+                        null,  // invoiceId - not linked yet
+                        "Auto-created from tenant onboarding OCR. Account holder: " +
+                                (cheque.getChequeFrom() != null ? cheque.getChequeFrom() : "N/A")
+                );
+
+                pdcEntries.add(entry);
+            }
+
+            if (pdcEntries.isEmpty()) {
+                LOGGER.warn("No valid cheques to create PDCs for tenant {}", savedTenant.getTenantNumber());
+                return;
+            }
+
+            // Create PDCs in bulk
+            PDCBulkCreateDto bulkDto = new PDCBulkCreateDto(
+                    savedTenant.getId(),
+                    null,  // leaseId - not linked yet
+                    pdcEntries
+            );
+
+            pdcService.createBulkPDCs(bulkDto, createdBy);
+
+            LOGGER.info("Created {} PDC records for tenant {} from OCR cheque details",
+                    pdcEntries.size(), savedTenant.getTenantNumber());
+
+        } catch (Exception e) {
+            // Log error but don't fail tenant creation
+            LOGGER.error("Failed to create PDCs from cheque details for tenant {}: {}",
+                    savedTenant.getTenantNumber(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Parse cheque details JSON string to list of ChequeDetailDto
+     */
+    private List<ChequeDetailDto> parseChequeDetailsJson(String json) {
+        if (json == null || json.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        try {
+            return OBJECT_MAPPER.readValue(json, new TypeReference<List<ChequeDetailDto>>() {});
+        } catch (Exception e) {
+            LOGGER.error("Failed to parse cheque details JSON: {}", e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Parse cheque date from ISO string or various formats
+     */
+    private LocalDate parseChequeDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            // Try ISO format first (YYYY-MM-DD)
+            return LocalDate.parse(dateStr.trim());
+        } catch (Exception e) {
+            LOGGER.debug("Could not parse date '{}' as ISO format: {}", dateStr, e.getMessage());
+            return null;
+        }
     }
 }

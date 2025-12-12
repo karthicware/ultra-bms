@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -47,6 +48,7 @@ import java.util.UUID;
 /**
  * REST Controller for Quotation management
  */
+@Slf4j
 @Tag(name = "Quotations", description = "Quotation management APIs")
 @RestController
 @RequestMapping("/api/v1/quotations")
@@ -171,8 +173,12 @@ public class QuotationController {
             @RequestParam("documentType") String documentType,
             @RequestPart("file") MultipartFile file
     ) {
+        log.info("Document upload request - Type: {}, Original filename: {}, Size: {} bytes",
+                documentType, file.getOriginalFilename(), file.getSize());
+
         // Validate document type
         if (!isValidDocumentType(documentType)) {
+            log.warn("Invalid document type: {}", documentType);
             return ResponseEntity.badRequest().body(
                     ApiResponse.error("Invalid document type. Must be: emirates_id_front, emirates_id_back, passport_front, or passport_back")
             );
@@ -181,6 +187,7 @@ public class QuotationController {
         // Upload to S3 with quotation documents directory
         String directory = "quotations/identity-documents/" + documentType;
         String filePath = s3Service.uploadFile(file, directory);
+        log.info("Document uploaded successfully - Type: {}, File path: {}", documentType, filePath);
 
         Map<String, String> response = new HashMap<>();
         response.put("filePath", filePath);
@@ -205,6 +212,57 @@ public class QuotationController {
         response.put("validFor", "5 minutes");
 
         return ResponseEntity.ok(ApiResponse.success(response, "Download URL generated successfully"));
+    }
+
+    /**
+     * Re-upload identity document for quotation (deletes old file and uploads new one)
+     * SCP-2025-12-11: Document re-upload endpoint for editing quotation identity documents
+     *
+     * @param documentType Type of document: emirates_id_front, emirates_id_back, passport_front, or passport_back
+     * @param file The new file to upload (JPG, PNG, or PDF, max 5MB)
+     * @param existingFilePath The S3 path of the existing file to delete
+     * @return New S3 file path
+     */
+    @PostMapping(value = "/documents/reupload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Re-upload identity document for quotation (replaces existing)")
+    public ResponseEntity<ApiResponse<Map<String, String>>> reuploadDocument(
+            @RequestParam("documentType") String documentType,
+            @RequestPart("file") MultipartFile file,
+            @RequestParam("existingFilePath") String existingFilePath
+    ) {
+        log.info("Document re-upload request - Type: {}, Existing path: {}", documentType, existingFilePath);
+
+        // Validate document type
+        if (!isValidDocumentType(documentType)) {
+            log.warn("Invalid document type for re-upload: {}", documentType);
+            return ResponseEntity.badRequest().body(
+                    ApiResponse.error("Invalid document type. Must be: emirates_id_front, emirates_id_back, passport_front, or passport_back")
+            );
+        }
+
+        // Delete old file if it exists
+        if (existingFilePath != null && !existingFilePath.isEmpty()) {
+            try {
+                log.info("Deleting old document file: {}", existingFilePath);
+                s3Service.deleteFile(existingFilePath);
+                log.info("Successfully deleted old document file: {}", existingFilePath);
+            } catch (Exception e) {
+                log.warn("Failed to delete old document file: {} - Error: {}", existingFilePath, e.getMessage());
+                // Continue with upload even if delete fails
+            }
+        }
+
+        // Upload new file to S3
+        String directory = "quotations/identity-documents/" + documentType;
+        String newFilePath = s3Service.uploadFile(file, directory);
+        log.info("New document uploaded successfully - Type: {}, New path: {}", documentType, newFilePath);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("filePath", newFilePath);
+        response.put("documentType", documentType);
+        response.put("deletedFilePath", existingFilePath);
+
+        return ResponseEntity.ok(ApiResponse.success(response, "Document re-uploaded successfully"));
     }
 
     /**

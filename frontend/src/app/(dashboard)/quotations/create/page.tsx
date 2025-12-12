@@ -98,65 +98,6 @@ const STEPS = [
 ];
 
 
-// Progress Step Component
-function ProgressStep({
-  step,
-  currentStep,
-  isLast
-}: {
-  step: typeof STEPS[0];
-  currentStep: number;
-  isLast: boolean;
-}) {
-  const isCompleted = currentStep > step.id;
-  const isActive = currentStep === step.id;
-  const Icon = step.icon;
-
-  return (
-    <div className="flex items-center">
-      <div className="flex flex-col items-center">
-        <div
-          className={cn(
-            "relative flex h-12 w-12 items-center justify-center rounded-2xl border-2 transition-all duration-500",
-            isCompleted && "border-primary bg-primary text-primary-foreground",
-            isActive && "border-primary bg-primary/10 text-primary scale-110 shadow-lg shadow-primary/20",
-            !isCompleted && !isActive && "border-muted-foreground/20 text-muted-foreground/40"
-          )}
-        >
-          {isCompleted ? (
-            <Check className="h-5 w-5 animate-in zoom-in-50 duration-300" />
-          ) : (
-            <Icon className={cn(
-              "h-5 w-5 transition-transform duration-300",
-              isActive && "scale-110"
-            )} />
-          )}
-          {isActive && (
-            <span className="absolute -inset-1 rounded-2xl border-2 border-primary/30 animate-pulse" />
-          )}
-        </div>
-        <div className="mt-3 text-center">
-          <p className={cn(
-            "text-sm font-medium transition-colors duration-300",
-            isActive ? "text-foreground" : "text-muted-foreground"
-          )}>
-            {step.title}
-          </p>
-          <p className="text-xs text-muted-foreground/60 hidden sm:block">
-            {step.description}
-          </p>
-        </div>
-      </div>
-      {!isLast && (
-        <div className={cn(
-          "mx-4 h-[2px] w-12 sm:w-20 lg:w-28 rounded-full transition-all duration-700",
-          isCompleted ? "bg-primary" : "bg-muted"
-        )} />
-      )}
-    </div>
-  );
-}
-
 // Live Preview Component
 function QuotationPreview({
   leadName,
@@ -803,6 +744,12 @@ function CreateQuotationForm() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Helper to convert date to YYYY-MM-DD format for backend (LocalDate)
+  // IMPORTANT: Use local date components to avoid timezone shifts (toISOString converts to UTC)
+  const formatDateForBackend = (date: Date): string => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
   const onSubmit = async (data: CreateQuotationFormData) => {
     // Validate document uploads first
     if (!validateDocuments()) {
@@ -834,8 +781,8 @@ function CreateQuotationForm() {
       // Build payload with document paths from S3
       const payload: CreateQuotationRequest = {
         leadId: data.leadId,
-        issueDate: data.issueDate.toISOString(),
-        validityDate: data.validityDate.toISOString(),
+        issueDate: formatDateForBackend(data.issueDate),
+        validityDate: formatDateForBackend(data.validityDate),
         propertyId: data.propertyId,
         unitId: data.unitId,
         baseRent: data.baseRent || 0,
@@ -854,9 +801,9 @@ function CreateQuotationForm() {
         specialTerms: data.specialTerms,
         // Document metadata
         emiratesIdNumber,
-        emiratesIdExpiry: emiratesIdExpiry!.toISOString(),
+        emiratesIdExpiry: formatDateForBackend(emiratesIdExpiry!),
         passportNumber,
-        passportExpiry: passportExpiry!.toISOString(),
+        passportExpiry: formatDateForBackend(passportExpiry!),
         nationality,
         // Document file paths from S3 upload
         emiratesIdFrontPath,
@@ -933,6 +880,11 @@ function CreateQuotationForm() {
                         }
                         setIssueDateOpen(false);
                       }}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today;
+                      }}
                       defaultMonth={field.value}
                     />
                   </PopoverContent>
@@ -971,7 +923,11 @@ function CreateQuotationForm() {
                         field.onChange(date);
                         setValidityDateOpen(false);
                       }}
-                      disabled={(date) => date < form.getValues('issueDate')}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today;
+                      }}
                       defaultMonth={field.value}
                     />
                   </PopoverContent>
@@ -1529,42 +1485,112 @@ function CreateQuotationForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      <div className="container max-w-7xl mx-auto px-4 py-8 lg:py-12">
-        {/* Header */}
-        <div className="mb-10">
-          <div className="mb-4">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden border-b bg-gradient-to-br from-primary/[0.03] via-background to-primary/[0.05]">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0ibm9uZSIvPgo8Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIxIiBmaWxsPSJyZ2JhKDAsIDAsIDAsIDAuMDIpIi8+Cjwvc3ZnPg==')] opacity-60" />
+        <div className="absolute -right-32 -top-32 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -left-20 bottom-0 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
+
+        <div className="relative container max-w-7xl mx-auto px-4 py-8">
+          {/* Top Row: Back button + Step indicator */}
+          <div className="flex items-center justify-between mb-6">
             <PageBackButton href="/quotations" aria-label="Back to quotations" />
+            <div className="flex items-center gap-3 rounded-full bg-card/80 backdrop-blur-sm border border-primary/10 px-4 py-2 shadow-sm">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                {currentStep}
+              </div>
+              <span className="text-sm font-medium text-foreground">
+                of {STEPS.length} steps
+              </span>
+              <div className="h-4 w-px bg-border" />
+              <span className="text-sm text-muted-foreground">
+                {STEPS[currentStep - 1].title}
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
-                Create Quotation
-              </h1>
-              <p className="mt-2 text-lg text-muted-foreground">
-                {leadName ? (
-                  <>Preparing quotation for <span className="text-foreground font-medium">{leadName}</span></>
-                ) : (
-                  'Build a new quotation step by step'
-                )}
-              </p>
+
+          {/* Main Header Content */}
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-widest text-primary">
+                    New Quotation
+                  </p>
+                  <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+                    {leadName ? leadName : 'Create Quotation'}
+                  </h1>
+                </div>
+              </div>
+              {leadName && (
+                <p className="text-muted-foreground pl-[60px]">
+                  Preparing rental quotation with property details, pricing, and terms
+                </p>
+              )}
+            </div>
+
+            {/* Progress Pills */}
+            <div className="flex items-center gap-2 lg:gap-3">
+              {STEPS.map((step, index) => {
+                const isCompleted = currentStep > step.id;
+                const isActive = currentStep === step.id;
+                const Icon = step.icon;
+
+                return (
+                  <div key={step.id} className="flex items-center gap-2 lg:gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isCompleted) setCurrentStep(step.id);
+                      }}
+                      disabled={!isCompleted}
+                      className={cn(
+                        'group relative flex items-center gap-2 rounded-full px-3 py-2 lg:px-4 lg:py-2.5 transition-all duration-300',
+                        isCompleted && 'bg-primary/10 hover:bg-primary/20 cursor-pointer',
+                        isActive && 'bg-primary text-primary-foreground shadow-lg shadow-primary/25',
+                        !isCompleted && !isActive && 'bg-muted/50 text-muted-foreground/50'
+                      )}
+                    >
+                      <div className={cn(
+                        'flex h-6 w-6 items-center justify-center rounded-full transition-all',
+                        isCompleted && 'bg-primary text-primary-foreground',
+                        isActive && 'bg-primary-foreground/20',
+                        !isCompleted && !isActive && 'bg-muted-foreground/20'
+                      )}>
+                        {isCompleted ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : (
+                          <Icon className="h-3.5 w-3.5" />
+                        )}
+                      </div>
+                      <span className={cn(
+                        'text-sm font-medium hidden lg:block',
+                        isActive && 'text-primary-foreground',
+                        isCompleted && 'text-primary'
+                      )}>
+                        {step.title}
+                      </span>
+                    </button>
+                    {index < STEPS.length - 1 && (
+                      <div className={cn(
+                        'h-px w-4 lg:w-6 rounded-full transition-all duration-500',
+                        isCompleted ? 'bg-primary' : 'bg-muted-foreground/20'
+                      )} />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Progress Steps */}
-        <div className="mb-10 flex justify-center">
-          <div className="flex items-center">
-            {STEPS.map((step, index) => (
-              <ProgressStep
-                key={step.id}
-                step={step}
-                currentStep={currentStep}
-                isLast={index === STEPS.length - 1}
-              />
-            ))}
-          </div>
-        </div>
+      <div className="container max-w-7xl mx-auto px-4 py-8">
 
         {/* Main Content */}
         <Form {...form}>
@@ -1698,22 +1724,35 @@ function CreateQuotationForm() {
 export default function CreateQuotationPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-        <div className="container max-w-7xl mx-auto px-4 py-8 lg:py-12">
-          <div className="mb-10">
-            <div className="h-10 w-48 bg-muted animate-pulse rounded-lg mb-4" />
-            <div className="h-6 w-72 bg-muted animate-pulse rounded-lg" />
-          </div>
-          <div className="flex justify-center mb-10">
-            <div className="flex items-center gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-muted animate-pulse rounded-2xl" />
-                  {i < 4 && <div className="h-1 w-20 bg-muted animate-pulse rounded-full" />}
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+        {/* Header Skeleton */}
+        <div className="relative border-b bg-gradient-to-br from-primary/[0.03] via-background to-primary/[0.05]">
+          <div className="container max-w-7xl mx-auto px-4 py-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="h-9 w-24 bg-muted animate-pulse rounded-lg" />
+              <div className="h-10 w-48 bg-muted animate-pulse rounded-full" />
+            </div>
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 bg-muted animate-pulse rounded-2xl" />
+                <div className="space-y-2">
+                  <div className="h-3 w-24 bg-muted animate-pulse rounded" />
+                  <div className="h-8 w-48 bg-muted animate-pulse rounded-lg" />
                 </div>
-              ))}
+              </div>
+              <div className="flex items-center gap-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="h-10 w-24 bg-muted animate-pulse rounded-full" />
+                    {i < 4 && <div className="h-px w-6 bg-muted animate-pulse rounded-full" />}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
+        </div>
+        {/* Content Skeleton */}
+        <div className="container max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             <div className="lg:col-span-3">
               <div className="h-96 bg-muted animate-pulse rounded-3xl" />

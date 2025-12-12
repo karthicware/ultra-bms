@@ -83,7 +83,8 @@ export interface Quotation {
   numberOfCheques?: number;  // Actual cheques needed (numberOfPayments - 1 if first month is CASH)
   firstMonthPaymentMethod?: FirstMonthPaymentMethod;
   firstMonthTotal?: number; // Custom first month total (includes one-time fees + first rent)
-  chequeBreakdown?: ChequeBreakdownItem[];
+  paymentDueDate?: number; // SCP-2025-12-10: Day of month (1-31) for subsequent payment due dates
+  chequeBreakdown?: ChequeBreakdownItem[] | string; // Array or JSON string from backend
 
   // Document requirements
   documentRequirements: string[]; // Array of required document types
@@ -179,7 +180,8 @@ export interface UpdateQuotationRequest {
   numberOfCheques?: number;  // Actual cheques needed
   firstMonthPaymentMethod?: FirstMonthPaymentMethod;
   firstMonthTotal?: number; // Custom first month total (includes one-time fees + first rent)
-  chequeBreakdown?: ChequeBreakdownItem[];
+  paymentDueDate?: number; // SCP-2025-12-10: Day of month (1-31) for subsequent payment due dates
+  chequeBreakdown?: ChequeBreakdownItem[] | string; // Array or JSON string
   documentRequirements?: string[];
   // SCP-2025-12-04: Identity document fields (moved from Lead)
   emiratesIdNumber?: string;

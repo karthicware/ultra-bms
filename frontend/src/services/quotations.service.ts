@@ -529,6 +529,43 @@ export async function uploadQuotationDocument(
 }
 
 /**
+ * Re-upload a quotation document (deletes old file and uploads new one)
+ * Used when updating an existing quotation's identity documents
+ *
+ * @param file - The new file to upload
+ * @param documentType - Type of document being re-uploaded
+ * @param existingFilePath - Path of the existing file to delete
+ * @returns Promise that resolves to the new S3 file path
+ *
+ * @example
+ * ```typescript
+ * const newPath = await reuploadQuotationDocument(file, 'emirates_id_front', 'quotations/identity-documents/emirates_id_front/old.pdf');
+ * ```
+ */
+export async function reuploadQuotationDocument(
+  file: File,
+  documentType: 'emirates_id_front' | 'emirates_id_back' | 'passport_front' | 'passport_back',
+  existingFilePath: string
+): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('documentType', documentType);
+  formData.append('existingFilePath', existingFilePath);
+
+  const response = await apiClient.post<{
+    success: boolean;
+    data: { filePath: string; documentType: string; deletedFilePath: string };
+    message: string;
+  }>(`${QUOTATIONS_BASE_PATH}/documents/reupload`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data.data.filePath;
+}
+
+/**
  * Get presigned download URL for a quotation document
  *
  * @param filePath - S3 file path of the document
