@@ -101,9 +101,13 @@ export interface Quotation {
   passportNumber?: string;
   passportExpiry?: string; // ISO date string
   nationality?: string;
+  // SCP-2025-12-12: Full name and DOB from Emirates ID OCR
+  fullName?: string;
+  dateOfBirth?: string; // ISO date string
   emiratesIdFrontPath?: string;
   emiratesIdBackPath?: string;
-  passportPath?: string;
+  passportFrontPath?: string;
+  passportBackPath?: string;
 
   // Status and timestamps
   status: QuotationStatus;
@@ -152,10 +156,14 @@ export interface CreateQuotationRequest {
   passportNumber: string;
   passportExpiry: string; // ISO date string
   nationality: string;
+  // SCP-2025-12-12: Full name and DOB from Emirates ID OCR
+  fullName?: string;
+  dateOfBirth?: string; // ISO date string
   // Document file paths (set after S3 upload)
   emiratesIdFrontPath?: string;
   emiratesIdBackPath?: string;
-  passportPath?: string;
+  passportFrontPath?: string;
+  passportBackPath?: string;
   paymentTerms: string;
   moveinProcedures: string;
   cancellationPolicy: string;
@@ -189,9 +197,13 @@ export interface UpdateQuotationRequest {
   passportNumber?: string;
   passportExpiry?: string;
   nationality?: string;
+  // SCP-2025-12-12: Full name and DOB from Emirates ID OCR
+  fullName?: string;
+  dateOfBirth?: string;
   emiratesIdFrontPath?: string;
   emiratesIdBackPath?: string;
-  passportPath?: string;
+  passportFrontPath?: string;
+  passportBackPath?: string;
   paymentTerms?: string;
   moveinProcedures?: string;
   cancellationPolicy?: string;
@@ -379,14 +391,15 @@ export interface LeadConversionResponse {
   leadId: string;
   leadNumber: string;
   fullName: string;
-  firstName?: string;
-  lastName?: string;
+  // SCP-2025-12-12: Removed firstName/lastName - using fullName from Emirates ID OCR
   emiratesId: string;
   emiratesIdExpiry?: string;
   passportNumber: string;
   passportExpiryDate: string;
   homeCountry: string;
   nationality?: string;
+  // SCP-2025-12-12: DOB from Emirates ID OCR
+  dateOfBirth?: string; // ISO date string
   email: string;
   contactNumber: string;
 

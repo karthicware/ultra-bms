@@ -36,15 +36,12 @@ public class CreateTenantRequest {
 
     // =============================
     // PERSONAL INFORMATION
+    // SCP-2025-12-12: Replaced firstName/lastName with fullName from Emirates ID OCR
     // =============================
 
-    @NotBlank(message = "First name is required")
-    @Size(max = 100, message = "First name must be less than 100 characters")
-    private String firstName;
-
-    @NotBlank(message = "Last name is required")
-    @Size(max = 100, message = "Last name must be less than 100 characters")
-    private String lastName;
+    @NotBlank(message = "Full name is required")
+    @Size(max = 255, message = "Full name must be less than 255 characters")
+    private String fullName;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")

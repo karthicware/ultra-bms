@@ -128,8 +128,9 @@ export const QuotationPrintView = forwardRef<HTMLDivElement, QuotationPrintViewP
             }}>
               Prepared For
             </div>
+            {/* SCP-2025-12-12: Prefer fullName from OCR over leadName */}
             <div style={{ fontSize: '12pt', fontWeight: 'bold', marginBottom: '1mm' }}>
-              {quotation.leadName}
+              {quotation.fullName || quotation.leadName}
             </div>
             {quotation.leadEmail && (
               <div style={{ fontSize: '9pt', color: '#444' }}>{quotation.leadEmail}</div>
@@ -139,6 +140,10 @@ export const QuotationPrintView = forwardRef<HTMLDivElement, QuotationPrintViewP
             )}
             {quotation.nationality && (
               <div style={{ fontSize: '9pt', color: '#444' }}>Nationality: {quotation.nationality}</div>
+            )}
+            {/* SCP-2025-12-12: Date of Birth from Emirates ID OCR */}
+            {quotation.dateOfBirth && (
+              <div style={{ fontSize: '9pt', color: '#444' }}>DOB: {format(new Date(quotation.dateOfBirth), 'dd MMM yyyy')}</div>
             )}
           </div>
 

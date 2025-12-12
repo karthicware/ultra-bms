@@ -32,10 +32,10 @@ public class TenantProfileResponse {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    // SCP-2025-12-12: Replaced firstName/lastName with fullName
     public static class TenantPersonalInfo {
         private UUID id;
-        private String firstName;
-        private String lastName;
+        private String fullName;
         private String email;
         private String phone;
         private LocalDate dateOfBirth;

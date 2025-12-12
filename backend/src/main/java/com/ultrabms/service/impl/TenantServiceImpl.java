@@ -183,8 +183,7 @@ public class TenantServiceImpl implements TenantService {
             Tenant tenant = Tenant.builder()
                     // Personal Info
                     .userId(userId)
-                    .firstName(request.getFirstName())
-                    .lastName(request.getLastName())
+                    .fullName(request.getFullName())
                     .email(request.getEmail())
                     .phone(request.getPhone())
                     .dateOfBirth(request.getDateOfBirth())
@@ -356,8 +355,7 @@ public class TenantServiceImpl implements TenantService {
             Tenant tenant = Tenant.builder()
                     // Personal Info
                     .userId(userId)
-                    .firstName(request.getFirstName())
-                    .lastName(request.getLastName())
+                    .fullName(request.getFullName())
                     .email(request.getEmail())
                     .phone(request.getPhone())
                     .dateOfBirth(request.getDateOfBirth())
@@ -514,11 +512,16 @@ public class TenantServiceImpl implements TenantService {
                 .orElseThrow(() -> new EntityNotFoundException("Role not found: TENANT"));
 
         // Create new user entity with TENANT role
+        // SCP-2025-12-12: Split fullName into firstName/lastName for User entity
+        String[] nameParts = request.getFullName() != null ? request.getFullName().split(" ", 2) : new String[]{"", ""};
+        String firstName = nameParts.length > 0 ? nameParts[0] : "";
+        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(randomPassword)); // Hash password with BCrypt
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
         user.setRole(tenantRole);
         user.setPhone(request.getPhone());
         user.setActive(true);
@@ -767,8 +770,8 @@ public class TenantServiceImpl implements TenantService {
                 .tenantNumber(tenant.getTenantNumber())
                 .status(tenant.getStatus())
                 // Personal Info
-                .firstName(tenant.getFirstName())
-                .lastName(tenant.getLastName())
+                // SCP-2025-12-12: Using fullName instead of firstName/lastName
+                .fullName(tenant.getFullName())
                 .email(tenant.getEmail())
                 .phone(tenant.getPhone())
                 .dateOfBirth(tenant.getDateOfBirth())

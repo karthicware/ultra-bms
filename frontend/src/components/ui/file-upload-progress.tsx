@@ -34,6 +34,8 @@ export interface FileUploadProgressProps {
   uploadProgress?: number;
   uploadStatus?: FileUploadStatus;
   errorMessage?: string;
+  // SCP-2025-12-12: For edit mode - show existing file name when no new file selected
+  existingFileName?: string;
 }
 
 const getFileIcon = (file: File) => {
@@ -66,6 +68,7 @@ export function FileUploadProgress({
   uploadProgress = 0,
   uploadStatus = 'idle',
   errorMessage,
+  existingFileName,
 }: FileUploadProgressProps) {
   const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [dragError, setDragError] = useState<string | null>(null);
@@ -135,6 +138,11 @@ export function FileUploadProgress({
   const isSuccess = uploadStatus === 'success';
   const isError = uploadStatus === 'error' || !!dragError;
 
+  // SCP-2025-12-12: For edit mode - determine if we have a file to show (either selected or existing)
+  const hasFile = selectedFile || existingFileName;
+  const displayFileName = selectedFile?.name || existingFileName || '';
+  const displayFileSize = selectedFile ? formatFileSize(selectedFile.size) : 'Uploaded';
+
   return (
     <div className={cn('space-y-2', className)}>
       {/* Label */}
@@ -159,13 +167,13 @@ export function FileUploadProgress({
           isSuccess && 'border-green-500/50 bg-green-500/5',
           isError && 'border-destructive/50 bg-destructive/5',
           disabled && 'opacity-50 cursor-not-allowed hover:border-border hover:bg-transparent',
-          !selectedFile && 'p-8',
-          selectedFile && 'p-4'
+          !hasFile && 'p-8',
+          hasFile && 'p-4'
         )}
       >
         <input {...getInputProps()} />
 
-        {!selectedFile ? (
+        {!hasFile ? (
           // Empty state
           <div className="flex flex-col items-center justify-center text-center">
             <div
@@ -225,9 +233,9 @@ export function FileUploadProgress({
 
               {/* File info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                <p className="text-sm font-medium truncate">{displayFileName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {formatFileSize(selectedFile.size)}
+                  {displayFileSize}
                 </p>
               </div>
 

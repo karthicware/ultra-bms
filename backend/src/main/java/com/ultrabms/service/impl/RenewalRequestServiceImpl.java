@@ -102,8 +102,8 @@ public class RenewalRequestServiceImpl implements RenewalRequestService {
                 null,
                 java.util.Map.of(
                         "renewalRequestId", renewalRequest.getId().toString(),
-                        "message", String.format("Renewal request %s submitted by tenant %s %s",
-                                requestNumber, tenant.getFirstName(), tenant.getLastName())
+                        "message", String.format("Renewal request %s submitted by tenant %s",
+                                requestNumber, tenant.getFullName())
                 )
         );
 
@@ -282,7 +282,7 @@ public class RenewalRequestServiceImpl implements RenewalRequestService {
                 .requestNumber(request.getRequestNumber())
                 .tenantId(tenant.getId())
                 .tenantNumber(tenant.getTenantNumber())
-                .tenantName(tenant.getFirstName() + " " + tenant.getLastName())
+                .tenantName(tenant.getFullName())
                 .tenantEmail(tenant.getEmail())
                 .propertyName(tenant.getProperty() != null ? tenant.getProperty().getName() : null)
                 .unitNumber(tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : null)

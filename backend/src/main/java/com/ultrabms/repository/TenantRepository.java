@@ -122,9 +122,9 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
      * @param pageable   Pagination
      * @return Page of matching tenants
      */
+    // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
     @Query("SELECT t FROM Tenant t WHERE " +
-            "(LOWER(t.firstName) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
-            "LOWER(t.lastName) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
+            "(LOWER(t.fullName) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
             "LOWER(t.email) LIKE LOWER(CAST(:searchTerm AS string)) OR " +
             "LOWER(t.tenantNumber) LIKE LOWER(CAST(:searchTerm AS string))) " +
             "AND t.active = :active")

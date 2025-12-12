@@ -312,13 +312,12 @@ public class PDCMapper {
      * @param tenant Tenant entity
      * @return Full name (first + last)
      */
+    // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
     private String getTenantFullName(Tenant tenant) {
         if (tenant == null) {
             return null;
         }
-        String firstName = tenant.getFirstName() != null ? tenant.getFirstName() : "";
-        String lastName = tenant.getLastName() != null ? tenant.getLastName() : "";
-        return (firstName + " " + lastName).trim();
+        return tenant.getFullName();
     }
 
     /**

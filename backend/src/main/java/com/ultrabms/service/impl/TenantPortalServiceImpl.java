@@ -117,10 +117,10 @@ public class TenantPortalServiceImpl implements TenantPortalService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant not found for user ID: " + userId));
 
         // Personal info
+        // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
         TenantProfileResponse.TenantPersonalInfo personalInfo = TenantProfileResponse.TenantPersonalInfo.builder()
                 .id(tenant.getId())
-                .firstName(tenant.getFirstName())
-                .lastName(tenant.getLastName())
+                .fullName(tenant.getFullName())
                 .email(tenant.getEmail())
                 .phone(tenant.getPhone())
                 .dateOfBirth(tenant.getDateOfBirth())

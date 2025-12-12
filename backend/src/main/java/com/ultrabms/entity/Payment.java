@@ -175,12 +175,13 @@ public class Payment extends BaseEntity {
 
     /**
      * Get the tenant name
+     * SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
      */
     public String getTenantFullName() {
         if (this.tenant == null) {
             return null;
         }
-        return this.tenant.getFirstName() + " " + this.tenant.getLastName();
+        return this.tenant.getFullName();
     }
 
     /**

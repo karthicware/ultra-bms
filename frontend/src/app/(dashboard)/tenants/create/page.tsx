@@ -128,13 +128,13 @@ function CreateTenantWizard() {
 
   // Form state for all steps
   // SCP-2025-12-10: Updated for 5-step wizard with Financial Info
+  // SCP-2025-12-12: Using fullName instead of firstName/lastName
   const [formData, setFormData] = useState<TenantOnboardingFormData>({
     personalInfo: {
-      firstName: '',
-      lastName: '',
+      fullName: '',
       email: '',
       phone: '',
-      dateOfBirth: undefined as unknown as Date, // User must enter DOB manually
+      dateOfBirth: undefined as unknown as Date, // Auto-populated from Emirates ID OCR
       nationalId: '',
       nationality: '',
       emergencyContactName: '',
@@ -185,14 +185,15 @@ function CreateTenantWizard() {
 
         // Pre-populate personal info from lead
         // SCP-2025-12-10: Updated for 5-step wizard with Financial Info (replaces rentBreakdown/parkingAllocation)
+        // SCP-2025-12-12: Using fullName and dateOfBirth from Emirates ID OCR
         setFormData((prev) => ({
           ...prev,
           personalInfo: {
             ...prev.personalInfo,
-            firstName: conversionData.firstName,
-            lastName: conversionData.lastName,
+            fullName: conversionData.fullName,
             email: conversionData.email,
             phone: conversionData.phone || conversionData.contactNumber || '',
+            dateOfBirth: conversionData.dateOfBirth ? new Date(conversionData.dateOfBirth) : (undefined as unknown as Date),
             nationalId: conversionData.nationalId || conversionData.emiratesId || '',
             nationality: conversionData.nationality,
           },
@@ -203,6 +204,9 @@ function CreateTenantWizard() {
             // SCP-2025-12-07: Store property/unit display names for Lease Preview
             propertyName: conversionData.propertyName,
             unitNumber: conversionData.unitNumber,
+            // SCP-2025-12-12: Lease dates from quotation
+            leaseStartDate: conversionData.leaseStartDate ? new Date(conversionData.leaseStartDate) : (undefined as unknown as Date),
+            leaseEndDate: conversionData.leaseEndDate ? new Date(conversionData.leaseEndDate) : (undefined as unknown as Date),
           },
           // SCP-2025-12-10: Financial info now holds all rent/cheque/parking data (read-only from quotation)
           financialInfo: {
@@ -361,8 +365,8 @@ function CreateTenantWizard() {
       const submitData = new FormData();
 
       // Personal Info
-      submitData.append('firstName', formData.personalInfo.firstName);
-      submitData.append('lastName', formData.personalInfo.lastName);
+      // SCP-2025-12-12: Using fullName instead of firstName/lastName
+      submitData.append('fullName', formData.personalInfo.fullName);
       submitData.append('email', formData.personalInfo.email);
       submitData.append('phone', formData.personalInfo.phone);
       // SCP-2025-12-07: Only submit DOB if it's set

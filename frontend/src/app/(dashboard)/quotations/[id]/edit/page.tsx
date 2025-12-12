@@ -56,6 +56,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { getQuotationById, updateQuotation, uploadQuotationDocument, reuploadQuotationDocument } from '@/services/quotations.service';
+import { processIdentityDocuments, IdentityOverallStatus } from '@/services/textract.service';
 import { getAvailableParkingSpots } from '@/services/parking.service';
 import { getProperties } from '@/services/properties.service';
 import { getAvailableUnits } from '@/services/units.service';
@@ -71,7 +72,8 @@ import { FirstMonthPaymentMethod, type ChequeBreakdownItem, QuotationStatus, typ
 import { ChequeBreakdownSection } from '@/components/quotations/ChequeBreakdownSection';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Banknote, Loader2, Upload, X, FileCheck } from 'lucide-react';
+import { Banknote, Loader2, Upload, X, FileCheck, CheckCircle, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileUploadProgress } from '@/components/ui/file-upload-progress';
 
 const formatCurrency = (amount: number) => {
@@ -325,6 +327,14 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
   const [passportNumber, setPassportNumber] = useState('');
   const [passportExpiry, setPassportExpiry] = useState<Date | null>(null);
   const [nationality, setNationality] = useState('');
+  // SCP-2025-12-12: DOB from Emirates ID OCR
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
+  const [dateOfBirthOpen, setDateOfBirthOpen] = useState(false);
+
+  // SCP-2025-12-12: OCR processing state
+  const [isProcessingOcr, setIsProcessingOcr] = useState(false);
+  const [ocrMessage, setOcrMessage] = useState<string | null>(null);
+  const [ocrSuccess, setOcrSuccess] = useState<boolean | null>(null);
 
   // Identity document file upload state
   const [emiratesIdFront, setEmiratesIdFront] = useState<File | null>(null);
@@ -432,6 +442,16 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
           setEmiratesIdNumber(data.emiratesIdNumber || '');
           setPassportNumber(data.passportNumber || '');
           setNationality(data.nationality || '');
+          // SCP-2025-12-12: Load fullName and DOB from quotation
+          if (data.fullName) {
+            setLeadName(data.fullName);
+          }
+          if (data.dateOfBirth) {
+            const parsed = new Date(data.dateOfBirth + 'T00:00:00');
+            if (!isNaN(parsed.getTime())) {
+              setDateOfBirth(parsed);
+            }
+          }
           // Parse expiry dates
           if (data.emiratesIdExpiry) {
             const parsed = new Date(data.emiratesIdExpiry + 'T00:00:00');
@@ -846,6 +866,9 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
         passportNumber: passportNumber.trim() || undefined,
         passportExpiry: passportExpiry ? formatDateForBackend(passportExpiry) : undefined,
         nationality: nationality.trim() || undefined,
+        // SCP-2025-12-12: Full name and DOB from Emirates ID OCR
+        fullName: leadName.trim() || undefined,
+        dateOfBirth: dateOfBirth ? formatDateForBackend(dateOfBirth) : undefined,
       };
 
       await updateQuotation(quotationId, payload);
@@ -1063,6 +1086,7 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
   );
 
   // Handler for document re-upload - uploads new file and deletes old one
+  // SCP-2025-12-12: Also triggers OCR when Emirates ID front or Passport front is uploaded
   const handleDocumentReupload = async (
     file: File | null,
     documentType: 'emirates_id_front' | 'emirates_id_back' | 'passport_front' | 'passport_back',
@@ -1092,6 +1116,15 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
         description: 'Document uploaded successfully',
         variant: 'success',
       });
+
+      // SCP-2025-12-12: Auto-trigger OCR when Emirates ID front is uploaded
+      if (documentType === 'emirates_id_front') {
+        processOcrForDocument(passportFront, file);
+      }
+      // SCP-2025-12-12: Auto-trigger OCR when Passport front is uploaded
+      if (documentType === 'passport_front') {
+        processOcrForDocument(file, emiratesIdFront);
+      }
     } catch (error) {
       console.error('Document upload error:', error);
       toast({
@@ -1111,8 +1144,128 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
     return parts[parts.length - 1] || '';
   };
 
+  // SCP-2025-12-12: Process OCR for identity documents
+  const processOcrForDocument = async (
+    passportFrontFile: File | null,
+    emiratesIdFrontFile: File | null
+  ) => {
+    if (!passportFrontFile && !emiratesIdFrontFile) {
+      return; // No files to process
+    }
+
+    setIsProcessingOcr(true);
+    setOcrMessage(null);
+    setOcrSuccess(null);
+
+    try {
+      // Only send front-side documents for OCR processing
+      const result = await processIdentityDocuments(
+        passportFrontFile || undefined,
+        undefined, // passportBack - not used for OCR
+        emiratesIdFrontFile || undefined,
+        undefined  // emiratesIdBack - not used for OCR
+      );
+
+      // Auto-fill passport fields if extracted (number and expiry only)
+      if (result.passportDetails) {
+        const passport = result.passportDetails;
+        if (passport.documentNumber && !passportNumber) {
+          setPassportNumber(passport.documentNumber);
+        }
+        if (passport.expiryDate && !passportExpiry) {
+          setPassportExpiry(new Date(passport.expiryDate));
+        }
+      }
+
+      // Auto-fill Emirates ID fields if extracted (including nationality and name)
+      if (result.emiratesIdDetails) {
+        const emiratesId = result.emiratesIdDetails;
+        if (emiratesId.documentNumber && !emiratesIdNumber) {
+          setEmiratesIdNumber(emiratesId.documentNumber);
+        }
+        if (emiratesId.expiryDate && !emiratesIdExpiry) {
+          setEmiratesIdExpiry(new Date(emiratesId.expiryDate));
+        }
+        // SCP-2025-12-12: ALWAYS override tenant name from Emirates ID (even if pre-populated)
+        if (emiratesId.fullName) {
+          setLeadName(emiratesId.fullName);
+        }
+        // SCP-2025-12-12: Extract DOB from Emirates ID OCR
+        if (emiratesId.dateOfBirth) {
+          setDateOfBirth(new Date(emiratesId.dateOfBirth));
+        }
+        // Auto-fill nationality from Emirates ID directly
+        if (emiratesId.nationality && !nationality) {
+          setNationality(emiratesId.nationality.trim());
+        }
+      }
+
+      // Set message based on result
+      if (result.overallStatus === IdentityOverallStatus.SUCCESS) {
+        setOcrSuccess(true);
+        setOcrMessage('Documents scanned successfully! Fields have been auto-filled.');
+        toast({
+          title: 'OCR Complete',
+          description: 'Identity documents scanned successfully. Please verify the extracted data.',
+        });
+      } else if (result.overallStatus === IdentityOverallStatus.PARTIAL_SUCCESS) {
+        setOcrSuccess(true);
+        setOcrMessage('Some fields extracted. Please complete missing information manually.');
+        toast({
+          title: 'Partial OCR',
+          description: 'Some fields could not be extracted. Please fill in missing data.',
+          variant: 'default',
+        });
+      } else {
+        setOcrSuccess(false);
+        setOcrMessage('Could not extract data. Please enter details manually.');
+        toast({
+          title: 'OCR Failed',
+          description: 'Could not extract data from documents. Please enter details manually.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('OCR processing error:', error);
+      setOcrSuccess(false);
+      setOcrMessage('An error occurred during scanning. Please enter details manually.');
+      toast({
+        title: 'OCR Error',
+        description: 'Failed to process documents. Please enter details manually.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessingOcr(false);
+    }
+  };
+
   const renderIdentityStep = () => (
     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+      {/* SCP-2025-12-12: OCR Processing Status */}
+      {isProcessingOcr && (
+        <Alert className="border-blue-200 bg-blue-50">
+          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+          <AlertDescription className="text-blue-700">
+            Scanning documents... Please wait.
+          </AlertDescription>
+        </Alert>
+      )}
+      {ocrMessage && !isProcessingOcr && (
+        <Alert className={cn(
+          "border",
+          ocrSuccess ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"
+        )}>
+          {ocrSuccess ? (
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          ) : (
+            <AlertCircle className="h-4 w-4 text-red-600" />
+          )}
+          <AlertDescription className={ocrSuccess ? "text-green-700" : "text-red-700"}>
+            {ocrMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Emirates ID Section */}
       <div className="rounded-2xl border border-muted bg-muted/20 p-6">
         <div className="flex items-center gap-3 mb-6">
@@ -1295,16 +1448,51 @@ function EditQuotationForm({ quotationId }: { quotationId: string }) {
         </div>
       </div>
 
-      {/* Nationality */}
-      <div className="space-y-2">
-        <Label htmlFor="nationality" className="text-muted-foreground">Nationality *</Label>
-        <Input
-          id="nationality"
-          placeholder="Enter nationality"
-          value={nationality}
-          onChange={(e) => setNationality(e.target.value)}
-          className="h-12 rounded-xl border-2"
-        />
+      {/* Nationality and Date of Birth */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="nationality" className="text-muted-foreground">Nationality *</Label>
+          <Input
+            id="nationality"
+            placeholder="Enter nationality"
+            value={nationality}
+            onChange={(e) => setNationality(e.target.value)}
+            className="h-12 rounded-xl border-2"
+          />
+        </div>
+        {/* SCP-2025-12-12: Date of Birth from Emirates ID OCR */}
+        <div className="space-y-2">
+          <Label className="text-muted-foreground">Date of Birth</Label>
+          <Popover open={dateOfBirthOpen} onOpenChange={setDateOfBirthOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  'w-full h-12 justify-start text-left font-normal rounded-xl border-2',
+                  !dateOfBirth && 'text-muted-foreground'
+                )}
+              >
+                <CalendarIcon className="mr-3 h-4 w-4 text-muted-foreground" />
+                {dateOfBirth ? format(dateOfBirth, 'PPP') : <span>Select date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dateOfBirth || undefined}
+                defaultMonth={dateOfBirth || new Date(1990, 0, 1)}
+                onSelect={(date) => {
+                  setDateOfBirth(date || null);
+                  setDateOfBirthOpen(false);
+                }}
+                disabled={(date) => date > new Date()}
+                captionLayout="dropdown"
+                fromYear={1920}
+                toYear={new Date().getFullYear()}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
     </div>
   );

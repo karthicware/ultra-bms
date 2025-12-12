@@ -91,62 +91,36 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Name Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <Label htmlFor="firstName" className="flex items-center gap-1">
-                      First Name <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="relative">
-                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <UserIcon className="size-4" />
-                      </div>
-                      <FormControl>
-                        <Input
-                          id="firstName"
-                          className="pl-9"
-                          {...field}
-                          placeholder="Enter first name"
-                          data-testid="input-first-name"
-                        />
-                      </FormControl>
+            {/* SCP-2025-12-12: Full Name Field (replaces firstName/lastName) */}
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <Label htmlFor="fullName" className="flex items-center gap-1">
+                    Full Name <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <UserIcon className="size-4" />
                     </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <Label htmlFor="lastName" className="flex items-center gap-1">
-                      Last Name <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="relative">
-                      <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <UserIcon className="size-4" />
-                      </div>
-                      <FormControl>
-                        <Input
-                          id="lastName"
-                          className="pl-9"
-                          {...field}
-                          placeholder="Enter last name"
-                          data-testid="input-last-name"
-                        />
-                      </FormControl>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <FormControl>
+                      <Input
+                        id="fullName"
+                        className="pl-9"
+                        {...field}
+                        placeholder="Enter full name (as on Emirates ID)"
+                        data-testid="input-full-name"
+                      />
+                    </FormControl>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    Full name as extracted from Emirates ID
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Contact Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -302,7 +276,7 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
               />
             </div>
 
-            {/* Nationality */}
+            {/* Nationality - SCP-2025-12-12: Changed to textbox for OCR data */}
             <FormField
               control={form.control}
               name="nationality"
@@ -311,23 +285,17 @@ export function PersonalInfoStep({ data, onComplete, onBack }: PersonalInfoStepP
                   <Label className="flex items-center gap-1">
                     Nationality <span className="text-destructive">*</span>
                   </Label>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger data-testid="select-nationality" className="w-full">
-                        <div className="flex items-center gap-2">
-                          <GlobeIcon className="size-4 text-muted-foreground" />
-                          <SelectValue placeholder="Select nationality" />
-                        </div>
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {NATIONALITIES.map((nationality) => (
-                        <SelectItem key={nationality} value={nationality}>
-                          {nationality}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <div className="relative">
+                      <GlobeIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                      <Input
+                        {...field}
+                        data-testid="input-nationality"
+                        placeholder="Enter nationality"
+                        className="pl-10"
+                      />
+                    </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

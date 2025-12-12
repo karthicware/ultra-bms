@@ -25,8 +25,7 @@ public class LeadConversionResponse {
     private UUID leadId;
     private String leadNumber;
     private String fullName;
-    private String firstName;
-    private String lastName;
+    // SCP-2025-12-12: Removed firstName/lastName - using fullName from Emirates ID OCR
     private String email;
     private String contactNumber;
     private String alternateContact;
@@ -38,6 +37,8 @@ public class LeadConversionResponse {
     private String passportNumber;
     private LocalDate passportExpiryDate;
     private String nationality;
+    // SCP-2025-12-12: DOB from Emirates ID OCR
+    private LocalDate dateOfBirth;
     // Document file paths
     private String emiratesIdFrontPath;
     private String emiratesIdBackPath;
@@ -49,6 +50,11 @@ public class LeadConversionResponse {
     private String quotationNumber;
     private UUID propertyId;
     private UUID unitId;
+
+    // ===== Lease Dates (from Quotation) =====
+    // SCP-2025-12-12: Lease dates for tenant onboarding
+    private LocalDate leaseStartDate; // Quotation issue date as default lease start
+    private LocalDate leaseEndDate;   // Quotation validity date as default lease end
 
     // ===== Financial Information =====
     private BigDecimal baseRent;

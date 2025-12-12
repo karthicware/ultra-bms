@@ -233,7 +233,7 @@ export default function PDCRegistrationPage() {
                                 {tenants.map((tenant) => (
                                 <SelectItem key={tenant.id} value={tenant.id}>
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                                        <span className="font-medium">{tenant.firstName} {tenant.lastName}</span>
+                                        <span className="font-medium">{tenant.fullName}</span>
                                         <span className="hidden sm:inline text-muted-foreground">-</span>
                                         <span className="text-muted-foreground text-xs sm:text-sm">{tenant.tenantNumber}</span>
                                     </div>

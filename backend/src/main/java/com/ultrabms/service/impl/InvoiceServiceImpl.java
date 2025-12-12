@@ -654,11 +654,12 @@ public class InvoiceServiceImpl implements InvoiceService {
     /**
      * Map frontend sort field to entity field
      */
+    // SCP-2025-12-12: Updated to use fullName instead of firstName
     private String mapSortField(String sortBy) {
         if (sortBy == null) return "createdAt";
         return switch (sortBy) {
             case "invoiceNumber" -> "invoiceNumber";
-            case "tenantName" -> "tenant.firstName";
+            case "tenantName" -> "tenant.fullName";
             case "totalAmount" -> "totalAmount";
             case "dueDate" -> "dueDate";
             case "status" -> "status";

@@ -442,8 +442,8 @@ public class PDCServiceImpl implements PDCService {
         // Get PDCs
         Page<PDC> pdcPage = pdcRepository.findByTenantId(tenantId, pageable);
 
-        String tenantName = (tenant.getFirstName() != null ? tenant.getFirstName() : "")
-                + " " + (tenant.getLastName() != null ? tenant.getLastName() : "");
+        // SCP-2025-12-12: Updated to use fullName
+        String tenantName = tenant.getFullName() != null ? tenant.getFullName() : "";
 
         return TenantPDCHistoryDto.builder()
                 .tenantId(tenantId)

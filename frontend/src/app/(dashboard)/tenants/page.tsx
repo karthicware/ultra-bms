@@ -166,11 +166,11 @@ export default function TenantsPage() {
     }
 
     // Search filter
+    // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
     if (searchTerm.trim()) {
       const query = searchTerm.toLowerCase().trim();
       result = result.filter(t =>
-        t.firstName?.toLowerCase().includes(query) ||
-        t.lastName?.toLowerCase().includes(query) ||
+        t.fullName?.toLowerCase().includes(query) ||
         t.email?.toLowerCase().includes(query) ||
         t.phone?.includes(query) ||
         t.tenantNumber?.toLowerCase().includes(query) ||
@@ -669,10 +669,10 @@ export default function TenantsPage() {
                                 </DropdownMenu>
                               </div>
 
-                              {/* Avatar */}
+                              {/* Avatar - SCP-2025-12-12: Updated to use fullName */}
                               <div className="absolute -bottom-8 left-4">
                                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-xl ring-4 ring-background shadow-lg">
-                                  {tenant.firstName?.[0]?.toUpperCase()}{tenant.lastName?.[0]?.toUpperCase()}
+                                  {tenant.fullName?.split(' ').map(n => n[0]?.toUpperCase()).join('').slice(0, 2)}
                                 </div>
                               </div>
                             </div>
@@ -680,8 +680,8 @@ export default function TenantsPage() {
                             {/* Content */}
                             <CardContent className="p-4 pt-10 flex-1 flex flex-col">
                               <div className="mb-1">
-                                <h3 className="font-semibold text-lg truncate" title={`${tenant.firstName} ${tenant.lastName}`}>
-                                  {tenant.firstName} {tenant.lastName}
+                                <h3 className="font-semibold text-lg truncate" title={tenant.fullName}>
+                                  {tenant.fullName}
                                 </h3>
                                 <p className="text-xs text-muted-foreground font-mono">
                                   {tenant.tenantNumber || '-'}
@@ -730,16 +730,16 @@ export default function TenantsPage() {
                           >
                             <CardContent className="p-4">
                               <div className="flex items-center gap-4">
-                                {/* Avatar */}
+                                {/* Avatar - SCP-2025-12-12: Updated to use fullName */}
                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-lg shrink-0">
-                                  {tenant.firstName?.[0]?.toUpperCase()}{tenant.lastName?.[0]?.toUpperCase()}
+                                  {tenant.fullName?.split(' ').map(n => n[0]?.toUpperCase()).join('').slice(0, 2)}
                                 </div>
 
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
                                     <h3 className="font-semibold truncate">
-                                      {tenant.firstName} {tenant.lastName}
+                                      {tenant.fullName}
                                     </h3>
                                     <Badge variant="secondary" className={cn("text-xs shrink-0", statusStyles.badge)}>
                                       {tenant.status}

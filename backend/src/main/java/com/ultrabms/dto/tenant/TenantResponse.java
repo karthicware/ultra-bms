@@ -30,8 +30,8 @@ public class TenantResponse {
     private TenantStatus status;
 
     // Personal Information
-    private String firstName;
-    private String lastName;
+    // SCP-2025-12-12: Replaced firstName/lastName with fullName from Emirates ID OCR
+    private String fullName;
     private String email;
     private String phone;
     private LocalDate dateOfBirth;

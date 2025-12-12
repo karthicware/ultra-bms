@@ -110,9 +110,10 @@ public interface TenantCheckoutRepository extends JpaRepository<TenantCheckout, 
      * @param pageable   Pagination
      * @return Page of checkouts
      */
+    // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
     @Query("SELECT c FROM TenantCheckout c " +
            "WHERE LOWER(c.checkoutNumber) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(CONCAT(c.tenant.firstName, ' ', c.tenant.lastName)) LIKE LOWER(CONCAT('%', :search, '%'))")
+           "OR LOWER(c.tenant.fullName) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<TenantCheckout> searchByCheckoutNumberOrTenantName(@Param("search") String searchTerm, Pageable pageable);
 
     /**
@@ -126,6 +127,7 @@ public interface TenantCheckoutRepository extends JpaRepository<TenantCheckout, 
      * @param pageable   Pagination
      * @return Page of checkouts
      */
+    // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
     @Query("SELECT c FROM TenantCheckout c " +
            "WHERE (:status IS NULL OR c.status = :status) " +
            "AND (:propertyId IS NULL OR c.property.id = :propertyId) " +
@@ -133,7 +135,7 @@ public interface TenantCheckoutRepository extends JpaRepository<TenantCheckout, 
            "AND (:toDate IS NULL OR c.expectedMoveOutDate <= :toDate) " +
            "AND (:search IS NULL OR :search = '' " +
            "     OR LOWER(c.checkoutNumber) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "     OR LOWER(CONCAT(c.tenant.firstName, ' ', c.tenant.lastName)) LIKE LOWER(CONCAT('%', :search, '%')))")
+           "     OR LOWER(c.tenant.fullName) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<TenantCheckout> findWithFilters(
             @Param("status") CheckoutStatus status,
             @Param("propertyId") UUID propertyId,

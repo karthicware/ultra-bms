@@ -176,9 +176,10 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
      * @param pageable   Pagination parameters
      * @return Page of matching invoices
      */
+    // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
     @Query("SELECT i FROM Invoice i WHERE " +
             "LOWER(i.invoiceNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-            "LOWER(CONCAT(i.tenant.firstName, ' ', i.tenant.lastName)) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+            "LOWER(i.tenant.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     Page<Invoice> searchByKeyword(@Param("searchTerm") String searchTerm, Pageable pageable);
 
     /**
@@ -193,10 +194,11 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
      * @param pageable   Pagination parameters
      * @return Page of matching invoices
      */
+    // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
     @Query("SELECT i FROM Invoice i WHERE " +
             "(:searchTerm IS NULL OR :searchTerm = '' OR " +
             "LOWER(i.invoiceNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-            "LOWER(CONCAT(i.tenant.firstName, ' ', i.tenant.lastName)) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
+            "LOWER(i.tenant.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
             "(:status IS NULL OR i.status = :status) AND " +
             "(:propertyId IS NULL OR i.property.id = :propertyId) AND " +
             "(:tenantId IS NULL OR i.tenant.id = :tenantId) AND " +

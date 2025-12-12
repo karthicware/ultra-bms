@@ -94,6 +94,10 @@ public class UpdateQuotationRequest {
     private LocalDate passportExpiry;
     private String nationality;
 
+    // SCP-2025-12-12: Full name and DOB from Emirates ID OCR
+    private String fullName;
+    private LocalDate dateOfBirth;
+
     // Document file paths (will be set after S3 upload)
     private String emiratesIdFrontPath;
     private String emiratesIdBackPath;

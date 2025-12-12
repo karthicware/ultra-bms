@@ -138,11 +138,12 @@ public interface ParkingSpotRepository extends JpaRepository<ParkingSpot, UUID>,
      * @param pageable Pagination info
      * @return Page of matching parking spots
      */
+    // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
     @Query("SELECT ps FROM ParkingSpot ps " +
            "LEFT JOIN ps.assignedTenant t " +
            "WHERE ps.active = true " +
            "AND (LOWER(ps.spotNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
-           "OR LOWER(CONCAT(t.firstName, ' ', t.lastName)) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+           "OR LOWER(t.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
     Page<ParkingSpot> searchBySpotNumberOrTenantName(
             @Param("searchTerm") String searchTerm,
             Pageable pageable);
@@ -155,12 +156,13 @@ public interface ParkingSpotRepository extends JpaRepository<ParkingSpot, UUID>,
      * @param pageable Pagination info
      * @return Page of matching parking spots
      */
+    // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
     @Query("SELECT ps FROM ParkingSpot ps " +
            "LEFT JOIN ps.assignedTenant t " +
            "WHERE ps.active = true " +
            "AND ps.property.id = :propertyId " +
            "AND (LOWER(ps.spotNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
-           "OR LOWER(CONCAT(t.firstName, ' ', t.lastName)) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+           "OR LOWER(t.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
     Page<ParkingSpot> searchByPropertyAndSpotNumberOrTenantName(
             @Param("propertyId") UUID propertyId,
             @Param("searchTerm") String searchTerm,

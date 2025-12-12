@@ -310,6 +310,9 @@ function CreateQuotationForm() {
   const [ocrMessage, setOcrMessage] = useState<string | null>(null);
   const [ocrSuccess, setOcrSuccess] = useState<boolean | null>(null);
 
+  // SCP-2025-12-12: DOB from Emirates ID OCR
+  const [dateOfBirth, setDateOfBirth] = useState<string | null>(null);
+
   // SCP-2025-12-06: Cheque breakdown state
   // Default: 6 cheques and Cash as first payment method
   const [yearlyRentAmount, setYearlyRentAmount] = useState<number>(0);
@@ -524,9 +527,13 @@ function CreateQuotationForm() {
         if (emiratesId.expiryDate && !emiratesIdExpiry) {
           setEmiratesIdExpiry(new Date(emiratesId.expiryDate));
         }
-        // Auto-fill tenant name from Emirates ID
-        if (emiratesId.fullName && !leadName) {
+        // SCP-2025-12-12: ALWAYS override tenant name from Emirates ID (even if pre-populated from lead)
+        if (emiratesId.fullName) {
           setLeadName(emiratesId.fullName);
+        }
+        // SCP-2025-12-12: Extract DOB from Emirates ID OCR
+        if (emiratesId.dateOfBirth) {
+          setDateOfBirth(emiratesId.dateOfBirth);
         }
         // Auto-fill nationality from Emirates ID directly
         if (emiratesId.nationality && !nationality) {
@@ -805,10 +812,14 @@ function CreateQuotationForm() {
         passportNumber,
         passportExpiry: formatDateForBackend(passportExpiry!),
         nationality,
+        // SCP-2025-12-12: Full name and DOB from Emirates ID OCR
+        fullName: leadName || undefined,
+        dateOfBirth: dateOfBirth || undefined,
         // Document file paths from S3 upload
         emiratesIdFrontPath,
         emiratesIdBackPath,
-        passportPath: passportFrontPath, // Using front as the main passport path
+        passportFrontPath,
+        passportBackPath,
         // SCP-2025-12-06: Cheque breakdown data
         yearlyRentAmount: yearlyRentAmount > 0 ? yearlyRentAmount : undefined,
         numberOfCheques: numberOfCheques > 0 ? numberOfCheques : undefined,

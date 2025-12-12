@@ -55,12 +55,10 @@ public class ParkingSpotResponse {
         }
 
         // Set assigned tenant info
+        // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
         if (parkingSpot.getAssignedTenant() != null) {
             builder.assignedTenantId(parkingSpot.getAssignedTenant().getId())
-                   .assignedTenantName(
-                       parkingSpot.getAssignedTenant().getFirstName() + " " +
-                       parkingSpot.getAssignedTenant().getLastName()
-                   );
+                   .assignedTenantName(parkingSpot.getAssignedTenant().getFullName());
         }
 
         return builder.build();

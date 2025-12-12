@@ -160,6 +160,13 @@ public class Quotation {
     @Column(name = "nationality", length = 100)
     private String nationality;
 
+    // SCP-2025-12-12: Full name and DOB from Emirates ID OCR
+    @Column(name = "full_name", length = 255)
+    private String fullName;
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
+
     // Document file paths (S3 storage)
     @Column(name = "emirates_id_front_path", length = 500)
     private String emiratesIdFrontPath;

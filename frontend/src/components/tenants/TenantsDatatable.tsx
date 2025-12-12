@@ -113,20 +113,21 @@ const TenantsDatatable = ({
         ),
         size: 50,
       },
+      // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
       {
         header: 'Tenant',
-        accessorKey: 'firstName',
+        accessorKey: 'fullName',
         cell: ({ row }) => (
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-sm">
-              {row.original.firstName?.[0]?.toUpperCase()}{row.original.lastName?.[0]?.toUpperCase()}
+              {row.original.fullName?.split(' ').map(n => n[0]?.toUpperCase()).join('').slice(0, 2)}
             </div>
             <div className="flex flex-col min-w-0">
               <Link
                 href={`/tenants/${row.original.id}`}
                 className="font-medium hover:text-primary hover:underline truncate"
               >
-                {row.original.firstName} {row.original.lastName}
+                {row.original.fullName}
               </Link>
               <span className="text-xs text-muted-foreground font-mono">
                 {row.original.tenantNumber || '-'}

@@ -186,7 +186,7 @@ export default function TenantDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight">
-                {tenant.firstName} {tenant.lastName}
+                {tenant.fullName}
               </h1>
               <Badge variant={statusConfig?.variant ?? 'secondary'}>
                 <StatusIcon className="h-3 w-3 mr-1" />
@@ -344,7 +344,7 @@ export default function TenantDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Full Name</p>
                     <p className="font-medium">
-                      {tenant.firstName} {tenant.lastName}
+                      {tenant.fullName}
                     </p>
                   </div>
                   <div>
@@ -669,7 +669,7 @@ export default function TenantDetailPage() {
             <DialogDescription>
               You are about to initiate the checkout process for{' '}
               <strong>
-                {tenant.firstName} {tenant.lastName}
+                {tenant.fullName}
               </strong>
               . This will:
             </DialogDescription>

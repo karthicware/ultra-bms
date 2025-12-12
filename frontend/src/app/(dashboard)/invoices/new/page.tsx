@@ -385,7 +385,7 @@ function CreateInvoicePageContent() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-semibold text-lg">
-                                {selectedTenant.firstName} {selectedTenant.lastName}
+                                {selectedTenant.fullName}
                               </h3>
                               <Badge variant="outline" className="text-xs">
                                 {selectedTenant.tenantNumber}
@@ -475,9 +475,10 @@ function CreateInvoicePageContent() {
                                       <User className="h-5 w-5 text-muted-foreground" />
                                     </div>
                                     <div className="flex-1 min-w-0">
+                                      {/* SCP-2025-12-12: Updated to use fullName */}
                                       <div className="flex items-center gap-2">
                                         <span className="font-medium">
-                                          {tenant.firstName} {tenant.lastName}
+                                          {tenant.fullName}
                                         </span>
                                         <Badge variant="outline" className="text-xs">
                                           {tenant.tenantNumber}

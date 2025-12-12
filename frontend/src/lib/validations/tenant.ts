@@ -47,6 +47,16 @@ const nameSchema = z
   .regex(/^[a-zA-Z\s'-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes');
 
 /**
+ * Full name validation (SCP-2025-12-12: Replaces firstName/lastName)
+ * Full name from Emirates ID OCR - allows more characters
+ */
+const fullNameSchema = z
+  .string()
+  .min(1, 'Full name is required')
+  .max(255, 'Full name must be less than 255 characters')
+  .regex(/^[a-zA-Z\s'-]+$/, 'Full name can only contain letters, spaces, hyphens, and apostrophes');
+
+/**
  * National ID validation
  */
 const nationalIdSchema = z
@@ -109,9 +119,9 @@ const fileSchema10MB = z
 // Step 1: Personal Information Schema
 // ===========================
 
+// SCP-2025-12-12: Replaced firstName/lastName with fullName from Emirates ID OCR
 export const personalInfoSchema = z.object({
-  firstName: nameSchema,
-  lastName: nameSchema,
+  fullName: fullNameSchema,
   email: emailSchema,
   phone: phoneSchema,
   dateOfBirth: dateOfBirthSchema,
@@ -264,10 +274,10 @@ export type TenantDocumentUploadFormData = z.infer<typeof documentUploadSchema>;
 // SCP-2025-12-07: Was Step 7, now Step 6 after Payment Schedule was eliminated
 // ===========================
 
+// SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
 export const createTenantSchema = z.object({
   // Step 1: Personal Information
-  firstName: personalInfoSchema.shape.firstName,
-  lastName: personalInfoSchema.shape.lastName,
+  fullName: personalInfoSchema.shape.fullName,
   email: personalInfoSchema.shape.email,
   phone: personalInfoSchema.shape.phone,
   dateOfBirth: personalInfoSchema.shape.dateOfBirth,

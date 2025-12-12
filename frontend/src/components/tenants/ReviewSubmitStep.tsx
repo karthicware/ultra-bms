@@ -87,10 +87,11 @@ export function ReviewSubmitStep({
                 <Edit className="h-4 w-4" />
               </Button>
             </div>
+            {/* SCP-2025-12-12: Updated to use fullName instead of firstName/lastName */}
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Name</p>
-                <p className="font-medium">{personalInfo.firstName} {personalInfo.lastName}</p>
+                <p className="font-medium">{personalInfo.fullName}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Email</p>

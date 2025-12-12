@@ -89,7 +89,7 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
         return TenantCheckoutSummaryDto.builder()
                 .tenantId(tenant.getId())
                 .tenantNumber(tenant.getTenantNumber())
-                .tenantName(tenant.getFirstName() + " " + tenant.getLastName())
+                .tenantName(tenant.getFullName())
                 .email(tenant.getEmail())
                 .phone(tenant.getPhone())
                 .propertyId(tenant.getProperty() != null ? tenant.getProperty().getId() : null)
@@ -142,7 +142,7 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
 
         return OutstandingAmountsDto.builder()
                 .tenantId(tenantId)
-                .tenantName(tenant.getFirstName() + " " + tenant.getLastName())
+                .tenantName(tenant.getFullName())
                 .outstandingInvoices(invoiceDtos)
                 .totalOutstandingRent(totalOutstandingRent)
                 .totalLateFees(totalLateFees)
@@ -218,8 +218,8 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
                 Map.of(
                         "tenantId", request.getTenantId().toString(),
                         "checkoutId", checkout.getId().toString(),
-                        "message", String.format("Checkout initiated for %s %s - Unit %s",
-                                tenant.getFirstName(), tenant.getLastName(),
+                        "message", String.format("Checkout initiated for %s - Unit %s",
+                                tenant.getFullName(),
                                 tenant.getUnit().getUnitNumber())
                 )
         );
@@ -676,8 +676,8 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
                 Map.of(
                         "tenantId", tenantId.toString(),
                         "checkoutId", checkoutId.toString(),
-                        "message", String.format("Tenant %s %s checked out from Unit %s",
-                                tenant.getFirstName(), tenant.getLastName(),
+                        "message", String.format("Tenant %s checked out from Unit %s",
+                                tenant.getFullName(),
                                 unit.getUnitNumber())
                 )
         );
@@ -874,7 +874,7 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
                 .checkoutNumber(checkout.getCheckoutNumber())
                 .tenantId(tenant.getId())
                 .tenantNumber(tenant.getTenantNumber())
-                .tenantName(tenant.getFirstName() + " " + tenant.getLastName())
+                .tenantName(tenant.getFullName())
                 .tenantEmail(tenant.getEmail())
                 .tenantPhone(tenant.getPhone())
                 .propertyId(checkout.getProperty().getId())
@@ -928,7 +928,7 @@ public class TenantCheckoutServiceImpl implements TenantCheckoutService {
                 .checkoutNumber(checkout.getCheckoutNumber())
                 .tenantId(tenant.getId())
                 .tenantNumber(tenant.getTenantNumber())
-                .tenantName(tenant.getFirstName() + " " + tenant.getLastName())
+                .tenantName(tenant.getFullName())
                 .propertyName(checkout.getProperty().getName())
                 .unitNumber(checkout.getUnit().getUnitNumber())
                 .expectedMoveOutDate(checkout.getExpectedMoveOutDate())

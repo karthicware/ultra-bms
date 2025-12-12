@@ -360,23 +360,16 @@ public class LeadServiceImpl implements LeadService {
             throw new ValidationException("Quotation does not belong to the specified lead");
         }
 
-        // Split fullName into firstName and lastName
-        String firstName = lead.getFullName();
-        String lastName = "";
-        if (lead.getFullName() != null && lead.getFullName().contains(" ")) {
-            String[] parts = lead.getFullName().split(" ", 2);
-            firstName = parts[0];
-            lastName = parts.length > 1 ? parts[1] : "";
-        }
-
         // Build response with all data for tenant onboarding pre-population
+        // SCP-2025-12-12: Use fullName from quotation (OCR) if available, otherwise from lead
+        String fullName = quotation.getFullName() != null ? quotation.getFullName() : lead.getFullName();
+
         LeadConversionResponse response = LeadConversionResponse.builder()
                 // Lead personal info
                 .leadId(lead.getId())
                 .leadNumber(lead.getLeadNumber())
-                .fullName(lead.getFullName())
-                .firstName(firstName)
-                .lastName(lastName)
+                // SCP-2025-12-12: Removed firstName/lastName - using fullName from Emirates ID OCR
+                .fullName(fullName)
                 .email(lead.getEmail())
                 .contactNumber(lead.getContactNumber())
                 // Identity documents from quotation (SCP-2025-12-04)
@@ -385,6 +378,8 @@ public class LeadServiceImpl implements LeadService {
                 .passportNumber(quotation.getPassportNumber())
                 .passportExpiryDate(quotation.getPassportExpiry())
                 .nationality(quotation.getNationality())
+                // SCP-2025-12-12: DOB from Emirates ID OCR
+                .dateOfBirth(quotation.getDateOfBirth())
                 // Document file paths (SCP-2025-12-06: for tenant onboarding)
                 .emiratesIdFrontPath(quotation.getEmiratesIdFrontPath())
                 .emiratesIdBackPath(quotation.getEmiratesIdBackPath())
@@ -395,6 +390,9 @@ public class LeadServiceImpl implements LeadService {
                 .quotationNumber(quotation.getQuotationNumber())
                 .propertyId(quotation.getPropertyId())
                 .unitId(quotation.getUnitId())
+                // SCP-2025-12-12: Lease dates from quotation
+                .leaseStartDate(quotation.getIssueDate())
+                .leaseEndDate(quotation.getValidityDate())
                 // Financial info
                 .baseRent(quotation.getBaseRent())
                 .serviceCharges(quotation.getServiceCharges())

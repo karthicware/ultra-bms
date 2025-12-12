@@ -241,14 +241,11 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
       const response = await convertToTenant(quotation.id);
       toast({
         title: 'Success',
-        description: response.message || 'Lead converted to tenant successfully',
+        description: response.message || 'Redirecting to tenant onboarding...',
         variant: 'success'
       });
-      const updated = await getQuotationById(quotation.id);
-      if (updated.chequeBreakdown && typeof updated.chequeBreakdown === 'string') {
-        try { updated.chequeBreakdown = JSON.parse(updated.chequeBreakdown); } catch { updated.chequeBreakdown = []; }
-      }
-      setQuotation(updated);
+      // Redirect to tenant creation page with lead and quotation IDs for pre-population
+      router.push(`/tenants/create?fromLead=${response.leadId}&fromQuotation=${response.quotationId}`);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast({
@@ -256,7 +253,6 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
         description: err.response?.data?.message || 'Failed to convert lead to tenant',
         variant: 'destructive'
       });
-    } finally {
       setIsConverting(false);
     }
   };
@@ -469,8 +465,9 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
                   </div>
                   <div className="space-y-3">
                     <div>
+                      {/* SCP-2025-12-12: Prefer fullName from OCR over leadName */}
                       <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Full Name</p>
-                      <p className="text-sm font-semibold text-slate-900">{quotation.leadName || '—'}</p>
+                      <p className="text-sm font-semibold text-slate-900">{quotation.fullName || quotation.leadName || '—'}</p>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Email</p>
@@ -486,6 +483,13 @@ export default function QuotationDetailPage({ params }: QuotationDetailPageProps
                         <p className="text-sm text-slate-700">{quotation.nationality || '—'}</p>
                       </div>
                     </div>
+                    {/* SCP-2025-12-12: Date of Birth from Emirates ID OCR */}
+                    {quotation.dateOfBirth && (
+                      <div>
+                        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Date of Birth</p>
+                        <p className="text-sm text-slate-700">{format(new Date(quotation.dateOfBirth), 'PPP')}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 

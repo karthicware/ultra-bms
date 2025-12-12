@@ -359,9 +359,10 @@ public interface PDCRepository extends JpaRepository<PDC, UUID> {
      * @param pageable   Pagination
      * @return Page of matching PDCs
      */
+    // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
     @Query("SELECT p FROM PDC p WHERE " +
            "LOWER(p.chequeNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(CONCAT(p.tenant.firstName, ' ', p.tenant.lastName)) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+           "LOWER(p.tenant.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     Page<PDC> searchByKeyword(@Param("searchTerm") String searchTerm, Pageable pageable);
 
     /**
@@ -376,10 +377,11 @@ public interface PDCRepository extends JpaRepository<PDC, UUID> {
      * @param pageable   Pagination
      * @return Page of matching PDCs
      */
+    // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
     @Query("SELECT p FROM PDC p WHERE " +
            "(:searchTerm IS NULL OR :searchTerm = '' OR " +
            "LOWER(p.chequeNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(CONCAT(p.tenant.firstName, ' ', p.tenant.lastName)) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
+           "LOWER(p.tenant.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
            "(:status IS NULL OR p.status = :status) AND " +
            "(:tenantId IS NULL OR p.tenant.id = :tenantId) AND " +
            "(:bankName IS NULL OR :bankName = '' OR LOWER(p.bankName) LIKE LOWER(CONCAT('%', :bankName, '%'))) AND " +

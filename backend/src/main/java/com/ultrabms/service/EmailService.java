@@ -261,7 +261,7 @@ public class EmailService implements IEmailService {
 
             // Build Thymeleaf context with template variables
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("requestNumber", request.getRequestNumber());
             context.setVariable("category", request.getCategory().toString().replace("_", " "));
             context.setVariable("priority", request.getPriority().toString());
@@ -311,7 +311,7 @@ public class EmailService implements IEmailService {
             // Build Thymeleaf context with template variables
             Context context = new Context();
             context.setVariable("requestNumber", request.getRequestNumber());
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("tenantEmail", tenant.getEmail());
             context.setVariable("tenantPhone", tenant.getPhone() != null ? tenant.getPhone() : "Not provided");
             context.setVariable("propertyName", tenant.getProperty().getName());
@@ -397,7 +397,7 @@ public class EmailService implements IEmailService {
 
             // Build Thymeleaf context with template variables
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("requestNumber", request.getRequestNumber());
             context.setVariable("title", request.getTitle());
             context.setVariable("status", request.getStatus().toString());
@@ -1045,7 +1045,7 @@ public class EmailService implements IEmailService {
             String invoiceUrl = frontendUrl + "/tenant/invoices/" + invoice.getId();
 
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("invoiceNumber", invoice.getInvoiceNumber());
             context.setVariable("invoiceDate", invoice.getInvoiceDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
             context.setVariable("dueDate", invoice.getDueDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
@@ -1100,7 +1100,7 @@ public class EmailService implements IEmailService {
             String receiptUrl = frontendUrl + "/tenant/invoices/" + invoice.getId() + "/payments/" + payment.getId();
 
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("receiptNumber", payment.getPaymentNumber());
             context.setVariable("invoiceNumber", invoice.getInvoiceNumber());
             context.setVariable("paymentDate", payment.getPaymentDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
@@ -1149,7 +1149,7 @@ public class EmailService implements IEmailService {
             String paymentUrl = frontendUrl + "/tenant/invoices/" + invoice.getId() + "/pay";
 
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("invoiceNumber", invoice.getInvoiceNumber());
             context.setVariable("dueDate", invoice.getDueDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
             context.setVariable("daysUntilDue", daysUntilDue);
@@ -1201,7 +1201,7 @@ public class EmailService implements IEmailService {
             String paymentUrl = frontendUrl + "/tenant/invoices/" + invoice.getId() + "/pay";
 
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("invoiceNumber", invoice.getInvoiceNumber());
             context.setVariable("dueDate", invoice.getDueDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
             context.setVariable("daysOverdue", daysOverdue);
@@ -1247,7 +1247,7 @@ public class EmailService implements IEmailService {
             String invoiceUrl = frontendUrl + "/tenant/invoices/" + invoice.getId();
 
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("invoiceNumber", invoice.getInvoiceNumber());
             context.setVariable("dueDate", invoice.getDueDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
             context.setVariable("lateFeeAmount", formatCurrency(invoice.getLateFee()));
@@ -1424,7 +1424,7 @@ public class EmailService implements IEmailService {
             String portalUrl = frontendUrl + "/tenant/dashboard";
 
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("extensionNumber", extension.getExtensionNumber());
             context.setVariable("propertyName", tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A");
             context.setVariable("unitNumber", tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A");
@@ -1475,7 +1475,7 @@ public class EmailService implements IEmailService {
             String portalUrl = frontendUrl + "/tenant/lease/renew";
 
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("propertyName", tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A");
             context.setVariable("unitNumber", tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A");
             context.setVariable("leaseEndDate", tenant.getLeaseEndDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
@@ -1525,7 +1525,7 @@ public class EmailService implements IEmailService {
             String portalUrl = frontendUrl + "/tenant/dashboard";
 
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("requestNumber", request.getRequestNumber());
             context.setVariable("preferredTerm", request.getPreferredTerm().replace("_", " "));
             context.setVariable("submittedAt", request.getRequestedAt().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")));
@@ -1570,7 +1570,7 @@ public class EmailService implements IEmailService {
             boolean isApproved = request.getStatus() == com.ultrabms.entity.enums.RenewalRequestStatus.APPROVED;
 
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("requestNumber", request.getRequestNumber());
             context.setVariable("status", request.getStatus().name());
             context.setVariable("isApproved", isApproved);
@@ -1625,7 +1625,7 @@ public class EmailService implements IEmailService {
             String portalUrl = frontendUrl + "/tenant/dashboard";
 
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("checkoutNumber", checkout.getCheckoutNumber());
             context.setVariable("propertyName", tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A");
             context.setVariable("unitNumber", tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A");
@@ -1654,7 +1654,7 @@ public class EmailService implements IEmailService {
                 "If you have any questions, please contact us at %s.\n\n" +
                 "Best regards,\n" +
                 "Ultra BMS Team",
-                tenant.getFirstName() + " " + tenant.getLastName(),
+                tenant.getFullName(),
                 checkout.getCheckoutNumber(),
                 tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A",
                 tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A",
@@ -1698,7 +1698,7 @@ public class EmailService implements IEmailService {
             String portalUrl = frontendUrl + "/tenant/dashboard";
 
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("checkoutNumber", checkout.getCheckoutNumber());
             context.setVariable("propertyName", tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A");
             context.setVariable("unitNumber", tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A");
@@ -1730,7 +1730,7 @@ public class EmailService implements IEmailService {
                 "If you need to reschedule, please contact us at %s.\n\n" +
                 "Best regards,\n" +
                 "Ultra BMS Team",
-                tenant.getFirstName() + " " + tenant.getLastName(),
+                tenant.getFullName(),
                 checkout.getCheckoutNumber(),
                 tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A",
                 tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A",
@@ -1775,7 +1775,7 @@ public class EmailService implements IEmailService {
     ) {
         try {
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("checkoutNumber", checkout.getCheckoutNumber());
             context.setVariable("propertyName", tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A");
             context.setVariable("unitNumber", tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A");
@@ -1802,7 +1802,7 @@ public class EmailService implements IEmailService {
                 "If you have any questions about your final settlement, please contact us at %s.\n\n" +
                 "Best regards,\n" +
                 "Ultra BMS Team",
-                tenant.getFirstName() + " " + tenant.getLastName(),
+                tenant.getFullName(),
                 checkout.getCheckoutNumber(),
                 tenant.getProperty() != null ? tenant.getProperty().getName() : "N/A",
                 tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : "N/A",
@@ -1888,8 +1888,9 @@ public class EmailService implements IEmailService {
     @Override
     public void sendPDCBouncedNotification(String adminEmail, com.ultrabms.entity.PDC pdc) {
         try {
+            // SCP-2025-12-12: Updated to use fullName
             String tenantName = pdc.getTenant() != null
-                    ? pdc.getTenant().getFirstName() + " " + pdc.getTenant().getLastName()
+                    ? pdc.getTenant().getFullName()
                     : "Unknown";
             String tenantEmail = pdc.getTenant() != null ? pdc.getTenant().getEmail() : "N/A";
             String tenantPhone = pdc.getTenant() != null ? pdc.getTenant().getPhone() : "N/A";
@@ -2134,7 +2135,7 @@ public class EmailService implements IEmailService {
         try {
             // Build Thymeleaf context with template variables
             Context context = new Context();
-            context.setVariable("tenantName", tenant.getFirstName() + " " + tenant.getLastName());
+            context.setVariable("tenantName", tenant.getFullName());
             context.setVariable("announcementTitle", announcement.getTitle());
             context.setVariable("announcementMessage", announcement.getMessage());
             context.setVariable("publishedDate", announcement.getPublishedAt() != null
@@ -2168,7 +2169,8 @@ public class EmailService implements IEmailService {
      */
     private String buildAnnouncementEmailText(com.ultrabms.entity.Tenant tenant, com.ultrabms.entity.Announcement announcement) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Dear ").append(tenant.getFirstName()).append(",\n\n");
+        // SCP-2025-12-12: Updated to use fullName
+        sb.append("Dear ").append(tenant.getFullName()).append(",\n\n");
         sb.append("A new announcement has been published.\n\n");
         sb.append("Title: ").append(announcement.getTitle()).append("\n\n");
         sb.append("Message:\n");

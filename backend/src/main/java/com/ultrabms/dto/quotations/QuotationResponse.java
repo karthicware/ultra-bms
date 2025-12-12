@@ -63,6 +63,9 @@ public class QuotationResponse {
     private String passportNumber;
     private LocalDate passportExpiry;
     private String nationality;
+    // SCP-2025-12-12: Full name and DOB from Emirates ID OCR
+    private String fullName;
+    private LocalDate dateOfBirth;
     private String emiratesIdFrontPath;
     private String emiratesIdBackPath;
     private String passportFrontPath;
@@ -141,6 +144,9 @@ public class QuotationResponse {
                 .passportNumber(quotation.getPassportNumber())
                 .passportExpiry(quotation.getPassportExpiry())
                 .nationality(quotation.getNationality())
+                // SCP-2025-12-12: Full name and DOB from Emirates ID OCR
+                .fullName(quotation.getFullName())
+                .dateOfBirth(quotation.getDateOfBirth())
                 .emiratesIdFrontPath(quotation.getEmiratesIdFrontPath())
                 .emiratesIdBackPath(quotation.getEmiratesIdBackPath())
                 .passportFrontPath(quotation.getPassportFrontPath())

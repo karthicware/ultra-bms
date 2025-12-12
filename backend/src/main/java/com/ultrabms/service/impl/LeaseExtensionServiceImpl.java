@@ -167,8 +167,8 @@ public class LeaseExtensionServiceImpl implements LeaseExtensionService {
                 null,
                 java.util.Map.of(
                         "tenantId", tenantId.toString(),
-                        "message", String.format("Lease extended for %s %s - Unit %s until %s",
-                                tenant.getFirstName(), tenant.getLastName(),
+                        "message", String.format("Lease extended for %s - Unit %s until %s",
+                                tenant.getFullName(),
                                 tenant.getUnit().getUnitNumber(), request.getNewEndDate())
                 )
         );
@@ -215,7 +215,7 @@ public class LeaseExtensionServiceImpl implements LeaseExtensionService {
         return CurrentLeaseSummaryDto.builder()
                 .tenantId(tenant.getId())
                 .tenantNumber(tenant.getTenantNumber())
-                .tenantName(tenant.getFirstName() + " " + tenant.getLastName())
+                .tenantName(tenant.getFullName())
                 .email(tenant.getEmail())
                 .propertyName(tenant.getProperty() != null ? tenant.getProperty().getName() : null)
                 .unitNumber(tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : null)
@@ -353,7 +353,7 @@ public class LeaseExtensionServiceImpl implements LeaseExtensionService {
                 .extensionNumber(extension.getExtensionNumber())
                 .tenantId(tenant.getId())
                 .tenantNumber(tenant.getTenantNumber())
-                .tenantName(tenant.getFirstName() + " " + tenant.getLastName())
+                .tenantName(tenant.getFullName())
                 .propertyName(tenant.getProperty() != null ? tenant.getProperty().getName() : null)
                 .unitNumber(tenant.getUnit() != null ? tenant.getUnit().getUnitNumber() : null)
                 .previousEndDate(extension.getPreviousEndDate())
@@ -398,7 +398,7 @@ public class LeaseExtensionServiceImpl implements LeaseExtensionService {
         return ExpiringLeaseDto.builder()
                 .tenantId(tenant.getId())
                 .tenantNumber(tenant.getTenantNumber())
-                .tenantName(tenant.getFirstName() + " " + tenant.getLastName())
+                .tenantName(tenant.getFullName())
                 .email(tenant.getEmail())
                 .phone(tenant.getPhone())
                 .propertyId(tenant.getProperty() != null ? tenant.getProperty().getId() : null)

@@ -218,7 +218,7 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
                 .setFont(boldFont)
                 .setFontSize(10)
                 .setFontColor(ColorConstants.GRAY));
-        billToCell.add(new Paragraph(tenant.getFirstName() + " " + tenant.getLastName())
+        billToCell.add(new Paragraph(tenant.getFullName())
                 .setFont(boldFont)
                 .setFontSize(12));
         billToCell.add(new Paragraph(tenant.getEmail())
@@ -442,7 +442,7 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
                 .setFont(boldFont)
                 .setFontSize(10)
                 .setFontColor(ColorConstants.GRAY));
-        tenantCell.add(new Paragraph(tenant.getFirstName() + " " + tenant.getLastName())
+        tenantCell.add(new Paragraph(tenant.getFullName())
                 .setFont(boldFont)
                 .setFontSize(12));
         tenantCell.add(new Paragraph("Tenant #: " + tenant.getTenantNumber())

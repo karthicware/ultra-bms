@@ -71,8 +71,8 @@ export interface Tenant {
   propertyId: string; // FK to Property
 
   // Personal Information
-  firstName: string;
-  lastName: string;
+  // SCP-2025-12-12: Replaced firstName/lastName with fullName from Emirates ID OCR
+  fullName: string;
   email: string;
   phone: string;
   dateOfBirth: string; // ISO date string
@@ -153,8 +153,8 @@ export interface TenantDocument {
 
 export interface CreateTenantRequest {
   // Personal Information
-  firstName: string;
-  lastName: string;
+  // SCP-2025-12-12: Replaced firstName/lastName with fullName from Emirates ID OCR
+  fullName: string;
   email: string;
   phone: string;
   dateOfBirth: string; // ISO date string
@@ -229,8 +229,8 @@ export interface TenantResponse {
   propertyId: string;
 
   // Personal Information
-  firstName: string;
-  lastName: string;
+  // SCP-2025-12-12: Replaced firstName/lastName with fullName from Emirates ID OCR
+  fullName: string;
   email: string;
   phone: string;
   dateOfBirth: string;
@@ -303,8 +303,8 @@ export interface TenantResponse {
 // ===========================
 
 export interface PersonalInfoFormData {
-  firstName: string;
-  lastName: string;
+  // SCP-2025-12-12: Replaced firstName/lastName with fullName from Emirates ID OCR
+  fullName: string;
   email: string;
   phone: string;
   dateOfBirth: Date; // Required - validated by zod schema
@@ -423,9 +423,10 @@ export interface LeadConversionData {
   quotationNumber?: string;
 
   // Pre-populated personal info from lead
-  fullName?: string;
-  firstName: string;
-  lastName: string;
+  // SCP-2025-12-12: Using fullName from Emirates ID OCR, removed firstName/lastName
+  fullName: string;
+  // SCP-2025-12-12: DOB from Emirates ID OCR
+  dateOfBirth?: string; // ISO date string
   email: string;
   phone: string;
   contactNumber?: string; // alias for phone

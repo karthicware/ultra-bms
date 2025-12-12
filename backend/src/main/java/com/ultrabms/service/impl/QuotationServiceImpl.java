@@ -142,6 +142,9 @@ public class QuotationServiceImpl implements QuotationService {
                 .passportNumber(request.getPassportNumber())
                 .passportExpiry(request.getPassportExpiry())
                 .nationality(request.getNationality())
+                // SCP-2025-12-12: Full name and DOB from Emirates ID OCR
+                .fullName(request.getFullName())
+                .dateOfBirth(request.getDateOfBirth())
                 .emiratesIdFrontPath(request.getEmiratesIdFrontPath())
                 .emiratesIdBackPath(request.getEmiratesIdBackPath())
                 .passportFrontPath(request.getPassportFrontPath())
@@ -335,6 +338,13 @@ public class QuotationServiceImpl implements QuotationService {
         }
         if (request.getNationality() != null) {
             quotation.setNationality(request.getNationality());
+        }
+        // SCP-2025-12-12: Full name and DOB from Emirates ID OCR
+        if (request.getFullName() != null) {
+            quotation.setFullName(request.getFullName());
+        }
+        if (request.getDateOfBirth() != null) {
+            quotation.setDateOfBirth(request.getDateOfBirth());
         }
         if (request.getEmiratesIdFrontPath() != null) {
             quotation.setEmiratesIdFrontPath(request.getEmiratesIdFrontPath());
@@ -566,18 +576,14 @@ public class QuotationServiceImpl implements QuotationService {
         // SCP-2025-12-02: Changed from parkingSpots to parkingSpotId
         // SCP-2025-12-04: Identity documents now come from quotation instead of lead
         // SCP-2025-12-06: Extended to include ALL fields for tenant auto-population
-        // Parse fullName into first/last name for tenant form
-        String[] nameParts = lead.getFullName() != null ? lead.getFullName().split(" ", 2) : new String[]{"", ""};
-        String firstName = nameParts.length > 0 ? nameParts[0] : "";
-        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+        // SCP-2025-12-12: Use fullName from quotation (OCR-extracted), removed firstName/lastName
 
         LeadConversionResponse response = LeadConversionResponse.builder()
                 // ===== Lead Personal Information =====
                 .leadId(lead.getId())
                 .leadNumber(lead.getLeadNumber())
-                .fullName(lead.getFullName())
-                .firstName(firstName)
-                .lastName(lastName)
+                // SCP-2025-12-12: Use fullName from quotation (Emirates ID OCR), fallback to lead's fullName
+                .fullName(quotation.getFullName() != null ? quotation.getFullName() : lead.getFullName())
                 .email(lead.getEmail())
                 .contactNumber(lead.getContactNumber())
                 .alternateContact(null) // Lead doesn't have this field
@@ -588,6 +594,8 @@ public class QuotationServiceImpl implements QuotationService {
                 .passportNumber(quotation.getPassportNumber())
                 .passportExpiryDate(quotation.getPassportExpiry())
                 .nationality(quotation.getNationality())
+                // SCP-2025-12-12: DOB from Emirates ID OCR
+                .dateOfBirth(quotation.getDateOfBirth())
                 .emiratesIdFrontPath(quotation.getEmiratesIdFrontPath())
                 .emiratesIdBackPath(quotation.getEmiratesIdBackPath())
                 .passportFrontPath(quotation.getPassportFrontPath())

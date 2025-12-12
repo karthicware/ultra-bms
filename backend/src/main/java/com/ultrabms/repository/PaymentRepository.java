@@ -178,10 +178,11 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
      * @param pageable   Pagination parameters
      * @return Page of matching payments
      */
+    // SCP-2025-12-12: Updated to use fullName instead of firstName/lastName
     @Query("SELECT p FROM Payment p WHERE " +
             "LOWER(p.paymentNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
             "LOWER(p.invoice.invoiceNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-            "LOWER(CONCAT(p.tenant.firstName, ' ', p.tenant.lastName)) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+            "LOWER(p.tenant.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
             "LOWER(p.transactionReference) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     Page<Payment> searchByKeyword(@Param("searchTerm") String searchTerm, Pageable pageable);
 

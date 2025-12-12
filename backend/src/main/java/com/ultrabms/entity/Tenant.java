@@ -72,20 +72,13 @@ public class Tenant extends BaseEntity {
     private UUID userId;
 
     /**
-     * First name
+     * Full name (from Emirates ID OCR)
+     * SCP-2025-12-12: Replaced firstName/lastName with single fullName field
      */
-    @NotBlank(message = "First name is required")
-    @Size(max = 100, message = "First name must be less than 100 characters")
-    @Column(name = "first_name", nullable = false, length = 100)
-    private String firstName;
-
-    /**
-     * Last name
-     */
-    @NotBlank(message = "Last name is required")
-    @Size(max = 100, message = "Last name must be less than 100 characters")
-    @Column(name = "last_name", nullable = false, length = 100)
-    private String lastName;
+    @NotBlank(message = "Full name is required")
+    @Size(max = 255, message = "Full name must be less than 255 characters")
+    @Column(name = "full_name", nullable = false, length = 255)
+    private String fullName;
 
     /**
      * Email address (unique)
