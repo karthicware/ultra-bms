@@ -48,7 +48,6 @@ import {
   RefreshCw,
   Banknote,
   CreditCard,
-  Info,
 } from 'lucide-react';
 
 import {
@@ -127,11 +126,10 @@ export function FinancialInfoStep({
   // Validation
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Adjust expected count if first month is cash
-  const adjustedExpectedCount =
-    firstMonthPaymentMethod === 'CASH'
-      ? Math.max(0, expectedChequeCount - 1)
-      : expectedChequeCount;
+  // SCP-2025-12-12: expectedChequeCount already comes from backend's numberOfCheques
+  // which is already adjusted for CASH first payment (numberOfPayments - 1)
+  // No need to subtract again here
+  const adjustedExpectedCount = expectedChequeCount;
 
   // Handle single file selection (backward compatible)
   const handleFileAdd = useCallback((file: File | null) => {
@@ -453,26 +451,80 @@ export function FinancialInfoStep({
             )}
           </div>
 
-          {/* Cheque Requirements Info */}
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              <div className="space-y-1">
-                <p>
-                  <strong>Cheque Requirements:</strong> Based on the quotation, you need to upload{' '}
-                  <strong>{adjustedExpectedCount} post-dated cheque(s)</strong>
-                  {firstMonthPaymentMethod === 'CASH' && (
-                    <span className="text-muted-foreground">
-                      {' '}(First payment will be by cash)
-                    </span>
-                  )}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  Supported formats: JPEG, PNG (max 5MB per file)
-                </p>
+          {/* Cheque Requirements Info - Premium Design */}
+          <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/[0.03] via-background to-primary/[0.05]">
+            {/* Decorative background elements */}
+            <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
+            <div className="absolute -left-4 -bottom-4 h-16 w-16 rounded-full bg-primary/5 blur-xl" />
+
+            <div className="relative p-5">
+              <div className="flex items-start gap-4">
+                {/* Icon with animated ring */}
+                <div className="relative flex-shrink-0">
+                  <div className="absolute inset-0 animate-[spin_8s_linear_infinite] rounded-2xl border border-dashed border-primary/30" />
+                  <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
+                    <CreditCard className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0 space-y-3">
+                  {/* Header */}
+                  <div>
+                    <h4 className="font-semibold text-foreground flex items-center gap-2">
+                      Cheque Requirements
+                      {firstMonthPaymentMethod === 'CASH' && (
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 rounded-full">
+                          First payment is Cash
+                        </span>
+                      )}
+                    </h4>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Based on the quotation payment schedule
+                    </p>
+                  </div>
+
+                  {/* Cheque count visual */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex -space-x-2">
+                      {Array.from({ length: Math.min(adjustedExpectedCount, 5) }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border-2 border-background text-xs font-bold text-primary"
+                        >
+                          {i + 1}
+                        </div>
+                      ))}
+                      {adjustedExpectedCount > 5 && (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted border-2 border-background text-xs font-medium text-muted-foreground">
+                          +{adjustedExpectedCount - 5}
+                        </div>
+                      )}
+                    </div>
+                    <div className="h-8 w-px bg-border" />
+                    <div>
+                      <span className="text-2xl font-bold text-primary">{adjustedExpectedCount}</span>
+                      <span className="text-sm text-muted-foreground ml-1.5">
+                        post-dated {adjustedExpectedCount === 1 ? 'cheque' : 'cheques'} required
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* File format info */}
+                  <div className="flex items-center gap-4 pt-1">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      <span>JPEG, PNG</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      <span>Max 5MB per file</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </AlertDescription>
-          </Alert>
+            </div>
+          </div>
 
           {/* Cheque Upload Section */}
           <div className="rounded-2xl border border-muted bg-muted/20 p-6">

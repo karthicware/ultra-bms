@@ -271,11 +271,22 @@ public class QuotationServiceImpl implements QuotationService {
         if (request.getYearlyRentAmount() != null) {
             quotation.setYearlyRentAmount(request.getYearlyRentAmount());
         }
+        // SCP-2025-12-12: Fix bug - request.numberOfCheques is actually total payments
+        // Must update numberOfPayments and recalculate numberOfCheques based on firstMonthPaymentMethod
         if (request.getNumberOfCheques() != null) {
-            quotation.setNumberOfCheques(request.getNumberOfCheques());
+            quotation.setNumberOfPayments(request.getNumberOfCheques());
         }
         if (request.getFirstMonthPaymentMethod() != null) {
             quotation.setFirstMonthPaymentMethod(request.getFirstMonthPaymentMethod());
+        }
+        // Recalculate numberOfCheques if either numberOfPayments or firstMonthPaymentMethod changed
+        if (request.getNumberOfCheques() != null || request.getFirstMonthPaymentMethod() != null) {
+            int payments = quotation.getNumberOfPayments() != null ? quotation.getNumberOfPayments() : 12;
+            Quotation.FirstMonthPaymentMethod method = quotation.getFirstMonthPaymentMethod();
+            int calculatedCheques = (method == Quotation.FirstMonthPaymentMethod.CASH)
+                    ? Math.max(0, payments - 1)
+                    : payments;
+            quotation.setNumberOfCheques(calculatedCheques);
         }
         if (request.getChequeBreakdown() != null) {
             quotation.setChequeBreakdown(request.getChequeBreakdown());
